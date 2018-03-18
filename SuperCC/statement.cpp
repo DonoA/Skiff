@@ -3,6 +3,8 @@
 #include "utils.h"
 #include <iostream>
 
+statement::statement() { }
+
 statement::statement(string raw)
 {
 	this->raw = raw;
@@ -13,9 +15,9 @@ string statement::eval_c()
 	return raw;
 }
 
-type * statement::eval(scope * env)
+object * statement::eval(scope * env)
 {
-	return new None();
+	return nullptr;
 }
 
 string statement::parse_string()
@@ -23,75 +25,132 @@ string statement::parse_string()
 	return "Statement("+raw+")";
 }
 
-bool statement::is_block_heading()
+scope::scope(scope * inherit)
 {
-	return false;
+	this->inherit = inherit;
 }
 
-value::value(type * typ, string val) : statement(val)
+void scope::define_variable(string name, object * val)
 {
-	this->typ = typ;
+	env[name] = val;
 }
 
-type * value::eval(scope * env)
+object * scope::get_variable(string name)
 {
-	return typ;
+	if (env.count(name))
+	{
+		return env[name];
+	}
+	if (inherit == nullptr)
+	{
+		return nullptr;
+	}
+	return inherit->get_variable(name);
+}
+
+void scope::define_type(string name, type_class cls)
+{
+	known_types[name] = cls;
+}
+
+type_class scope::get_type(string name)
+{
+	if (known_types.count(name))
+	{
+		return known_types[name];
+	}
+	if (inherit == nullptr)
+	{
+		return type_class();
+	}
+	return inherit->get_type(name);
+}
+
+void scope::define_function(string name, function cls)
+{
+	known_functions[name] = cls;
+}
+
+function scope::get_function(string name)
+{
+	if (known_functions.count(name))
+	{
+		return known_functions[name];
+	}
+	if (inherit == nullptr)
+	{
+		return function();
+	}
+	return inherit->get_function(name);
+}
+
+value::value(object * val)
+{
+	this->val = val;
+	this->typ = val->get_type();
+}
+
+object * value::eval(scope * env)
+{
+	return val;
 }
 
 string value::eval_c()
 {
-	return typ->to_string();
+	return val->to_string();
 }
 
 string value::parse_string()
 {
-	return "Value(" + typ->parse_string() + ")";
+	return "Value(" + typ.parse_string() + "," + val->to_string() + ")";
 }
 
-decleration::decleration(string name, statement * val, string raw) : statement(raw)
+decleration::decleration(string name, type_class type, statement * value)
 {
 	this->name = name;
-	this->val = val;
+	this->val = value;
+	this->type = type;
 }
 
-type * decleration::eval(scope * env)
+object * decleration::eval(scope * env)
 {
-	env->define(name, val->eval(env));
-	return val->eval(env);
+	env->define_variable(name, val->eval(env));
+	return nullptr;
 }
 
 string decleration::eval_c()
 {
-	return type + " " + name + " = " + val->eval_c() + ";";
+	return "";// type + " " + name + " = " + val->eval_c() + ";";
 }
 
 string decleration::parse_string()
 {
-	return "Decleration(" + name + "," + val->parse_string() + ")";
+	return "Decleration(" + name + "," + type.parse_string() + "," + val->parse_string() + ")";
 }
 
-function_call::function_call(string name, vector<statement*> params, string raw) : statement(raw)
+function_call::function_call(string name, vector<statement*> params)
 {
 	this->name = remove_pad(name);
 	this->params = params;
 }
 
-type * function_call::eval(scope * env)
+object * function_call::eval(scope * env)
 {
-	/*if (name == "print")
+	if (name == "print")
 	{
 		string tp;
 		for (statement * stmt : params)
 		{
-			tp += stmt->eval(env)->to_string();
+			object * res = stmt->eval(env);
+			res = res->get_type().get_scope()->get_function("to_string").eval(res);
+			tp += *((string *) res->get_value());
 			tp += " ";
 		}
 		tp.erase(tp.length() - 1);
 		std::cout << tp << std::endl;
-	}*/
+	}
 	return nullptr;
 }
-
 
 string function_call::eval_c()
 {
@@ -103,7 +162,6 @@ string function_call::eval_c()
 	rtn = rtn.substr(0, rtn.length() - 1);
 	rtn += ");";
 	return rtn;
-
 }
 
 string function_call::parse_string()
@@ -123,33 +181,14 @@ string function_call::parse_string()
 	return rtn;
 }
 
-scope::scope(scope * inherit)
-{
-	this->inherit = inherit;
-}
-
-void scope::define(string name, type * typ)
-{
-	env[name] = typ;
-}
-
-type * scope::get(string name)
-{
-	if (env.count(name))
-	{
-		return env[name];
-	}
-	return nullptr;
-}
-
 variable::variable(string name) : statement(name)
 {
 	this->name = name;
 }
 
-type * variable::eval(scope * env)
+object * variable::eval(scope * env)
 {
-	return env->get(name);
+	return env->get_variable(name);
 }
 
 string variable::eval_c()
@@ -162,17 +201,17 @@ string variable::parse_string()
 	return "Variable(" + name + ")";
 }
 
-assignment::assignment(string name, statement * value, string raw) : statement(raw)
+assignment::assignment(string name, statement * value)
 {
 	this->name = name;
 	this->val = value;
 }
 
-type * assignment::eval(scope * env)
+object * assignment::eval(scope * env)
 {
-	type * typ = val->eval(env);
-	env->define(name, typ);
-	return typ;
+	object * v = val->eval(env);
+	env->define_variable(name, v);
+	return v;
 }
 
 string assignment::eval_c()
@@ -185,15 +224,26 @@ string assignment::parse_string()
 	return "Assignment(" + name + "," + val->parse_string() + ")";
 }
 
-math_statement::math_statement(queue<statement*> operands, queue<char> operators, string raw) : statement(raw)
+math_statement::math_statement(queue<statement*> operands, queue<char> operators)
 {
 	this->operands = operands;
 	this->operators = operators;
 }
 
-type * math_statement::eval(scope * env)
+object * math_statement::eval(scope * env)
 {
-	return nullptr;
+	queue<char> ops = operators;
+	queue<statement *> stmts = operands;
+	object * base = stmts.front()->eval(env);
+	object * t = base->get_type().get_scope()->get_function("clone").eval(base);
+	stmts.pop();
+	while (!ops.empty())
+	{
+		math_statement::eval_single_op(t, ops.front(), stmts.front()->eval(env));
+		stmts.pop();
+		ops.pop();
+	}
+	return t;
 }
 
 string math_statement::eval_c()
@@ -216,14 +266,22 @@ string math_statement::parse_string()
 	return rtn;
 }
 
-comparison::comparison(statement * s1, comparison::comparison_type typ, statement * s2, string raw) : statement(raw)
+void math_statement::eval_single_op(object * s1, char op, object * s2)
+{
+	object * o = get_dominant_type(s1, s2);
+	vector<object *> p;
+	p.push_back(s2);
+	(*o->get_type().get_operators())[string(1, op)].eval(o, p);
+}
+
+comparison::comparison(statement * s1, comparison::comparison_type typ, statement * s2)
 {
 	this->s1 = s1;
 	this->s2 = s2;
 	this->typ = typ;
 }
 
-type * comparison::eval(scope * env)
+object * comparison::eval(scope * env)
 {
 	return nullptr;
 }
@@ -258,12 +316,12 @@ string comparison::comparison_string()
 	return "";
 }
 
-invert::invert(statement * value, string raw) : statement(raw)
+invert::invert(statement * value)
 {
 	this->val = value;
 }
 
-type * invert::eval(scope * env)
+object * invert::eval(scope * env)
 {
 	return nullptr;
 }
@@ -278,12 +336,12 @@ string invert::parse_string()
 	return "Invert(" + val->parse_string() + ")";
 }
 
-bitinvert::bitinvert(statement * value, string raw) : statement(raw)
+bitinvert::bitinvert(statement * value)
 {
 	this->val = value;
 }
 
-type * bitinvert::eval(scope * env)
+object * bitinvert::eval(scope * env)
 {
 	return nullptr;
 }
@@ -298,14 +356,14 @@ string bitinvert::parse_string()
 	return "BitInvert(" + val->parse_string() + ")";
 }
 
-bitwise::bitwise(statement * s1, bitwise::operation op, statement * s2, string raw) : statement(raw)
+bitwise::bitwise(statement * s1, bitwise::operation op, statement * s2)
 {
 	this->s1 = s1;
 	this->op = op;
 	this->s2 = s2;
 }
 
-type * bitwise::eval(scope * env)
+object * bitwise::eval(scope * env)
 {
 	return nullptr;
 }
@@ -334,14 +392,14 @@ string bitwise::operation_string()
 	return "";
 }
 
-boolean_conjunction::boolean_conjunction(comparison * s1, boolean_conjunction::conjunction_type conj, comparison * s2, string raw) : statement(raw)
+boolean_conjunction::boolean_conjunction(comparison * s1, boolean_conjunction::conjunction_type conj, comparison * s2)
 {
 	this->s1 = s1;
 	this->s2 = s2;
 	this->conj = conj;
 }
 
-type * boolean_conjunction::eval(scope * env)
+object * boolean_conjunction::eval(scope * env)
 {
 	return nullptr;
 }
@@ -378,14 +436,9 @@ string block_heading::eval_c()
 	return string();
 }
 
-type * block_heading::eval(scope * env)
+object * block_heading::eval(scope * env)
 {
 	return nullptr;
-}
-
-bool block_heading::is_block_heading()
-{
-	return true;
 }
 
 void block_heading::add_statement(statement * stmt)
@@ -393,12 +446,12 @@ void block_heading::add_statement(statement * stmt)
 	statements.push_back(stmt);
 }
 
-if_heading::if_heading(statement * condition, string raw) : block_heading(raw)
+if_heading::if_heading(statement * condition)
 {
 	this->condition = condition;
 }
 
-type * if_heading::eval(scope * env)
+object * if_heading::eval(scope * env)
 {
 	return condition->eval(env);
 }
@@ -419,13 +472,12 @@ string if_heading::parse_string()
 	return rtn;
 }
 
-
-class_heading::class_heading(string name, string raw) : block_heading(raw)
+class_heading::class_heading(string name)
 {
 	this->name = name;
 }
 
-type * class_heading::eval(scope * env)
+object * class_heading::eval(scope * env)
 {
 	return nullptr;
 }
@@ -446,22 +498,15 @@ string class_heading::parse_string()
 	return rtn;
 }
 
-function_heading::function_parameter function_heading::create_function_parameter(string name, TypeClass * typ)
-{
-	struct function_parameter p;
-	p.typ = typ;
-	p.name = name;
-	return p;
-}
 
-function_heading::function_heading(string name, vector<function_parameter> params, TypeClass * returns, string raw) : block_heading(raw)
+function_heading::function_heading(string name, vector<function::function_parameter> params, type_class returns)
 {
 	this->name = name;
 	this->params = params;
 	this->returns = returns;
 }
 
-type * function_heading::eval(scope * env)
+object * function_heading::eval(scope * env)
 {
 	return nullptr;
 }
@@ -475,7 +520,7 @@ string function_heading::parse_string()
 {
 	string params_rtn = "Params(";
 	bool any = false;
-	for (function_parameter p : params)
+	for (function::function_parameter p : params)
 	{
 		params_rtn += function_parameter_sig(p) + ",";
 		any = true;
@@ -484,7 +529,7 @@ string function_heading::parse_string()
 	{
 		params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
 	}
-	string rtn = "FunctionHeading(" + name + ", " + params_rtn + ", Returns(" + returns->parse_string() + "))\n{\n";
+	string rtn = "FunctionHeading(" + name + ", " + params_rtn + ", Returns(" + returns.parse_string() + "))\n{\n";
 	for (statement * s : statements)
 	{
 		rtn += "" + s->parse_string() + "\n";
@@ -493,17 +538,17 @@ string function_heading::parse_string()
 	return rtn;
 }
 
-string function_heading::function_parameter_sig(function_parameter p)
+string function_heading::function_parameter_sig(function::function_parameter p)
 {
-	return "Param(" + p.name + +"," + p.typ->parse_string() + ")";
+	return "Param(" + p.name + +"," + p.typ.parse_string() + ")";
 }
 
-while_heading::while_heading(statement * condition, string raw) : block_heading(raw)
+while_heading::while_heading(statement * condition)
 {
 	this->condition = condition;
 }
 
-type * while_heading::eval(scope * env)
+object * while_heading::eval(scope * env)
 {
 	return nullptr;
 }

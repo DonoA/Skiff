@@ -10,26 +10,17 @@ using std::vector;
 using std::map;
 using std::queue;
 
-class scope
-{
-public:
-	scope() {} ;
-	scope(scope * inherit);
-	void define(string name, type * typ);
-	type * get(string name);
-private:
-	map<string, type *> env;
-	scope * inherit;
-};
+class object;
+class scope;
 
 class statement
 {
 public:
+	statement();
 	statement(string raw);
 	virtual string eval_c();
-	virtual type * eval(scope * env);
+	virtual object * eval(scope * env);
 	virtual string parse_string();
-	virtual bool is_block_heading();
 private:
 	string raw;
 };
@@ -37,19 +28,20 @@ private:
 class value : public statement
 {
 public:
-	value(type * typ, string val);
-	type * eval(scope * env);
+	value(object * val);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
-	type * typ;
+	object * val;
+	type_class typ;
 };
 
 class variable : public statement
 {
 public:
 	variable(string name);
-	type * eval(scope * env);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -59,20 +51,21 @@ private:
 class math_statement : public statement
 {
 public:
-	math_statement(queue<statement *> operands, queue<char> operators, string raw);
-	type * eval(scope * env);
+	math_statement(queue<statement *> operands, queue<char> operators);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
 	queue<statement*> operands;
 	queue<char> operators;
+	static void eval_single_op(object * s1, char op, object * s2);
 };
 
 class assignment : public statement
 {
 public:
-	assignment(string name, statement * value, string raw);
-	type * eval(scope * env);
+	assignment(string name, statement * value);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -83,21 +76,21 @@ private:
 class decleration : public statement
 {
 public:
-	decleration(string name, statement * value, string raw);
-	type * eval(scope * env);
+	decleration(string name, type_class type, statement * value);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
 	string name;
-	string type;
+	type_class type;
 	statement * val;
 };
 
 class function_call : public statement
 {
 public:
-	function_call(string name, vector<statement *> params, string raw);
-	type * eval(scope * env);
+	function_call(string name, vector<statement *> params);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -108,11 +101,11 @@ private:
 class block_heading : public statement
 {
 public:
+	block_heading() {};
 	block_heading(string raw);
 	virtual string eval_c();
-	virtual type * eval(scope * env);
+	virtual object * eval(scope * env);
 	virtual string parse_string() = 0;
-	virtual bool is_block_heading();
 	void add_statement(statement * stmt);
 protected:
 	vector<statement *> statements;
@@ -123,8 +116,8 @@ private:
 class if_heading : public block_heading
 {
 public:
-	if_heading(statement * condition, string raw);
-	type * eval(scope * env);
+	if_heading(statement * condition);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -134,8 +127,8 @@ private:
 class while_heading : public block_heading
 {
 public:
-	while_heading(statement * condition, string raw);
-	type * eval(scope * env);
+	while_heading(statement * condition);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -145,8 +138,8 @@ private:
 class class_heading : public block_heading
 {
 public:
-	class_heading(string name, string raw);
-	type * eval(scope * env);
+	class_heading(string name);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -157,29 +150,23 @@ class function_heading : public block_heading
 {
 
 public:
-	struct function_parameter
-	{
-		TypeClass * typ;
-		string name;
-	};
-	static function_heading::function_parameter create_function_parameter(string name, TypeClass * typ);
-	function_heading(string name, vector<function_parameter> params, TypeClass * returns, string raw);
-	type * eval(scope * env);
+	function_heading(string name, vector<function::function_parameter> params, type_class returns);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
 	string name;
-	vector<function_parameter> params;
-	TypeClass * returns;
-	string function_parameter_sig(function_parameter);
+	vector<function::function_parameter> params;
+	type_class returns;
+	string function_parameter_sig(function::function_parameter);
 };
 
 class comparison : public statement
 {
 public:
 	enum comparison_type { Equal, NotEqual, LessThan, LessThanEqualTo, GreaterThan, GreaterThanEqualTo };
-	comparison(statement * s1, comparison::comparison_type typ, statement * s2, string raw);
-	type * eval(scope * env);
+	comparison(statement * s1, comparison::comparison_type typ, statement * s2);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -192,8 +179,8 @@ private:
 class invert : public statement
 {
 public:
-	invert(statement * value, string raw);
-	type * eval(scope * env);
+	invert(statement * value);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -203,8 +190,8 @@ private:
 class bitinvert : public statement
 {
 public:
-	bitinvert(statement * value, string raw);
-	type * eval(scope * env);
+	bitinvert(statement * value);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -215,8 +202,8 @@ class bitwise : public statement
 {
 public:
 	enum operation { And, Or, Xor };
-	bitwise(statement * s1, bitwise::operation op, statement * s2, string raw);
-	type * eval(scope * env);
+	bitwise(statement * s1, bitwise::operation op, statement * s2);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:
@@ -230,8 +217,8 @@ class boolean_conjunction : public statement
 {
 public:
 	enum conjunction_type { And, Or };
-	boolean_conjunction(comparison * s1, boolean_conjunction::conjunction_type conj, comparison * s2, string raw);
-	type * eval(scope * env);
+	boolean_conjunction(comparison * s1, boolean_conjunction::conjunction_type conj, comparison * s2);
+	object * eval(scope * env);
 	string eval_c();
 	string parse_string();
 private:

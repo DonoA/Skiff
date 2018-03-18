@@ -1,72 +1,96 @@
 #pragma once
 #include <string>
+#include <map>
+#include <vector>
+#include <stdlib.h>
+#include <functional>
 
 using std::string;
+using std::vector;
+using std::map;
 
-class type
+//class scope;
+class object;
+class type_class;
+class function;
+
+class scope
 {
 public:
-	type(string val);
-	virtual string to_string();
-	virtual string parse_string();
+	scope() { inherit = nullptr; };
+	scope(scope * inherit);
+	void define_variable(string name, object * val);
+	object * get_variable(string name);
+	void define_type(string name, type_class cls);
+	type_class get_type(string name);
+	void define_function(string name, function func);
+	function get_function(string name);
 private:
-	string val;
+	map<string, object *> env;
+	scope * inherit;
+	map<string, type_class> known_types;
+	map<string, function> known_functions;
 };
 
-class TypeClass : public type
+class type_class
 {
 public:
-	TypeClass(string name);
-	virtual string to_string();
-	virtual string parse_string();
+	type_class();
+	type_class(string name);
+	string get_name();
+	string parse_string();
+	scope * get_scope();
+	map<string, function> * get_operators();
 private:
 	string name;
+	scope class_env;
+	map<string, function> operators;
 };
 
-class String : public type
+class object
 {
 public:
-	String(string raw);
+	template<class T>
+	static void * allocate(T val);
+	object(void * str, type_class type);
+	type_class get_type();
 	string to_string();
-	string parse_string();
+	void * get_value();
+	void set_value(void * v);
 private:
-	string value;
+	type_class type;
+	void * value;
 };
 
-class Int : public type
+class function
 {
 public:
-	Int(string raw);
-	string to_string();
-	string parse_string();
+	struct function_parameter
+	{
+		type_class typ;
+		string name;
+	};
+	static function::function_parameter create_function_parameter(string name, type_class typ);
+	function(string name, vector<function_parameter> params, type_class returns, scope * env, std::function<object *(object *, vector<object *>, scope *)> * builtin);
+	//function(string name, vector<function_parameter> params, type_class returns, scope * env, object * (*builtin)(object *, vector<object *>, scope *));
+	function(string name, vector<function_parameter> params, type_class returns, scope * env);
+	function();
+	object * eval(object * self);
+	object * eval(object * self, vector<object *> params);
 private:
-	int value;
+	scope function_env;
+	string name;
+	vector<function_parameter> params;
+	type_class returns;
+	//vector<statement *> statements;
+	//object * (*builtin)(object *, vector<object *>, scope *);
+	std::function<object *(object *, vector<object *>, scope *)> * builtin;
 };
 
-class Double : public type
+template<class T>
+inline void * object::allocate(T val)
 {
-public:
-	Double(string raw);
-	string to_string();
-	string parse_string();
-private:
-	double value;
-};
-
-class Boolean : public type
-{
-public:
-	Boolean(string raw);
-	string to_string();
-	string parse_string();
-private:
-	bool value;
-};
-
-class None : public type
-{
-public:
-	None();
-	string to_string();
-	string parse_string();
-};
+	T * p = (T *) malloc(sizeof(T));
+	(*p) = val;
+	return p;
+}

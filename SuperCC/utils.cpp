@@ -41,3 +41,20 @@ string generate_indent(size_t len)
 	}
 	return rtn;
 }
+
+object * get_dominant_type(object * c1, object * c2)
+{
+	string type_order[] = { "Double", "Float", "Long", "Int", "Char" };
+	for (string s : type_order)
+	{
+		if (c1->get_type().get_name() == s)
+		{
+			return c1;
+		}
+		if (c2->get_type().get_name() == s)
+		{
+			return c2;
+		}
+	}
+	return nullptr;
+}

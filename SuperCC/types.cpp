@@ -1,128 +1,107 @@
 #include "stdafx.h"
 #include "types.h"
 #include "utils.h"
+#include <iostream>
 
-type::type(string val)
+type_class::type_class()
 {
-	this->val = val;
+	this->name = "None";
 }
 
-string type::to_string()
-{
-	return val;
-}
-
-string type::parse_string()
-{
-	return "Type(" + val + ")";
-}
-
-Int::Int(string raw) : type(raw)
-{
-	value = atoi(raw.c_str());
-}
-
-string Int::to_string()
-{
-	return std::to_string(value);
-}
-
-string Int::parse_string()
-{
-	return "Int(" + std::to_string(value) + ")";
-}
-
-String::String(string raw) : type(raw) 
-{
-	value = raw.substr(1, raw.length() - 2);
-}
-
-string String::to_string()
-{
-	return value;
-}
-
-string String::parse_string()
-{
-	return "String(\"" + value + "\")";
-}
-
-Double::Double(string raw) : type(raw)
-{
-	value = atof(raw.c_str());
-}
-
-string Double::to_string()
-{
-	return std::to_string(value);
-}
-
-string Double::parse_string()
-{
-	return "Double(" + std::to_string(value) + ")";
-}
-
-None::None() : type("None")
-{
-}
-
-string None::to_string()
-{
-	return "None";
-}
-
-string None::parse_string()
-{
-	return "None()";
-}
-
-Boolean::Boolean(string raw) : type(raw)
-{
-	if (remove_pad(raw) == "true")
-	{
-		value = true;
-	}
-	else if(remove_pad(raw) == "false")
-	{
-		value = false;
-	}
-}
-
-string Boolean::to_string()
-{
-	if (value)
-	{
-		return "true";
-	}
-	else
-	{
-		return "false";
-	}
-}
-
-string Boolean::parse_string()
-{
-	if (value)
-	{
-		return "Boolean(true)";
-	}
-	else
-	{
-		return "Boolean(false)";
-	}
-}
-
-TypeClass::TypeClass(string name) : type(name)
+type_class::type_class(string name)
 {
 	this->name = name;
 }
 
-string TypeClass::to_string()
+string type_class::get_name()
 {
 	return name;
 }
 
-string TypeClass::parse_string()
+string type_class::parse_string()
 {
 	return "TypeClass(" + name + ")";
+}
+
+scope * type_class::get_scope()
+{
+	return &class_env;
+}
+
+map<string, function>* type_class::get_operators()
+{
+	return &operators;
+}
+
+object::object(void * val, type_class type)
+{
+	this->type = type;
+	this->value = val;
+}
+
+type_class object::get_type()
+{
+	return type;
+}
+
+string object::to_string()
+{
+	return type.get_name() + "@" + std::to_string((int) this);
+}
+
+void * object::get_value()
+{
+	return value;
+}
+
+void object::set_value(void * v)
+{
+	this->value = v;
+}
+
+function::function_parameter function::create_function_parameter(string name, type_class typ)
+{
+	function::function_parameter p;
+	p.typ = typ;
+	p.name = name;
+	return p;
+}
+
+function::function(string name, vector<function_parameter> params, type_class returns, scope * env, std::function<object *(object *, vector<object *>, scope *)> * builtin)
+{
+	this->function_env = scope(env);
+	this->name = name;
+	this->params = params;
+	this->returns = returns;
+	this->builtin = builtin;
+	
+}
+
+function::function(string name, vector<function_parameter> params, type_class returns, scope * env) : function(name, params, returns, env, NULL)
+{ }
+
+function::function()
+{
+	this->builtin = NULL;
+}
+
+object * function::eval(object * self)
+{
+	return eval(self, vector<object*>());
+}
+
+object * function::eval(object * self, vector<object*> params)
+{
+	if (builtin == NULL)
+	{
+		//for (statement * stmt : statements)
+		//{
+		//	stmt->eval(&function_env);
+		//}
+		return nullptr;
+	}
+	else
+	{
+		return (*builtin)(self, params, &function_env);
+	}
 }

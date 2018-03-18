@@ -83,39 +83,39 @@ vector<string> parse_argument_list(string list)
 	return params;
 }
 
-type * box_type(string stmt)
+object * box_type(string stmt, scope * env)
 {
-	//std::cout << "boxing " << stmt << std::endl;
 	if (!stmt.empty() && stmt.find_first_not_of("0123456789") == std::string::npos)
 	{
-		return new Int(stmt);
+		return new object(object::allocate(atoi(stmt.c_str())), env->get_type("Int"));
 	}
 	else if (!stmt.empty() && stmt.find_first_not_of("0123456789.") == std::string::npos)
 	{
-		return new Double(stmt);
+		return new object(object::allocate(atof(stmt.c_str())), env->get_type("Double"));
 	}
 	else if (!stmt.empty() && stmt[0] == '"' && stmt[stmt.length() - 1] == '"')
 	{
-		return new String(stmt);
+		return new object(object::allocate(stmt), env->get_type("String"));
 	}
 	return nullptr;
 }
 
 statement * declare_or_assign(string name, statement * value, scope * env, string stmt)
 {
-	vector<string> s = string_split(name, ":");
-	string n = s[0], t;
-	if (s.size() == 2)
+	size_t loc = name.find_first_of(":");
+	string t, n = name;
+	if (loc != std::string::npos)
 	{
-		t = n[1];
+		n = name.substr(0, loc);
+		t = name.substr(loc+1);
 	}
-	if (env->get(n) == nullptr)
+	if (env->get_variable(n) == nullptr)
 	{
-		return new decleration(n, value, stmt);
+		return new decleration(n, env->get_type(t), value);
 	}
 	else
 	{
-		return new assignment(n, value, stmt);
+		return new assignment(n, value);
 	}
 }
 
@@ -144,7 +144,7 @@ statement * parse_math(string stmt, scope * env)
 	{
 		operands.push(parse_statement(stmt.substr(j), env));
 	}
-	return new math_statement(operands, operators, stmt);
+	return new math_statement(operands, operators);
 }
 
 statement * parse_function_header(string stmt, scope * env) 
@@ -166,13 +166,13 @@ statement * parse_function_header(string stmt, scope * env)
 	returns.erase(0, returns.find_first_of(":") + 1);
 	std::cout << dec << " | " << params << " | " << returns << std::endl;
 	vector<string> params_list = parse_argument_list(params);
-	vector<function_heading::function_parameter> f_params;
+	vector<function::function_parameter> f_params;
 	for (string s : params_list)
 	{
 		vector<string> n = string_split(s, ":");
-		f_params.push_back(function_heading::create_function_parameter(n[0], new TypeClass(n[1])));
+		f_params.push_back(function::create_function_parameter(n[0], env->get_type(n[1])));
 	}
-	return new function_heading(dec, f_params, new TypeClass(returns), stmt);
+	return new function_heading(dec, f_params, env->get_type(returns));
 }
 
 statement * parse_statement(string stmt, scope * env)
@@ -197,12 +197,12 @@ statement * parse_statement(string stmt, scope * env)
 			else if (stmt[i] == '!')
 			{
 				p2 = remove_pad(stmt.substr(i + 1));
-				return new invert(parse_statement(p2, env), stmt);
+				return new invert(parse_statement(p2, env));
 			}
 			else if (stmt[i] == '~')
 			{
 				p2 = remove_pad(stmt.substr(i + 1));
-				return new bitinvert(parse_statement(p2, env), stmt);
+				return new bitinvert(parse_statement(p2, env));
 			}
 			else if (stmt[i] == '(')
 			{
@@ -214,11 +214,11 @@ statement * parse_statement(string stmt, scope * env)
 				}
 				else if (p1 == "if")
 				{
-					return new if_heading(parse_statement(p2, env), stmt);
+					return new if_heading(parse_statement(p2, env));
 				}
 				else if (p1 == "while")
 				{
-					return new while_heading(parse_statement(p2, env), stmt);
+					return new while_heading(parse_statement(p2, env));
 				}
 				else
 				{
@@ -233,7 +233,7 @@ statement * parse_statement(string stmt, scope * env)
 					{
 						param_stmt.push_back(parse_statement(s, env));
 					}
-					return new function_call(p1, param_stmt, stmt);
+					return new function_call(p1, param_stmt);
 				}
 			}
 			else if (is_math(stmt[i]))
@@ -247,7 +247,7 @@ statement * parse_statement(string stmt, scope * env)
 					queue<statement *> stmts;
 					stmts.push(new variable(p1));
 					stmts.push(parse_math(p2, env));
-					return new assignment(p1, new math_statement(stmts, ops, p2), stmt);
+					return new assignment(p1, new math_statement(stmts, ops));
 				}
 				return parse_math(stmt, env);
 			}
@@ -279,7 +279,7 @@ statement * parse_statement(string stmt, scope * env)
 					typ = comparison::comparison_type::NotEqual;
 					p2 = remove_pad(stmt.substr(i + 2));
 				}
-				return new comparison(parse_statement(p1, env), typ, parse_statement(p2, env), stmt);
+				return new comparison(parse_statement(p1, env), typ, parse_statement(p2, env));
 			}
 			else if (stmt[i] == '&' || stmt[i] == '|')
 			{
@@ -294,7 +294,7 @@ statement * parse_statement(string stmt, scope * env)
 					{
 						typ = boolean_conjunction::conjunction_type::Or;
 					}
-					return new boolean_conjunction(c1, typ, c2, stmt);
+					return new boolean_conjunction(c1, typ, c2);
 				}
 				p1 = stmt.substr(0, i);
 				p2 = stmt.substr(i + 1);
@@ -305,7 +305,7 @@ statement * parse_statement(string stmt, scope * env)
 				{
 					op = bitwise::operation::Or;
 				}
-				return new bitwise(s1, op, s2, stmt);
+				return new bitwise(s1, op, s2);
 			}
 			else if (stmt[i] == '^')
 			{
@@ -314,7 +314,7 @@ statement * parse_statement(string stmt, scope * env)
 				statement * s1 = parse_statement(p1, env);
 				statement * s2 = parse_statement(p2, env);
 				bitwise::operation op = bitwise::operation::Xor;
-				return new bitwise(s1, op, s2, stmt);
+				return new bitwise(s1, op, s2);
 			}
 		}
 	}
@@ -323,19 +323,19 @@ statement * parse_statement(string stmt, scope * env)
 	{
 		return new statement(stmt);
 	}
-	type * t;
-	if ((t = box_type(stmt)) != nullptr)
+	object * t;
+	if ((t = box_type(stmt, env)) != nullptr)
 	{
-		return new value(t, stmt);
+		return new value(t);
 	}
-	if ((t = env->get(stmt)) != nullptr)
+	if ((t = env->get_variable(stmt)) != nullptr)
 	{
 		return new variable(stmt);
 	}
 	vector<string> parts = string_split(stmt, " ");
 	if (parts[0] == "class")
 	{
-		return new class_heading(parts[1], stmt);
+		return new class_heading(parts[1]);
 	}
 	std::cerr << "Could not locate refrence: '" << stmt << "'" << std::endl;
 	return new statement(stmt);

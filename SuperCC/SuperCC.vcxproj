@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="builtin.h" />
     <ClInclude Include="parsers.h" />
     <ClInclude Include="statement.h" />
     <ClInclude Include="stdafx.h" />
@@ -155,6 +156,7 @@
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="builtin.cpp" />
     <ClCompile Include="parsers.cpp" />
     <ClCompile Include="statement.cpp" />
     <ClCompile Include="stdafx.cpp">
