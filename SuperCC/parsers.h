@@ -15,5 +15,5 @@ void try_push(char op, stack<char> * braces);
 
 vector<string> parse_argument_list(string list);
 
-statement * parse_statement(string stmt, scope * env);
+statement * parse_statement(string stmt);
 

@@ -37,14 +37,18 @@ class type_class
 public:
 	type_class();
 	type_class(string name);
+	type_class(string name, size_t id);
 	string get_name();
+	size_t get_class_id();
 	string parse_string();
 	scope * get_scope();
 	map<string, function> * get_operators();
 private:
 	string name;
 	scope class_env;
+	size_t class_id;
 	map<string, function> operators;
+	static size_t internal_class_id_counter;
 };
 
 class object
@@ -74,6 +78,7 @@ public:
 	function(string name, vector<function_parameter> params, type_class returns, scope * env, std::function<object *(object *, vector<object *>, scope *)> * builtin);
 	//function(string name, vector<function_parameter> params, type_class returns, scope * env, object * (*builtin)(object *, vector<object *>, scope *));
 	function(string name, vector<function_parameter> params, type_class returns, scope * env);
+	function(string name, scope * env, std::function<object *(object *, vector<object *>, scope *)> * builtin);
 	function();
 	object * eval(object * self);
 	object * eval(object * self, vector<object *> params);

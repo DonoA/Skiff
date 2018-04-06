@@ -1,7 +1,10 @@
 #include "stdafx.h"
 #include "types.h"
 #include "utils.h"
+#include "builtin.h"
 #include <iostream>
+
+size_t type_class::internal_class_id_counter = 100;
 
 type_class::type_class()
 {
@@ -11,11 +14,24 @@ type_class::type_class()
 type_class::type_class(string name)
 {
 	this->name = name;
+	this->class_id = type_class::internal_class_id_counter++;
 }
+
+type_class::type_class(string name, size_t id)
+{
+	this->name = name;
+	this->class_id = id;
+}
+
 
 string type_class::get_name()
 {
 	return name;
+}
+
+size_t type_class::get_class_id()
+{
+	return class_id;
 }
 
 string type_class::parse_string()
@@ -79,6 +95,10 @@ function::function(string name, vector<function_parameter> params, type_class re
 
 function::function(string name, vector<function_parameter> params, type_class returns, scope * env) : function(name, params, returns, env, NULL)
 { }
+
+function::function(string name, scope * env, std::function<object*(object*, vector<object*>, scope*)>* builtin) : function(name, vector<function_parameter>(), type_class(), env, builtin)
+{
+}
 
 function::function()
 {

@@ -1,0 +1,10 @@
+def main(argc:Int, argv: String):Int {
+
+	x:Int = 5;
+	y:Int = 10;
+	z:Int = x + y;
+	print(x, y, z);
+	x += y*z;
+	print("X Y Z", x, y, z);
+	
+}

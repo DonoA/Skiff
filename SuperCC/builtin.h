@@ -19,9 +19,27 @@ public:
 	template<class T>
 	static std::function<object *(object *, vector<object *>, scope *)> * create_mod();
 	template<class T>
-	static std::function<object *(object *, vector<object *>, scope *)> * create_clone(); 
+	static std::function<object *(object *, vector<object *>, scope *)> * create_clone();
 	template<class T>
 	static std::function<object *(object *, vector<object *>, scope *)> * create_to_string();
+};
+
+class string_builtin
+{
+public:
+	static object * to_string(object * self, vector<object *> params, scope * env);
+	static object * clone(object * self, vector<object *> params, scope * env);
+};
+
+class builtin
+{
+
+public:
+	enum type { Int, Float, Double, Char, Long, String, None };
+	static type get_type_for(size_t id);
+	static size_t get_id_for(type nt);
+	static string get_name_for(type nt);
+	static string get_c_type_for(builtin::type nt);
 };
 
 template<class T>

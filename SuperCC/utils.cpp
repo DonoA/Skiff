@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "utils.h"
+#include "builtin.h"
 #include <iostream>
 
 string remove_pad(string str)
@@ -9,8 +10,8 @@ string remove_pad(string str)
 		return str;
 	}
 	int i, j;
-	for (i = 0; str[i] == ' ' || str[i] == '\n' || str[i] == '\r'; i++);
-	for (j = str.length() - 1; j >= 0 && (str[j] == ' ' || str[j] == '\n' || str[j] == '\r'); j--);
+	for (i = 0; str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t'; i++);
+	for (j = str.length() - 1; j >= 0 && (str[j] == ' ' || str[j] == '\n' || str[j] == '\r' || str[i] == '\t'); j--);
 
 	return str.substr(i, (j + 1) - i);
 }
@@ -37,21 +38,27 @@ string generate_indent(size_t len)
 	string rtn;
 	for (size_t i = 0; i < len; i++)
 	{
-		rtn += "  ";
+		rtn += "    ";
 	}
 	return rtn;
 }
 
 object * get_dominant_type(object * c1, object * c2)
 {
-	string type_order[] = { "Double", "Float", "Long", "Int", "Char" };
-	for (string s : type_order)
+	builtin::type type_order[] = { 
+		builtin::type::Double,
+		builtin::type::Float,
+		builtin::type::Long,
+		builtin::type::Int,
+		builtin::type::Char
+	};
+	for (builtin::type s : type_order)
 	{
-		if (c1->get_type().get_name() == s)
+		if (c1->get_type().get_class_id() == builtin::get_id_for(s))
 		{
 			return c1;
 		}
-		if (c2->get_type().get_name() == s)
+		if (c2->get_type().get_class_id() == builtin::get_id_for(s))
 		{
 			return c2;
 		}
