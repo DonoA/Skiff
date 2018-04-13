@@ -54,6 +54,16 @@ protected:
 	statement * on;
 };
 
+class list_accessor : public statement
+{
+public:
+	list_accessor(string list, statement * index);
+	string parse_string();
+protected:
+	string list;
+	statement * index;
+};
+
 class annotation_tag : public modifier_base
 {
 public:
@@ -75,13 +85,22 @@ private:
 	static void eval_single_op(object * s1, char op, object * s2);
 };
 
+class compund_statement : public statement
+{
+public:
+	compund_statement(vector<statement *> operations);
+	string parse_string();
+private:
+	vector<statement *> operations;
+};
+
 class assignment : public statement
 {
 public:
-	assignment(string name, statement * value);
+	assignment(statement * name, statement * value);
 	string parse_string();
 private:
-	string name;
+	statement * name;
 	statement * val;
 };
 
@@ -98,10 +117,10 @@ private:
 class decleration_with_assignment : public statement
 {
 public:
-	decleration_with_assignment(string name, type_class type, statement * val);
+	decleration_with_assignment(statement * name, type_class type, statement * val);
 	string parse_string();
 private:
-	string name;
+	statement * name;
 	type_class type;
 	statement * value;
 };
@@ -136,6 +155,16 @@ public:
 	int indent_mod();
 };
 
+class flow_statement : public statement
+{
+public:
+	enum type { BREAK, NEXT };
+	flow_statement(type typ);
+	string parse_string();
+private:
+	flow_statement::type typ;
+};
+
 class if_heading : public block_heading
 {
 public:
@@ -143,6 +172,37 @@ public:
 	string parse_string();
 private:
 	statement * condition;
+};
+
+class else_heading : public block_heading
+{
+public:
+	else_heading() : else_heading(nullptr) {};
+	else_heading(block_heading * wrapping);
+	string parse_string();
+private:
+	block_heading * wrapping;
+};
+
+class for_classic_heading : public block_heading
+{
+public:
+	for_classic_heading(statement * init, statement * condition, statement * tick);
+	string parse_string();
+private:
+	statement * init;
+	statement * condition;
+	statement * tick;
+};
+
+class for_itterator_heading : public block_heading
+{
+public:
+	for_itterator_heading(statement * val, statement * list);
+	string parse_string();
+private:
+	statement * val;
+	statement * list;
 };
 
 class while_heading : public block_heading
@@ -154,10 +214,21 @@ private:
 	statement * condition;
 };
 
+class switch_heading : public block_heading
+{
+public:
+	enum type { SWITCH, MATCH };
+	switch_heading(switch_heading::type typ, statement * on);
+	string parse_string();
+private:
+	switch_heading::type typ;
+	statement * on;
+};
+
 class class_heading : public block_heading
 {
 public:
-	enum class_type { CLASS, STRUCT };
+	enum class_type { CLASS, STRUCT, ANNOTATION };
 	class_heading(class_heading::class_type type, string name);
 	string parse_string();
 	string get_name();
@@ -209,6 +280,15 @@ private:
 	statement * returns;
 };
 
+class import_statement : public statement
+{
+public:
+	import_statement(string import_name);
+	string parse_string();
+private:
+	string import_name;
+};
+
 class throw_statement : public statement
 {
 public:
@@ -230,9 +310,9 @@ private:
 
 class function_heading : public block_heading
 {
-
 public:
-	function_heading(string name, vector<function::function_parameter> params, type_class returns);
+	function_heading(string name, vector<function::function_parameter> params, 
+		type_class returns);
 	string parse_string();
 private:
 	string name;
@@ -291,12 +371,12 @@ class boolean_conjunction : public statement
 {
 public:
 	enum conjunction_type { And, Or };
-	boolean_conjunction(comparison * s1, boolean_conjunction::conjunction_type conj, 
-		comparison * s2);
+	boolean_conjunction(statement * s1, boolean_conjunction::conjunction_type conj, 
+		statement * s2);
 	string parse_string();
 private:
-	comparison * s1;
-	comparison * s2;
+	statement * s1;
+	statement * s2;
 	boolean_conjunction::conjunction_type conj;
 	string conj_string();
 };

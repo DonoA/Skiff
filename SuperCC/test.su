@@ -1,60 +1,39 @@
-enum Job {
-	BUILDER,
-	DRIVER,
-	MINER;
+he: DogPile<Dog> = makeSet<SmallDog>();
+
+he.getSet().appendValue(some_value);
+
+he.getActor().name = new_name;
+
+if(he == "this") {
+    print("this");
+} else {
+    print("that");
 }
 
-class Person {
-	private name: String;
-	private age: Int;
-	private id: Int;
-	@Getter @Setter
-	private job: Job;
-	@Setter
-	private static idCounter: Int;
-
-	def Person(name: String, age: Int) {
-		this.name = name;
-		this.age = age;
-		this.id = Person.idCounter;
-		Person.idCounter++;
-	}
-
-	@Override
-	def setJob(new_job: Job): None {
-		this.job = new_job;
-	}
-
-	def getId(): Int {
-		return id;
-	}
-
-	def sayHello(): None {
-		print(name, "says hello");
-	}
-
-	@Operator(Operators.INCREMENT)
-	def tickAge(): None {
-		age++;
-	}
+if(x == 5) {
+    return new hello();
+    next;
+} else if(x == 7) {
+    return new wello();
 }
 
-person: Person = new Person("David", 35);
-
-x: Int = 15;
-x+=x++;
-x += 10;
-y: Int = 25 + x;
-if(x == y || x > y) {
-	print("x^2 == y", Math.pow(x, 2), y);
+while(5 == 6) {
+    print("Oh dear");
+    break;
 }
 
-if((x <= y && x < test(y, false)) || (x >= y && x > y)) {
-	x = y << 2;
+switch(x) {
+    print(x);
 }
 
-if(x != y && 5 > inter(x + 6, 5 == 6 || true)) {
-	x = x | y;
+match(x) {
+    print(x);
 }
 
-print(x, y);
+for(x: Int = 10; x < 100; x++) {
+    print(x - 10);
+}
+
+for(elem: String : strlst) {
+    print(elem);
+}

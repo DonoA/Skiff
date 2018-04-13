@@ -205,7 +205,7 @@ string variable::parse_string()
 	return "Variable(" + name + ")";
 }
 
-assignment::assignment(string name, statement * value)
+assignment::assignment(statement * name, statement * value)
 {
 	this->name = name;
 	this->val = value;
@@ -225,7 +225,7 @@ assignment::assignment(string name, statement * value)
 
 string assignment::parse_string()
 {
-	return "Assignment(" + name + "," + val->parse_string() + ")";
+	return "Assignment(" + name->parse_string() + "," + val->parse_string() + ")";
 }
 
 math_statement::math_statement(queue<statement*> operands, queue<char> operators)
@@ -416,8 +416,8 @@ string bitwise::operation_string()
 	return "";
 }
 
-boolean_conjunction::boolean_conjunction(comparison * s1, 
-	boolean_conjunction::conjunction_type conj, comparison * s2)
+boolean_conjunction::boolean_conjunction(statement * s1,
+	boolean_conjunction::conjunction_type conj, statement * s2)
 {
 	this->s1 = s1;
 	this->s2 = s2;
@@ -516,6 +516,8 @@ string class_heading::parse_string()
 		return "ClassHeading(" + name + ")";
 	case STRUCT:
 		return "StructHeading(" + name + ")";
+	case ANNOTATION:
+		return "AnnotationHeading(" + name + ")";
 	}
 	return string();
 }
@@ -779,7 +781,7 @@ string self_modifier::parse_string()
 	return name + "(" + on->parse_string() + ")";
 }
 
-decleration_with_assignment::decleration_with_assignment(string name, 
+decleration_with_assignment::decleration_with_assignment(statement * name, 
 	type_class type, statement * val)
 {
 	this->name = name;
@@ -789,6 +791,120 @@ decleration_with_assignment::decleration_with_assignment(string name,
 
 string decleration_with_assignment::parse_string()
 {
-	return "DeclareAndAssign(" + name + ", " + type.parse_string() + ", " + 
+	return "DeclareAndAssign(" + name->parse_string() + ", " + type.parse_string() + ", " + 
 		value->parse_string() + ")";
+}
+
+import_statement::import_statement(string import_name)
+{
+	this->import_name = import_name;
+}
+
+string import_statement::parse_string()
+{
+	return "Import(" + import_name + ")";
+}
+
+list_accessor::list_accessor(string list, statement * index)
+{
+	this->list = list;
+	this->index = index;
+}
+
+string list_accessor::parse_string()
+{
+	return "ListAccessor(" + list + ", " + index->parse_string() + ")";
+}
+
+compund_statement::compund_statement(vector<statement*> operations)
+{
+	this->operations = operations;
+}
+
+string compund_statement::parse_string()
+{
+	string ops;
+	bool any = false;
+	for (statement * stmt : operations)
+	{
+		ops += stmt->parse_string() + ",";
+		any = true;
+	}
+	if (any)
+	{
+		ops = ops.substr(0, ops.length() - 1);
+	}
+	return "CompoundStatement(" + ops + ")";
+}
+
+else_heading::else_heading(block_heading * wrapping)
+{
+	this->wrapping = wrapping;
+}
+
+string else_heading::parse_string()
+{
+	if (wrapping == nullptr)
+	{
+		return "Else()";
+	}
+	return "Else(" + wrapping->parse_string() + ")";
+}
+
+switch_heading::switch_heading(switch_heading::type typ, statement * on)
+{
+	this->on = on;
+	this->typ = typ;
+}
+
+string switch_heading::parse_string()
+{
+	switch (typ)
+	{
+	case SWITCH:
+		return "Switch(" + on->parse_string() + ")";
+	case MATCH:
+		return "Match(" + on->parse_string() + ")";
+	}
+}
+
+for_classic_heading::for_classic_heading(statement * init, statement * condition, 
+	statement * tick)
+{
+	this->init = init;
+	this->condition = condition;
+	this->tick = tick;
+}
+
+string for_classic_heading::parse_string()
+{
+	return "cFor(" + init->parse_string() + ", " + condition->parse_string() + ", " + 
+		tick->parse_string() + ")";
+}
+
+for_itterator_heading::for_itterator_heading(statement * val, statement * list)
+{
+	this->val = val;
+	this->list = list;
+}
+
+string for_itterator_heading::parse_string()
+{
+	return "iFor(" + val->parse_string() + ", " + list->parse_string() + ")";
+}
+
+flow_statement::flow_statement(type typ)
+{
+	this->typ = typ;
+}
+
+string flow_statement::parse_string()
+{
+	switch (typ)
+	{
+	case BREAK:
+		return "Break()";
+	case NEXT:
+		return "Next()";
+	}
 }

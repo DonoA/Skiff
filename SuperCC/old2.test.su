@@ -1,0 +1,52 @@
+class Set<T> {
+    items: List<T>;
+
+    def Set() {
+        items = new List<T>();
+    }
+}
+
+class Animal {
+    name: String;
+    age: Int;
+
+    def Animal(name: String, age: Int) {
+        this.name = name;
+        this.age = age;
+    }
+}
+
+class Dog : Animal {
+
+    def Dog(name: String, age: Int) {
+        super(name, age);
+        this.age = age * 7;
+    }
+}
+
+class SmallDog : Dog {
+
+    def SmallDog(name: String, age: Int) {
+        super(name, age);
+        this.age = age * 7;
+    }
+}
+
+class DogPile<T : Dog> : Set<T> {
+    def DogPile() {
+        items = new List<T>();
+    }
+}
+
+def makeSet<T>(arg: String): Set<T> {
+    print(arg);
+    return new Set<T>();
+}
+
+makeSet<SmallDog>("Hello");
+
+he: DogPile<Dog> = makeSet<SmallDog>();
+
+he.getSet().appendValue(some_value);
+
+he.getActor().name = new_name;

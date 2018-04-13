@@ -8,84 +8,6 @@
 
 using std::queue;
 
-void check_back_brace(char op, stack<char> * braces)
-{
-	if (braces->empty() || braces->top() != op)
-	{
-		std::cout << "brace mismatch" << std::endl;
-	}
-	else
-	{
-		braces->pop();
-	}
-}
-
-void try_push(char op, stack<char> * braces)
-{
-	if (!braces->empty() && braces->top() == op)
-	{
-		braces->pop();
-	}
-	else
-	{
-		braces->push(op);
-	}
-}
-
-void track_braces(char lc, char c, stack<char> * braces)
-{
-	switch (c)
-	{
-	case '[':
-	case '(':
-	case '{':
-		braces->push(c);
-		break;
-	case '"':
-		if (lc != '\\')
-		{
-			try_push(c, braces);
-		}
-		break;
-	case '\'':
-		if (lc != '\\')
-		{
-			try_push(c, braces);
-		}
-		break;
-	case ']':
-		check_back_brace('[', braces);
-		break;
-	case ')':
-		check_back_brace('(', braces);
-		break;
-	case '}':
-		check_back_brace('{', braces);
-		break;
-	}
-}
-
-vector<string> parse_argument_list(string list)
-{
-	vector<string> params;
-	stack<char> braces;
-	int j = 0;
-	for (unsigned i = 0; i < list.length(); i++)
-	{
-		track_braces(i == 0 ? '\0' : list[i - 1], list[i], &braces);
-		if (list[i] == ',' && braces.empty())
-		{
-			params.push_back(list.substr(j, i - j));
-			j = i + 1;
-		}
-	}
-	if (list != "")
-	{
-		params.push_back(list.substr(j));
-	}
-	return params;
-}
-
 vector<statement *> parse_argument_statements(vector<string> params)
 {
 	vector<statement *> parsed;
@@ -167,7 +89,7 @@ function_heading * parse_function_header(string stmt)
 	string returns = stmt.substr(i+1);
 	returns.erase(0, returns.find_first_of(":") + 1);
 	returns = remove_pad(returns);
-	vector<string> params_list = parse_argument_list(params);
+	vector<string> params_list = braced_split(params, ',');
 	vector<function::function_parameter> f_params;
 	for (string s : params_list)
 	{
@@ -193,7 +115,7 @@ new_object_statement * parse_object_creation(string stmt)
 			break;
 		}
 	}
-	vector<statement *> params = parse_argument_statements(parse_argument_list(params_str));
+	vector<statement *> params = parse_argument_statements(braced_split(params_str, ','));
 	return new new_object_statement(dec, params);
 }
 
@@ -227,7 +149,7 @@ annotation_tag * parse_annotation_tag(string tag)
 			break;
 		}
 	}
-	vector<statement *> p = parse_argument_statements(parse_argument_list(params));
+	vector<statement *> p = parse_argument_statements(braced_split(params, ','));
 	string on = tag.substr(i + 1);
 	return new annotation_tag(name, p, parse_statement(on));
 }
@@ -264,112 +186,59 @@ statement * parse_decleration(string name, string other)
 	{
 		string typ = remove_pad(other.substr(0, eq_i));
 		string val = remove_pad(other.substr(eq_i + 1));
-		return new decleration_with_assignment(name, type_class(typ), parse_statement(val));
+		return new decleration_with_assignment(parse_statement(name), type_class(typ), parse_statement(val));
 	}
-	
 }
 
-statement * parse_statement(string stmt)
+size_t scroll_to_next_close_brace(string stmt, size_t ci)
 {
-	stmt = remove_pad(stmt);
-	string p1, p2;
-	bool parsing_string = false;
 	stack<char> braces;
-	for (size_t i = 0; i < stmt.length(); i++)
+	for (size_t j = ci; j < stmt.length(); j++)
 	{
-		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
-		if (braces.empty() && stmt[i] == '&' && stmt[i + 1] == '&')
+		if (braces.empty() && stmt[j] == ')')
 		{
-			p1 = stmt.substr(0, i);
-			p2 = stmt.substr(i + 2);
-			comparison * c1 = (comparison *)parse_statement(p1);
-			comparison * c2 = (comparison *)parse_statement(p2);
-			return new boolean_conjunction(c1, boolean_conjunction::conjunction_type::And, c2);
+			return j;
 		}
+		track_braces(j == 0 ? '\0' : stmt[j - 1], stmt[j], &braces);
+	}
+	return stmt.length();
+}
+
+statement * parse_for_heading(string stmt)
+{
+	vector<string> s = braced_split(stmt, ';');
+	if (s.size() == 3)
+	{
+		vector<statement *> ss = parse_argument_statements(s);
+		return new for_classic_heading(ss[0], ss[1], ss[2]);
+	}
+	size_t sp = stmt.find_last_of(":");
+	string p1 = stmt.substr(0, sp);
+	string p2 = stmt.substr(sp + 1);
+	return new for_itterator_heading(parse_statement(p1), parse_statement(p2));
+}
+
+statement * scan_for_keyword(string stmt)
+{
+	stack<char> braces;
+	string p1, p2;
+	if (stmt == "else")
+	{
+		return new else_heading();
+	}
+	else if (stmt == "break")
+	{
+		return new flow_statement(flow_statement::type::BREAK);
+	}
+	else if (stmt == "next")
+	{
+		return new flow_statement(flow_statement::type::NEXT);
 	}
 	for (size_t i = 0; i < stmt.length(); i++)
 	{
-		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
-		if (braces.empty() && stmt[i] == '|' && stmt[i + 1] == '|')
+		if (braces.empty())
 		{
-			p1 = stmt.substr(0, i);
-			p2 = stmt.substr(i + 2);
-			comparison * c1 = (comparison *)parse_statement(p1);
-			comparison * c2 = (comparison *)parse_statement(p2);
-			return new boolean_conjunction(c1, boolean_conjunction::conjunction_type::Or, c2);
-		}
-	}
-	for (size_t i = 0; i < stmt.length(); i++)
-	{
-		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
-		if (braces.empty() && (stmt[i] == '<' || stmt[i] == '>' || (stmt[i] == '!' && 
-			stmt[i + 1] == '=') || stmt[i] == '='))
-		{
-			p1 = remove_pad(stmt.substr(0, i));
-			p2 = remove_pad(stmt.substr(i + 1));
-			comparison::comparison_type typ;
-			if (stmt[i] == '<' && stmt[i - 1] != '<' && stmt[i + 1] != '<')
-			{
-				typ = comparison::comparison_type::LessThan;
-				if (stmt[i + 1] == '=')
-				{
-					typ = comparison::comparison_type::LessThanEqualTo;
-					p2 = remove_pad(stmt.substr(i + 2));
-				}
-				return new comparison(parse_statement(p1), typ, parse_statement(p2));
-			}
-			else if (stmt[i] == '>' && stmt[i - 1] != '>' && stmt[i + 1] != '>')
-			{
-				typ = comparison::comparison_type::GreaterThan;
-				if (stmt[i + 1] == '=')
-				{
-					typ = comparison::comparison_type::GreaterThanEqualTo;
-					p2 = remove_pad(stmt.substr(i + 2));
-				}
-				return new comparison(parse_statement(p1), typ, parse_statement(p2));
-			}
-			else if (stmt[i] == '!')
-			{
-				typ = comparison::comparison_type::NotEqual;
-				p2 = remove_pad(stmt.substr(i + 2));
-				return new comparison(parse_statement(p1), typ, parse_statement(p2));
-			}
-			else if (stmt[i] == '=' && stmt[i + 1] == '=')
-			{
-				typ = comparison::comparison_type::Equal;
-				p2 = remove_pad(stmt.substr(i + 2));
-				return new comparison(parse_statement(p1), typ, parse_statement(p2));
-			}
-		}
-	}
-	for (size_t i = 0; i < stmt.length(); i++)
-	{
-		if ((stmt[i] == '"' || stmt[i] == '\'') && (i == 0 || stmt[i-1] != '\\'))
-		{
-			parsing_string = !parsing_string;
-		}
-		if (!parsing_string)
-		{
-			if (stmt[i] == '!')
-			{
-				if (stmt[i + 1 == '='])
-				{
-					continue;
-				}
-				p2 = remove_pad(stmt.substr(i + 1));
-				return new invert(parse_statement(p2));
-			}
-			else if (stmt[i] == '~')
-			{
-				p2 = remove_pad(stmt.substr(i + 1));
-				return new bitinvert(parse_statement(p2));
-			}
-			else if (stmt[i] == '@')
-			{
-				p1 = remove_pad(stmt.substr(1));
-				return parse_annotation_tag(p1);
-			}
-			else if (stmt[i] == ' ')
+			if (stmt[i] == ' ')
 			{
 				p1 = remove_pad(stmt.substr(0, i));
 				p2 = remove_pad(stmt.substr(i + 1));
@@ -415,55 +284,15 @@ statement * parse_statement(string stmt)
 				}
 				else if (p1 == "annotation")
 				{
-					//return new annotation_heading(p2);
-				}
-
-			}
-			else if (stmt[i] == '(')
-			{
-				p1 = remove_pad(stmt.substr(0, i));
-				p2 = stmt.substr(i + 1, stmt.find_last_of(')') - (i + 1));
-				if (p1 == "")
-				{
-					return parse_statement(p2);
-				}
-				else if (p1 == "if")
-				{
-					return new if_heading(parse_statement(p2));
-				}
-				else if (p1 == "while")
-				{
-					return new while_heading(parse_statement(p2));
-				}
-				else if (p1 == "for")
-				{
-
-				}
-				else if (p1 == "switch")
-				{
-
-				}
-				else if (p1 == "match")
-				{
-
+					return parse_class_heading(class_heading::class_type::ANNOTATION, p2);
 				}
 				else if (p1 == "import")
 				{
-
+					return new import_statement(p2);
 				}
-				else if (p1 == "")
+				else if (p1 == "else")
 				{
-					// analyse what is in the parens (math or first class function)
-				}
-				else
-				{
-					vector<string> params = parse_argument_list(p2);
-					vector<statement *> param_stmt;
-					for (string s : params)
-					{
-						param_stmt.push_back(parse_statement(s));
-					}
-					return new function_call(p1, param_stmt);
+					return new else_heading((block_heading *)scan_for_keyword(p2));
 				}
 			}
 			else if (stmt[i] == ':')
@@ -474,15 +303,153 @@ statement * parse_statement(string stmt)
 			}
 			else if (stmt[i] == '=')
 			{
-				if (stmt[i + 1] == '=' || stmt[i - 1] == '=' || stmt[i - 1] == '>' || stmt[i - 1] == '<' || stmt[i - 1] == '!')
+				if (stmt[i + 1] == '=' || stmt[i - 1] == '=' || stmt[i - 1] == '>' || 
+					stmt[i - 1] == '<' || stmt[i - 1] == '!' || is_math(stmt[i - 1]))
 				{
 					continue;
 				}
 				p1 = stmt.substr(0, i);
 				p2 = stmt.substr(i + 1);
-				return new assignment(remove_pad(p1), parse_statement(p2));
+				return new assignment(parse_statement(remove_pad(p1)), parse_statement(p2));
 			}
-			else if (is_math(stmt[i]))
+			else if (stmt[i] == '@')
+			{
+				p1 = remove_pad(stmt.substr(1));
+				return parse_annotation_tag(p1);
+			}
+			else if (stmt[i] == '(')
+			{
+				p1 = remove_pad(stmt.substr(0, i));
+				p2 = stmt.substr(i + 1, stmt.find_last_of(')') - (i + 1));
+				if (p1 == "if")
+				{
+					return new if_heading(parse_statement(p2));
+				}
+				else if (p1 == "while")
+				{
+					return new while_heading(parse_statement(p2));
+				}
+				else if (p1 == "for")
+				{
+					return parse_for_heading(p2);
+				}
+				else if (p1 == "switch")
+				{
+					return new switch_heading(switch_heading::type::SWITCH, parse_statement(p2));
+				}
+				else if (p1 == "match")
+				{
+					return new switch_heading(switch_heading::type::MATCH, parse_statement(p2));
+				}
+				else if (p1 == "")
+				{
+					// analyse what is in the parens (math or first class function)
+				}
+			}
+		}
+		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
+	}
+	return nullptr;
+}
+
+statement * scan_for_and(string stmt)
+{
+	stack<char> braces;
+	string p1, p2;
+	for (size_t i = 0; i < stmt.length(); i++)
+	{
+		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
+		if (braces.empty() && stmt[i] == '&' && stmt[i + 1] == '&')
+		{
+			p1 = stmt.substr(0, i);
+			p2 = stmt.substr(i + 2);
+			comparison * c1 = (comparison *)parse_statement(p1);
+			comparison * c2 = (comparison *)parse_statement(p2);
+			return new boolean_conjunction(c1, boolean_conjunction::conjunction_type::And, c2);
+		}
+	}
+	return nullptr;
+}
+
+statement * scan_for_or(string stmt)
+{
+	stack<char> braces;
+	string p1, p2;
+	for (size_t i = 0; i < stmt.length(); i++)
+	{
+		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
+		if (braces.empty() && stmt[i] == '|' && stmt[i + 1] == '|')
+		{
+			p1 = stmt.substr(0, i);
+			p2 = stmt.substr(i + 2);
+			comparison * c1 = (comparison *)parse_statement(p1);
+			comparison * c2 = (comparison *)parse_statement(p2);
+			return new boolean_conjunction(c1, boolean_conjunction::conjunction_type::Or, c2);
+		}
+	}
+	return nullptr;
+}
+
+statement * scan_for_camparison(string stmt)
+{
+	stack<char> braces;
+	string p1, p2;
+	for (size_t i = 0; i < stmt.length(); i++)
+	{
+		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
+		if (braces.empty() && (stmt[i] == '<' || stmt[i] == '>' || (stmt[i] == '!' &&
+			stmt[i + 1] == '=') || stmt[i] == '='))
+		{
+			p1 = remove_pad(stmt.substr(0, i));
+			p2 = remove_pad(stmt.substr(i + 1));
+			comparison::comparison_type typ;
+			if (stmt[i] == '<' && stmt[i - 1] != '<' && stmt[i + 1] != '<')
+			{
+				typ = comparison::comparison_type::LessThan;
+				if (stmt[i + 1] == '=')
+				{
+					typ = comparison::comparison_type::LessThanEqualTo;
+					p2 = remove_pad(stmt.substr(i + 2));
+				}
+				return new comparison(parse_statement(p1), typ, parse_statement(p2));
+			}
+			else if (stmt[i] == '>' && stmt[i - 1] != '>' && stmt[i + 1] != '>')
+			{
+				typ = comparison::comparison_type::GreaterThan;
+				if (stmt[i + 1] == '=')
+				{
+					typ = comparison::comparison_type::GreaterThanEqualTo;
+					p2 = remove_pad(stmt.substr(i + 2));
+				}
+				return new comparison(parse_statement(p1), typ, parse_statement(p2));
+			}
+			else if (stmt[i] == '!')
+			{
+				typ = comparison::comparison_type::NotEqual;
+				p2 = remove_pad(stmt.substr(i + 2));
+				return new comparison(parse_statement(p1), typ, parse_statement(p2));
+			}
+			else if (stmt[i] == '=' && stmt[i + 1] == '=')
+			{
+				typ = comparison::comparison_type::Equal;
+				p2 = remove_pad(stmt.substr(i + 2));
+				return new comparison(parse_statement(p1), typ, parse_statement(p2));
+			}
+		}
+	}
+	return nullptr;
+}
+
+statement * scan_for_math(string stmt)
+{
+	stack<char> braces;
+	string p1, p2;
+	for (size_t i = 0; i < stmt.length(); i++)
+	{
+		track_braces(i == 0 ? '\0' : stmt[i - 1], stmt[i], &braces);
+		if (braces.empty())
+		{
+			if (is_math(stmt[i]))
 			{
 				if (i + 1 < stmt.length() && stmt[i + 1] == '=')
 				{
@@ -493,7 +460,7 @@ statement * parse_statement(string stmt)
 					queue<statement *> stmts;
 					stmts.push(new variable(p1));
 					stmts.push(parse_statement(p2));
-					return new assignment(p1, new math_statement(stmts, ops));
+					return new assignment(parse_statement(p1), new math_statement(stmts, ops));
 				}
 				if (stmt[i] == '+' && i + 1 < stmt.length() && stmt[i + 1] == '+')
 				{
@@ -501,7 +468,7 @@ statement * parse_statement(string stmt)
 					p2 = stmt.substr(i + 2);
 					if (p1 == "")
 					{
-						return new self_modifier(self_modifier::modifier_type::PLUS, 
+						return new self_modifier(self_modifier::modifier_type::PLUS,
 							self_modifier::modifier_time::PRE, parse_statement(p2));
 					}
 					if (p2 == "")
@@ -569,6 +536,124 @@ statement * parse_statement(string stmt)
 			}
 		}
 	}
+	return nullptr;
+}
+
+statement * scan_for_doted(string stmt)
+{
+	stack<char> braces;
+	vector<string> stmts = braced_split(stmt, '.');
+	if (stmts.size() > 1)
+	{
+		return new compund_statement(parse_argument_statements(stmts));
+	}
+	return nullptr;
+}
+
+statement * scan_for_remaining(string stmt)
+{
+	string p1, p2;
+	bool parsing_string = false;
+	for (size_t i = 0; i < stmt.length(); i++)
+	{
+		if ((stmt[i] == '"' || stmt[i] == '\'') && (i == 0 || stmt[i - 1] != '\\'))
+		{
+			parsing_string = !parsing_string;
+		}
+		if (!parsing_string)
+		{
+			if (stmt[i] == '!')
+			{
+				if (stmt[i + 1 == '='])
+				{
+					continue;
+				}
+				p2 = remove_pad(stmt.substr(i + 1));
+				return new invert(parse_statement(p2));
+			}
+			else if (stmt[i] == '~')
+			{
+				p2 = remove_pad(stmt.substr(i + 1));
+				return new bitinvert(parse_statement(p2));
+			}
+			else if (stmt[i] == '(')
+			{
+				p1 = remove_pad(stmt.substr(0, i));
+				p2 = stmt.substr(i + 1, scroll_to_next_close_brace(stmt, i + 1) - (i+1));
+				if (p1 == "")
+				{
+					return parse_statement(p2);
+				}
+				vector<string> params = braced_split(p2, ',');
+				vector<statement *> param_stmt;
+				for (string s : params)
+				{
+					param_stmt.push_back(parse_statement(s));
+				}
+				return new function_call(p1, param_stmt);
+			}
+			else if (stmt[i] == '[')
+			{
+				p1 = remove_pad(stmt.substr(0, i));
+				p2 = stmt.substr(i + 1, stmt.find_last_of(']') - (i + 1));
+				statement * accessor = parse_statement(p2);
+				return new list_accessor(p1, accessor);
+			}
+		}
+	}
+	return nullptr;
+}
+
+statement * parse_statement(string stmt)
+{
+	stmt = remove_pad(stmt);
+	// TODO: refactor this to use an array of string possitions that are ranked. This
+	// way only one string pass is needed but the most powerful deimetter can be used.
+
+	statement * parsed;
+
+	parsed = scan_for_keyword(stmt);
+	if (parsed != nullptr)
+	{
+		return parsed;
+	}
+
+	parsed = scan_for_and(stmt);
+	if (parsed != nullptr)
+	{
+		return parsed;
+	}
+
+	parsed = scan_for_or(stmt);
+	if (parsed != nullptr)
+	{
+		return parsed;
+	}
+	
+	parsed = scan_for_camparison(stmt);
+	if (parsed != nullptr)
+	{
+		return parsed;
+	}
+
+	parsed = scan_for_math(stmt);
+	if (parsed != nullptr)
+	{
+		return parsed;
+	}
+
+	parsed = scan_for_doted(stmt);
+	if (parsed != nullptr)
+	{
+		return parsed;
+	}
+
+	parsed = scan_for_remaining(stmt);
+	if (parsed != nullptr)
+	{
+		return parsed;
+	}
+
 	stmt = remove_pad(stmt);
 	if (stmt == "")
 	{

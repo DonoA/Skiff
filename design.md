@@ -64,8 +64,8 @@ The language supports a wide range of syntactical styles:
         - [ ] Call: `functionName<T>(param1, param2)`
         - [ ] Required extension: `def functionName<T : OtherClass> {}`
 - [ ] Inheritance: `class Child : Parent`
-- [ ] List access: `list[index]`
-- [ ] Include other source `import <system file>` or `import "localfile"` 
+- [x] List access: `list[index]`
+- [x] Include other source `import <system file>` or `import "localfile"` 
 - Function modifiers:
     - [x] Static: `static def functionName() {}`
     - [x] Private: `private def functionName() {}`
@@ -79,13 +79,13 @@ The language supports a wide range of syntactical styles:
 - [ ] Quick initiallization: `new MyClass() {{}}`
 - [x] If: `if(condition) {}`
 - Else: 
-    - [ ] Catch all: `{} else {}`
-    - [ ] Conditional `{} else if() {}`
+    - [x] Catch all: `{} else {}`
+    - [x] Conditional `{} else if() {}`
 - Looping:
-    - [ ] While: `while(condition) {}`
-    - [ ] Basic for: `for(myVal: Int = value; myVal < myMax; myVal++) {}`
-    - [ ] Itterator: `for(myVal: Int : intList) {}`
-- [ ] Loop control:
+    - [x] While: `while(condition) {}`
+    - [x] Basic for: `for(myVal: Int = value; myVal < myMax; myVal++) {}`
+    - [x] Itterator: `for(myVal: Int : intList) {}`
+- [x] Loop control:
     - Next itteration: `next;`
     - Break itteration: `break;`
 - Switch statement: 
@@ -93,10 +93,10 @@ The language supports a wide range of syntactical styles:
     - [ ] case: `case val => {}`
     - [ ]default: `case _ => {}`
 - Match statement:
-    - heading: `match(var) {}`
-    - standard class case: `case val: MyClass => {}`
-    - structure case: `case val: MyStruct(val1, val2) => {}` or `case val: MyStruct(_, val2) => {}`
-    - default: `case _ => {}`
+    - [ ] heading: `match(var) {}`
+    - [ ] standard class case: `case val: MyClass => {}`
+    - [ ] structure case: `case val: MyStruct(val1, val2) => {}` or `case val: MyStruct(_, val2) => {}`
+    - [ ] default: `case _ => {}`
 - Exceptions:
     - [x] throw: `throw new MyException()`
     - [ ] try/catch: `try {} catch(e: MyException) {}`
@@ -227,3 +227,5 @@ def getType(val: Any): String {
 ```
 ### Truthiness
 The only values which evaluate to false are `None`, `false`, and `0`. Any other value will evaluate to `true`. In addition, the evaluation of booleans is a fail fast operation. Thus `if(!value.isNone() && value.call_function())` is valid regardless of if value is `None`.
+
+Methods can override the operation that will be preformed when the access `[]` is called on the class as well as the access and assignement `[] =` is called on the class. Through this methodology, many array access and asignment operations may be preformed from the user space.
