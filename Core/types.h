@@ -37,6 +37,7 @@ class type_class
 public:
 	type_class();
 	type_class(string name);
+	type_class(string name, vector<type_class> generic_types);
 	type_class(string name, size_t id);
 	string get_name();
 	size_t get_class_id();
@@ -45,6 +46,7 @@ public:
 	map<string, function> * get_operators();
 private:
 	string name;
+	vector<type_class> generic_types;
 	scope class_env;
 	size_t class_id;
 	map<string, function> operators;

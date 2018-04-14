@@ -1,4 +1,20 @@
-he: DogPile<Dog> = makeSet<SmallDog>();
+he: DogPile<Dog, Cat> = new DogPile<SmallDog>();
+
+class Set : Parent {
+    items: List<T>;
+
+    def Set() {
+        items = new List<T>();
+    }
+}
+
+struct Set<T: Dog> : PPrt {
+    items: List<T>;
+
+    def Set() {
+        items = new List<T>();
+    }
+}
 
 he.getSet().appendValue(some_value);
 

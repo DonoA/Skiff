@@ -52,18 +52,18 @@ The language supports a wide range of syntactical styles:
     - [x] Pre/Post decriment `--`
 - Generic types:
     - Class:
-        - [ ] Declare: `class ClassName<T> {}` or `class ClassName<T, U> {}`
-        - [ ] Instanciate: `new ClassName<T>()`
-        - [ ] Required extension: `class ClassName<T : OtherClass> {}`
+        - [x] Declare: `class ClassName<T> {}` or `class ClassName<T, U> {}`
+        - [x] Instanciate: `new ClassName<T>()`
+        - [x] Required extension: `class ClassName<T : OtherClass> {}`
     - Struct
-        - [ ] Declare: `struct ClassName<T> {}` or `struct ClassName<T, U> {}`
-        - [ ] Instanciate: `new ClassName<T>()`
-        - [ ] Required extension: `struct ClassName<T : MyClass> {}`
+        - [x] Declare: `struct ClassName<T> {}` or `struct ClassName<T, U> {}`
+        - [x] Instanciate: `new ClassName<T>()`
+        - [x] Required extension: `struct ClassName<T : MyClass> {}`
     - Function:
         - [ ] Declare: `def functionName<T>(parameter: Type): ReturnType {}`
         - [ ] Call: `functionName<T>(param1, param2)`
         - [ ] Required extension: `def functionName<T : OtherClass> {}`
-- [ ] Inheritance: `class Child : Parent`
+- [x] Inheritance: `class Child : Parent`
 - [x] List access: `list[index]`
 - [x] Include other source `import <system file>` or `import "localfile"` 
 - Function modifiers:
@@ -89,11 +89,11 @@ The language supports a wide range of syntactical styles:
     - Next itteration: `next;`
     - Break itteration: `break;`
 - Switch statement: 
-    - [ ] heading: `switch(var) {}`
+    - [x] heading: `switch(var) {}`
     - [ ] case: `case val => {}`
-    - [ ]default: `case _ => {}`
+    - [ ] default: `case _ => {}`
 - Match statement:
-    - [ ] heading: `match(var) {}`
+    - [x] heading: `match(var) {}`
     - [ ] standard class case: `case val: MyClass => {}`
     - [ ] structure case: `case val: MyStruct(val1, val2) => {}` or `case val: MyStruct(_, val2) => {}`
     - [ ] default: `case _ => {}`

@@ -268,6 +268,83 @@ namespace Test
 			p = new self_modifier(self_modifier::modifier_type::MINUS,
 				self_modifier::modifier_time::PRE, new statement("x"));
 			Assert::AreEqual(s->parse_string(), p->parse_string());
-		};
+		}
+
+		TEST_METHOD(ListOperations)
+		{
+			statement * s, *p;
+			s = parse_statement("x[y]");
+			p = new list_accessor(new statement("x"), new statement("y"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("x[y] = z");
+			p = new assignment(new list_accessor(new statement("x"), new statement("y")), 
+				new statement("z"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+		}
+
+		TEST_METHOD(IfStatement)
+		{
+			statement * s, *p;
+			s = parse_statement("if(x)");
+			p = new if_heading(new statement("x"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("if(x == y)");
+			p = new if_heading(new comparison(new statement("x"), 
+				comparison::comparison_type::Equal, new statement("y")));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+		}
+
+		TEST_METHOD(WhileStatement)
+		{
+			statement * s, *p;
+			s = parse_statement("while(x)");
+			p = new while_heading(new statement("x"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("while(x == y)");
+			p = new while_heading(new comparison(new statement("x"),
+				comparison::comparison_type::Equal, new statement("y")));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+		}
+
+		TEST_METHOD(ForStatement)
+		{
+			statement * s, *p;
+			s = parse_statement("for(x: Int = 0; x < 10; x++)");
+			p = new for_classic_heading(
+				new decleration_with_assignment(
+					new statement("x"), 
+					type_class("Int"), 
+					new value("0")
+				), 
+				new comparison(
+					new statement("x"), 
+					comparison::comparison_type::LessThan, 
+					new value("10")
+				), 
+				new self_modifier(
+					self_modifier::modifier_type::PLUS, 
+					self_modifier::modifier_time::POST,
+					new statement("x")
+				)
+			);
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("for(x: Int : lst)");
+			p = new for_itterator_heading(
+				new decleration("x", type_class("Int")), 
+				new statement("lst")
+			);
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+		}
+
+		TEST_METHOD(FlowControls)
+		{
+			statement * s, *p;
+			s = parse_statement("break");
+			p = new flow_statement(flow_statement::type::BREAK);
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("next");
+			p = new flow_statement(flow_statement::type::NEXT);
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+		}
 	};
 }

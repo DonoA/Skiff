@@ -43,6 +43,23 @@ type_class box_type(string stmt)
 	return type_class("Var");
 }
 
+type_class parse_type_class_name(string name)
+{
+	size_t p = name.find_first_of('<');
+	if (p == string::npos)
+	{
+		return type_class(name);
+	}
+	string g = name.substr(p + 1, name.find_last_of('>') - (p + 1));
+	vector<string> gv = string_split(g, ",");
+	vector<type_class> gvt;
+	for (string s : gv)
+	{
+		gvt.push_back(type_class(remove_pad(s)));
+	}
+	return type_class(name.substr(0, p), gvt);
+}
+
 bool is_math(char c)
 {
 	return c == '+' || c == '-' || c == '*' || c == '/' || c == '%';
@@ -95,9 +112,9 @@ function_heading * parse_function_header(string stmt)
 	{
 		vector<string> n = string_split(s, ":");
 		f_params.push_back(function::create_function_parameter(remove_pad(n[0]), 
-			type_class(remove_pad(n[1]))));
+			parse_type_class_name(remove_pad(n[1]))));
 	}
-	return new function_heading(dec, f_params, type_class(returns));
+	return new function_heading(dec, f_params, parse_type_class_name(returns));
 }
 
 new_object_statement * parse_object_creation(string stmt)
@@ -116,7 +133,7 @@ new_object_statement * parse_object_creation(string stmt)
 		}
 	}
 	vector<statement *> params = parse_argument_statements(braced_split(params_str, ','));
-	return new new_object_statement(dec, params);
+	return new new_object_statement(parse_type_class_name(dec), params);
 }
 
 annotation_tag * parse_annotation_tag(string tag)
@@ -156,7 +173,49 @@ annotation_tag * parse_annotation_tag(string tag)
 
 class_heading * parse_class_heading(class_heading::class_type type, string stmt)
 {
-	return new class_heading(type, stmt);
+	size_t p = stmt.find_first_of('<');
+	size_t c = stmt.find_last_of(':');
+	if (p == string::npos && c == string::npos)
+	{
+		return new class_heading(type, stmt);
+	}
+	vector<class_heading::heading_generic> gvt;
+	string c_name;
+	type_class extends = type_class("");
+	if (p != string::npos)
+	{
+		string g = stmt.substr(p + 1, stmt.find_last_of('>') - (p + 1));
+		vector<string> gv = string_split(g, ",");
+		c_name = stmt.substr(0, p);
+		for (string s : gv)
+		{
+			vector<string> bts = string_split(s, ":");
+			if (bts.size() == 1)
+			{
+				gvt.push_back(class_heading::generate_generic_heading(remove_pad(bts[0]), 
+					type_class("")));
+			}
+			else
+			{
+				gvt.push_back(class_heading::generate_generic_heading(remove_pad(bts[0]),
+					type_class(remove_pad(bts[1]))));
+			}
+		}
+	}
+	if (c != string::npos)
+	{
+		if (p == string::npos)
+		{
+			vector<string> gv = string_split(stmt, ":");
+			c_name = remove_pad(gv[0]);
+			extends = type_class(remove_pad(gv[1]));
+		}
+		else if (c > p)
+		{
+			extends = type_class(remove_pad(stmt.substr(c + 1)));
+		}
+	}
+	return new class_heading(type, c_name, gvt, extends);
 }
 
 enum_heading * parse_enum_heading(string stmt)
@@ -180,13 +239,13 @@ statement * parse_decleration(string name, string other)
 	size_t eq_i = other.find_first_of('=');
 	if (eq_i == string::npos)
 	{
-		return new decleration(name, type_class(other));
+		return new decleration(name, parse_type_class_name(other));
 	}
 	else
 	{
 		string typ = remove_pad(other.substr(0, eq_i));
 		string val = remove_pad(other.substr(eq_i + 1));
-		return new decleration_with_assignment(parse_statement(name), type_class(typ), parse_statement(val));
+		return new decleration_with_assignment(parse_statement(name), parse_type_class_name(typ), parse_statement(val));
 	}
 }
 
@@ -458,7 +517,7 @@ statement * scan_for_math(string stmt)
 					queue<char> ops;
 					ops.push(stmt[i]);
 					queue<statement *> stmts;
-					stmts.push(new variable(p1));
+					stmts.push(parse_statement(p1));
 					stmts.push(parse_statement(p2));
 					return new assignment(parse_statement(p1), new math_statement(stmts, ops));
 				}
@@ -543,6 +602,13 @@ statement * scan_for_doted(string stmt)
 {
 	stack<char> braces;
 	vector<string> stmts = braced_split(stmt, '.');
+	for (string s : stmts)
+	{
+		if (box_type(s).get_name() == "Int")
+		{
+			return nullptr;
+		}
+	}
 	if (stmts.size() > 1)
 	{
 		return new compund_statement(parse_argument_statements(stmts));
@@ -564,7 +630,7 @@ statement * scan_for_remaining(string stmt)
 		{
 			if (stmt[i] == '!')
 			{
-				if (stmt[i + 1 == '='])
+				if (stmt[i + 1] == '=')
 				{
 					continue;
 				}
@@ -597,7 +663,7 @@ statement * scan_for_remaining(string stmt)
 				p1 = remove_pad(stmt.substr(0, i));
 				p2 = stmt.substr(i + 1, stmt.find_last_of(']') - (i + 1));
 				statement * accessor = parse_statement(p2);
-				return new list_accessor(p1, accessor);
+				return new list_accessor(parse_statement(p1), accessor);
 			}
 		}
 	}

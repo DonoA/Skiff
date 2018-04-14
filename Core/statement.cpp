@@ -502,29 +502,70 @@ string if_heading::parse_string()
 //	return "NOT CONVERTABLE";
 //}
 
-class_heading::class_heading(class_heading::class_type type, string name)
+class_heading::class_heading(class_heading::class_type type, string name) :
+	class_heading(type, name, vector<class_heading::heading_generic>())
+{ }
+
+class_heading::class_heading(class_heading::class_type type, string name, 
+	vector<class_heading::heading_generic> generic_types) :
+	class_heading(type, name, generic_types, type_class())
+{ }
+
+class_heading::class_heading(class_heading::class_type type, string name, type_class extends) :
+	class_heading(type, name, vector<class_heading::heading_generic>(), extends)
+{ }
+
+class_heading::class_heading(class_heading::class_type type, string name, 
+	vector<heading_generic> generic_types, type_class extends)
 {
 	this->type = type;
 	this->name = name;
+	this->generic_types = generic_types;
+	this->extends = extends;
 }
 
 string class_heading::parse_string()
 {
+	string heading;
 	switch (type)
 	{
 	case CLASS:
-		return "ClassHeading(" + name + ")";
+		heading = "ClassHeading";
+		break;
 	case STRUCT:
-		return "StructHeading(" + name + ")";
+		heading = "StructHeading";
+		break;
 	case ANNOTATION:
-		return "AnnotationHeading(" + name + ")";
+		heading = "AnnotationHeading";
+		break;
 	}
-	return string();
+	if (generic_types.empty())
+	{
+		return heading + "(" + name + "," + extends.parse_string() + ")";
+	}
+	string params_rtn = "Generics(";
+	bool any = false;
+	for (class_heading::heading_generic p : generic_types)
+	{
+		params_rtn += "Generic(" + p.t_name + " extends " + p.extends.parse_string() + "),";
+		any = true;
+	}
+	if (any)
+	{
+		params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
+	}
+	params_rtn += ")";
+	return heading + "(" + name + + "," + params_rtn + "," + extends.parse_string() + ")";
 }
 
 string class_heading::get_name()
 {
 	return name;
+}
+
+class_heading::heading_generic class_heading::generate_generic_heading(string t_name, type_class extends)
+{
+	return { t_name, extends };
 }
 
 
@@ -805,7 +846,7 @@ string import_statement::parse_string()
 	return "Import(" + import_name + ")";
 }
 
-list_accessor::list_accessor(string list, statement * index)
+list_accessor::list_accessor(statement * list, statement * index)
 {
 	this->list = list;
 	this->index = index;
@@ -813,7 +854,7 @@ list_accessor::list_accessor(string list, statement * index)
 
 string list_accessor::parse_string()
 {
-	return "ListAccessor(" + list + ", " + index->parse_string() + ")";
+	return "ListAccessor(" + list->parse_string() + ", " + index->parse_string() + ")";
 }
 
 compund_statement::compund_statement(vector<statement*> operations)

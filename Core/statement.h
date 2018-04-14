@@ -57,10 +57,10 @@ protected:
 class list_accessor : public statement
 {
 public:
-	list_accessor(string list, statement * index);
+	list_accessor(statement * list, statement * index);
 	string parse_string();
 protected:
-	string list;
+	statement * list;
 	statement * index;
 };
 
@@ -229,12 +229,26 @@ class class_heading : public block_heading
 {
 public:
 	enum class_type { CLASS, STRUCT, ANNOTATION };
+	struct heading_generic 
+	{
+		string t_name;
+		type_class extends;
+	};
 	class_heading(class_heading::class_type type, string name);
+	class_heading(class_heading::class_type type, string name,
+		vector<heading_generic> generic_types);
+	class_heading(class_heading::class_type type, string name, type_class extends);
+	class_heading(class_heading::class_type type, string name, 
+		vector<heading_generic> generic_types, type_class extends);
 	string parse_string();
 	string get_name();
+	static class_heading::heading_generic generate_generic_heading(string t_name, 
+		type_class extends);
 private:
 	string name;
 	class_heading::class_type type;
+	type_class extends;
+	vector<heading_generic> generic_types;
 };
 
 class enum_heading : public block_heading

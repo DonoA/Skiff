@@ -122,3 +122,5 @@ inline std::function<object*(object*, vector<object*>, scope*)>* navite_builtin:
 		return new object((void *)s, env->get_type("String"));
 	});
 }
+
+

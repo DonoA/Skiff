@@ -14,7 +14,13 @@ type_class::type_class()
 type_class::type_class(string name)
 {
 	this->name = name;
+	this->generic_types = vector<type_class>();
 	this->class_id = type_class::internal_class_id_counter++;
+}
+
+type_class::type_class(string name, vector<type_class> generic_types) : type_class(name)
+{
+	this->generic_types = generic_types;
 }
 
 type_class::type_class(string name, size_t id)
@@ -22,7 +28,6 @@ type_class::type_class(string name, size_t id)
 	this->name = name;
 	this->class_id = id;
 }
-
 
 string type_class::get_name()
 {
@@ -36,7 +41,22 @@ size_t type_class::get_class_id()
 
 string type_class::parse_string()
 {
-	return "TypeClass(" + name + ")";
+	if (generic_types.empty())
+	{
+		return "TypeClass(" + name + ")";
+	}
+	string params_rtn = "Generics(";
+	bool any = false;
+	for (type_class tc : generic_types)
+	{
+		params_rtn += tc.parse_string() + ",";
+		any = true;
+	}
+	if (any)
+	{
+		params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
+	}
+	return "TypeClass(" + name + ", " + params_rtn + "))";
 }
 
 scope * type_class::get_scope()
