@@ -15,8 +15,14 @@ namespace Test
 		TEST_METHOD(Declaration)
 		{
 			// Decleration(x,TypeClass(Int))
-			statement * s = parse_statement("x: Int");
-			statement * p = new decleration("x", type_class("Int"));
+			statement * s, *p;
+			s = parse_statement("x: Int");
+			p = new decleration("x", type_class("Int"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("x: List<Type>");
+			vector<type_class> et;
+			et.push_back(type_class("Type"));
+			p = new decleration("x", type_class("List", et));
 			Assert::AreEqual(s->parse_string(), p->parse_string());
 		}
 
@@ -31,8 +37,16 @@ namespace Test
 		TEST_METHOD(AssignmentAndDeclaration)
 		{
 			// DeclareAndAssign(Statement(x), TypeClass(Int), Value(5))
-			statement * s = parse_statement("x: Int = 5");
-			statement * p = new decleration_with_assignment(new statement("x"), type_class("Int"), new value("5"));
+			statement * s, *p;
+			s = parse_statement("x: Int = 5");
+			p = new decleration_with_assignment(new statement("x"), type_class("Int"), 
+				new value("5"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("x: List<Type> = new List<Type>()");
+			vector<type_class> et;
+			et.push_back(type_class("Type"));
+			p = new decleration_with_assignment(new statement("x"), type_class("List", et), 
+				new new_object_statement(type_class("List", et), vector<statement *>()));
 			Assert::AreEqual(s->parse_string(), p->parse_string());
 		}
 
@@ -94,15 +108,51 @@ namespace Test
 
 		TEST_METHOD(ClassDef)
 		{
-			statement * s = parse_statement("class Test");
-			statement * p = new class_heading(class_heading::class_type::CLASS, "Test");
+			statement * s, *p;
+			vector<class_heading::heading_generic> gt;
+			s = parse_statement("class Test");
+			p = new class_heading(class_heading::class_type::CLASS, "Test");
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("class Test<T>");
+			gt.push_back(class_heading::generate_generic_heading("T", type_class("")));
+			p = new class_heading(class_heading::class_type::CLASS, "Test", gt);
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("class Test<T> : Parent");
+			gt = vector<class_heading::heading_generic>();
+			gt.push_back(class_heading::generate_generic_heading("T", type_class("")));
+			p = new class_heading(class_heading::class_type::CLASS, "Test", gt, 
+				type_class("Parent"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("class Test<T:Extends> : Parent");
+			gt = vector<class_heading::heading_generic>();
+			gt.push_back(class_heading::generate_generic_heading("T", type_class("Extends")));
+			p = new class_heading(class_heading::class_type::CLASS, "Test", gt,
+				type_class("Parent"));
 			Assert::AreEqual(s->parse_string(), p->parse_string());
 		}
 
 		TEST_METHOD(StructDef)
 		{
-			statement * s = parse_statement("struct Test");
-			statement * p = new class_heading(class_heading::class_type::STRUCT, "Test");
+			statement * s, *p;
+			vector<class_heading::heading_generic> gt;
+			s = parse_statement("struct Test");
+			p = new class_heading(class_heading::class_type::STRUCT, "Test");
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("struct Test<T>");
+			gt.push_back(class_heading::generate_generic_heading("T", type_class("")));
+			p = new class_heading(class_heading::class_type::STRUCT, "Test", gt);
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("struct Test<T> : Parent");
+			gt = vector<class_heading::heading_generic>();
+			gt.push_back(class_heading::generate_generic_heading("T", type_class("")));
+			p = new class_heading(class_heading::class_type::STRUCT, "Test", gt,
+				type_class("Parent"));
+			Assert::AreEqual(s->parse_string(), p->parse_string());
+			s = parse_statement("struct Test<T:Extends> : Parent");
+			gt = vector<class_heading::heading_generic>();
+			gt.push_back(class_heading::generate_generic_heading("T", type_class("Extends")));
+			p = new class_heading(class_heading::class_type::STRUCT, "Test", gt,
+				type_class("Parent"));
 			Assert::AreEqual(s->parse_string(), p->parse_string());
 		}
 

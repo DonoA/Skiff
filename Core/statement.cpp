@@ -508,7 +508,7 @@ class_heading::class_heading(class_heading::class_type type, string name) :
 
 class_heading::class_heading(class_heading::class_type type, string name, 
 	vector<class_heading::heading_generic> generic_types) :
-	class_heading(type, name, generic_types, type_class())
+	class_heading(type, name, generic_types, type_class(""))
 { }
 
 class_heading::class_heading(class_heading::class_type type, string name, type_class extends) :
