@@ -325,6 +325,8 @@ private:
 class function_heading : public block_heading
 {
 public:
+	function_heading(string name) : function_heading(name, vector<function::function_parameter>(),
+		type_class("")) { }
 	function_heading(string name, vector<function::function_parameter> params, 
 		type_class returns);
 	string parse_string();
