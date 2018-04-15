@@ -78,3 +78,22 @@ string builtin::get_name_for(builtin::type nt)
 	}
 	return "None";
 }
+
+type_class builtin_load::define_string_builtins(scope * env)
+{
+	type_class t = type_class("String", builtin::type::String);
+	(*t.get_operators())[string(1, '+')] = function("add", env, navite_builtin::create_add<string>());
+	t.get_scope()->define_function("to_string", function("to_string", env, new std::function<object*(object*, vector<object*>, scope*)>(&string_builtin::to_string)));
+	t.get_scope()->define_function("clone", function("clone", env, new std::function<object*(object*, vector<object*>, scope*)>(&string_builtin::clone)));
+	return t;
+}
+
+void builtin_load::load_standards(scope * env)
+{
+	env->define_type(builtin::get_name_for(builtin::type::Char), define_native_fixpoint_builtins<char>(env, builtin::type::Char));
+	env->define_type(builtin::get_name_for(builtin::type::Int), define_native_fixpoint_builtins<int>(env, builtin::type::Int));
+	env->define_type(builtin::get_name_for(builtin::type::Long), define_native_fixpoint_builtins<long>(env, builtin::type::Long));
+	env->define_type(builtin::get_name_for(builtin::type::Float), define_native_builtins<float>(env, builtin::type::Float));
+	env->define_type(builtin::get_name_for(builtin::type::Double), define_native_builtins<double>(env, builtin::type::Double));
+	env->define_type(builtin::get_name_for(builtin::type::String), define_string_builtins(env));
+}

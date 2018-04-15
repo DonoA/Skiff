@@ -10,3 +10,5 @@ using std::vector;
 using std::string;
 
 statement * parse_statement(string stmt);
+
+bool handle_line(string input, char c, queue<statement *> * stmts);

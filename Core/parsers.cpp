@@ -733,3 +733,26 @@ statement * parse_statement(string stmt)
 	//std::cerr << "Could not locate refrence: '" << stmt << "'" << std::endl;
 	return new statement(stmt);
 }
+
+bool handle_line(string input, char c, queue<statement *> * stmts)
+{
+	input = remove_pad(input);
+	if (input != "")
+	{
+		statement * stmt = parse_statement(input);
+		stmts->push(stmt);
+	}
+	if (c == '}')
+	{
+		stmts->push(new end_block_statement());
+	}
+	//if (c == '}')
+	//{
+	//	stmts->push(new end_block_statement());
+	//}
+	if (input == "exit()")
+	{
+		return false;
+	}
+	return true;
+}

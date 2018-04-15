@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="builtin.h" />
+    <ClInclude Include="modes.h" />
     <ClInclude Include="parsers.h" />
     <ClInclude Include="statement.h" />
     <ClInclude Include="stdafx.h" />
@@ -157,6 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="builtin.cpp" />
+    <ClCompile Include="modes.cpp" />
     <ClCompile Include="parsers.cpp" />
     <ClCompile Include="statement.cpp" />
     <ClCompile Include="stdafx.cpp">

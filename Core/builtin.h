@@ -22,6 +22,7 @@ public:
 	static std::function<object *(object *, vector<object *>, scope *)> * create_clone();
 	template<class T>
 	static std::function<object *(object *, vector<object *>, scope *)> * create_to_string();
+
 };
 
 class string_builtin
@@ -40,6 +41,17 @@ public:
 	static size_t get_id_for(type nt);
 	static string get_name_for(type nt);
 	static string get_c_type_for(builtin::type nt);
+};
+
+class builtin_load
+{
+public:
+	template<class T>
+	static type_class define_native_builtins(scope * env, builtin::type nt);
+	template<class T>
+	static type_class define_native_fixpoint_builtins(scope * env, builtin::type nt);
+	static type_class define_string_builtins(scope * env);
+	static void load_standards(scope * env);
 };
 
 template<class T>
@@ -123,4 +135,23 @@ inline std::function<object*(object*, vector<object*>, scope*)>* navite_builtin:
 	});
 }
 
+template<class T>
+inline type_class builtin_load::define_native_builtins(scope * env, builtin::type nt)
+{
+	type_class t = type_class(builtin::get_name_for(nt), builtin::get_id_for(nt));
+	(*t.get_operators())[string(1, '+')] = function("add", env, navite_builtin::create_add<T>());
+	(*t.get_operators())[string(1, '-')] = function("sub", env, navite_builtin::create_sub<T>());
+	(*t.get_operators())[string(1, '*')] = function("mul", env, navite_builtin::create_mul<T>());
+	(*t.get_operators())[string(1, '/')] = function("div", env, navite_builtin::create_div<T>());
+	t.get_scope()->define_function("to_string", function("to_string", env, navite_builtin::create_to_string<T>()));
+	t.get_scope()->define_function("clone", function("clone", env, navite_builtin::create_clone<T>()));
+	return t;
+}
 
+template<class T>
+inline type_class builtin_load::define_native_fixpoint_builtins(scope * env, builtin::type nt)
+{
+	type_class t = define_native_builtins<T>(env, nt);
+	(*t.get_operators())[string(1, '%')] = function("mod", vector<function::function_parameter>(), type_class(), env, navite_builtin::create_mod<T>());
+	return t;
+}
