@@ -30,9 +30,9 @@ namespace skiff
 			return raw;
 		}
 
-		object * statement::eval(scope * env)
+		object statement::eval(scope * env)
 		{
-			return nullptr;
+			return object();
 		}
 
 		string statement::parse_string()
@@ -50,7 +50,7 @@ namespace skiff
 			this->val = val;
 		}
 
-		//object * value::eval(scope * env)
+		//object value::eval(scope * env)
 		//{
 		//	return val;
 		//}
@@ -235,16 +235,16 @@ namespace skiff
 			return rtn;
 		}
 
-		void math_statement::eval_single_op(object * s1, char op, object * s2)
+		void math_statement::eval_single_op(object s1, char op, object s2)
 		{
-			object * o = builtin::utils::get_dominant_type(s1, s2);
+			object * o = builtin::utils::get_dominant_type(&s1, &s2);
 			if (o == nullptr)
 			{
-				o = s1;
+				o = &s1;
 			}
-			vector<object *> p;
+			vector<object> p;
 			p.push_back(s2);
-			(*o->get_type().get_operators())[string(1, op)].eval(o, p);
+			(*o->get_type().get_operators())[string(1, op)].eval(*o, p);
 		}
 
 		comparison::comparison(statement * s1, comparison::comparison_type typ, statement * s2)
@@ -417,9 +417,9 @@ namespace skiff
 			return string();
 		}
 
-		object * block_heading::eval(scope * env)
+		object block_heading::eval(scope * env)
 		{
-			return nullptr;
+			return object();
 		}
 
 		int block_heading::indent_mod()

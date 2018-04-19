@@ -15,7 +15,7 @@ namespace skiff
 			statement();
 			statement(std::string raw);
 			virtual std::string eval_c();
-			virtual types::object * eval(types::scope * env);
+			virtual types::object eval(types::scope * env);
 			virtual std::string parse_string();
 			virtual int indent_mod();
 		private:
@@ -78,7 +78,7 @@ namespace skiff
 		private:
 			std::queue<statement*> operands;
 			std::queue<char> operators;
-			static void eval_single_op(types::object * s1, char op, types::object * s2);
+			static void eval_single_op(types::object s1, char op, types::object s2);
 		};
 
 		class compund_statement : public statement
@@ -137,7 +137,7 @@ namespace skiff
 			block_heading() {};
 			block_heading(std::string raw);
 			virtual std::string eval_c();
-			virtual types::object * eval(types::scope * env);
+			virtual types::object eval(types::scope * env);
 			virtual std::string parse_string() = 0;
 			int indent_mod();
 		private:

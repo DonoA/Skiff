@@ -19,186 +19,140 @@ namespace skiff
 		namespace generator
 		{
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, 
+			std::function<types::object(types::object, std::vector<types::object>, 
 				types::scope *)> * create_add();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, 
+			std::function<types::object(types::object, std::vector<types::object>, 
 				types::scope *)> * create_sub();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, 
+			std::function<types::object(types::object, std::vector<types::object>, 
 				types::scope *)> * create_mul();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>,
+			std::function<types::object(types::object, std::vector<types::object>,
 				types::scope *)> * create_div();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, 
+			std::function<types::object(types::object, std::vector<types::object>, 
 				types::scope *)> * create_mod();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>,
+			std::function<types::object(types::object, std::vector<types::object>,
 				types::scope *)> * create_clone();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, 
+			std::function<types::object(types::object, std::vector<types::object>, 
 				types::scope *)> * create_to_string();
 
 			namespace string
 			{
-				types::object * to_string(types::object * self, 
-					std::vector<types::object *> params, types::scope * env);
-				types::object * clone(types::object * self, 
-					std::vector<types::object *> params, types::scope * env);
+				types::object to_string(types::object self, 
+					std::vector<types::object> params, types::scope * env);
+				types::object clone(types::object self, 
+					std::vector<types::object> params, types::scope * env);
 			}
 			template<class T>
-			inline std::function<types::object*(types::object*, 
-				std::vector<types::object*>, types::scope*)>* create_add()
+			inline std::function<types::object(types::object, 
+				std::vector<types::object>, types::scope*)>* create_add()
 			{
 				return new std::function<
-					types::object *(
-						types::object *, 
-						std::vector<types::object *>, 
-						types::scope *)>([](
-							types::object * self, 
-							std::vector<types::object *> params, 
+					types::object(types::object,std::vector<types::object>, types::scope *)>(
+						[](types::object self, std::vector<types::object> params, 
 							types::scope * env)
 				{
-					T * n1 = (T *)self->get_value();
-					T * n2 = (T *)params[0]->get_value();
+					T * n1 = (T *)self.get_value();
+					T * n2 = (T *)params[0].get_value();
 					(*n1) = (*n1) + (*n2);
-					return nullptr;
+					return types::object();
 				});
 			}
 
 			template<class T>
-			inline std::function<
-				types::object*(
-					types::object*, 
-					std::vector<types::object*>, 
-					types::scope*)>* create_sub()
+			inline std::function<types::object(types::object,
+				std::vector<types::object>, types::scope*)>* create_sub()
 			{
 				return new std::function<
-					types::object *(
-						types::object *, 
-						std::vector<types::object *>, 
-						types::scope *)>([](
-							types::object * self, 
-							std::vector<types::object *> params, 
+					types::object(types::object, std::vector<types::object>, types::scope *)>(
+						[](types::object self, std::vector<types::object> params,
 							types::scope * env)
 				{
-					T * n1 = (T *)self->get_value();
-					T * n2 = (T *)params[0]->get_value();
+					T * n1 = (T *)self.get_value();
+					T * n2 = (T *)params[0].get_value();
 					(*n1) = (*n1) - (*n2);
-					return nullptr;
+					return types::object();
 				});
 			}
 
 			template<class T>
-			inline std::function<
-				types::object*(
-					types::object*, 
-					std::vector<types::object*>, 
-					types::scope*)>* create_mul()
+			inline std::function<types::object(types::object,
+				std::vector<types::object>, types::scope*)>* create_mul()
 			{
 				return new std::function<
-					types::object *(
-						types::object *, 
-						std::vector<types::object *>, 
-						types::scope *)>([](
-							types::object * self, 
-							std::vector<types::object *> params,
+					types::object(types::object, std::vector<types::object>, types::scope *)>(
+						[](types::object self, std::vector<types::object> params,
 							types::scope * env)
 				{
-					T * n1 = (T *)self->get_value();
-					T * n2 = (T *)params[0]->get_value();
+					T * n1 = (T *)self.get_value();
+					T * n2 = (T *)params[0].get_value();
 					(*n1) = (*n1) * (*n2);
-					return nullptr;
+					return types::object();
 				});
 			}
 
 			template<class T>
-			inline std::function<
-				types::object*(
-					types::object*, 
-					std::vector<types::object*>, 
-					types::scope*)>* create_div()
+			inline std::function<types::object(types::object, 
+				std::vector<types::object>, types::scope*)>* create_div()
 			{
 				return new std::function<
-					types::object *(
-						types::object *, 
-						std::vector<types::object *>, 
-						types::scope *)>([](
-							types::object * self, 
-							std::vector<types::object *> params, 
+					types::object(types::object,std::vector<types::object>, types::scope *)>(
+						[](types::object self, std::vector<types::object> params, 
 							types::scope * env)
 				{
-					T * n1 = (T *)self->get_value();
-					T * n2 = (T *)params[0]->get_value();
+					T * n1 = (T *)self.get_value();
+					T * n2 = (T *)params[0].get_value();
 					(*n1) = (*n1) / (*n2);
-					return nullptr;
+					return types::object();
 				});
 			}
 
 			template<class T>
-			inline std::function<
-				types::object*(
-					types::object*, 
-					std::vector<types::object*>, 
-					types::scope*)>* create_mod()
+			inline std::function<types::object(types::object,
+				std::vector<types::object>, types::scope*)>* create_mod()
 			{
 				return new std::function<
-					types::object *(
-						types::object *,
-						std::vector<types::object *>,
-						types::scope *)>([](
-							types::object * self, 
-							std::vector<types::object *> params, 
+					types::object(types::object, std::vector<types::object>, types::scope *)>(
+						[](types::object self, std::vector<types::object> params,
 							types::scope * env)
 				{
-					T * n1 = (T *)self->get_value();
-					T * n2 = (T *)params[0]->get_value();
+					T * n1 = (T *)self.get_value();
+					T * n2 = (T *)params[0].get_value();
 					(*n1) = (*n1) % (*n2);
-					return nullptr;
+					return types::object();
 				});
 			}
 
 			template<class T>
-			inline std::function<
-				types::object*(
-					types::object*, 
-					std::vector<types::object*>, 
-					types::scope*)>* create_clone()
+			inline std::function<types::object(types::object,
+				std::vector<types::object>, types::scope*)>* create_clone()
 			{
 				return new std::function<
-					types::object *(
-						types::object *, 
-						std::vector<types::object *>, 
-						types::scope *)>([](
-							types::object * self, 
-							std::vector<types::object *> params, 
+					types::object(types::object, std::vector<types::object>, types::scope *)>(
+						[](types::object self, std::vector<types::object> params,
 							types::scope * env)
 				{
-					T v = *(T *)self->get_value();
-					return new types::object(types::object::allocate(v), self->get_type());
+					T v = *(T *)self.get_value();
+					return types::object(types::object::allocate(v), self.get_type());
 				});
 			}
 
 			template<class T>
-			inline std::function<
-				types::object*(
-					types::object*, 
-					std::vector<types::object*>, 
-					types::scope*)>* create_to_string()
+			inline std::function<types::object(types::object,
+				std::vector<types::object>, types::scope*)>* create_to_string()
 			{
 				return new std::function<
-					types::object *(
-						types::object *, 
-						std::vector<types::object *>, 
-						types::scope *)>([](
-							types::object * self, 
-							std::vector<types::object *> params, 
+					types::object(types::object, std::vector<types::object>, types::scope *)>(
+						[](types::object self, std::vector<types::object> params,
 							types::scope * env)
 				{
-					T v = *(T *)self->get_value();
+					T v = *(T *)self.get_value();
 					std::string * s = new std::string(std::to_string(v));
-					return new types::object((void *)s, env->get_type("String"));
+					return types::object((void *)s, env->get_type("String"));
 				});
 			}
 		}

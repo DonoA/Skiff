@@ -1,7 +1,3 @@
-try {
-    doSt();
-} catch(e: Except) {
-    print(e);
-} finally {
-    print("Yay");
-}
+x: Int = 5;
+x++;
+print(x);

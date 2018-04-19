@@ -60,6 +60,7 @@ namespace skiff
 		public:
 			template<class T>
 			static void * allocate(T val);
+			object() : object(nullptr, type_class("")) { }
 			object(void * str, type_class type);
 			type_class get_type();
 			std::string to_string();
@@ -82,15 +83,15 @@ namespace skiff
 				type_class typ);
 			function(std::string name, std::vector<function_parameter> params, type_class returns, 
 				scope * env, 
-				std::function<object *(object *, std::vector<object *>, scope *)> * builtin);
+				std::function<object(object, std::vector<object>, scope *)> * builtin);
 			//function(std::string name, std::vector<function_parameter> params, type_class returns, scope * env, object * (*builtin)(object *, std::vector<object *>, scope *));
 			function(std::string name, std::vector<function_parameter> params, 
 				type_class returns, scope * env);
 			function(std::string name, scope * env, 
-				std::function<object *(object *, std::vector<object *>, scope *)> * builtin);
+				std::function<object(object, std::vector<object>, scope *)> * builtin);
 			function();
-			object * eval(object * self);
-			object * eval(object * self, std::vector<object *> params);
+			object eval(object self);
+			object eval(object self, std::vector<object> params);
 		private:
 			scope function_env;
 			std::string name;
@@ -98,7 +99,7 @@ namespace skiff
 			type_class returns;
 			//std::vector<statement *> statements;
 			//object * (*builtin)(object *, std::vector<object *>, scope *);
-			std::function<object *(object *, std::vector<object *>, scope *)> * builtin;
+			std::function<object(object, std::vector<object>, scope *)> * builtin;
 		};
 
 		template<class T>

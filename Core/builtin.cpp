@@ -83,15 +83,15 @@ namespace skiff
 		{
 			namespace string
 			{
-				object * to_string(object * self, vector<object*> params, scope * env)
+				object to_string(object self, vector<object> params, scope * env)
 				{
 					return self;
 				}
 
-				object * clone(object * self, vector<object*> params, scope * env)
+				object clone(object self, vector<object> params, scope * env)
 				{
-					return new object((void *) new std::string(*(std::string *)self->get_value()), 
-						self->get_type());
+					return object((void *) new std::string(*(std::string *)self.get_value()), 
+						self.get_type());
 				}
 			}
 		}
@@ -104,10 +104,10 @@ namespace skiff
 				(*t.get_operators())[string(1, '+')] = function("add", env, 
 					skiff::builtin::generator::create_add<string>());
 				t.get_scope()->define_function("to_string", function("to_string", env, 
-					new std::function<object*(object*, vector<object*>, scope*)>(
+					new std::function<object(object, vector<object>, scope*)>(
 						&skiff::builtin::generator::string::to_string)));
 				t.get_scope()->define_function("clone", function("clone", env, 
-					new std::function<object*(object*, vector<object*>, scope*)>(
+					new std::function<object(object, vector<object>, scope*)>(
 						&skiff::builtin::generator::string::clone)));
 				return t;
 			}

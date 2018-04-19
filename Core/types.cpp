@@ -100,7 +100,8 @@ namespace skiff
 			this->value = v;
 		}
 
-		function::function_parameter function::create_function_parameter(string name, type_class typ)
+		function::function_parameter function::create_function_parameter(string name, 
+			type_class typ)
 		{
 			function::function_parameter p;
 			p.typ = typ;
@@ -108,7 +109,8 @@ namespace skiff
 			return p;
 		}
 
-		function::function(string name, vector<function_parameter> params, type_class returns, scope * env, std::function<object *(object *, vector<object *>, scope *)> * builtin)
+		function::function(string name, vector<function_parameter> params, type_class returns, 
+			scope * env, std::function<object(object, vector<object>, scope *)> * builtin)
 		{
 			this->function_env = scope(env);
 			this->name = name;
@@ -122,7 +124,7 @@ namespace skiff
 			scope * env) : function(name, params, returns, env, NULL)
 		{ }
 
-		function::function(string name, scope * env, std::function<object*(object*, vector<object*>,
+		function::function(string name, scope * env, std::function<object(object, vector<object>,
 			scope*)>* builtin) : function(name, 
 				vector<function_parameter>(), type_class(), env, builtin)
 		{
@@ -133,12 +135,12 @@ namespace skiff
 			this->builtin = NULL;
 		}
 
-		object * function::eval(object * self)
+		object function::eval(object self)
 		{
-			return eval(self, vector<object*>());
+			return eval(self, vector<object>());
 		}
 
-		object * function::eval(object * self, vector<object*> params)
+		object function::eval(object self, vector<object> params)
 		{
 			if (builtin == NULL)
 			{
@@ -146,7 +148,7 @@ namespace skiff
 				//{
 				//	stmt->eval(&function_env);
 				//}
-				return nullptr;
+				return object();
 			}
 			else
 			{

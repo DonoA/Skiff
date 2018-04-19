@@ -114,14 +114,13 @@ namespace skiff
 
 		void evaluate(scope * env, queue<statement *> statements)
 		{
-
 			size_t indent = 0;
 			while (!statements.empty())
 			{
-				statement * s = statements.front();
-				statements.pop();
-				std::cout << s->eval(env) << std::endl;
-				indent += s->indent_mod();
+				//statement * s = statements.front();
+				//statements.pop();
+				//std::cout << s->eval(env) << std::endl;
+				//indent += s->indent_mod();
 			}
 		}
 	}
