@@ -90,17 +90,17 @@ The language supports a wide range of syntactical styles:
     - Break itteration: `break;`
 - Switch statement: 
     - [x] heading: `switch(var) {}`
-    - [ ] case: `case val => {}`
-    - [ ] default: `case _ => {}`
+    - [x] case: `case val => {}`
+    - [x] default: `case _ => {}`
 - Match statement:
     - [x] heading: `match(var) {}`
-    - [ ] standard class case: `case val: MyClass => {}`
-    - [ ] structure case: `case val: MyStruct(val1, val2) => {}` or `case val: MyStruct(_, val2) => {}`
-    - [ ] default: `case _ => {}`
+    - [x] standard class case: `case val: MyClass => {}`
+    - [x] structure case: `case val: MyStruct(val1, val2) => {}` or `case val: MyStruct(_, val2) => {}`
+    - [x] default: `case _ => {}`
 - Exceptions:
     - [x] throw: `throw new MyException()`
-    - [ ] try/catch: `try {} catch(e: MyException) {}`
-    - [ ] try/finally: `try {} finally {}`
+    - [x] try/catch: `try {} catch(e: MyException) {}`
+    - [x] try/finally: `try {} finally {}`
     - [ ] Define a function to throw an exception: `def myFunction(arg1: Type): ReturnType throws MyException {}`
 - [x] Annotations:
     - On a function: 

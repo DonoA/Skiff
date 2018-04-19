@@ -1,9 +1,24 @@
 #pragma once
-#include "statement.h"
+#include <queue>
+#include <string>
+#include <fstream>
+#include <iostream>
 
-void interactive_mode();
-queue<statement *> parse_file(string infile);
-void print_parse(queue<statement *> statements);
-void translate_c(queue<statement *> statements);
-void evaluate(scope * env, queue<statement *> statements);
+#include "types.h"
+#include "statement.h"
+#include "parsers.h"
+#include "utils.h"
+
+namespace skiff
+{
+	namespace modes
+	{
+		void interactive_mode();
+		std::queue<statements::statement *> parse_file(std::string infile);
+		void print_parse(std::queue<statements::statement *> statements);
+		void translate_c(std::queue<statements::statement *> statements);
+		void evaluate(types::scope * env, std::queue<statements::statement *> statements);
+	}
+}
+
 

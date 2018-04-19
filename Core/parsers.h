@@ -1,14 +1,18 @@
 #pragma once
 #include <string>
-#include <stack>
-#include <vector>
+#include <queue>
+#include <iostream>
+#include <queue>
+#include <algorithm>
+#include <assert.h>
+
 #include "statement.h"
 #include "types.h"
+#include "utils.h"
 
-using std::stack;
-using std::vector;
-using std::string;
+namespace skiff
+{
+	skiff::statements::statement * parse_statement(std::string stmt);
 
-statement * parse_statement(string stmt);
-
-bool handle_line(string input, char c, queue<statement *> * stmts);
+	bool handle_line(std::string input, char c, std::queue<skiff::statements::statement *> * stmts);
+}

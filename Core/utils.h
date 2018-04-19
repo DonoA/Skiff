@@ -2,22 +2,22 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <iostream>
 #include "types.h"
-#include "statement.h"
 
-using std::string;
-using std::vector;
-using std::stack;
+namespace skiff
+{
+	namespace utils
+	{
+		std::string remove_pad(std::string str);
 
-string remove_pad(string str);
+		std::vector<std::string> string_split(std::string str, std::string d);
 
-vector<string> string_split(string str, string d);
+		std::string generate_indent(size_t len);
 
-string generate_indent(size_t len);
 
-object * get_dominant_type(object * c1, object * c2);
+		void track_braces(char lc, char c, std::stack<char> * braces);
 
-void track_braces(char lc, char c, stack<char> * braces);
-
-vector<string> braced_split(string list, char del);
-
+		std::vector<std::string> braced_split(std::string list, char del);
+	}
+}

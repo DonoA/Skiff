@@ -1,55 +1,7 @@
-he: DogPile<Dog, Cat> = new DogPile<SmallDog>();
-
-class Set : Parent {
-    items: List<T>;
-
-    def Set() {
-        items = new List<T>();
-    }
-}
-
-struct Set<T: Dog> : PPrt {
-    items: List<T>;
-
-    def Set() {
-        items = new List<T>();
-    }
-}
-
-he.getSet().appendValue(some_value);
-
-he.getActor().name = new_name;
-
-if(he == "this") {
-    print("this");
-} else {
-    print("that");
-}
-
-if(x == 5) {
-    return new hello();
-    next;
-} else if(x == 7) {
-    return new wello();
-}
-
-while(5 == 6) {
-    print("Oh dear");
-    break;
-}
-
-switch(x) {
-    print(x);
-}
-
-match(x) {
-    print(x);
-}
-
-for(x: Int = 10; x < 100; x++) {
-    print(x - 10);
-}
-
-for(elem: String : strlst) {
-    print(elem);
+try {
+    doSt();
+} catch(e: Except) {
+    print(e);
+} finally {
+    print("Yay");
 }
