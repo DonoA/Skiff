@@ -19,29 +19,46 @@ namespace skiff
 		namespace generator
 		{
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)> * create_add();
+			std::function<types::object *(types::object *, std::vector<types::object *>, 
+				types::scope *)> * create_add();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)> * create_sub();
+			std::function<types::object *(types::object *, std::vector<types::object *>, 
+				types::scope *)> * create_sub();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)> * create_mul();
+			std::function<types::object *(types::object *, std::vector<types::object *>, 
+				types::scope *)> * create_mul();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)> * create_div();
+			std::function<types::object *(types::object *, std::vector<types::object *>,
+				types::scope *)> * create_div();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)> * create_mod();
+			std::function<types::object *(types::object *, std::vector<types::object *>, 
+				types::scope *)> * create_mod();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)> * create_clone();
+			std::function<types::object *(types::object *, std::vector<types::object *>,
+				types::scope *)> * create_clone();
 			template<class T>
-			std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)> * create_to_string();
+			std::function<types::object *(types::object *, std::vector<types::object *>, 
+				types::scope *)> * create_to_string();
 
 			namespace string
 			{
-				types::object * to_string(types::object * self, std::vector<types::object *> params, types::scope * env);
-				types::object * clone(types::object * self, std::vector<types::object *> params, types::scope * env);
+				types::object * to_string(types::object * self, 
+					std::vector<types::object *> params, types::scope * env);
+				types::object * clone(types::object * self, 
+					std::vector<types::object *> params, types::scope * env);
 			}
 			template<class T>
-			inline std::function<types::object*(types::object*, std::vector<types::object*>, types::scope*)>* create_add()
+			inline std::function<types::object*(types::object*, 
+				std::vector<types::object*>, types::scope*)>* create_add()
 			{
-				return new std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)>([](types::object * self, std::vector<types::object *> params, types::scope * env)
+				return new std::function<
+					types::object *(
+						types::object *, 
+						std::vector<types::object *>, 
+						types::scope *)>([](
+							types::object * self, 
+							std::vector<types::object *> params, 
+							types::scope * env)
 				{
 					T * n1 = (T *)self->get_value();
 					T * n2 = (T *)params[0]->get_value();
@@ -51,9 +68,20 @@ namespace skiff
 			}
 
 			template<class T>
-			inline std::function<types::object*(types::object*, std::vector<types::object*>, types::scope*)>* create_sub()
+			inline std::function<
+				types::object*(
+					types::object*, 
+					std::vector<types::object*>, 
+					types::scope*)>* create_sub()
 			{
-				return new std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)>([](types::object * self, std::vector<types::object *> params, types::scope * env)
+				return new std::function<
+					types::object *(
+						types::object *, 
+						std::vector<types::object *>, 
+						types::scope *)>([](
+							types::object * self, 
+							std::vector<types::object *> params, 
+							types::scope * env)
 				{
 					T * n1 = (T *)self->get_value();
 					T * n2 = (T *)params[0]->get_value();
@@ -63,9 +91,20 @@ namespace skiff
 			}
 
 			template<class T>
-			inline std::function<types::object*(types::object*, std::vector<types::object*>, types::scope*)>* create_mul()
+			inline std::function<
+				types::object*(
+					types::object*, 
+					std::vector<types::object*>, 
+					types::scope*)>* create_mul()
 			{
-				return new std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)>([](types::object * self, std::vector<types::object *> params, types::scope * env)
+				return new std::function<
+					types::object *(
+						types::object *, 
+						std::vector<types::object *>, 
+						types::scope *)>([](
+							types::object * self, 
+							std::vector<types::object *> params,
+							types::scope * env)
 				{
 					T * n1 = (T *)self->get_value();
 					T * n2 = (T *)params[0]->get_value();
@@ -75,9 +114,20 @@ namespace skiff
 			}
 
 			template<class T>
-			inline std::function<types::object*(types::object*, std::vector<types::object*>, types::scope*)>* create_div()
+			inline std::function<
+				types::object*(
+					types::object*, 
+					std::vector<types::object*>, 
+					types::scope*)>* create_div()
 			{
-				return new std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)>([](types::object * self, std::vector<types::object *> params, types::scope * env)
+				return new std::function<
+					types::object *(
+						types::object *, 
+						std::vector<types::object *>, 
+						types::scope *)>([](
+							types::object * self, 
+							std::vector<types::object *> params, 
+							types::scope * env)
 				{
 					T * n1 = (T *)self->get_value();
 					T * n2 = (T *)params[0]->get_value();
@@ -87,9 +137,20 @@ namespace skiff
 			}
 
 			template<class T>
-			inline std::function<types::object*(types::object*, std::vector<types::object*>, types::scope*)>* create_mod()
+			inline std::function<
+				types::object*(
+					types::object*, 
+					std::vector<types::object*>, 
+					types::scope*)>* create_mod()
 			{
-				return new std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)>([](types::object * self, std::vector<types::object *> params, types::scope * env)
+				return new std::function<
+					types::object *(
+						types::object *,
+						std::vector<types::object *>,
+						types::scope *)>([](
+							types::object * self, 
+							std::vector<types::object *> params, 
+							types::scope * env)
 				{
 					T * n1 = (T *)self->get_value();
 					T * n2 = (T *)params[0]->get_value();
@@ -99,9 +160,20 @@ namespace skiff
 			}
 
 			template<class T>
-			inline std::function<types::object*(types::object*, std::vector<types::object*>, types::scope*)>* create_clone()
+			inline std::function<
+				types::object*(
+					types::object*, 
+					std::vector<types::object*>, 
+					types::scope*)>* create_clone()
 			{
-				return new std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)>([](types::object * self, std::vector<types::object *> params, types::scope * env)
+				return new std::function<
+					types::object *(
+						types::object *, 
+						std::vector<types::object *>, 
+						types::scope *)>([](
+							types::object * self, 
+							std::vector<types::object *> params, 
+							types::scope * env)
 				{
 					T v = *(T *)self->get_value();
 					return new types::object(types::object::allocate(v), self->get_type());
@@ -109,9 +181,20 @@ namespace skiff
 			}
 
 			template<class T>
-			inline std::function<types::object*(types::object*, std::vector<types::object*>, types::scope*)>* create_to_string()
+			inline std::function<
+				types::object*(
+					types::object*, 
+					std::vector<types::object*>, 
+					types::scope*)>* create_to_string()
 			{
-				return new std::function<types::object *(types::object *, std::vector<types::object *>, types::scope *)>([](types::object * self, std::vector<types::object *> params, types::scope * env)
+				return new std::function<
+					types::object *(
+						types::object *, 
+						std::vector<types::object *>, 
+						types::scope *)>([](
+							types::object * self, 
+							std::vector<types::object *> params, 
+							types::scope * env)
 				{
 					T v = *(T *)self->get_value();
 					std::string * s = new std::string(std::to_string(v));
@@ -133,20 +216,29 @@ namespace skiff
 			inline types::type_class define_native_builtins(types::scope * env, builtin::type nt)
 			{
 				types::type_class t = types::type_class(builtin::get_name_for(nt), builtin::get_id_for(nt));
-				(*t.get_operators())[std::string(1, '+')] = types::function("add", env, generator::create_add<T>());
-				(*t.get_operators())[std::string(1, '-')] = types::function("sub", env, generator::create_sub<T>());
-				(*t.get_operators())[std::string(1, '*')] = types::function("mul", env, generator::create_mul<T>());
-				(*t.get_operators())[std::string(1, '/')] = types::function("div", env, generator::create_div<T>());
-				t.get_scope()->define_function("to_string", types::function("to_string", env, generator::create_to_string<T>()));
-				t.get_scope()->define_function("clone", types::function("clone", env, generator::create_clone<T>()));
+				(*t.get_operators())[std::string(1, '+')] = types::function("add", env, 
+					generator::create_add<T>());
+				(*t.get_operators())[std::string(1, '-')] = types::function("sub", env, 
+					generator::create_sub<T>());
+				(*t.get_operators())[std::string(1, '*')] = types::function("mul", env, 
+					generator::create_mul<T>());
+				(*t.get_operators())[std::string(1, '/')] = types::function("div", env, 
+					generator::create_div<T>());
+				t.get_scope()->define_function("to_string", types::function("to_string", env, 
+					generator::create_to_string<T>()));
+				t.get_scope()->define_function("clone", types::function("clone", env,
+					generator::create_clone<T>()));
 				return t;
 			}
 
 			template<class T>
-			inline types::type_class define_native_fixpoint_builtins(types::scope * env, builtin::type nt)
+			inline types::type_class define_native_fixpoint_builtins(types::scope * env, 
+				builtin::type nt)
 			{
 				types::type_class t = define_native_builtins<T>(env, nt);
-				(*t.get_operators())[std::string(1, '%')] = types::function("mod", std::vector<types::function::function_parameter>(), types::type_class(), env, generator::create_mod<T>());
+				(*t.get_operators())[std::string(1, '%')] = types::function("mod", 
+					std::vector<types::function::function_parameter>(), 
+					types::type_class(), env, generator::create_mod<T>());
 				return t;
 			}
 		}

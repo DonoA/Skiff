@@ -518,7 +518,8 @@ namespace skiff
 			return name;
 		}
 
-		class_heading::heading_generic class_heading::generate_generic_heading(string t_name, type_class extends)
+		class_heading::heading_generic class_heading::generate_generic_heading(string t_name, 
+			type_class extends)
 		{
 			return { t_name, extends };
 		}

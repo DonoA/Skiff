@@ -26,7 +26,8 @@ namespace skiff
 				char c;
 				do {
 					c = getchar();
-					if ((c == '"' || c == '\'') && (input.length() == 0 || input[input.length() - 1] != '\\'))
+					if ((c == '"' || c == '\'') && (input.length() == 0 || 
+						input[input.length() - 1] != '\\'))
 					{
 						parsing_string = !parsing_string;
 					}
@@ -69,7 +70,8 @@ namespace skiff
 					input = string();
 					c = '\0';
 				}
-				utils::track_braces(input.length() == 0 ? '\0' : input[input.length() - 1], c, &braces);
+				utils::track_braces(input.length() == 0 ? '\0' : input[input.length() - 1], c, 
+					&braces);
 			}
 			return statements;
 		}

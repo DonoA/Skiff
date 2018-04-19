@@ -78,11 +78,16 @@ namespace skiff
 				type_class typ;
 				std::string name;
 			};
-			static function::function_parameter create_function_parameter(std::string name, type_class typ);
-			function(std::string name, std::vector<function_parameter> params, type_class returns, scope * env, std::function<object *(object *, std::vector<object *>, scope *)> * builtin);
+			static function::function_parameter create_function_parameter(std::string name, 
+				type_class typ);
+			function(std::string name, std::vector<function_parameter> params, type_class returns, 
+				scope * env, 
+				std::function<object *(object *, std::vector<object *>, scope *)> * builtin);
 			//function(std::string name, std::vector<function_parameter> params, type_class returns, scope * env, object * (*builtin)(object *, std::vector<object *>, scope *));
-			function(std::string name, std::vector<function_parameter> params, type_class returns, scope * env);
-			function(std::string name, scope * env, std::function<object *(object *, std::vector<object *>, scope *)> * builtin);
+			function(std::string name, std::vector<function_parameter> params, 
+				type_class returns, scope * env);
+			function(std::string name, scope * env, 
+				std::function<object *(object *, std::vector<object *>, scope *)> * builtin);
 			function();
 			object * eval(object * self);
 			object * eval(object * self, std::vector<object *> params);

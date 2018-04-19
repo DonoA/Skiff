@@ -118,10 +118,13 @@ namespace skiff
 
 		}
 
-		function::function(string name, vector<function_parameter> params, type_class returns, scope * env) : function(name, params, returns, env, NULL)
+		function::function(string name, vector<function_parameter> params, type_class returns, 
+			scope * env) : function(name, params, returns, env, NULL)
 		{ }
 
-		function::function(string name, scope * env, std::function<object*(object*, vector<object*>, scope*)>* builtin) : function(name, vector<function_parameter>(), type_class(), env, builtin)
+		function::function(string name, scope * env, std::function<object*(object*, vector<object*>,
+			scope*)>* builtin) : function(name, 
+				vector<function_parameter>(), type_class(), env, builtin)
 		{
 		}
 

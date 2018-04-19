@@ -17,7 +17,9 @@ namespace skiff
 			}
 			int i, j;
 			for (i = 0; str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t'; i++);
-			for (j = str.length() - 1; j >= 0 && (str[j] == ' ' || str[j] == '\n' || str[j] == '\r' || str[i] == '\t'); j--);
+			for (j = str.length() - 1; 
+				j >= 0 && (str[j] == ' ' || str[j] == '\n' || str[j] == '\r' || str[i] == '\t'); 
+				j--);
 
 			return str.substr(i, (j + 1) - i);
 		}

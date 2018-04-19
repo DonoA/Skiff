@@ -90,7 +90,8 @@ namespace skiff
 
 				object * clone(object * self, vector<object*> params, scope * env)
 				{
-					return new object((void *) new std::string(*(std::string *)self->get_value()), self->get_type());
+					return new object((void *) new std::string(*(std::string *)self->get_value()), 
+						self->get_type());
 				}
 			}
 		}
@@ -100,20 +101,31 @@ namespace skiff
 			type_class define_string_builtins(scope * env)
 			{
 				type_class t = type_class("String", builtin::type::String);
-				(*t.get_operators())[string(1, '+')] = function("add", env, skiff::builtin::generator::create_add<string>());
-				t.get_scope()->define_function("to_string", function("to_string", env, new std::function<object*(object*, vector<object*>, scope*)>(&skiff::builtin::generator::string::to_string)));
-				t.get_scope()->define_function("clone", function("clone", env, new std::function<object*(object*, vector<object*>, scope*)>(&skiff::builtin::generator::string::clone)));
+				(*t.get_operators())[string(1, '+')] = function("add", env, 
+					skiff::builtin::generator::create_add<string>());
+				t.get_scope()->define_function("to_string", function("to_string", env, 
+					new std::function<object*(object*, vector<object*>, scope*)>(
+						&skiff::builtin::generator::string::to_string)));
+				t.get_scope()->define_function("clone", function("clone", env, 
+					new std::function<object*(object*, vector<object*>, scope*)>(
+						&skiff::builtin::generator::string::clone)));
 				return t;
 			}
 
 			void load_standards(scope * env)
 			{
-				env->define_type(builtin::get_name_for(builtin::type::Char), define_native_fixpoint_builtins<char>(env, builtin::type::Char));
-				env->define_type(builtin::get_name_for(builtin::type::Int), define_native_fixpoint_builtins<int>(env, builtin::type::Int));
-				env->define_type(builtin::get_name_for(builtin::type::Long), define_native_fixpoint_builtins<long>(env, builtin::type::Long));
-				env->define_type(builtin::get_name_for(builtin::type::Float), define_native_builtins<float>(env, builtin::type::Float));
-				env->define_type(builtin::get_name_for(builtin::type::Double), define_native_builtins<double>(env, builtin::type::Double));
-				env->define_type(builtin::get_name_for(builtin::type::String), define_string_builtins(env));
+				env->define_type(builtin::get_name_for(builtin::type::Char), 
+					define_native_fixpoint_builtins<char>(env, builtin::type::Char));
+				env->define_type(builtin::get_name_for(builtin::type::Int), 
+					define_native_fixpoint_builtins<int>(env, builtin::type::Int));
+				env->define_type(builtin::get_name_for(builtin::type::Long), 
+					define_native_fixpoint_builtins<long>(env, builtin::type::Long));
+				env->define_type(builtin::get_name_for(builtin::type::Float), 
+					define_native_builtins<float>(env, builtin::type::Float));
+				env->define_type(builtin::get_name_for(builtin::type::Double), 
+					define_native_builtins<double>(env, builtin::type::Double));
+				env->define_type(builtin::get_name_for(builtin::type::String), 
+					define_string_builtins(env));
 			}
 		}
 

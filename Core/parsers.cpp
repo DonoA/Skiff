@@ -146,14 +146,16 @@ namespace skiff
 		{
 			size_t split = std::min(tag.find_first_of(' '), tag.find_first_of('\n'));
 			string on = utils::remove_pad(tag.substr(split + 1));
-			return new statements::annotation_tag(tag.substr(0, split), vector<statements::statement *>(),
+			return new statements::annotation_tag(tag.substr(0, split), 
+				vector<statements::statement *>(),
 				parse_statement(on));
 		}
 		if (i > tag.find_first_of('\n'))
 		{
 			size_t split = tag.find_first_of('\n');
 			string on = utils::remove_pad(tag.substr(split + 1));
-			return new statements::annotation_tag(tag.substr(0, split), vector<statements::statement *>(),
+			return new statements::annotation_tag(tag.substr(0, split), 
+				vector<statements::statement *>(),
 				parse_statement(on));
 		}
 		string name = tag.substr(0, i);
@@ -169,12 +171,14 @@ namespace skiff
 				break;
 			}
 		}
-		vector<statements::statement *> p = parse_argument_statements(utils::braced_split(params, ','));
+		vector<statements::statement *> p = 
+			parse_argument_statements(utils::braced_split(params, ','));
 		string on = tag.substr(i + 1);
 		return new statements::annotation_tag(name, p, parse_statement(on));
 	}
 
-	statements::class_heading * parse_class_heading(statements::class_heading::class_type type, string stmt)
+	statements::class_heading * parse_class_heading(statements::class_heading::class_type type, 
+		string stmt)
 	{
 		size_t p = stmt.find_first_of('<');
 		size_t c = stmt.find_last_of(':');
@@ -195,12 +199,14 @@ namespace skiff
 				vector<string> bts = utils::string_split(s, ":");
 				if (bts.size() == 1)
 				{
-					gvt.push_back(statements::class_heading::generate_generic_heading(utils::remove_pad(bts[0]),
+					gvt.push_back(statements::class_heading::generate_generic_heading(
+						utils::remove_pad(bts[0]),
 						type_class("")));
 				}
 				else
 				{
-					gvt.push_back(statements::class_heading::generate_generic_heading(utils::remove_pad(bts[0]),
+					gvt.push_back(statements::class_heading::generate_generic_heading(
+						utils::remove_pad(bts[0]),
 						type_class(utils::remove_pad(bts[1]))));
 				}
 			}
@@ -226,12 +232,14 @@ namespace skiff
 		vector<string> s = utils::string_split(stmt, " ");
 		if (s[0] == "struct")
 		{
-			statements::class_heading * heading = parse_class_heading(statements::class_heading::class_type::STRUCT, s[1]);
+			statements::class_heading * heading = parse_class_heading(
+				statements::class_heading::class_type::STRUCT, s[1]);
 			return new statements::enum_heading(heading->get_name(), heading);
 		}
 		else if (s[0] == "class")
 		{
-			statements::class_heading * heading = parse_class_heading(statements::class_heading::class_type::CLASS, s[1]);
+			statements::class_heading * heading = parse_class_heading(
+				statements::class_heading::class_type::CLASS, s[1]);
 			return new statements::enum_heading(heading->get_name(), heading);
 		}
 		return new statements::enum_heading(stmt);
@@ -248,7 +256,8 @@ namespace skiff
 		{
 			string typ = utils::remove_pad(other.substr(0, eq_i));
 			string val = utils::remove_pad(other.substr(eq_i + 1));
-			return new statements::decleration_with_assignment(parse_statement(name), parse_type_class_name(typ), parse_statement(val));
+			return new statements::decleration_with_assignment(parse_statement(name),
+				parse_type_class_name(typ), parse_statement(val));
 		}
 	}
 
@@ -296,7 +305,8 @@ namespace skiff
 			return new statements::match_case_heading(p1, parse_type_class_name(p2));
 		}
 		string c_name = p2.substr(0, s);
-		vector<string> p_names = utils::braced_split(p2.substr(s + 1, p2.find_last_of(")") - (s + 1)), ',');
+		vector<string> p_names = 
+			utils::braced_split(p2.substr(s + 1, p2.find_last_of(")") - (s + 1)), ',');
 		return new statements::match_case_heading(p1, parse_type_class_name(c_name), p_names);
 	}
 
@@ -354,11 +364,13 @@ namespace skiff
 					}
 					else if (p1 == "static")
 					{
-						return new statements::modifier(statements::modifier::modifier_type::STATIC, parse_statement(p2));
+						return new statements::modifier(statements::modifier::modifier_type::STATIC, 
+							parse_statement(p2));
 					}
 					else if (p1 == "private")
 					{
-						return new statements::modifier(statements::modifier::modifier_type::PRIVATE, parse_statement(p2));
+						return new statements::modifier(statements::modifier::modifier_type::PRIVATE,
+							parse_statement(p2));
 					}
 					else if (p1 == "case")
 					{
@@ -382,7 +394,8 @@ namespace skiff
 					}
 					else if (p1 == "else")
 					{
-						return new statements::else_heading((statements::block_heading *)scan_for_keyword(p2));
+						return new statements::else_heading(
+							(statements::block_heading *)scan_for_keyword(p2));
 					}
 				}
 				else if (stmt[i] == ':')
@@ -400,7 +413,8 @@ namespace skiff
 					}
 					p1 = stmt.substr(0, i);
 					p2 = stmt.substr(i + 1);
-					return new statements::assignment(parse_statement(utils::remove_pad(p1)), parse_statement(p2));
+					return new statements::assignment(parse_statement(utils::remove_pad(p1)), 
+						parse_statement(p2));
 				}
 				else if (stmt[i] == '@')
 				{
@@ -425,11 +439,13 @@ namespace skiff
 					}
 					else if (p1 == "switch")
 					{
-						return new statements::switch_heading(statements::switch_heading::type::SWITCH, parse_statement(p2));
+						return new statements::switch_heading(
+							statements::switch_heading::type::SWITCH, parse_statement(p2));
 					}
 					else if (p1 == "match")
 					{
-						return new statements::switch_heading(statements::switch_heading::type::MATCH, parse_statement(p2));
+						return new statements::switch_heading(
+							statements::switch_heading::type::MATCH, parse_statement(p2));
 					}
 					else if (p1 == "catch")
 					{
@@ -459,7 +475,8 @@ namespace skiff
 				p2 = stmt.substr(i + 2);
 				statements::comparison * c1 = (statements::comparison *)parse_statement(p1);
 				statements::comparison * c2 = (statements::comparison *)parse_statement(p2);
-				return new statements::boolean_conjunction(c1, statements::boolean_conjunction::conjunction_type::And, c2);
+				return new statements::boolean_conjunction(c1, 
+					statements::boolean_conjunction::conjunction_type::And, c2);
 			}
 		}
 		return nullptr;
@@ -478,7 +495,8 @@ namespace skiff
 				p2 = stmt.substr(i + 2);
 				statements::comparison * c1 = (statements::comparison *)parse_statement(p1);
 				statements::comparison * c2 = (statements::comparison *)parse_statement(p2);
-				return new statements::boolean_conjunction(c1, statements::boolean_conjunction::conjunction_type::Or, c2);
+				return new statements::boolean_conjunction(c1,
+					statements::boolean_conjunction::conjunction_type::Or, c2);
 			}
 		}
 		return nullptr;
@@ -554,7 +572,8 @@ namespace skiff
 						queue<statements::statement *> stmts;
 						stmts.push(parse_statement(p1));
 						stmts.push(parse_statement(p2));
-						return new statements::assignment(parse_statement(p1), new statements::math_statement(stmts, ops));
+						return new statements::assignment(parse_statement(p1), 
+							new statements::math_statement(stmts, ops));
 					}
 					if (stmt[i] == '+' && i + 1 < stmt.length() && stmt[i + 1] == '+')
 					{
@@ -562,12 +581,14 @@ namespace skiff
 						p2 = stmt.substr(i + 2);
 						if (p1 == "")
 						{
-							return new statements::self_modifier(statements::self_modifier::modifier_type::PLUS,
+							return new statements::self_modifier(
+								statements::self_modifier::modifier_type::PLUS,
 								statements::self_modifier::modifier_time::PRE, parse_statement(p2));
 						}
 						if (p2 == "")
 						{
-							return new statements::self_modifier(statements::self_modifier::modifier_type::PLUS,
+							return new statements::self_modifier(
+								statements::self_modifier::modifier_type::PLUS,
 								statements::self_modifier::modifier_time::POST, parse_statement(p1));
 						}
 					}
@@ -577,12 +598,14 @@ namespace skiff
 						p2 = stmt.substr(i + 2);
 						if (p1 == "")
 						{
-							return new statements::self_modifier(statements::self_modifier::modifier_type::MINUS,
+							return new statements::self_modifier(
+								statements::self_modifier::modifier_type::MINUS,
 								statements::self_modifier::modifier_time::PRE, parse_statement(p2));
 						}
 						if (p2 == "")
 						{
-							return new statements::self_modifier(statements::self_modifier::modifier_type::MINUS,
+							return new statements::self_modifier(
+								statements::self_modifier::modifier_type::MINUS,
 								statements::self_modifier::modifier_time::POST, parse_statement(p1));
 						}
 					}

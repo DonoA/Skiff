@@ -258,7 +258,8 @@ namespace skiff
 		public:
 			match_case_heading(std::string name, types::type_class t) :
 				match_case_heading(name, t, std::vector<std::string>()) { };
-			match_case_heading(std::string name, types::type_class t, std::vector<std::string> struct_vals);
+			match_case_heading(std::string name, types::type_class t, 
+				std::vector<std::string> struct_vals);
 			std::string parse_string();
 		private:
 			std::string name;
@@ -278,7 +279,8 @@ namespace skiff
 			class_heading(class_heading::class_type type, std::string name);
 			class_heading(class_heading::class_type type, std::string name,
 				std::vector<heading_generic> generic_types);
-			class_heading(class_heading::class_type type, std::string name, types::type_class extends);
+			class_heading(class_heading::class_type type, std::string name, 
+				types::type_class extends);
 			class_heading(class_heading::class_type type, std::string name,
 				std::vector<heading_generic> generic_types, types::type_class extends);
 			std::string parse_string();
@@ -366,9 +368,11 @@ namespace skiff
 		class function_heading : public block_heading
 		{
 		public:
-			function_heading(std::string name) : function_heading(name, std::vector<types::function::function_parameter>(),
+			function_heading(std::string name) : function_heading(name, 
+				std::vector<types::function::function_parameter>(),
 				types::type_class("")) { }
-			function_heading(std::string name, std::vector<types::function::function_parameter> params,
+			function_heading(std::string name, 
+				std::vector<types::function::function_parameter> params,
 				types::type_class returns);
 			std::string parse_string();
 		private:
