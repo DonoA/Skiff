@@ -15,9 +15,19 @@ namespace skiff
 
 		std::string generate_indent(size_t len);
 
-
 		void track_braces(char lc, char c, std::stack<char> * braces);
 
 		std::vector<std::string> braced_split(std::string list, char del);
+
+		template<class T>
+		void * allocate(T val);
+
+		template<class T>
+		void * allocate(T val)
+		{
+			T * t = (T *) malloc(sizeof(T));
+			(*t) = val;
+			return t;
+		}
 	}
 }

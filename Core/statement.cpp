@@ -1,22 +1,21 @@
 #include "stdafx.h"
 #include "statement.h"
 #include "utils.h"
-#include "builtin.h"
 #include <iostream>
 
 namespace skiff
 {
 	namespace statements
 	{
-		using std::map;
-		using std::queue;
-		using std::string;
-		using std::vector;
+		using ::std::map;
+		using ::std::queue;
+		using ::std::string;
+		using ::std::vector;
 
-		using types::object;
-		using types::type_class;
-		using types::scope;
-		using types::function;
+		using ::skiff::environment::skiff_object;
+		using ::skiff::environment::skiff_class;
+		using ::skiff::environment::skiff_function;
+		using ::skiff::environment::scope;
 
 		statement::statement() { }
 
@@ -30,9 +29,9 @@ namespace skiff
 			return raw;
 		}
 
-		object statement::eval(scope * env)
+		skiff_object statement::eval(scope * env)
 		{
-			return object();
+			return skiff_object();
 		}
 
 		string statement::parse_string()
@@ -50,7 +49,12 @@ namespace skiff
 			this->val = val;
 		}
 
-		//object value::eval(scope * env)
+		skiff_object value::eval(scope * env)
+		{
+			return skiff_object();
+		}
+
+		//skiff_object value::eval(scope * env)
 		//{
 		//	return val;
 		//}
@@ -65,13 +69,13 @@ namespace skiff
 			return "Value(" + val + ")";
 		}
 
-		decleration::decleration(string name, type_class type)
+		decleration::decleration(string name, type_statement type)
 		{
 			this->name = name;
 			this->type = type;
 		}
 
-		//object * decleration::eval(scope * env)
+		//skiff_object * decleration::eval(scope * env)
 		//{
 		//	env->define_variable(name, val->eval(env));
 		//	return nullptr;
@@ -93,14 +97,14 @@ namespace skiff
 			this->params = params;
 		}
 
-		//object * function_call::eval(scope * env)
+		//skiff_object * function_call::eval(scope * env)
 		//{
 		//	if (name == "print")
 		//	{
 		//		string tp;
 		//		for (statement * stmt : params)
 		//		{
-		//			object * res = stmt->eval(env);
+		//			skiff_object * res = stmt->eval(env);
 		//			res = res->get_type().get_scope()->get_function("to_string").eval(res);
 		//			tp += *((string *) res->get_value());
 		//			tp += " ";
@@ -145,7 +149,7 @@ namespace skiff
 			this->name = name;
 		}
 
-		//object * variable::eval(scope * env)
+		//skiff_object * variable::eval(scope * env)
 		//{
 		//	return env->get_variable(name);
 		//}
@@ -166,9 +170,9 @@ namespace skiff
 			this->val = value;
 		}
 
-		//object * assignment::eval(scope * env)
+		//skiff_object * assignment::eval(scope * env)
 		//{
-		//	object * v = val->eval(env);
+		//	skiff_object * v = val->eval(env);
 		//	env->define_variable(name, v);
 		//	return v;
 		//}
@@ -189,12 +193,12 @@ namespace skiff
 			this->operators = operators;
 		}
 
-		//object * math_statement::eval(scope * env)
+		//skiff_object * math_statement::eval(scope * env)
 		//{
 		//	queue<char> ops = operators;
 		//	queue<statement *> stmts = operands;
-		//	object * base = stmts.front()->eval(env);
-		//	object * t = base->get_type().get_scope()->get_function("clone").eval(base);
+		//	skiff_object * base = stmts.front()->eval(env);
+		//	skiff_object * t = base->get_type().get_scope()->get_function("clone").eval(base);
 		//	stmts.pop();
 		//	while (!ops.empty())
 		//	{
@@ -235,16 +239,16 @@ namespace skiff
 			return rtn;
 		}
 
-		void math_statement::eval_single_op(object s1, char op, object s2)
+		void math_statement::eval_single_op(skiff_object s1, char op, skiff_object s2)
 		{
-			object * o = builtin::utils::get_dominant_type(&s1, &s2);
-			if (o == nullptr)
-			{
-				o = &s1;
-			}
-			vector<object> p;
-			p.push_back(s2);
-			(*o->get_type().get_operators())[string(1, op)].eval(*o, p);
+			//skiff_object * o = get_dominant_type(&s1, &s2);
+			//if (o == nullptr)
+			//{
+			//	o = &s1;
+			//}
+			//vector<skiff_object> p;
+			//p.push_back(s2);
+			//(*o->get_type().get_operators())[string(1, op)].eval(*o, p);
 		}
 
 		comparison::comparison(statement * s1, comparison::comparison_type typ, statement * s2)
@@ -254,7 +258,7 @@ namespace skiff
 			this->typ = typ;
 		}
 
-		//object * comparison::eval(scope * env)
+		//skiff_object * comparison::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -295,7 +299,7 @@ namespace skiff
 			this->val = value;
 		}
 
-		//object * invert::eval(scope * env)
+		//skiff_object * invert::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -315,7 +319,7 @@ namespace skiff
 			this->val = value;
 		}
 
-		//object * bitinvert::eval(scope * env)
+		//skiff_object * bitinvert::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -337,7 +341,7 @@ namespace skiff
 			this->s2 = s2;
 		}
 
-		//object * bitwise::eval(scope * env)
+		//skiff_object * bitwise::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -379,7 +383,7 @@ namespace skiff
 			this->conj = conj;
 		}
 
-		//object * boolean_conjunction::eval(scope * env)
+		//skiff_object * boolean_conjunction::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -417,9 +421,9 @@ namespace skiff
 			return string();
 		}
 
-		object block_heading::eval(scope * env)
+		skiff_object block_heading::eval(scope * env)
 		{
-			return object();
+			return skiff_object();
 		}
 
 		int block_heading::indent_mod()
@@ -432,7 +436,7 @@ namespace skiff
 			this->condition = condition;
 		}
 
-		//object * if_heading::eval(scope * env)
+		//skiff_object * if_heading::eval(scope * env)
 		//{
 		//	return condition->eval(env);
 		//}
@@ -447,7 +451,7 @@ namespace skiff
 			return "If(" + condition->parse_string() + ")";
 		}
 
-		//object * class_heading::eval(scope * env)
+		//skiff_object * class_heading::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -463,15 +467,15 @@ namespace skiff
 
 		class_heading::class_heading(class_heading::class_type type, string name,
 			vector<class_heading::heading_generic> generic_types) :
-			class_heading(type, name, generic_types, type_class(""))
+			class_heading(type, name, generic_types, type_statement(""))
 		{ }
 
-		class_heading::class_heading(class_heading::class_type type, string name, type_class extends) :
+		class_heading::class_heading(class_heading::class_type type, string name, type_statement extends) :
 			class_heading(type, name, vector<class_heading::heading_generic>(), extends)
 		{ }
 
 		class_heading::class_heading(class_heading::class_type type, string name,
-			vector<heading_generic> generic_types, type_class extends)
+			vector<heading_generic> generic_types, type_statement extends)
 		{
 			this->type = type;
 			this->name = name;
@@ -519,21 +523,29 @@ namespace skiff
 		}
 
 		class_heading::heading_generic class_heading::generate_generic_heading(string t_name, 
-			type_class extends)
+			type_statement extends)
 		{
 			return { t_name, extends };
 		}
 
 
-		function_heading::function_heading(string name, vector<function::function_parameter> params,
-			type_class returns)
+		function_heading::function_parameter function_heading::create_function_parameter(std::string name, type_statement typ)
+		{
+			function_heading::function_parameter p;
+			p.typ = typ;
+			p.name = name;
+			return p;
+		}
+
+		function_heading::function_heading(string name, vector<function_parameter> params,
+			type_statement returns)
 		{
 			this->name = name;
 			this->params = params;
 			this->returns = returns;
 		}
 
-		//object * function_heading::eval(scope * env)
+		//skiff_object * function_heading::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -558,7 +570,7 @@ namespace skiff
 		{
 			string params_rtn = "Params(";
 			bool any = false;
-			for (function::function_parameter p : params)
+			for (function_parameter p : params)
 			{
 				params_rtn += function_parameter_sig(p) + ",";
 				any = true;
@@ -572,15 +584,16 @@ namespace skiff
 				", Returns(" + returns.parse_string() + "))";
 		}
 
-		string function_heading::function_parameter_sig(function::function_parameter p)
+		string function_heading::function_parameter_sig(function_parameter p)
 		{
 			return "Param(" + p.name + +"," + p.typ.parse_string() + ")";
 		}
 
-		string function_heading::function_parameter_c_sig(function::function_parameter p)
+		string function_heading::function_parameter_c_sig(function_parameter p)
 		{
-			builtin::type t = builtin::get_type_for(p.typ.get_class_id());
-			return builtin::get_c_type_for(t) + " " + p.name;
+			//builtin::type t = builtin::get_type_for(p.typ.get_class_id());
+			//return builtin::get_c_type_for(t) + " " + p.name;
+			return string();
 		}
 
 		while_heading::while_heading(statement * condition)
@@ -588,7 +601,7 @@ namespace skiff
 			this->condition = condition;
 		}
 
-		//object * while_heading::eval(scope * env)
+		//skiff_object * while_heading::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -618,7 +631,7 @@ namespace skiff
 			this->returns = returns;
 		}
 
-		//object * return_statement::eval(scope * env)
+		//skiff_object * return_statement::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
@@ -633,18 +646,19 @@ namespace skiff
 			return "Returns(" + returns->parse_string() + ")";
 		}
 
-		new_object_statement::new_object_statement(type_class type, vector<statement*> params)
+		new_object_statement::new_object_statement(type_statement type,
+			vector<statement*> params)
 		{
 			this->type = type;
 			this->params = params;
 		}
 
-		//object * new_object_statement::eval(scope * env)
+		//skiff_object * new_skiff_object_statement::eval(scope * env)
 		//{
 		//	return nullptr;
 		//}
 		//
-		//string new_object_statement::eval_c()
+		//string new_skiff_object_statement::eval_c()
 		//{
 		//	return "NOT CONVERTABLE";
 		//}
@@ -779,7 +793,7 @@ namespace skiff
 		}
 
 		decleration_with_assignment::decleration_with_assignment(statement * name,
-			type_class type, statement * val)
+			type_statement type, statement * val)
 		{
 			this->name = name;
 			this->type = type;
@@ -916,7 +930,8 @@ namespace skiff
 			return "SwitchCase(" + val->parse_string() + ")";
 		}
 
-		match_case_heading::match_case_heading(string name, type_class t, vector<string> struct_vals)
+		match_case_heading::match_case_heading(string name, type_statement t, 
+			vector<string> struct_vals)
 		{
 			this->name = name;
 			this->t = t;
@@ -958,5 +973,33 @@ namespace skiff
 		{
 			return "CatchHeading(" + var->parse_string() + ")";
 		}
-	}
+		type_statement::type_statement(std::string name, std::vector<type_statement> generic_types)
+		{
+			this->name = name;
+			this->generic_types = generic_types;
+		}
+		std::string type_statement::get_name()
+		{
+			return name;
+		}
+		std::string type_statement::parse_string()
+		{
+			if (generic_types.empty())
+			{
+				return "TypeClass(" + name + ")";
+			}
+			string params_rtn = "Generics(";
+			bool any = false;
+			for (type_statement tc : generic_types)
+			{
+				params_rtn += tc.parse_string() + ",";
+				any = true;
+			}
+			if (any)
+			{
+				params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
+			}
+			return "TypeClass(" + name + ", " + params_rtn + "))";
+		}
+}
 }

@@ -17,7 +17,7 @@ namespace skiff
 		std::queue<statements::statement *> parse_file(std::string infile);
 		void print_parse(std::queue<statements::statement *> statements);
 		void translate_c(std::queue<statements::statement *> statements);
-		void evaluate(types::scope * env, std::queue<statements::statement *> statements);
+		void evaluate(environment::scope * env, std::queue<statements::statement *> statements);
 	}
 }
 

@@ -9,7 +9,7 @@ namespace skiff
 	using ::std::queue;
 	using ::std::stack;
 
-	using ::skiff::types::type_class;
+	using ::skiff::statements::type_statement;
 
 	vector<statements::statement *> parse_argument_statements(vector<string> params)
 	{
@@ -21,46 +21,46 @@ namespace skiff
 		return parsed;
 	}
 
-	type_class box_type(string stmt)
+	type_statement box_type(string stmt)
 	{
 		if (!stmt.empty() && stmt.find_first_not_of("0123456789") == std::string::npos)
 		{
-			return type_class("Int");
+			return type_statement("Int");
 		}
 		else if (!stmt.empty() && stmt.find_first_not_of("0123456789.") == std::string::npos)
 		{
-			return type_class("Double");
+			return type_statement("Double");
 		}
 		else if (!stmt.empty() && stmt[0] == '"' && stmt[stmt.length() - 1] == '"')
 		{
-			return type_class("String");
+			return type_statement("String");
 		}
 		else if (!stmt.empty() && stmt[0] == '\'' && stmt[stmt.length() - 1] == '\'')
 		{
-			return type_class("Sequence");
+			return type_statement("Sequence");
 		}
 		else if (!stmt.empty() && (stmt == "true" || stmt == "false"))
 		{
-			return type_class("Boolean");
+			return type_statement("Boolean");
 		}
-		return type_class("Var");
+		return type_statement("Var");
 	}
 
-	type_class parse_type_class_name(string name)
+	type_statement parse_type_statement_name(string name)
 	{
 		size_t p = name.find_first_of('<');
 		if (p == string::npos)
 		{
-			return type_class(name);
+			return type_statement(name);
 		}
 		string g = name.substr(p + 1, name.find_last_of('>') - (p + 1));
 		vector<string> gv = utils::string_split(g, ",");
-		vector<type_class> gvt;
+		vector<type_statement> gvt;
 		for (string s : gv)
 		{
-			gvt.push_back(type_class(utils::remove_pad(s)));
+			gvt.push_back(type_statement(utils::remove_pad(s)));
 		}
-		return type_class(name.substr(0, p), gvt);
+		return type_statement(name.substr(0, p), gvt);
 	}
 
 	bool is_math(char c)
@@ -110,14 +110,14 @@ namespace skiff
 		returns.erase(0, returns.find_first_of(":") + 1);
 		returns = utils::remove_pad(returns);
 		vector<string> params_list = utils::braced_split(params, ',');
-		vector<types::function::function_parameter> f_params;
+		vector<statements::function_heading::function_parameter> f_params;
 		for (string s : params_list)
 		{
 			vector<string> n = utils::string_split(s, ":");
-			f_params.push_back(types::function::create_function_parameter(utils::remove_pad(n[0]),
-				parse_type_class_name(utils::remove_pad(n[1]))));
+			f_params.push_back(statements::function_heading::create_function_parameter(utils::remove_pad(n[0]),
+				parse_type_statement_name(utils::remove_pad(n[1]))));
 		}
-		return new statements::function_heading(dec, f_params, parse_type_class_name(returns));
+		return new statements::function_heading(dec, f_params, parse_type_statement_name(returns));
 	}
 
 	statements::new_object_statement * parse_object_creation(string stmt)
@@ -136,7 +136,7 @@ namespace skiff
 			}
 		}
 		vector<statements::statement *> params = parse_argument_statements(utils::braced_split(params_str, ','));
-		return new statements::new_object_statement(parse_type_class_name(dec), params);
+		return new statements::new_object_statement(parse_type_statement_name(dec), params);
 	}
 
 	statements::annotation_tag * parse_annotation_tag(string tag)
@@ -188,7 +188,7 @@ namespace skiff
 		}
 		vector<statements::class_heading::heading_generic> gvt;
 		string c_name;
-		type_class extends = type_class("");
+		type_statement extends = type_statement("");
 		if (p != string::npos)
 		{
 			string g = stmt.substr(p + 1, stmt.find_last_of('>') - (p + 1));
@@ -201,13 +201,13 @@ namespace skiff
 				{
 					gvt.push_back(statements::class_heading::generate_generic_heading(
 						utils::remove_pad(bts[0]),
-						type_class("")));
+						type_statement("")));
 				}
 				else
 				{
 					gvt.push_back(statements::class_heading::generate_generic_heading(
 						utils::remove_pad(bts[0]),
-						type_class(utils::remove_pad(bts[1]))));
+						type_statement(utils::remove_pad(bts[1]))));
 				}
 			}
 		}
@@ -217,11 +217,11 @@ namespace skiff
 			{
 				vector<string> gv = utils::string_split(stmt, ":");
 				c_name = utils::remove_pad(gv[0]);
-				extends = type_class(utils::remove_pad(gv[1]));
+				extends = type_statement(utils::remove_pad(gv[1]));
 			}
 			else if (c > p)
 			{
-				extends = type_class(utils::remove_pad(stmt.substr(c + 1)));
+				extends = type_statement(utils::remove_pad(stmt.substr(c + 1)));
 			}
 		}
 		return new statements::class_heading(type, c_name, gvt, extends);
@@ -250,14 +250,14 @@ namespace skiff
 		size_t eq_i = other.find_first_of('=');
 		if (eq_i == string::npos)
 		{
-			return new statements::decleration(name, parse_type_class_name(other));
+			return new statements::decleration(name, parse_type_statement_name(other));
 		}
 		else
 		{
 			string typ = utils::remove_pad(other.substr(0, eq_i));
 			string val = utils::remove_pad(other.substr(eq_i + 1));
 			return new statements::decleration_with_assignment(parse_statement(name),
-				parse_type_class_name(typ), parse_statement(val));
+				parse_type_statement_name(typ), parse_statement(val));
 		}
 	}
 
@@ -302,12 +302,12 @@ namespace skiff
 		s = p2.find_first_of("(");
 		if (s == string::npos)
 		{
-			return new statements::match_case_heading(p1, parse_type_class_name(p2));
+			return new statements::match_case_heading(p1, parse_type_statement_name(p2));
 		}
 		string c_name = p2.substr(0, s);
 		vector<string> p_names = 
 			utils::braced_split(p2.substr(s + 1, p2.find_last_of(")") - (s + 1)), ',');
-		return new statements::match_case_heading(p1, parse_type_class_name(c_name), p_names);
+		return new statements::match_case_heading(p1, parse_type_statement_name(c_name), p_names);
 	}
 
 	statements::statement * scan_for_keyword(string stmt)

@@ -3,114 +3,50 @@
 
 namespace skiff
 {
-	namespace types
+	namespace environment
 	{
 		using ::std::string;
 		using ::std::vector;
 		using ::std::map;
 
-		size_t type_class::internal_class_id_counter = 100;
+		using ::skiff::environment::skiff_object;
+		using ::skiff::environment::skiff_class;
+		using ::skiff::environment::skiff_function;
+		using ::skiff::environment::scope;
 
-		type_class::type_class()
-		{
-			this->name = "None";
-		}
-
-		type_class::type_class(string name)
-		{
-			this->name = name;
-			this->generic_types = vector<type_class>();
-			this->class_id = type_class::internal_class_id_counter++;
-		}
-
-		type_class::type_class(string name, vector<type_class> generic_types) : type_class(name)
-		{
-			this->generic_types = generic_types;
-		}
-
-		type_class::type_class(string name, size_t id)
-		{
-			this->name = name;
-			this->class_id = id;
-		}
-
-		string type_class::get_name()
-		{
-			return name;
-		}
-
-		size_t type_class::get_class_id()
-		{
-			return class_id;
-		}
-
-		string type_class::parse_string()
-		{
-			if (generic_types.empty())
-			{
-				return "TypeClass(" + name + ")";
-			}
-			string params_rtn = "Generics(";
-			bool any = false;
-			for (type_class tc : generic_types)
-			{
-				params_rtn += tc.parse_string() + ",";
-				any = true;
-			}
-			if (any)
-			{
-				params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
-			}
-			return "TypeClass(" + name + ", " + params_rtn + "))";
-		}
-
-		scope * type_class::get_scope()
-		{
-			return &class_env;
-		}
-
-		map<string, function>* type_class::get_operators()
-		{
-			return &operators;
-		}
-
-		object::object(void * val, type_class type)
+		skiff_object::skiff_object(void * val, skiff_class type)
 		{
 			this->type = type;
 			this->value = val;
 		}
 
-		type_class object::get_type()
+		skiff_class skiff_object::get_class()
 		{
 			return type;
 		}
 
-		string object::to_string()
+		string skiff_object::to_string()
 		{
 			return type.get_name() + "@" + std::to_string((int)this);
 		}
 
-		void * object::get_value()
+		void * skiff_object::get_value()
 		{
 			return value;
 		}
 
-		void object::set_value(void * v)
+		void skiff_object::set_value(void * v)
 		{
 			this->value = v;
 		}
 
-		function::function_parameter function::create_function_parameter(string name, 
-			type_class typ)
+		skiff_function::function_parameter skiff_function::create_function_parameter(std::string name, skiff_class typ)
 		{
-			function::function_parameter p;
-			p.typ = typ;
-			p.name = name;
-			return p;
+			return function_parameter();
 		}
 
-		function::function(string name, vector<function_parameter> params, type_class returns, 
-			scope * env, std::function<object(object, vector<object>, scope *)> * builtin)
+		skiff_function::skiff_function(string name, vector<function_parameter> params, skiff_class returns,
+			scope * env, std::function<skiff_object(skiff_object, vector<skiff_object>, scope *)> * builtin)
 		{
 			this->function_env = scope(env);
 			this->name = name;
@@ -120,27 +56,27 @@ namespace skiff
 
 		}
 
-		function::function(string name, vector<function_parameter> params, type_class returns, 
-			scope * env) : function(name, params, returns, env, NULL)
+		skiff_function::skiff_function(string name, vector<function_parameter> params, skiff_class returns,
+			scope * env) : skiff_function(name, params, returns, env, NULL)
 		{ }
 
-		function::function(string name, scope * env, std::function<object(object, vector<object>,
-			scope*)>* builtin) : function(name, 
-				vector<function_parameter>(), type_class(), env, builtin)
+		skiff_function::skiff_function(string name, scope * env, std::function<skiff_object(skiff_object, vector<skiff_object>,
+			scope*)>* builtin) : skiff_function(name,
+				vector<function_parameter>(), skiff_class(), env, builtin)
 		{
 		}
 
-		function::function()
+		skiff_function::skiff_function()
 		{
 			this->builtin = NULL;
 		}
 
-		object function::eval(object self)
+		skiff_object skiff_function::eval(skiff_object self)
 		{
-			return eval(self, vector<object>());
+			return eval(self, vector<skiff_object>());
 		}
 
-		object function::eval(object self, vector<object> params)
+		skiff_object skiff_function::eval(skiff_object self, vector<skiff_object> params)
 		{
 			if (builtin == NULL)
 			{
@@ -148,11 +84,11 @@ namespace skiff
 				//{
 				//	stmt->eval(&function_env);
 				//}
-				return object();
+				return skiff_object();
 			}
 			else
 			{
-				return (*builtin)(self, params, &function_env);
+				return (*builtin)(self, params, &(this->function_env));
 			}
 		}
 		scope::scope(scope * inherit)
@@ -160,12 +96,12 @@ namespace skiff
 			this->inherit = inherit;
 		}
 
-		void scope::define_variable(string name, object * val)
+		void scope::define_variable(string name, skiff_object val)
 		{
 			env[name] = val;
 		}
 
-		object * scope::get_variable(string name)
+		skiff_object scope::get_variable(string name)
 		{
 			if (env.count(name))
 			{
@@ -173,17 +109,17 @@ namespace skiff
 			}
 			if (inherit == nullptr)
 			{
-				return nullptr;
+				return skiff_object();
 			}
 			return inherit->get_variable(name);
 		}
 
-		void scope::define_type(string name, type_class cls)
+		void scope::define_type(string name, skiff_class cls)
 		{
 			known_types[name] = cls;
 		}
 
-		type_class scope::get_type(string name)
+		skiff_class scope::get_type(string name)
 		{
 			if (known_types.count(name))
 			{
@@ -191,17 +127,17 @@ namespace skiff
 			}
 			if (inherit == nullptr)
 			{
-				return type_class();
+				return skiff_class();
 			}
 			return inherit->get_type(name);
 		}
 
-		void scope::define_function(string name, function cls)
+		void scope::define_function(string name, skiff_function cls)
 		{
 			known_functions[name] = cls;
 		}
 
-		function scope::get_function(string name)
+		skiff_function scope::get_function(string name)
 		{
 			if (known_functions.count(name))
 			{
@@ -209,9 +145,30 @@ namespace skiff
 			}
 			if (inherit == nullptr)
 			{
-				return function();
+				return skiff_function();
 			}
 			return inherit->get_function(name);
 		}
-	}
+		skiff_class::skiff_class(std::string name, skiff_class * parent)
+		{
+			this->name = name;
+			this->parent = parent;
+		}
+		scope * skiff_class::get_scope()
+		{
+			return &class_env;
+		}
+		std::string skiff_class::get_name()
+		{
+			return name;
+		}
+		std::map<std::string, skiff_function>* skiff_class::get_operators()
+		{
+			return &known_functions;
+		}
+		skiff_object skiff_class::construct(std::vector<skiff_object> params)
+		{
+			return skiff_object();
+		}
+}
 }

@@ -11,7 +11,7 @@ namespace skiff
 		using ::std::queue;
 		using ::std::stack;
 		using statements::statement;
-		using types::scope;
+		using environment::scope;
 
 		void interactive_mode()
 		{

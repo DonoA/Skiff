@@ -6,108 +6,96 @@
 #include <functional>
 #include <iostream>
 
+#include "statement.h"
 #include "utils.h"
 
 namespace skiff
 {
-	namespace types
+
+	namespace environment
 	{
-		class type_class;
-		class function;
-		class object;
+		class scope;
+		class skiff_object;
+		class skiff_function;
+		class skiff_class;
 
 		class scope
 		{
 		public:
 			scope() { inherit = nullptr; };
 			scope(scope * inherit);
-			void define_variable(std::string name, object * val);
-			object * get_variable(std::string name);
-			void define_type(std::string name, type_class cls);
-			type_class get_type(std::string name);
-			void define_function(std::string name, function func);
-			function get_function(std::string name);
+			void define_variable(std::string name, skiff_object val);
+			skiff_object get_variable(std::string name);
+			void define_type(std::string name, skiff_class cls);
+			skiff_class get_type(std::string name);
+			void define_function(std::string name, skiff_function func);
+			skiff_function get_function(std::string name);
 		private:
-			std::map<std::string, object *> env;
+			std::map<std::string, skiff_object> env;
 			scope * inherit;
-			std::map<std::string, type_class> known_types;
-			std::map<std::string, function> known_functions;
+			std::map<std::string, skiff_class> known_types;
+			std::map<std::string, skiff_function> known_functions;
 		};
 
-		class type_class
+		class skiff_class
 		{
 		public:
-			type_class();
-			type_class(std::string name);
-			type_class(std::string name, std::vector<type_class> generic_types);
-			type_class(std::string name, size_t id);
-			std::string get_name();
-			size_t get_class_id();
-			std::string parse_string();
+			skiff_class() : skiff_class("") { }
+			skiff_class(std::string name) : skiff_class(name, nullptr) { }
+			skiff_class(std::string name, skiff_class * parent);
 			scope * get_scope();
-			std::map<std::string, function> * get_operators();
+			std::string get_name();
+			std::map<std::string, skiff_function> * get_operators();
+			skiff_object construct(std::vector<skiff_object> params);
 		private:
 			std::string name;
-			std::vector<type_class> generic_types;
+			skiff_class * parent;
 			scope class_env;
-			size_t class_id;
-			std::map<std::string, function> operators;
-			static size_t internal_class_id_counter;
+			std::map<std::string, skiff_function> known_functions;
 		};
 
-		class object
+		class skiff_object
 		{
 		public:
-			template<class T>
-			static void * allocate(T val);
-			object() : object(nullptr, type_class("")) { }
-			object(void * str, type_class type);
-			type_class get_type();
+			skiff_object() : skiff_object(nullptr, skiff_class()) { }
+			skiff_object(void * str, skiff_class type);
+
+			skiff_class get_class();
 			std::string to_string();
 			void * get_value();
 			void set_value(void * v);
 		private:
-			type_class type;
+			skiff_class type;
 			void * value;
 		};
 
-		class function
+		class skiff_function
 		{
 		public:
 			struct function_parameter
 			{
-				type_class typ;
+				skiff_class typ;
 				std::string name;
 			};
-			static function::function_parameter create_function_parameter(std::string name, 
-				type_class typ);
-			function(std::string name, std::vector<function_parameter> params, type_class returns, 
-				scope * env, 
-				std::function<object(object, std::vector<object>, scope *)> * builtin);
-			//function(std::string name, std::vector<function_parameter> params, type_class returns, scope * env, object * (*builtin)(object *, std::vector<object *>, scope *));
-			function(std::string name, std::vector<function_parameter> params, 
-				type_class returns, scope * env);
-			function(std::string name, scope * env, 
-				std::function<object(object, std::vector<object>, scope *)> * builtin);
-			function();
-			object eval(object self);
-			object eval(object self, std::vector<object> params);
+			static function_parameter create_function_parameter(std::string name,
+				skiff_class typ);
+			skiff_function(std::string name, std::vector<function_parameter> params, skiff_class returns,
+				scope * env,
+				std::function<skiff_object(skiff_object, std::vector<skiff_object>, scope *)> * builtin);
+			skiff_function(std::string name, std::vector<function_parameter> params,
+				skiff_class returns, scope * env);
+			skiff_function(std::string name, scope * env,
+				std::function<skiff_object(skiff_object, std::vector<skiff_object>, scope *)> * builtin);
+			skiff_function();
+			skiff_object eval(skiff_object self);
+			skiff_object eval(skiff_object self, std::vector<skiff_object> params);
 		private:
 			scope function_env;
 			std::string name;
 			std::vector<function_parameter> params;
-			type_class returns;
-			//std::vector<statement *> statements;
-			//object * (*builtin)(object *, std::vector<object *>, scope *);
-			std::function<object(object, std::vector<object>, scope *)> * builtin;
+			skiff_class returns;
+			//std::vector<statements::statement *> statements;
+			std::function<skiff_object(skiff_object, std::vector<skiff_object>, scope *)> * builtin;
 		};
-
-		template<class T>
-		inline void * object::allocate(T val)
-		{
-			T * p = (T *)malloc(sizeof(T));
-			(*p) = val;
-			return p;
-		}
 	}
 }

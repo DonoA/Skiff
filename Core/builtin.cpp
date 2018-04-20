@@ -35,10 +35,11 @@ namespace skiff
 	{
 		using std::string;
 		using std::vector;
-		using types::object;
-		using types::scope;
-		using types::type_class;
-		using types::function;
+
+		using environment::scope;
+		using environment::skiff_object;
+		using environment::skiff_class;
+		using environment::skiff_function;
 
 		string get_c_type_for(builtin::type nt)
 		{
@@ -83,31 +84,31 @@ namespace skiff
 		{
 			namespace string
 			{
-				object to_string(object self, vector<object> params, scope * env)
+				skiff_object to_string(skiff_object self, vector<skiff_object> params, scope * env)
 				{
 					return self;
 				}
 
-				object clone(object self, vector<object> params, scope * env)
+				skiff_object clone(skiff_object self, vector<skiff_object> params, scope * env)
 				{
-					return object((void *) new std::string(*(std::string *)self.get_value()), 
-						self.get_type());
+					return skiff_object((void *) new std::string(*(std::string *)self.get_value()),
+						self.get_class());
 				}
 			}
 		}
 
 		namespace load
 		{
-			type_class define_string_builtins(scope * env)
+			skiff_class define_string_builtins(scope * env)
 			{
-				type_class t = type_class("String", builtin::type::String);
-				(*t.get_operators())[string(1, '+')] = function("add", env, 
+				skiff_class t = skiff_class("String");
+				(*t.get_operators())[string(1, '+')] = skiff_function("add", env, 
 					skiff::builtin::generator::create_add<string>());
-				t.get_scope()->define_function("to_string", function("to_string", env, 
-					new std::function<object(object, vector<object>, scope*)>(
+				t.get_scope()->define_function("to_string", skiff_function("to_string", env,
+					new std::function<skiff_object(skiff_object, vector<skiff_object>, scope*)>(
 						&skiff::builtin::generator::string::to_string)));
-				t.get_scope()->define_function("clone", function("clone", env, 
-					new std::function<object(object, vector<object>, scope*)>(
+				t.get_scope()->define_function("clone", skiff_function("clone", env,
+					new std::function<skiff_object(skiff_object, vector<skiff_object>, scope*)>(
 						&skiff::builtin::generator::string::clone)));
 				return t;
 			}
@@ -131,7 +132,7 @@ namespace skiff
 
 		namespace utils
 		{
-			object * get_dominant_type(object * c1, object * c2)
+			skiff_object * get_dominant_type(skiff_object * c1, skiff_object * c2)
 			{
 				builtin::type type_order[] = {
 					builtin::type::Double,
@@ -142,11 +143,11 @@ namespace skiff
 				};
 				for (builtin::type s : type_order)
 				{
-					if (c1->get_type().get_class_id() == builtin::get_id_for(s))
+					if (c1->get_class().get_name() == name_by_type.at(s))
 					{
 						return c1;
 					}
-					if (c2->get_type().get_class_id() == builtin::get_id_for(s))
+					if (c1->get_class().get_name() == name_by_type.at(s))
 					{
 						return c2;
 					}

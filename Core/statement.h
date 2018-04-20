@@ -7,6 +7,14 @@
 
 namespace skiff
 {
+	namespace environment
+	{
+		class scope;
+		class skiff_object;
+		class skiff_function;
+		class skiff_class;
+	}
+
 	namespace statements
 	{
 		class statement
@@ -15,21 +23,36 @@ namespace skiff
 			statement();
 			statement(std::string raw);
 			virtual std::string eval_c();
-			virtual types::object eval(types::scope * env);
+			virtual environment::skiff_object eval(environment::scope * env);
 			virtual std::string parse_string();
 			virtual int indent_mod();
 		private:
 			std::string raw;
 		};
 
+		class type_statement : public statement
+		{
+		public:
+			type_statement() : type_statement("") { };
+			type_statement(std::string name) : type_statement(name, std::vector<type_statement>())
+			{ }
+			type_statement(std::string name, std::vector<type_statement> generic_types);
+			std::string get_name();
+			std::string parse_string();
+		private:
+			std::string name;
+			std::vector<type_statement> generic_types;
+		};
+
 		class value : public statement
 		{
 		public:
 			value(std::string val);
+			environment::skiff_object eval(environment::scope * env);
 			std::string parse_string();
 		private:
 			std::string val;
-			types::type_class typ;
+			type_statement typ;
 		};
 
 		class variable : public statement
@@ -78,7 +101,7 @@ namespace skiff
 		private:
 			std::queue<statement*> operands;
 			std::queue<char> operators;
-			static void eval_single_op(types::object s1, char op, types::object s2);
+			static void eval_single_op(environment::skiff_object s1, char op, environment::skiff_object s2);
 		};
 
 		class compund_statement : public statement
@@ -103,21 +126,21 @@ namespace skiff
 		class decleration : public statement
 		{
 		public:
-			decleration(std::string name, types::type_class type);
+			decleration(std::string name, type_statement type);
 			std::string parse_string();
 		private:
 			std::string name;
-			types::type_class type;
+			type_statement type;
 		};
 
 		class decleration_with_assignment : public statement
 		{
 		public:
-			decleration_with_assignment(statement * name, types::type_class type, statement * val);
+			decleration_with_assignment(statement * name, type_statement type, statement * val);
 			std::string parse_string();
 		private:
 			statement * name;
-			types::type_class type;
+			type_statement type;
 			statement * value;
 		};
 
@@ -137,7 +160,7 @@ namespace skiff
 			block_heading() {};
 			block_heading(std::string raw);
 			virtual std::string eval_c();
-			virtual types::object eval(types::scope * env);
+			virtual environment::skiff_object eval(environment::scope * env);
 			virtual std::string parse_string() = 0;
 			int indent_mod();
 		private:
@@ -256,14 +279,14 @@ namespace skiff
 		class match_case_heading : public block_heading
 		{
 		public:
-			match_case_heading(std::string name, types::type_class t) :
+			match_case_heading(std::string name, type_statement t) :
 				match_case_heading(name, t, std::vector<std::string>()) { };
-			match_case_heading(std::string name, types::type_class t, 
+			match_case_heading(std::string name, type_statement t, 
 				std::vector<std::string> struct_vals);
 			std::string parse_string();
 		private:
 			std::string name;
-			types::type_class t;
+			type_statement t;
 			std::vector<std::string> struct_vals;
 		};
 
@@ -274,23 +297,23 @@ namespace skiff
 			struct heading_generic
 			{
 				std::string t_name;
-				types::type_class extends;
+				type_statement extends;
 			};
 			class_heading(class_heading::class_type type, std::string name);
 			class_heading(class_heading::class_type type, std::string name,
 				std::vector<heading_generic> generic_types);
 			class_heading(class_heading::class_type type, std::string name, 
-				types::type_class extends);
+				type_statement extends);
 			class_heading(class_heading::class_type type, std::string name,
-				std::vector<heading_generic> generic_types, types::type_class extends);
+				std::vector<heading_generic> generic_types, type_statement extends);
 			std::string parse_string();
 			std::string get_name();
 			static class_heading::heading_generic generate_generic_heading(std::string t_name,
-				types::type_class extends);
+				type_statement extends);
 		private:
 			std::string name;
 			class_heading::class_type type;
-			types::type_class extends;
+			type_statement extends;
 			std::vector<heading_generic> generic_types;
 		};
 
@@ -358,29 +381,35 @@ namespace skiff
 		class new_object_statement : public statement
 		{
 		public:
-			new_object_statement(types::type_class type, std::vector<statement *> params);
+			new_object_statement(type_statement type, std::vector<statement *> params);
 			std::string parse_string();
 		private:
-			types::type_class type;
+			type_statement type;
 			std::vector<statement *> params;
 		};
 
 		class function_heading : public block_heading
 		{
 		public:
+			struct function_parameter
+			{
+				type_statement typ;
+				std::string name;
+			};
+			static function_heading::function_parameter create_function_parameter(std::string name,
+				type_statement typ);
 			function_heading(std::string name) : function_heading(name, 
-				std::vector<types::function::function_parameter>(),
-				types::type_class("")) { }
-			function_heading(std::string name, 
-				std::vector<types::function::function_parameter> params,
-				types::type_class returns);
+				std::vector<function_parameter>(),
+				type_statement("")) { }
+			function_heading(std::string name, std::vector<function_parameter> params,
+				type_statement returns);
 			std::string parse_string();
 		private:
 			std::string name;
-			std::vector<types::function::function_parameter> params;
-			types::type_class returns;
-			std::string function_parameter_sig(types::function::function_parameter);
-			std::string function_parameter_c_sig(types::function::function_parameter);
+			std::vector<function_parameter> params;
+			type_statement returns;
+			std::string function_parameter_sig(function_parameter);
+			std::string function_parameter_c_sig(function_parameter);
 		};
 
 		class comparison : public statement
