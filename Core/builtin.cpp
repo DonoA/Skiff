@@ -143,11 +143,11 @@ namespace skiff
 				};
 				for (builtin::type s : type_order)
 				{
-					if (c1->get_class().get_name() == name_by_type.at(s))
+					if (c1->get_class()->get_name() == name_by_type.at(s))
 					{
 						return c1;
 					}
-					if (c1->get_class().get_name() == name_by_type.at(s))
+					if (c1->get_class()->get_name() == name_by_type.at(s))
 					{
 						return c2;
 					}

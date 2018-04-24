@@ -72,7 +72,7 @@ The language supports a wide range of syntactical styles:
 - Instance variable modifiers:
     - [x] Static: `static var: Type`
     - [x] Private: `private var: Type`
-- [ ] Anonymous functions: 
+- [ ] Anonymous functions:
     - Creation: `(parameter: Type): ReturnType => {}`
     - As a type: `myFunction: (Type) => ReturnType`
 - [ ] Anonymous Class: `new MyClass() {}`

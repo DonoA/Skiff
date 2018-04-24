@@ -256,7 +256,7 @@ namespace skiff
 		{
 			string typ = utils::remove_pad(other.substr(0, eq_i));
 			string val = utils::remove_pad(other.substr(eq_i + 1));
-			return new statements::decleration_with_assignment(parse_statement(name),
+			return new statements::decleration_with_assignment(name,
 				parse_type_statement_name(typ), parse_statement(val));
 		}
 	}
@@ -789,7 +789,7 @@ namespace skiff
 		}
 		//return new variable(stmt);
 		//std::cerr << "Could not locate refrence: '" << stmt << "'" << std::endl;
-		return new statements::statement(stmt);
+		return new statements::variable(stmt);
 	}
 
 	bool handle_line(string input, char c, queue<statements::statement *> * stmts)

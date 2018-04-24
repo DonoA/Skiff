@@ -792,7 +792,7 @@ namespace skiff
 			return name + "(" + on->parse_string() + ")";
 		}
 
-		decleration_with_assignment::decleration_with_assignment(statement * name,
+		decleration_with_assignment::decleration_with_assignment(std::string name,
 			type_statement type, statement * val)
 		{
 			this->name = name;
@@ -802,8 +802,18 @@ namespace skiff
 
 		string decleration_with_assignment::parse_string()
 		{
-			return "DeclareAndAssign(" + name->parse_string() + ", " + type.parse_string() + ", " +
+			return "DeclareAndAssign(" + name + ", " + type.parse_string() + ", " +
 				value->parse_string() + ")";
+		}
+
+		environment::skiff_object decleration_with_assignment::eval(environment::scope * env)
+		{
+			skiff_class clazz = type.eval_class(env);
+			vector<skiff_object> params = {
+				value->eval(env)
+			};
+			env->define_variable(name, clazz.construct(params));
+			return environment::skiff_object();
 		}
 
 		import_statement::import_statement(string import_name)
@@ -1000,6 +1010,10 @@ namespace skiff
 				params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
 			}
 			return "TypeClass(" + name + ", " + params_rtn + "))";
+		}
+		skiff_class type_statement::eval_class(scope * env)
+		{
+			return env->get_type(name);
 		}
 }
 }

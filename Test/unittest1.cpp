@@ -14,7 +14,6 @@ using std::string;
 using std::vector;
 using std::queue;
 
-
 namespace Test
 {		
 	TEST_CLASS(Utils)
@@ -59,13 +58,13 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("x: Int");
-			p = new skiff::statements::decleration("x", skiff::types::type_class("Int"));
+			p = new skiff::statements::decleration("x", skiff::statements::type_statement("Int"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x: List<Type>");
-			vector<skiff::types::type_class> et;
-			et.push_back(skiff::types::type_class("Type"));
-			p = new skiff::statements::decleration("x", skiff::types::type_class("List", et));
+			vector<skiff::statements::type_statement> et;
+			et.push_back(skiff::statements::type_statement("Type"));
+			p = new skiff::statements::decleration("x", skiff::statements::type_statement("List", et));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -85,18 +84,18 @@ namespace Test
 
 			s = skiff::parse_statement("x: Int = 5");
 			p = new skiff::statements::decleration_with_assignment(
-				new skiff::statements::statement("x"), skiff::types::type_class("Int"), 
+				new skiff::statements::statement("x"), skiff::statements::type_statement("Int"), 
 				new skiff::statements::value("5"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("x: List<Type> = new List<Type>()");
-			vector<skiff::types::type_class> et;
-			et.push_back(skiff::types::type_class("Type"));
+			vector<skiff::statements::type_statement> et;
+			et.push_back(skiff::statements::type_statement("Type"));
 			p = new skiff::statements::decleration_with_assignment(
-				new skiff::statements::statement("x"), skiff::types::type_class("List", et), 
+				new skiff::statements::statement("x"), skiff::statements::type_statement("List", et), 
 				new skiff::statements::new_object_statement(
-					skiff::types::type_class("List", et), 
+					skiff::statements::type_statement("List", et), 
 					vector<skiff::statements::statement *>()));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
@@ -136,41 +135,41 @@ namespace Test
 		TEST_METHOD(FunctionDef)
 		{
 			skiff::statements::statement * s, *p;
-			vector<skiff::types::function::function_parameter> params;
+			vector<skiff::statements::function_heading::function_parameter> params;
 
 			s = skiff::parse_statement("def test(): Some");
 			p = new skiff::statements::function_heading("test", 
-				vector<skiff::types::function::function_parameter>(),
-				skiff::types::type_class("Some"));
+				vector<skiff::statements::function_heading::function_parameter>(),
+				skiff::statements::type_statement("Some"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("def test(arg: String): Some");
 			params = {
-				{ skiff::types::type_class("String"), "arg" }
+				{ skiff::statements::type_statement("String"), "arg" }
 			};
 			p = new skiff::statements::function_heading("test", params, 
-				skiff::types::type_class("Some"));
+				skiff::statements::type_statement("Some"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("def test(argc: Int, argv: String): Some");
 			params = {
-				{ skiff::types::type_class("Int"), "argc" },
-				{ skiff::types::type_class("String"), "argv" }
+				{ skiff::statements::type_statement("Int"), "argc" },
+				{ skiff::statements::type_statement("String"), "argv" }
 			};
 			p = new skiff::statements::function_heading("test", params, 
-				skiff::types::type_class("Some"));
+				skiff::statements::type_statement("Some"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("def test(argc: Int, argv: String)");
 			params = {
-				{ skiff::types::type_class("Int"), "argc" },
-				{ skiff::types::type_class("String"), "argv" }
+				{ skiff::statements::type_statement("Int"), "argc" },
+				{ skiff::statements::type_statement("String"), "argv" }
 			};
 			p = new skiff::statements::function_heading("test", params, 
-				skiff::types::type_class(""));
+				skiff::statements::type_statement(""));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -187,7 +186,7 @@ namespace Test
 			s = skiff::parse_statement("class Test<T>");
 			gt.push_back(
 				skiff::statements::class_heading::generate_generic_heading("T", 
-					skiff::types::type_class("")));
+					skiff::statements::type_statement("")));
 			p = new skiff::statements::class_heading(
 				skiff::statements::class_heading::class_type::CLASS, "Test", gt);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
@@ -196,20 +195,20 @@ namespace Test
 			gt = vector<skiff::statements::class_heading::heading_generic>();
 			gt.push_back(
 				skiff::statements::class_heading::generate_generic_heading("T", 
-					skiff::types::type_class("")));
+					skiff::statements::type_statement("")));
 			p = new skiff::statements::class_heading(
 				skiff::statements::class_heading::class_type::CLASS, "Test", gt, 
-				skiff::types::type_class("Parent"));
+				skiff::statements::type_statement("Parent"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("class Test<T:Extends> : Parent");
 			gt = vector<skiff::statements::class_heading::heading_generic>();
 			gt.push_back(
 				skiff::statements::class_heading::generate_generic_heading("T", 
-					skiff::types::type_class("Extends")));
+					skiff::statements::type_statement("Extends")));
 			p = new skiff::statements::class_heading(
 				skiff::statements::class_heading::class_type::CLASS, "Test", gt,
-				skiff::types::type_class("Parent"));
+				skiff::statements::type_statement("Parent"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -226,7 +225,7 @@ namespace Test
 			s = skiff::parse_statement("struct Test<T>");
 			gt.push_back(
 				skiff::statements::class_heading::generate_generic_heading("T", 
-					skiff::types::type_class("")));
+					skiff::statements::type_statement("")));
 			p = new skiff::statements::class_heading(
 				skiff::statements::class_heading::class_type::STRUCT, "Test", gt);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
@@ -235,20 +234,20 @@ namespace Test
 			gt = vector<skiff::statements::class_heading::heading_generic>();
 			gt.push_back(
 				skiff::statements::class_heading::generate_generic_heading("T", 
-					skiff::types::type_class("")));
+					skiff::statements::type_statement("")));
 			p = new skiff::statements::class_heading(
 				skiff::statements::class_heading::class_type::STRUCT, "Test", gt,
-				skiff::types::type_class("Parent"));
+				skiff::statements::type_statement("Parent"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("struct Test<T:Extends> : Parent");
 			gt = vector<skiff::statements::class_heading::heading_generic>();
 			gt.push_back(
 				skiff::statements::class_heading::generate_generic_heading("T", 
-					skiff::types::type_class("Extends")));
+					skiff::statements::type_statement("Extends")));
 			p = new skiff::statements::class_heading(
 				skiff::statements::class_heading::class_type::STRUCT, "Test", gt,
-				skiff::types::type_class("Parent"));
+				skiff::statements::type_statement("Parent"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -258,7 +257,7 @@ namespace Test
 			vector<skiff::statements::statement *> params;
 
 			s = skiff::parse_statement("new Test()");
-			p = new skiff::statements::new_object_statement(skiff::types::type_class("Test"), 
+			p = new skiff::statements::new_object_statement(skiff::statements::type_statement("Test"), 
 				vector<skiff::statements::statement *>());
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
@@ -267,7 +266,7 @@ namespace Test
 			params = {
 				new skiff::statements::statement("x")
 			};
-			p = new skiff::statements::new_object_statement(skiff::types::type_class("Test"), 
+			p = new skiff::statements::new_object_statement(skiff::statements::type_statement("Test"), 
 				params);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
@@ -277,7 +276,7 @@ namespace Test
 				new skiff::statements::value("5"),
 				new skiff::statements::statement("x")
 			};
-			p = new skiff::statements::new_object_statement(skiff::types::type_class("Test"), 
+			p = new skiff::statements::new_object_statement(skiff::statements::type_statement("Test"), 
 				params);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
@@ -535,7 +534,7 @@ namespace Test
 			p = new skiff::statements::for_classic_heading(
 				new skiff::statements::decleration_with_assignment(
 					new skiff::statements::statement("x"), 
-					skiff::types::type_class("Int"), 
+					skiff::statements::type_statement("Int"), 
 					new skiff::statements::value("0")
 				), 
 				new skiff::statements::comparison(
@@ -553,7 +552,7 @@ namespace Test
 
 			s = skiff::parse_statement("for(x: Int : lst)");
 			p = new skiff::statements::for_itterator_heading(
-				new skiff::statements::decleration("x", skiff::types::type_class("Int")), 
+				new skiff::statements::decleration("x", skiff::statements::type_statement("Int")), 
 				new skiff::statements::statement("lst")
 			);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
@@ -616,20 +615,20 @@ namespace Test
 
 			s = skiff::parse_statement("static test: String");
 			p = new skiff::statements::modifier(skiff::statements::modifier::modifier_type::STATIC,
-				new skiff::statements::decleration("test", skiff::types::type_class("String")));
+				new skiff::statements::decleration("test", skiff::statements::type_statement("String")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("private test: String");
 			p = new skiff::statements::modifier(skiff::statements::modifier::modifier_type::PRIVATE,
-				new skiff::statements::decleration("test", skiff::types::type_class("String")));
+				new skiff::statements::decleration("test", skiff::statements::type_statement("String")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("private static test: String");
 			p = new skiff::statements::modifier(skiff::statements::modifier::modifier_type::PRIVATE,
 				new skiff::statements::modifier(skiff::statements::modifier::modifier_type::STATIC,
-					new skiff::statements::decleration("test", skiff::types::type_class("String"))
+					new skiff::statements::decleration("test", skiff::statements::type_statement("String"))
 				));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
@@ -638,12 +637,12 @@ namespace Test
 		{
 			skiff::statements::statement * s, *p;
 			vector<skiff::statements::statement *> anno_params;
-			vector<skiff::types::function::function_parameter> func_params;
+			vector<skiff::statements::function_heading::function_parameter> func_params;
 
 			s = skiff::parse_statement("@Anno def test()");
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
-					skiff::types::type_class("")));
+					skiff::statements::type_statement("")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
@@ -652,7 +651,7 @@ namespace Test
 			anno_params.push_back(new skiff::statements::statement("param"));
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
-					skiff::types::type_class("")));
+					skiff::statements::type_statement("")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
@@ -662,33 +661,33 @@ namespace Test
 			anno_params.push_back(new skiff::statements::statement("paramz"));
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
-					skiff::types::type_class("")));
+					skiff::statements::type_statement("")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("@Anno def test(agrz: String): Int");
-			func_params = vector<skiff::types::function::function_parameter>();
+			func_params = vector<skiff::statements::function_heading::function_parameter>();
 			func_params.push_back(
-				skiff::types::function::create_function_parameter("argz",
-					skiff::types::type_class("String"))
+				skiff::statements::function_heading::create_function_parameter("argz",
+					skiff::statements::type_statement("String"))
 			);
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
-					skiff::types::type_class("Int")));
+					skiff::statements::type_statement("Int")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("@Anno(param) def test(agrz: String): Int");
 			anno_params = vector<skiff::statements::statement *>();
 			anno_params.push_back(new skiff::statements::statement("param"));
-			func_params = vector<skiff::types::function::function_parameter>();
+			func_params = vector<skiff::statements::function_heading::function_parameter>();
 			func_params.push_back(
-				skiff::types::function::create_function_parameter("argz",
-					skiff::types::type_class("String"))
+				skiff::statements::function_heading::create_function_parameter("argz",
+					skiff::statements::type_statement("String"))
 			);
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
-					skiff::types::type_class("Int")));
+					skiff::statements::type_statement("Int")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
@@ -696,18 +695,18 @@ namespace Test
 			anno_params = vector<skiff::statements::statement *>();
 			anno_params.push_back(new skiff::statements::statement("param"));
 			anno_params.push_back(new skiff::statements::statement("paramz"));
-			func_params = vector<skiff::types::function::function_parameter>();
+			func_params = vector<skiff::statements::function_heading::function_parameter>();
 			func_params.push_back(
-				skiff::types::function::create_function_parameter("argz",
-					skiff::types::type_class("String"))
+				skiff::statements::function_heading::create_function_parameter("argz",
+					skiff::statements::type_statement("String"))
 			);
 			func_params.push_back(
-				skiff::types::function::create_function_parameter("a",
-					skiff::types::type_class("Char"))
+				skiff::statements::function_heading::create_function_parameter("a",
+					skiff::statements::type_statement("Char"))
 			);
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
-					skiff::types::type_class("Int")));
+					skiff::statements::type_statement("Int")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -739,14 +738,14 @@ namespace Test
 
 			s = skiff::parse_statement("case val: ClassClass =>");
 			p = new skiff::statements::match_case_heading("val",
-				skiff::types::type_class("ClassClass"));
+				skiff::statements::type_statement("ClassClass"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			struct_params = vector<string>();
 			struct_params = { "p1", "p2" };
 			s = skiff::parse_statement("case val: StructClass(p1, p2) =>");
 			p = new skiff::statements::match_case_heading("val",
-				skiff::types::type_class("StructClass"), struct_params);
+				skiff::statements::type_statement("StructClass"), struct_params);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("case _ =>");

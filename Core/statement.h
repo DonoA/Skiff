@@ -39,6 +39,7 @@ namespace skiff
 			type_statement(std::string name, std::vector<type_statement> generic_types);
 			std::string get_name();
 			std::string parse_string();
+			environment::skiff_class eval_class(environment::scope * env);
 		private:
 			std::string name;
 			std::vector<type_statement> generic_types;
@@ -136,10 +137,11 @@ namespace skiff
 		class decleration_with_assignment : public statement
 		{
 		public:
-			decleration_with_assignment(statement * name, type_statement type, statement * val);
+			decleration_with_assignment(std::string name, type_statement type, statement * val);
 			std::string parse_string();
+			environment::skiff_object eval(environment::scope * env);
 		private:
-			statement * name;
+			std::string name;
 			type_statement type;
 			statement * value;
 		};

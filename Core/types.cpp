@@ -14,20 +14,20 @@ namespace skiff
 		using ::skiff::environment::skiff_function;
 		using ::skiff::environment::scope;
 
-		skiff_object::skiff_object(void * val, skiff_class type)
+		skiff_object::skiff_object(void * val, skiff_class * type)
 		{
 			this->type = type;
 			this->value = val;
 		}
 
-		skiff_class skiff_object::get_class()
+		skiff_class * skiff_object::get_class()
 		{
 			return type;
 		}
 
 		string skiff_object::to_string()
 		{
-			return type.get_name() + "@" + std::to_string((int)this);
+			return type->get_name() + "@" + std::to_string((int)this);
 		}
 
 		void * skiff_object::get_value()
@@ -40,35 +40,30 @@ namespace skiff
 			this->value = v;
 		}
 
-		skiff_function::function_parameter skiff_function::create_function_parameter(std::string name, skiff_class typ)
+		skiff_function::function_parameter skiff_function::create_function_parameter(
+			std::string name, skiff_class * typ)
 		{
 			return function_parameter();
 		}
 
-		skiff_function::skiff_function(string name, vector<function_parameter> params, skiff_class returns,
-			scope * env, std::function<skiff_object(skiff_object, vector<skiff_object>, scope *)> * builtin)
+		skiff_function::skiff_function(string name, vector<function_parameter> params, 
+			skiff_class * returns, scope * env)
 		{
-			this->function_env = scope(env);
+			this->function_env = new scope(env);
 			this->name = name;
 			this->params = params;
 			this->returns = returns;
+			this->builtin = nullptr;
+		}
+
+		skiff_function::skiff_function(std::string name, scope * env, 
+			std::function<skiff_object(skiff_object, std::vector<skiff_object>, scope*)>* builtin)
+		{
+			this->name = name;
+			this->function_env = new scope(env);
+			this->params = vector<function_parameter>();
+			this->returns = nullptr;
 			this->builtin = builtin;
-
-		}
-
-		skiff_function::skiff_function(string name, vector<function_parameter> params, skiff_class returns,
-			scope * env) : skiff_function(name, params, returns, env, NULL)
-		{ }
-
-		skiff_function::skiff_function(string name, scope * env, std::function<skiff_object(skiff_object, vector<skiff_object>,
-			scope*)>* builtin) : skiff_function(name,
-				vector<function_parameter>(), skiff_class(), env, builtin)
-		{
-		}
-
-		skiff_function::skiff_function()
-		{
-			this->builtin = NULL;
 		}
 
 		skiff_object skiff_function::eval(skiff_object self)
@@ -78,7 +73,7 @@ namespace skiff
 
 		skiff_object skiff_function::eval(skiff_object self, vector<skiff_object> params)
 		{
-			if (builtin == NULL)
+			if (builtin == nullptr)
 			{
 				//for (statement * stmt : statements)
 				//{
@@ -88,7 +83,7 @@ namespace skiff
 			}
 			else
 			{
-				return (*builtin)(self, params, &(this->function_env));
+				return (*builtin)(self, params, this->function_env);
 			}
 		}
 		scope::scope(scope * inherit)
@@ -156,7 +151,7 @@ namespace skiff
 		}
 		scope * skiff_class::get_scope()
 		{
-			return &class_env;
+			return class_env;
 		}
 		std::string skiff_class::get_name()
 		{
@@ -164,11 +159,15 @@ namespace skiff
 		}
 		std::map<std::string, skiff_function>* skiff_class::get_operators()
 		{
-			return &known_functions;
+			return &ops;
+		}
+		void skiff_class::add_constructor(skiff_function constructor_)
+		{
+			this->constructor = constructor_;
 		}
 		skiff_object skiff_class::construct(std::vector<skiff_object> params)
 		{
 			return skiff_object();
 		}
-}
+	}
 }

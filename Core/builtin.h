@@ -40,6 +40,9 @@ namespace skiff
 			template<class T>
 			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, 
 				environment::scope *)> * create_to_string();
+			template<class T>
+			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>,
+				environment::scope *)> * create_constructor();
 
 			namespace string_builtins
 			{
@@ -156,6 +159,20 @@ namespace skiff
 					return environment::skiff_object((void *)s, env->get_type("String"));
 				});
 			}
+			template<class T>
+			std::function<environment::skiff_object(std::vector<environment::skiff_object>, 
+				environment::scope*)>* create_constructor()
+			{
+				return new std::function<
+					environment::skiff_object(std::vector<environment::skiff_object>, 
+						environment::scope *)>(
+						[](std::vector<environment::skiff_object> params, environment::scope * env)
+				{
+					T * v = (T *) malloc(sizeof(T));
+					*v = *((T *) params[0].get_value());
+					return environment::skiff_object((void *)s, env->get_type("String"));
+				});
+			}
 		}
 
 		namespace load
@@ -183,6 +200,8 @@ namespace skiff
 					generator::create_to_string<T>()));
 				t.get_scope()->define_function("clone", environment::skiff_function("clone", env,
 					generator::create_clone<T>()));
+				t.add_constuctor(environment::skiff_function("constructor", env, 
+					generator::create_constructor<T>()));
 				return t;
 			}
 
@@ -192,8 +211,7 @@ namespace skiff
 			{
 				environment::skiff_class t = define_native_builtins<T>(env, nt);
 				(*t.get_operators())[std::string(1, '%')] = environment::skiff_function("mod", 
-					std::vector<environment::skiff_function::function_parameter>(),
-					environment::skiff_class(), env, generator::create_mod<T>());
+					env, generator::create_mod<T>());
 				return t;
 			}
 		}
