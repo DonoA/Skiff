@@ -1,4 +1,6 @@
-#include "stdafx.h"
+#if (defined (_WIN32) || defined (_WIN64))
+	#include "stdafx.h"
+#endif
 #include "types.h"
 
 namespace skiff
@@ -27,7 +29,7 @@ namespace skiff
 
 		string skiff_object::to_string()
 		{
-			return type->get_name() + "@" + std::to_string((int)this);
+			return type->get_name() + "@" + std::to_string((size_t)this);
 		}
 
 		void * skiff_object::get_value()
@@ -57,7 +59,7 @@ namespace skiff
 		}
 
 		skiff_function::skiff_function(std::string name, scope * env, 
-			std::function<skiff_object(skiff_object, std::vector<skiff_object>, scope*)>* builtin)
+			skiff_func_sig * builtin)
 		{
 			this->name = name;
 			this->function_env = new scope(env);
@@ -68,10 +70,11 @@ namespace skiff
 
 		skiff_object skiff_function::eval(skiff_object self)
 		{
-			return eval(self, vector<skiff_object>());
+			vector<skiff_object> p = {self};
+			return eval(p);
 		}
 
-		skiff_object skiff_function::eval(skiff_object self, vector<skiff_object> params)
+		skiff_object skiff_function::eval(vector<skiff_object> params)
 		{
 			if (builtin == nullptr)
 			{
@@ -83,7 +86,7 @@ namespace skiff
 			}
 			else
 			{
-				return (*builtin)(self, params, this->function_env);
+				return (*builtin)(params, this->function_env);
 			}
 		}
 		scope::scope(scope * inherit)
@@ -114,15 +117,15 @@ namespace skiff
 			known_types[name] = cls;
 		}
 
-		skiff_class scope::get_type(string name)
+		skiff_class * scope::get_type(string name)
 		{
 			if (known_types.count(name))
 			{
-				return known_types[name];
+				return &known_types[name];
 			}
 			if (inherit == nullptr)
 			{
-				return skiff_class();
+				return nullptr;
 			}
 			return inherit->get_type(name);
 		}

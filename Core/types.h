@@ -9,15 +9,18 @@
 #include "statement.h"
 #include "utils.h"
 
+ 
+
 namespace skiff
 {
-
 	namespace environment
 	{
 		class scope;
 		class skiff_object;
 		class skiff_function;
 		class skiff_class;
+
+		using skiff_func_sig = std::function<skiff_object(std::vector<skiff_object>,scope *)>;
 
 		class skiff_object
 		{
@@ -48,17 +51,16 @@ namespace skiff
 			{ };
 			skiff_function(std::string name, std::vector<function_parameter> params,
 				skiff_class * returns, scope * env);
-			skiff_function(std::string name, scope * env,
-				std::function<skiff_object(skiff_object, std::vector<skiff_object>, scope *)> * builtin);
+			skiff_function(std::string name, scope * env, skiff_func_sig * builtin);
 			skiff_object eval(skiff_object self);
-			skiff_object eval(skiff_object self, std::vector<skiff_object> params);
+			skiff_object eval(std::vector<skiff_object> params);
 		private:
 			scope * function_env;
 			std::string name;
 			std::vector<function_parameter> params;
 			skiff_class * returns;
 			//std::vector<statements::statement *> statements;
-			std::function<skiff_object(std::vector<skiff_object>, scope *)> * builtin;
+			skiff_func_sig * builtin;
 		};
 
 		class skiff_class
@@ -88,7 +90,7 @@ namespace skiff
 			void define_variable(std::string name, skiff_object val);
 			skiff_object get_variable(std::string name);
 			void define_type(std::string name, skiff_class cls);
-			skiff_class get_type(std::string name);
+			skiff_class * get_type(std::string name);
 			void define_function(std::string name, skiff_function func);
 			skiff_function get_function(std::string name);
 		private:

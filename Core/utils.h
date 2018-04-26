@@ -3,7 +3,6 @@
 #include <vector>
 #include <stack>
 #include <iostream>
-#include "types.h"
 
 namespace skiff
 {

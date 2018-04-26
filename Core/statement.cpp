@@ -1,4 +1,6 @@
-#include "stdafx.h"
+#if (defined (_WIN32) || defined (_WIN64))
+	#include "stdafx.h"
+#endif
 #include "statement.h"
 #include "utils.h"
 #include <iostream>
@@ -808,11 +810,11 @@ namespace skiff
 
 		environment::skiff_object decleration_with_assignment::eval(environment::scope * env)
 		{
-			skiff_class clazz = type.eval_class(env);
+			skiff_class * clazz = type.eval_class(env);
 			vector<skiff_object> params = {
 				value->eval(env)
 			};
-			env->define_variable(name, clazz.construct(params));
+			env->define_variable(name, clazz->construct(params));
 			return environment::skiff_object();
 		}
 
@@ -1011,7 +1013,7 @@ namespace skiff
 			}
 			return "TypeClass(" + name + ", " + params_rtn + "))";
 		}
-		skiff_class type_statement::eval_class(scope * env)
+		skiff_class * type_statement::eval_class(scope * env)
 		{
 			return env->get_type(name);
 		}

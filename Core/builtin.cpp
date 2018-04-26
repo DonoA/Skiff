@@ -1,4 +1,6 @@
-#include "stdafx.h"
+#if (defined (_WIN32) || defined (_WIN64))
+	#include "stdafx.h"
+#endif
 #include "builtin.h"
 
 static const skiff::builtin::type type_by_id[] = {
@@ -84,15 +86,15 @@ namespace skiff
 		{
 			namespace string
 			{
-				skiff_object to_string(skiff_object self, vector<skiff_object> params, scope * env)
+				skiff_object to_string(vector<skiff_object> params, scope * env)
 				{
-					return self;
+					return params[0];
 				}
 
-				skiff_object clone(skiff_object self, vector<skiff_object> params, scope * env)
+				skiff_object clone(vector<skiff_object> params, scope * env)
 				{
-					return skiff_object((void *) new std::string(*(std::string *)self.get_value()),
-						self.get_class());
+					return skiff_object((void *) new std::string(*(std::string *)params[0].get_value()),
+						params[0].get_class());
 				}
 			}
 		}
@@ -105,11 +107,9 @@ namespace skiff
 				(*t.get_operators())[string(1, '+')] = skiff_function("add", env, 
 					skiff::builtin::generator::create_add<string>());
 				t.get_scope()->define_function("to_string", skiff_function("to_string", env,
-					new std::function<skiff_object(skiff_object, vector<skiff_object>, scope*)>(
-						&skiff::builtin::generator::string::to_string)));
+					new environment::skiff_func_sig(&skiff::builtin::generator::string::to_string)));
 				t.get_scope()->define_function("clone", skiff_function("clone", env,
-					new std::function<skiff_object(skiff_object, vector<skiff_object>, scope*)>(
-						&skiff::builtin::generator::string::clone)));
+					new environment::skiff_func_sig(&skiff::builtin::generator::string::clone)));
 				return t;
 			}
 

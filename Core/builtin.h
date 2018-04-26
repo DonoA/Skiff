@@ -20,157 +20,123 @@ namespace skiff
 		namespace generator
 		{
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, 
-				environment::scope *)> * create_add();
+			environment::skiff_func_sig * create_add();
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, 
-				environment::scope *)> * create_sub();
+			environment::skiff_func_sig * create_sub();
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, 
-				environment::scope *)> * create_mul();
+			environment::skiff_func_sig * create_mul();
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>,
-				environment::scope *)> * create_div();
+			environment::skiff_func_sig * create_div();
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, 
-				environment::scope *)> * create_mod();
+			environment::skiff_func_sig * create_mod();
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>,
-				environment::scope *)> * create_clone();
+			environment::skiff_func_sig * create_clone();
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, 
-				environment::scope *)> * create_to_string();
+			environment::skiff_func_sig * create_to_string();
 			template<class T>
-			std::function<environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>,
-				environment::scope *)> * create_constructor();
+			environment::skiff_func_sig * create_constructor();
 
 			namespace string_builtins
 			{
-				environment::skiff_object to_string(environment::skiff_object self, 
-					std::vector<environment::skiff_object> params, environment::scope * env);
-				environment::skiff_object clone(environment::skiff_object self, 
-					std::vector<environment::skiff_object> params, environment::scope * env);
+				environment::skiff_object to_string(std::vector<environment::skiff_object> params, environment::scope * env);
+				environment::skiff_object clone(std::vector<environment::skiff_object> params, environment::scope * env);
 			}
 			template<class T>
-			inline std::function<environment::skiff_object(environment::skiff_object, 
-				std::vector<environment::skiff_object>, environment::scope*)>* create_add()
+			inline environment::skiff_func_sig * create_add()
 			{
-				return new std::function<
-					environment::skiff_object(environment::skiff_object,std::vector<environment::skiff_object>, environment::scope *)>(
-						[](environment::skiff_object self, std::vector<environment::skiff_object> params, 
-							environment::scope * env)
+				return new environment::skiff_func_sig(
+					[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)self.get_value();
-					T * n2 = (T *)params[0].get_value();
+					T * n1 = (T *)params[0].get_value();
+					T * n2 = (T *)params[1].get_value();
 					(*n1) = (*n1) + (*n2);
 					return environment::skiff_object();
 				});
 			}
 
 			template<class T>
-			inline std::function<environment::skiff_object(environment::skiff_object,
-				std::vector<environment::skiff_object>, environment::scope*)>* create_sub()
+			inline environment::skiff_func_sig * create_sub()
 			{
-				return new std::function<
-					environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, environment::scope *)>(
-						[](environment::skiff_object self, std::vector<environment::skiff_object> params,
-							environment::scope * env)
+				return new environment::skiff_func_sig(
+						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)self.get_value();
-					T * n2 = (T *)params[0].get_value();
+					T * n1 = (T *)params[0].get_value();
+					T * n2 = (T *)params[1].get_value();
 					(*n1) = (*n1) - (*n2);
 					return environment::skiff_object();
 				});
 			}
 
 			template<class T>
-			inline std::function<environment::skiff_object(environment::skiff_object,
-				std::vector<environment::skiff_object>, environment::scope*)>* create_mul()
+			inline environment::skiff_func_sig* create_mul()
 			{
-				return new std::function<
-					environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, environment::scope *)>(
-						[](environment::skiff_object self, std::vector<environment::skiff_object> params,
-							environment::scope * env)
+				return new environment::skiff_func_sig(
+						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)self.get_value();
-					T * n2 = (T *)params[0].get_value();
+					T * n1 = (T *)params[0].get_value();
+					T * n2 = (T *)params[1].get_value();
 					(*n1) = (*n1) * (*n2);
 					return environment::skiff_object();
 				});
 			}
 
 			template<class T>
-			inline std::function<environment::skiff_object(environment::skiff_object, 
-				std::vector<environment::skiff_object>, environment::scope*)>* create_div()
+			inline environment::skiff_func_sig* create_div()
 			{
-				return new std::function<
-					environment::skiff_object(environment::skiff_object,std::vector<environment::skiff_object>, environment::scope *)>(
-						[](environment::skiff_object self, std::vector<environment::skiff_object> params, 
-							environment::scope * env)
+				return new environment::skiff_func_sig(
+						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)self.get_value();
-					T * n2 = (T *)params[0].get_value();
+					T * n1 = (T *)params[0].get_value();
+					T * n2 = (T *)params[1].get_value();
 					(*n1) = (*n1) / (*n2);
 					return environment::skiff_object();
 				});
 			}
 
 			template<class T>
-			inline std::function<environment::skiff_object(environment::skiff_object,
-				std::vector<environment::skiff_object>, environment::scope*)>* create_mod()
+			inline environment::skiff_func_sig* create_mod()
 			{
-				return new std::function<
-					environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, environment::scope *)>(
-						[](environment::skiff_object self, std::vector<environment::skiff_object> params,
-							environment::scope * env)
+				return new environment::skiff_func_sig(
+						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)self.get_value();
-					T * n2 = (T *)params[0].get_value();
+					T * n1 = (T *)params[0].get_value();
+					T * n2 = (T *)params[1].get_value();
 					(*n1) = (*n1) % (*n2);
 					return environment::skiff_object();
 				});
 			}
 
 			template<class T>
-			inline std::function<environment::skiff_object(environment::skiff_object,
-				std::vector<environment::skiff_object>, environment::scope*)>* create_clone()
+			inline environment::skiff_func_sig* create_clone()
 			{
-				return new std::function<
-					environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, environment::scope *)>(
-						[](environment::skiff_object self, std::vector<environment::skiff_object> params,
-							environment::scope * env)
+				return new environment::skiff_func_sig(
+						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T v = *(T *)self.get_value();
-					return environment::skiff_object(::skiff::utils::allocate(v), self.get_class());
+					T v = *(T *)params[0].get_value();
+					return environment::skiff_object(::skiff::utils::allocate(v), params[0].get_class());
 				});
 			}
 
 			template<class T>
-			inline std::function<environment::skiff_object(environment::skiff_object,
-				std::vector<environment::skiff_object>, environment::scope*)>* create_to_string()
+			inline environment::skiff_func_sig* create_to_string()
 			{
-				return new std::function<
-					environment::skiff_object(environment::skiff_object, std::vector<environment::skiff_object>, environment::scope *)>(
-						[](environment::skiff_object self, std::vector<environment::skiff_object> params,
-							environment::scope * env)
+				return new environment::skiff_func_sig(
+						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T v = *(T *)self.get_value();
+					T v = *(T *)params[0].get_value();
 					std::string * s = new std::string(std::to_string(v));
 					return environment::skiff_object((void *)s, env->get_type("String"));
 				});
 			}
 			template<class T>
-			std::function<environment::skiff_object(std::vector<environment::skiff_object>, 
-				environment::scope*)>* create_constructor()
+			environment::skiff_func_sig* create_constructor()
 			{
-				return new std::function<
-					environment::skiff_object(std::vector<environment::skiff_object>, 
-						environment::scope *)>(
+				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
 					T * v = (T *) malloc(sizeof(T));
 					*v = *((T *) params[0].get_value());
-					return environment::skiff_object((void *)s, env->get_type("String"));
+					return environment::skiff_object((void *)v, env->get_type("String"));
 				});
 			}
 		}
@@ -200,7 +166,7 @@ namespace skiff
 					generator::create_to_string<T>()));
 				t.get_scope()->define_function("clone", environment::skiff_function("clone", env,
 					generator::create_clone<T>()));
-				t.add_constuctor(environment::skiff_function("constructor", env, 
+				t.add_constructor(environment::skiff_function("constructor", env, 
 					generator::create_constructor<T>()));
 				return t;
 			}

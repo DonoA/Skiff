@@ -39,7 +39,7 @@ namespace skiff
 			type_statement(std::string name, std::vector<type_statement> generic_types);
 			std::string get_name();
 			std::string parse_string();
-			environment::skiff_class eval_class(environment::scope * env);
+			environment::skiff_class * eval_class(environment::scope * env);
 		private:
 			std::string name;
 			std::vector<type_statement> generic_types;

@@ -1,5 +1,3 @@
-#include "stdafx.h"
-#include "CppUnitTest.h"
 #include "../Core/statement.h"
 #include "../Core/parsers.h"
 #include "../Core/utils.h"
@@ -8,7 +6,27 @@
 #include <queue>
 #include <iostream>
 
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+#if (defined (_WIN32) || defined (_WIN64))
+	#include "stdafx.h"
+	#include "CppUnitTest.h"
+	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+#else
+	#define TEST_CLASS(name) class Test_ ## name
+	#define TEST_METHOD(name) void Test_ ## name ## ()
+
+	namespace Assert
+	{
+		void AreEqual(std::string, std::string)
+		{
+
+		}
+
+		void IsTrue(bool expr)
+		{
+
+		}
+	}
+#endif
 
 using std::string;
 using std::vector;
@@ -84,7 +102,7 @@ namespace Test
 
 			s = skiff::parse_statement("x: Int = 5");
 			p = new skiff::statements::decleration_with_assignment(
-				new skiff::statements::statement("x"), skiff::statements::type_statement("Int"), 
+				"x", skiff::statements::type_statement("Int"), 
 				new skiff::statements::value("5"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
@@ -93,7 +111,7 @@ namespace Test
 			vector<skiff::statements::type_statement> et;
 			et.push_back(skiff::statements::type_statement("Type"));
 			p = new skiff::statements::decleration_with_assignment(
-				new skiff::statements::statement("x"), skiff::statements::type_statement("List", et), 
+				"x", skiff::statements::type_statement("List", et), 
 				new skiff::statements::new_object_statement(
 					skiff::statements::type_statement("List", et), 
 					vector<skiff::statements::statement *>()));
@@ -533,7 +551,7 @@ namespace Test
 			s = skiff::parse_statement("for(x: Int = 0; x < 10; x++)");
 			p = new skiff::statements::for_classic_heading(
 				new skiff::statements::decleration_with_assignment(
-					new skiff::statements::statement("x"), 
+					"x", 
 					skiff::statements::type_statement("Int"), 
 					new skiff::statements::value("0")
 				), 
