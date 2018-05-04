@@ -15,11 +15,14 @@ int main()
 	skiff::environment::scope env;
 
 	skiff::builtin::load::load_standards(&env);
+
 	std::queue<skiff::statements::statement *> test_statements = 
 		skiff::modes::parse_file("test.su");
 	skiff::modes::print_parse(test_statements);
 	std::cout << "=== Parse Complete ===" << std::endl;
-	// skiff::modes::evaluate(&env, test_statements);
+	skiff::modes::evaluate(&env, test_statements);
+#if (defined (_WIN32) || defined (_WIN64))
 	system("pause");
+#endif
 }
 

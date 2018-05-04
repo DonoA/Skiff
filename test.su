@@ -1,36 +1,3 @@
-x:Int = 5;
-print(x);
-def test(arg:String):Int {
-	print(arg);
-	arg += "hello";
-	print(arg);
-	return 5;
-}
-
-test("world");
-
-class Test {
-	t:String;
-	
-	def try_print(x:Int, y:Int):String {
-		if(x > y) {
-			print("x > y",x,y);
-			while(x > y) {
-				y += 1;
-			}
-		}
-		print(x,y);
-		return t;
-	}
-	
-	def p(arg:String):None {
-		print(arg);
-	}
-}
-
-print("complete");
-
-
-
-
-
+x: Int = 5;
+x += 1;
+print((x + (5 * 6)), " <~ that was six");

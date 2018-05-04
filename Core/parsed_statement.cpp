@@ -31,11 +31,6 @@ namespace skiff
 			return raw;
 		}
 
-		skiff_object statement::eval(scope * env)
-		{
-			return skiff_object();
-		}
-
 		string statement::parse_string()
 		{
 			return "Statement(" + raw + ")";
@@ -50,21 +45,6 @@ namespace skiff
 		{
 			this->val = val;
 		}
-
-		skiff_object value::eval(scope * env)
-		{
-			return skiff_object();
-		}
-
-		//skiff_object value::eval(scope * env)
-		//{
-		//	return val;
-		//}
-		//
-		//string value::eval_c()
-		//{
-		//	return *(string *) typ.get_scope()->get_function("to_string").eval(val)->get_value();
-		//}
 
 		string value::parse_string()
 		{
@@ -82,11 +62,6 @@ namespace skiff
 		//	env->define_variable(name, val->eval(env));
 		//	return nullptr;
 		//}
-		//
-		//string decleration::eval_c()
-		//{
-		//	return type.get_name() + " " + name + " = " + val->eval_c();
-		//}
 
 		string decleration::parse_string()
 		{
@@ -98,36 +73,6 @@ namespace skiff
 			this->name = utils::remove_pad(name);
 			this->params = params;
 		}
-
-		//skiff_object * function_call::eval(scope * env)
-		//{
-		//	if (name == "print")
-		//	{
-		//		string tp;
-		//		for (statement * stmt : params)
-		//		{
-		//			skiff_object * res = stmt->eval(env);
-		//			res = res->get_type().get_scope()->get_function("to_string").eval(res);
-		//			tp += *((string *) res->get_value());
-		//			tp += " ";
-		//		}
-		//		tp.erase(tp.length() - 1);
-		//		std::cout << tp << std::endl;
-		//	}
-		//	return nullptr;
-		//}
-		//
-		//string function_call::eval_c()
-		//{
-		//	string rtn = name + "(";
-		//	for (statement * stmt : params)
-		//	{
-		//		rtn += stmt->eval_c() + ",";
-		//	}
-		//	rtn = rtn.substr(0, rtn.length() - 1);
-		//	rtn += ");";
-		//	return rtn;
-		//}
 
 		string function_call::parse_string()
 		{
@@ -151,16 +96,6 @@ namespace skiff
 			this->name = name;
 		}
 
-		//skiff_object * variable::eval(scope * env)
-		//{
-		//	return env->get_variable(name);
-		//}
-		//
-		//string variable::eval_c()
-		//{
-		//	return name;
-		//}
-
 		string variable::parse_string()
 		{
 			return "Variable(" + name + ")";
@@ -171,18 +106,6 @@ namespace skiff
 			this->name = name;
 			this->val = value;
 		}
-
-		//skiff_object * assignment::eval(scope * env)
-		//{
-		//	skiff_object * v = val->eval(env);
-		//	env->define_variable(name, v);
-		//	return v;
-		//}
-		//
-		//string assignment::eval_c()
-		//{
-		//	return name + "=" + val->eval_c();
-		//}
 
 		string assignment::parse_string()
 		{
@@ -195,36 +118,7 @@ namespace skiff
 			this->operators = operators;
 		}
 
-		//skiff_object * math_statement::eval(scope * env)
-		//{
-		//	queue<char> ops = operators;
-		//	queue<statement *> stmts = operands;
-		//	skiff_object * base = stmts.front()->eval(env);
-		//	skiff_object * t = base->get_type().get_scope()->get_function("clone").eval(base);
-		//	stmts.pop();
-		//	while (!ops.empty())
-		//	{
-		//		math_statement::eval_single_op(t, ops.front(), stmts.front()->eval(env));
-		//		stmts.pop();
-		//		ops.pop();
-		//	}
-		//	return t;
-		//}
-		//
-		//string math_statement::eval_c()
-		//{
-		//	string rtn = string();
-		//	queue<char> ops = operators;
-		//	queue<statement *> stmts = operands;
-		//	while (!ops.empty())
-		//	{
-		//		rtn += stmts.front()->eval_c() + " " + ops.front() + " ";
-		//		stmts.pop();
-		//		ops.pop();
-		//	}
-		//	rtn += stmts.front()->eval_c();
-		//	return rtn;
-		//}
+
 
 		string math_statement::parse_string()
 		{
@@ -241,17 +135,6 @@ namespace skiff
 			return rtn;
 		}
 
-		void math_statement::eval_single_op(skiff_object s1, char op, skiff_object s2)
-		{
-			//skiff_object * o = get_dominant_type(&s1, &s2);
-			//if (o == nullptr)
-			//{
-			//	o = &s1;
-			//}
-			//vector<skiff_object> p;
-			//p.push_back(s2);
-			//(*o->get_type().get_operators())[string(1, op)].eval(*o, p);
-		}
 
 		comparison::comparison(statement * s1, comparison::comparison_type typ, statement * s2)
 		{
@@ -808,15 +691,7 @@ namespace skiff
 				value->parse_string() + ")";
 		}
 
-		environment::skiff_object decleration_with_assignment::eval(environment::scope * env)
-		{
-			skiff_class * clazz = type.eval_class(env);
-			vector<skiff_object> params = {
-				value->eval(env)
-			};
-			env->define_variable(name, clazz->construct(params));
-			return environment::skiff_object();
-		}
+
 
 		import_statement::import_statement(string import_name)
 		{
@@ -889,6 +764,7 @@ namespace skiff
 			case MATCH:
 				return "Match(" + on->parse_string() + ")";
 			}
+			return "SwitchType(" + on->parse_string() + ")";
 		}
 
 		for_classic_heading::for_classic_heading(statement * init, statement * condition,
@@ -930,6 +806,7 @@ namespace skiff
 			case NEXT:
 				return "Next()";
 			}
+			return "UnknownFlow()";
 		}
 
 		switch_case_heading::switch_case_heading(statement * val)

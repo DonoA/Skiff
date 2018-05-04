@@ -42,6 +42,7 @@ namespace skiff
 		using environment::skiff_object;
 		using environment::skiff_class;
 		using environment::skiff_function;
+		using environment::skiff_value;
 
 		string get_c_type_for(builtin::type nt)
 		{
@@ -84,7 +85,7 @@ namespace skiff
 
 		namespace generator
 		{
-			namespace string
+			namespace strings
 			{
 				skiff_object to_string(vector<skiff_object> params, scope * env)
 				{
@@ -93,8 +94,8 @@ namespace skiff
 
 				skiff_object clone(vector<skiff_object> params, scope * env)
 				{
-					return skiff_object((void *) new std::string(*(std::string *)params[0].get_value()),
-						params[0].get_class());
+					string * s = new string(*(std::string *)params[0].get_value()->get_value());
+					return skiff_object(new skiff_value((void *) s), params[0].get_class());
 				}
 			}
 		}
@@ -107,9 +108,9 @@ namespace skiff
 				(*t.get_operators())[string(1, '+')] = skiff_function("add", env, 
 					skiff::builtin::generator::create_add<string>());
 				t.get_scope()->define_function("to_string", skiff_function("to_string", env,
-					new environment::skiff_func_sig(&skiff::builtin::generator::string::to_string)));
+					new environment::skiff_func_sig(&skiff::builtin::generator::strings::to_string)));
 				t.get_scope()->define_function("clone", skiff_function("clone", env,
-					new environment::skiff_func_sig(&skiff::builtin::generator::string::clone)));
+					new environment::skiff_func_sig(&skiff::builtin::generator::strings::clone)));
 				return t;
 			}
 

@@ -47,10 +47,10 @@ namespace skiff
 				return new environment::skiff_func_sig(
 					[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)params[0].get_value();
-					T * n2 = (T *)params[1].get_value();
-					(*n1) = (*n1) + (*n2);
-					return environment::skiff_object();
+					T n1 = *((T *)params[0].get_value()->get_value());
+					T n2 = *((T *)params[1].get_value()->get_value());
+					return environment::skiff_object(new environment::skiff_value(::skiff::utils::allocate(n1 + n2)), 
+						(environment::skiff_class *) params[2].get_value()->get_value());
 				});
 			}
 
@@ -60,10 +60,10 @@ namespace skiff
 				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)params[0].get_value();
-					T * n2 = (T *)params[1].get_value();
-					(*n1) = (*n1) - (*n2);
-					return environment::skiff_object();
+					T n1 = *((T *)params[0].get_value()->get_value());
+					T n2 = *((T *)params[1].get_value()->get_value());
+					return environment::skiff_object(new environment::skiff_value(::skiff::utils::allocate(n1 - n2)), 
+						(environment::skiff_class *) params[2].get_value()->get_value());
 				});
 			}
 
@@ -73,10 +73,10 @@ namespace skiff
 				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)params[0].get_value();
-					T * n2 = (T *)params[1].get_value();
-					(*n1) = (*n1) * (*n2);
-					return environment::skiff_object();
+					T n1 = *((T *)params[0].get_value()->get_value());
+					T n2 = *((T *)params[1].get_value()->get_value());
+					return environment::skiff_object(new environment::skiff_value(::skiff::utils::allocate(n1 * n2)), 
+						(environment::skiff_class *) params[2].get_value()->get_value());
 				});
 			}
 
@@ -86,10 +86,10 @@ namespace skiff
 				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)params[0].get_value();
-					T * n2 = (T *)params[1].get_value();
-					(*n1) = (*n1) / (*n2);
-					return environment::skiff_object();
+					T n1 = *((T *)params[0].get_value()->get_value());
+					T n2 = *((T *)params[1].get_value()->get_value());
+					return environment::skiff_object(new environment::skiff_value(::skiff::utils::allocate(n1 / n2)), 
+						(environment::skiff_class *) params[2].get_value()->get_value());
 				});
 			}
 
@@ -99,10 +99,10 @@ namespace skiff
 				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T * n1 = (T *)params[0].get_value();
-					T * n2 = (T *)params[1].get_value();
-					(*n1) = (*n1) % (*n2);
-					return environment::skiff_object();
+					T n1 = *((T *)params[0].get_value()->get_value());
+					T n2 = *((T *)params[1].get_value()->get_value());
+					return environment::skiff_object(new environment::skiff_value(::skiff::utils::allocate(n1 % n2)), 
+						(environment::skiff_class *) params[2].get_value()->get_value());
 				});
 			}
 
@@ -112,8 +112,8 @@ namespace skiff
 				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T v = *(T *)params[0].get_value();
-					return environment::skiff_object(::skiff::utils::allocate(v), params[0].get_class());
+					T v = *(T *)params[0].get_value()->get_value();
+					return environment::skiff_object(new environment::skiff_value(::skiff::utils::allocate(v)), params[0].get_class());
 				});
 			}
 
@@ -123,9 +123,9 @@ namespace skiff
 				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T v = *(T *)params[0].get_value();
+					T v = *(T *)params[0].get_value()->get_value();
 					std::string * s = new std::string(std::to_string(v));
-					return environment::skiff_object((void *)s, env->get_type("String"));
+					return environment::skiff_object(new environment::skiff_value((void *)s), env->get_type("String"));
 				});
 			}
 			template<class T>
@@ -135,8 +135,8 @@ namespace skiff
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
 					T * v = (T *) malloc(sizeof(T));
-					*v = *((T *) params[0].get_value());
-					return environment::skiff_object((void *)v, env->get_type("String"));
+					*v = *((T *) params[0].get_value()->get_value());
+					return environment::skiff_object(new environment::skiff_value((void *)v), params[0].get_class());
 				});
 			}
 		}
@@ -162,6 +162,7 @@ namespace skiff
 					generator::create_mul<T>());
 				(*t.get_operators())[std::string(1, '/')] = environment::skiff_function("div", env,
 					generator::create_div<T>());
+					
 				t.get_scope()->define_function("to_string", environment::skiff_function("to_string", env,
 					generator::create_to_string<T>()));
 				t.get_scope()->define_function("clone", environment::skiff_function("clone", env,

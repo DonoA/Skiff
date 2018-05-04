@@ -16,7 +16,30 @@ namespace skiff
 		using ::skiff::environment::skiff_function;
 		using ::skiff::environment::scope;
 
-		skiff_object::skiff_object(void * val, skiff_class * type)
+		skiff_value::skiff_value(void * v)
+		{
+			this->value = v;
+		}
+
+		skiff_value::~skiff_value()
+		{
+			if(this->value != nullptr)
+			{
+				free(this->value);
+			}
+		}
+
+		void skiff_value::set_value(void * v)
+		{
+			this->value = v;
+		}
+
+		void * skiff_value::get_value()
+		{
+			return this->value;
+		}
+
+		skiff_object::skiff_object(skiff_value * val, skiff_class * type)
 		{
 			this->type = type;
 			this->value = val;
@@ -27,19 +50,29 @@ namespace skiff
 			return type;
 		}
 
+		void skiff_object::set_class(skiff_class * clazz)
+		{
+			this->type = clazz;
+		}
+
 		string skiff_object::to_string()
 		{
 			return type->get_name() + "@" + std::to_string((size_t)this);
 		}
 
-		void * skiff_object::get_value()
+		skiff_value * skiff_object::get_value()
 		{
 			return value;
 		}
 
-		void skiff_object::set_value(void * v)
+		void skiff_object::set_value(skiff_value * v)
 		{
 			this->value = v;
+		}
+
+		void skiff_object::update_value(void * v)
+		{
+			this->value->set_value(v);
 		}
 
 		skiff_function::function_parameter skiff_function::create_function_parameter(
@@ -147,10 +180,18 @@ namespace skiff
 			}
 			return inherit->get_function(name);
 		}
+		void scope::print_debug()
+		{
+			std::cout << "== Known Variables ==" << std::endl;
+			for(map<string, skiff_object>::iterator it = env.begin(); it != env.end(); ++it) {
+				std::cout << it->first << std::endl;
+			}
+		}
 		skiff_class::skiff_class(std::string name, skiff_class * parent)
 		{
 			this->name = name;
 			this->parent = parent;
+			this->class_env = new scope();
 		}
 		scope * skiff_class::get_scope()
 		{
@@ -170,7 +211,10 @@ namespace skiff
 		}
 		skiff_object skiff_class::construct(std::vector<skiff_object> params)
 		{
-			return skiff_object();
+			skiff_object obj = constructor.eval(params);
+			obj.set_class(this);
+			return obj;
 		}
+
 	}
 }

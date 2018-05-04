@@ -61,6 +61,7 @@ namespace skiff
 		public:
 			variable(std::string name);
 			std::string parse_string();
+			environment::skiff_object eval(environment::scope * env);
 		private:
 			std::string name;
 		};
@@ -99,10 +100,12 @@ namespace skiff
 		public:
 			math_statement(std::queue<statement *> operands, std::queue<char> operators);
 			std::string parse_string();
+			environment::skiff_object eval(environment::scope * env);
 		private:
 			std::queue<statement*> operands;
 			std::queue<char> operators;
-			static void eval_single_op(environment::skiff_object s1, char op, environment::skiff_object s2);
+			static environment::skiff_object eval_single_op(environment::skiff_object s1, char op, environment::skiff_object s2);
+			static environment::skiff_class * get_dominant_class(environment::skiff_object s1, environment::skiff_object s2);
 		};
 
 		class compund_statement : public statement
@@ -119,6 +122,7 @@ namespace skiff
 		public:
 			assignment(statement * name, statement * value);
 			std::string parse_string();
+			environment::skiff_object eval(environment::scope * env);
 		private:
 			statement * name;
 			statement * val;
@@ -151,6 +155,7 @@ namespace skiff
 		public:
 			function_call(std::string name, std::vector<statement *> params);
 			std::string parse_string();
+			environment::skiff_object eval(environment::scope * env);
 		private:
 			std::string name;
 			std::vector<statement *> params;
@@ -348,6 +353,7 @@ namespace skiff
 			self_modifier(self_modifier::modifier_type type,
 				self_modifier::modifier_time time, statement * on);
 			std::string parse_string();
+			environment::skiff_object eval(environment::scope * env);
 		private:
 			self_modifier::modifier_type type;
 			self_modifier::modifier_time time;
