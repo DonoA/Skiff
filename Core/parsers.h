@@ -2,7 +2,7 @@
 #include <string>
 #include <queue>
 #include <iostream>
-#include <queue>
+#include <stack>
 #include <algorithm>
 #include <assert.h>
 
@@ -14,5 +14,5 @@ namespace skiff
 {
 	skiff::statements::statement * parse_statement(std::string stmt);
 
-	bool handle_line(std::string input, char c, std::queue<skiff::statements::statement *> * stmts);
+	bool handle_line(std::string input, char c, std::stack<skiff::statements::braced_block *> * stmts);
 }

@@ -39,6 +39,25 @@ namespace skiff
 			return this->value;
 		}
 
+		template<class T>
+		skiff_native_value<T>::skiff_native_value(T v) : skiff_value()
+		{
+			this->v = v;
+			value = &this->v;
+		}
+
+		template<class T>
+		void skiff_native_value<T>::set_value(T v)
+		{
+			this->v = v;
+		}
+
+		template<class T>
+		T skiff_native_value<T>::get_value()
+		{
+			return this->v;
+		}
+
 		skiff_object::skiff_object(skiff_value * val, skiff_class * type)
 		{
 			this->type = type;

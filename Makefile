@@ -34,3 +34,6 @@ clean:
 	rm Target/*.o
 	rm Target/Core/*.o 
 	rm Target/Skiff
+
+lines:
+	git ls-files | xargs wc -l

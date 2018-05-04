@@ -794,22 +794,26 @@ namespace skiff
 		return new statements::variable(stmt);
 	}
 
-	bool handle_line(string input, char c, queue<statements::statement *> * stmts)
+	bool handle_line(string input, char c, stack<statements::braced_block *> * stmts)
 	{
 		input = utils::remove_pad(input);
-		if (input != "")
+		if (input == "")
 		{
-			statements::statement * stmt = parse_statement(input);
-			stmts->push(stmt);
+			return true;
+		}
+		statements::statement * stmt = parse_statement(input);
+		std::cout << stmt->parse_string() << std::endl;
+		stmts->top()->push_body(stmt);
+		if (c == '{')
+		{
+			statements::braced_block * bb = new statements::braced_block();
+			stmt->add_body(bb);
+			stmts->push(bb);
 		}
 		if (c == '}')
 		{
-			stmts->push(new statements::end_block_statement());
+			stmts->pop();
 		}
-		//if (c == '}')
-		//{
-		//	stmts->push(new end_block_statement());
-		//}
 		if (input == "exit()")
 		{
 			return false;

@@ -13,6 +13,7 @@ namespace skiff
 		using ::std::queue;
 		using ::std::stack;
 		using statements::statement;
+		using statements::braced_block;
 		using environment::scope;
 
 		void interactive_mode()
@@ -38,7 +39,7 @@ namespace skiff
 						input += c;
 					}
 				} while ((c != ';' && c != '{' && c != '}') || parsing_string);
-				running = handle_line(input, c, &stmts);
+				// running = handle_line(input, c, &stmts);
 			}
 
 			size_t indent = 0;
@@ -53,13 +54,14 @@ namespace skiff
 
 		queue<statement *> parse_file(string infile)
 		{
-			queue<statement *> statements;
+
+			stack<statements::braced_block *> blocks;
+			blocks.push(new braced_block());
 
 			std::fstream fin(infile, std::fstream::in);
 			bool running = true;
 			string input = string();
 			stack<char> braces;
-			//bool parsing_string = false;
 			char c = '\0';
 			while (fin >> std::noskipws >> c && running) {
 				if (!braces.empty() || (c != ';' && c != '{' && c != '}'))
@@ -68,14 +70,16 @@ namespace skiff
 				}
 				if ((c == ';' || c == '{' || c == '}') && braces.empty())
 				{
-					running = handle_line(input, c, &statements);
+					running = handle_line(input, c, &blocks);
 					input = string();
 					c = '\0';
 				}
 				utils::track_braces(input.length() == 0 ? '\0' : input[input.length() - 1], c, 
 					&braces);
 			}
-			return statements;
+			queue<statement *> stmts;
+			stmts.push(blocks.top());
+			return stmts;
 		}
 
 		void print_parse(queue<statement *> statements)

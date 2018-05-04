@@ -1,3 +1,7 @@
 x: Int = 5;
-x += 1;
-print((x + (5 * 6)), " <~ that was six");
+
+y: Int = 10;
+
+if(x == y - 5) {
+    print("x is less than y!");
+}

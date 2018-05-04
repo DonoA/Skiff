@@ -69,9 +69,10 @@ namespace skiff
         {
             skiff_object obj = name->eval(env);
             obj.update_value(val->eval(env).get_value()->get_value());
-            std::cout << "Assign comlete:" << std::endl;
             return obj;
         }
+
+        // Math in functions does not parse correctly
 
         skiff_object math_statement::eval(scope * env)
 		{
@@ -154,10 +155,17 @@ namespace skiff
 			skiff_object obj = on->eval(env);
 			vector<skiff_object> params = {
 				obj,
-				skiff_object(new skiff_value(::skiff::utils::allocate(1)), env->get_type("Int"))
+				skiff_object(new skiff_value(::skiff::utils::allocate(1)), env->get_type("Int")),
+                skiff_object(new skiff_value(obj.get_class()), nullptr)
 			};
-			(*obj.get_class()->get_operators())[std::string(1, '+')].eval(params);
-			std::cout << "Completed inc" << std::endl;
+			if(type == PLUS)
+			{
+				(*obj.get_class()->get_operators())[std::string(1, '+')].eval(params);
+			}
+			else
+			{
+				(*obj.get_class()->get_operators())[std::string(1, '-')].eval(params);
+			}
 			return obj;
 		}
 
@@ -168,10 +176,25 @@ namespace skiff
 				value->eval(env)
 			};
 			env->define_variable(name, clazz->construct(params));
-			std::cout << "Def and Assign Complete!" << std::endl;
-			env->print_debug();
 			return environment::skiff_object();
 		}
+
+        skiff_object if_heading::eval(environment::scope * env)
+        {
+			skiff_object obj = condition->eval(env);
+            bool passed = *((bool *) obj.get_value()->get_value());
+			if(passed)
+			{
+				body->eval(env);
+			}
+            return skiff_object();
+        }
+
+		skiff_object comparison::eval(environment::scope * env)
+		{
+			return skiff_object();
+		}
+
     }
 
 }

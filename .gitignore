@@ -2,3 +2,5 @@ Debug/
 .vs/
 SuperCC/Debug/
 *.o
+Target/Skiff
+Core/.vscode/

@@ -41,6 +41,11 @@ namespace skiff
 			return 0;
 		}
 
+		void statement::add_body(braced_block * bb)
+		{
+			std::cout << "No body allowed" << std::endl;
+		}
+
 		value::value(string val)
 		{
 			this->val = val;
@@ -57,11 +62,20 @@ namespace skiff
 			this->type = type;
 		}
 
-		//skiff_object * decleration::eval(scope * env)
-		//{
-		//	env->define_variable(name, val->eval(env));
-		//	return nullptr;
-		//}
+		string braced_block::parse_string()
+		{
+			return "";
+		}
+
+		void braced_block::push_body(statement * s)
+		{
+			stmts.push(s);
+		}
+
+		skiff_object braced_block::eval(scope * env)
+		{
+			return skiff_object();
+		}
 
 		string decleration::parse_string()
 		{
@@ -316,20 +330,15 @@ namespace skiff
 			return 1;
 		}
 
+		void block_heading::add_body(braced_block * s)
+		{
+			body = s;
+		}
+
 		if_heading::if_heading(statement * condition)
 		{
 			this->condition = condition;
 		}
-
-		//skiff_object * if_heading::eval(scope * env)
-		//{
-		//	return condition->eval(env);
-		//}
-		//
-		//string if_heading::eval_c()
-		//{
-		//	return "if(" + condition->eval_c() + ")";
-		//}
 
 		string if_heading::parse_string()
 		{

@@ -10,6 +10,7 @@ namespace skiff
 	namespace environment
 	{
 		class scope;
+		class skiff_value;
 		class skiff_object;
 		class skiff_function;
 		class skiff_class;
@@ -17,6 +18,8 @@ namespace skiff
 
 	namespace statements
 	{
+		class braced_block;
+
 		class statement
 		{
 		public:
@@ -26,6 +29,7 @@ namespace skiff
 			virtual environment::skiff_object eval(environment::scope * env);
 			virtual std::string parse_string();
 			virtual int indent_mod();
+			virtual void add_body(braced_block *);
 		private:
 			std::string raw;
 		};
@@ -64,6 +68,17 @@ namespace skiff
 			environment::skiff_object eval(environment::scope * env);
 		private:
 			std::string name;
+		};
+
+		class braced_block : public statement
+		{
+		public:
+			braced_block() { };
+			environment::skiff_object eval(environment::scope * env);
+			std::string parse_string();
+			void push_body(statement * s);
+		private:
+			std::queue<statement *> stmts;
 		};
 
 		class modifier_base : public statement
@@ -169,7 +184,10 @@ namespace skiff
 			virtual std::string eval_c();
 			virtual environment::skiff_object eval(environment::scope * env);
 			virtual std::string parse_string() = 0;
+			void add_body(braced_block * s);
 			int indent_mod();
+		protected:
+			braced_block * body;
 		private:
 			std::string raw;
 		};
@@ -196,6 +214,7 @@ namespace skiff
 		public:
 			if_heading(statement * condition);
 			std::string parse_string();
+       		environment::skiff_object eval(environment::scope * env);
 		private:
 			statement * condition;
 		};
@@ -429,6 +448,7 @@ namespace skiff
 			};
 			comparison(statement * s1, comparison::comparison_type typ, statement * s2);
 			std::string parse_string();
+			environment::skiff_object eval(environment::scope * env);
 		private:
 			statement * s1;
 			statement * s2;

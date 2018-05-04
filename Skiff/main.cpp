@@ -18,9 +18,11 @@ int main()
 
 	std::queue<skiff::statements::statement *> test_statements = 
 		skiff::modes::parse_file("test.su");
-	skiff::modes::print_parse(test_statements);
+	// skiff::modes::print_parse(test_statements);
 	std::cout << "=== Parse Complete ===" << std::endl;
 	skiff::modes::evaluate(&env, test_statements);
+	std::cout << "=== Eval Complete ===" << std::endl;
+	env.print_debug();
 #if (defined (_WIN32) || defined (_WIN64))
 	system("pause");
 #endif

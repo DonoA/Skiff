@@ -29,8 +29,18 @@ namespace skiff
 			~skiff_value();
 			void set_value(void * v);
 			void * get_value();
-		private:
+		protected:
 			void * value;
+		};
+
+		template<class T>
+		class skiff_native_value : public skiff_value {
+		public:
+			skiff_native_value(T v);
+			void set_value(T v);
+			T get_value();
+		private:
+			T v;
 		};
 
 		class skiff_object
