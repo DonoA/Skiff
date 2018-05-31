@@ -2,6 +2,12 @@ x: Int = 5;
 
 y: Int = 10;
 
-if(x == y - 5) {
+x += 2;
+
+y = x + 15;
+
+if(x < y) {
     print("x is less than y!");
 }
+
+print(x, " = x", y, " = y");

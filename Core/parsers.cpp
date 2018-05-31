@@ -797,6 +797,12 @@ namespace skiff
 	bool handle_line(string input, char c, stack<statements::braced_block *> * stmts)
 	{
 		input = utils::remove_pad(input);
+
+		if (c == '}')
+		{
+			stmts->pop();
+		}
+
 		if (input == "")
 		{
 			return true;
@@ -809,10 +815,6 @@ namespace skiff
 			statements::braced_block * bb = new statements::braced_block();
 			stmt->add_body(bb);
 			stmts->push(bb);
-		}
-		if (c == '}')
-		{
-			stmts->pop();
 		}
 		if (input == "exit()")
 		{

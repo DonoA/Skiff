@@ -94,7 +94,10 @@ namespace skiff
 			skiff_class(std::string name, skiff_class * parent);
 			scope * get_scope();
 			std::string get_name();
-			std::map<std::string, skiff_function> * get_operators();
+
+			void add_operator(std::string key, skiff_function op);
+			skiff_object invoke_operator(std::string op, std::vector<skiff_object> params);
+			
 			void add_constructor(skiff_function constructor_);
 			skiff_object construct(std::vector<skiff_object> params);
 		private:

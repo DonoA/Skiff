@@ -101,7 +101,7 @@ namespace skiff
                 s2,
                 skiff_object(new skiff_value((void *) clazz), nullptr)
             };
-			return (*clazz->get_operators())[string(1, op)].eval(p);
+			return clazz->invoke_operator(string(1, op), p);
 		}
 
         skiff_class * math_statement::get_dominant_class(skiff_object s1, skiff_object s2)
@@ -158,14 +158,17 @@ namespace skiff
 				skiff_object(new skiff_value(::skiff::utils::allocate(1)), env->get_type("Int")),
                 skiff_object(new skiff_value(obj.get_class()), nullptr)
 			};
+
+			// this was not the intent for this function, it should be fixed to match the design doc
 			if(type == PLUS)
 			{
-				(*obj.get_class()->get_operators())[std::string(1, '+')].eval(params);
+				obj.get_class()->invoke_operator(std::string(1, '+'), params);
 			}
 			else
 			{
-				(*obj.get_class()->get_operators())[std::string(1, '-')].eval(params);
+				obj.get_class()->invoke_operator(std::string(1, '-'), params);
 			}
+
 			return obj;
 		}
 
@@ -192,6 +195,59 @@ namespace skiff
 
 		skiff_object comparison::eval(environment::scope * env)
 		{
+			skiff_object o1 = s1->eval(env);
+			skiff_object o2 = s2->eval(env);
+			vector<skiff_object> p = {
+				o1, o2
+			};
+			switch (typ)
+			{
+			case Equal:
+				return o1.get_class()->invoke_operator("==", p);
+			case NotEqual:
+			{
+				skiff_object res = o1.get_class()->invoke_operator("==", p);
+				bool * b = (bool *) res.get_value()->get_value();
+				*b = !(*b);
+				return res;
+			}
+			case LessThan:
+				return o1.get_class()->invoke_operator("<", p);;
+			case LessThanEqualTo:
+			{
+				skiff_object lt = o1.get_class()->invoke_operator("<", p);
+				skiff_object et = o1.get_class()->invoke_operator("==", p);
+				bool * lt_b = (bool *) lt.get_value()->get_value();
+				bool * et_b = (bool *) et.get_value()->get_value();
+
+				*lt_b = (*lt_b) || (*et_b);
+
+				return lt;
+			}
+			case GreaterThan:
+				return o1.get_class()->invoke_operator(">", p);
+			case GreaterThanEqualTo:
+			{
+				skiff_object gt = o1.get_class()->invoke_operator(">", p);
+				skiff_object et = o1.get_class()->invoke_operator("==", p);
+				bool * gt_b = (bool *) gt.get_value()->get_value();
+				bool * et_b = (bool *) et.get_value()->get_value();
+
+				*gt_b = (*gt_b) || (*et_b);
+				
+				return gt;
+			}
+			}
+			return skiff_object();
+		}
+
+		skiff_object braced_block::eval(scope * env)
+		{
+			while(!this->stmts.empty())
+			{
+				stmts.front()->eval(env);
+				stmts.pop();
+			}
 			return skiff_object();
 		}
 

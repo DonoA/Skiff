@@ -64,17 +64,12 @@ namespace skiff
 
 		string braced_block::parse_string()
 		{
-			return "";
+			return "BraceBlock()";
 		}
 
 		void braced_block::push_body(statement * s)
 		{
 			stmts.push(s);
-		}
-
-		skiff_object braced_block::eval(scope * env)
-		{
-			return skiff_object();
 		}
 
 		string decleration::parse_string()

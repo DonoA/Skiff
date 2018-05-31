@@ -105,8 +105,8 @@ namespace skiff
 			skiff_class define_string_builtins(scope * env)
 			{
 				skiff_class t = skiff_class("String");
-				(*t.get_operators())[string(1, '+')] = skiff_function("add", env, 
-					skiff::builtin::generator::create_add<string>());
+				t.add_operator(string(1, '+'), skiff_function("add", env, 
+					skiff::builtin::generator::create_add<string>()));
 				t.get_scope()->define_function("to_string", skiff_function("to_string", env,
 					new environment::skiff_func_sig(&skiff::builtin::generator::strings::to_string)));
 				t.get_scope()->define_function("clone", skiff_function("clone", env,

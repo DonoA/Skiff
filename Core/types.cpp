@@ -220,9 +220,13 @@ namespace skiff
 		{
 			return name;
 		}
-		std::map<std::string, skiff_function>* skiff_class::get_operators()
+		void skiff_class::add_operator(string key, skiff_function op)
 		{
-			return &ops;
+			ops[key] = op;
+		}
+		skiff_object skiff_class::invoke_operator(string op, vector<skiff_object> params)
+		{
+			return ops[op].eval(params);
 		}
 		void skiff_class::add_constructor(skiff_function constructor_)
 		{
