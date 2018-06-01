@@ -102,7 +102,7 @@ The language supports a wide range of syntactical styles:
     - [x] try/catch: `try {} catch(e: MyException) {}`
     - [x] try/finally: `try {} finally {}`
     - [ ] Define a function to throw an exception: `def myFunction(arg1: Type): ReturnType throws MyException {}`
-- [x] Annotations:
+- [ ] Annotations:
     - On a function: 
     ```
     @MyAnnotation(param1, param2)

@@ -1,6 +1,3 @@
-#if (defined (_WIN32) || defined (_WIN64))
-	#include "stdafx.h"
-#endif
 #include "statement.h"
 #include "utils.h"
 #include <iostream>
@@ -152,16 +149,6 @@ namespace skiff
 			this->typ = typ;
 		}
 
-		//skiff_object * comparison::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string comparison::eval_c()
-		//{
-		//	return s1->eval_c() + " " + this->comparison_string() + " " + s2->eval_c();
-		//}
-
 		string comparison::parse_string()
 		{
 			return "Comparison(" + s1->parse_string() + " " + this->comparison_string() + " " +
@@ -193,16 +180,6 @@ namespace skiff
 			this->val = value;
 		}
 
-		//skiff_object * invert::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string invert::eval_c()
-		//{
-		//	return "!" + val->eval_c();
-		//}
-
 		string invert::parse_string()
 		{
 			return "Invert(" + val->parse_string() + ")";
@@ -212,16 +189,6 @@ namespace skiff
 		{
 			this->val = value;
 		}
-
-		//skiff_object * bitinvert::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string bitinvert::eval_c()
-		//{
-		//	return "~" + val->eval_c();
-		//}
 
 		string bitinvert::parse_string()
 		{
@@ -234,16 +201,6 @@ namespace skiff
 			this->op = op;
 			this->s2 = s2;
 		}
-
-		//skiff_object * bitwise::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string bitwise::eval_c()
-		//{
-		//	return string();
-		//}
 
 		string bitwise::parse_string()
 		{
@@ -276,16 +233,6 @@ namespace skiff
 			this->s2 = s2;
 			this->conj = conj;
 		}
-
-		//skiff_object * boolean_conjunction::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string boolean_conjunction::eval_c()
-		//{
-		//	return s1->eval_c() + " " + this->conj_string() + " " + s2->eval_c();
-		//}
 
 		string boolean_conjunction::parse_string()
 		{
@@ -339,16 +286,6 @@ namespace skiff
 		{
 			return "If(" + condition->parse_string() + ")";
 		}
-
-		//skiff_object * class_heading::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string class_heading::eval_c()
-		//{
-		//	return "NOT CONVERTABLE";
-		//}
 
 		class_heading::class_heading(class_heading::class_type type, string name) :
 			class_heading(type, name, vector<class_heading::heading_generic>())
@@ -434,27 +371,6 @@ namespace skiff
 			this->returns = returns;
 		}
 
-		//skiff_object * function_heading::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string function_heading::eval_c()
-		//{
-		//	string params_rtn = string();
-		//	bool any = false;
-		//	for (function::function_parameter p : params)
-		//	{
-		//		params_rtn += function_parameter_c_sig(p) + ",";
-		//		any = true;
-		//	}
-		//	if (any)
-		//	{
-		//		params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
-		//	}
-		//	return returns.get_name() + " " + name + "(" + params_rtn + ")";
-		//}
-
 		string function_heading::parse_string()
 		{
 			string params_rtn = "Params(";
@@ -490,16 +406,6 @@ namespace skiff
 			this->condition = condition;
 		}
 
-		//skiff_object * while_heading::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string while_heading::eval_c()
-		//{
-		//	return "while(" + condition->eval_c() + ")";
-		//}
-
 		string while_heading::parse_string()
 		{
 			return "While(" + condition->parse_string() + ")";
@@ -520,16 +426,6 @@ namespace skiff
 			this->returns = returns;
 		}
 
-		//skiff_object * return_statement::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string return_statement::eval_c()
-		//{
-		//	return "return " + returns->eval_c();
-		//}
-
 		string return_statement::parse_string()
 		{
 			return "Returns(" + returns->parse_string() + ")";
@@ -541,16 +437,6 @@ namespace skiff
 			this->type = type;
 			this->params = params;
 		}
-
-		//skiff_object * new_skiff_object_statement::eval(scope * env)
-		//{
-		//	return nullptr;
-		//}
-		//
-		//string new_skiff_object_statement::eval_c()
-		//{
-		//	return "NOT CONVERTABLE";
-		//}
 
 		string new_object_statement::parse_string()
 		{
@@ -866,15 +752,18 @@ namespace skiff
 		{
 			return "CatchHeading(" + var->parse_string() + ")";
 		}
+
 		type_statement::type_statement(std::string name, std::vector<type_statement> generic_types)
 		{
 			this->name = name;
 			this->generic_types = generic_types;
 		}
+
 		std::string type_statement::get_name()
 		{
 			return name;
 		}
+
 		std::string type_statement::parse_string()
 		{
 			if (generic_types.empty())
@@ -894,9 +783,10 @@ namespace skiff
 			}
 			return "TypeClass(" + name + ", " + params_rtn + "))";
 		}
+
 		skiff_class * type_statement::eval_class(scope * env)
 		{
 			return env->get_type(name);
 		}
-}
+	}
 }
