@@ -2,7 +2,8 @@ Debug/
 .vs/
 .vscode/
 SuperCC/Debug/
-Test/SampleSkripts
 *.o
+*.su
 Target/Skiff
 Core/.vscode/
+Target/SkiffTest

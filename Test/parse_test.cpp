@@ -1,75 +1,20 @@
 #include "../Core/statement.h"
 #include "../Core/parsers.h"
 #include "../Core/utils.h"
+#include "test_util.h"
 #include <string>
 #include <vector>
 #include <queue>
 #include <iostream>
-
-#if (defined (_WIN32) || defined (_WIN64))
-	#include "stdafx.h"
-	#include "CppUnitTest.h"
-	using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-#else
-	#define TEST_CLASS(name) class Test_ ## name
-	#define TEST_METHOD(name) void Test_ ## name ## ()
-
-	namespace Assert
-	{
-		void AreEqual(std::string, std::string)
-		{
-
-		}
-
-		void IsTrue(bool expr)
-		{
-
-		}
-	}
-#endif
 
 using std::string;
 using std::vector;
 using std::queue;
 
 namespace Test
-{		
-	TEST_CLASS(Utils)
-	{
-	public:
-
-		TEST_METHOD(Padding)
-		{
-			Assert::AreEqual(string("Hello    World"), 
-				skiff::utils::remove_pad("  Hello    World   "));
-			Assert::AreEqual(string(""), skiff::utils::remove_pad("  "));
-		}
-
-		TEST_METHOD(BracedSplit)
-		{
-			vector<string> exp;
-			vector<string> real;
-			real = skiff::utils::braced_split("Hello,World", ',');
-			exp = vector<string>();
-			exp.push_back("Hello");
-			exp.push_back("World");
-			Assert::IsTrue(real == exp);
-			real = skiff::utils::braced_split("\"Hello,World\"", ',');
-			exp = vector<string>();
-			exp.push_back("\"Hello,World\"");
-			Assert::IsTrue(real == exp);
-			real = skiff::utils::braced_split("({Hello,World})", ',');
-			exp = vector<string>();
-			exp.push_back("({Hello,World})");
-			Assert::IsTrue(real == exp);
-		}
-
-	};
-
+{
 	TEST_CLASS(Parsing)
 	{
-	public:
-
 		TEST_METHOD(Declaration)
 		{
 			// Decleration(x,TypeClass(Int))

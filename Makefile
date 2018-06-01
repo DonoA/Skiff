@@ -30,10 +30,21 @@ Target/Core/utils.o: Core/utils.cpp Core/utils.h
 Target/main.o: Skiff/main.cpp
 	$(CC) $(CFLAGS) -c -o Target/main.o Skiff/main.cpp
 
+test: Target/Test/main.o Target/Test/test_util.o
+	$(CC) $(CFLAGS) -o Target/SkiffTest Target/Test/*.o Target/Core/*.o
+
+Target/Test/main.o: Test/main.cpp
+	$(CC) $(CFLAGS) -c -o Target/Test/main.o Test/main.cpp
+
+Target/Test/test_util.o: Test/test_util.cpp
+	$(CC) $(CFLAGS) -c -o Target/Test/test_util.o Test/test_util.cpp
+
 clean:
-	rm Target/*.o
-	rm Target/Core/*.o 
-	rm Target/Skiff
+	rm Target/*.o || true
+	rm Target/Core/*.o || true
+	rm Target/Test/*.o || true
+	rm Target/SkiffTest || true
+	rm Target/Skiff || true
 
 lines:
 	git ls-files | xargs wc -l

@@ -1,6 +1,3 @@
-#if (defined (_WIN32) || defined (_WIN64))
-	#include "stdafx.h"
-#endif
 #include <queue>
 #include <iostream>
 #include "../Core/types.h"
