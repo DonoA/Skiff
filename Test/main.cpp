@@ -11,20 +11,27 @@ using std::string;
 
 vector<string> assert_failures;
 bool last_failed;
-size_t total_test_count = 0;
-size_t tests_failed = 0;
+size_t tests_passed;
+size_t tests_failed;
 string current_test;
+
+size_t total_run = 0;
 
 int main()
 {
     std::cout << "Running Skiff Tests:" << std::endl;
     std::cout << "========" << std::endl;
 
+    tests_passed = 0;
+    tests_failed = 0;
     std::cout << "Utils:" << std::endl << "\t";
     CALL_TEST_METHOD(Utils, Padding);
     CALL_TEST_METHOD(Utils, BracedSplit);
-    std::cout << std::endl;
-    
+    std::cout << "      " << tests_passed + tests_failed << " run, " << tests_failed << " failures" << std::endl;
+    total_run += tests_passed + tests_failed;
+
+    tests_passed = 0;
+    tests_failed = 0;
     std::cout << "Parsing:" << std::endl << "\t";
     CALL_TEST_METHOD(Parsing, Declaration);
     CALL_TEST_METHOD(Parsing, Assignment);
@@ -49,14 +56,15 @@ int main()
     CALL_TEST_METHOD(Parsing, DeclarationModifiers);
     CALL_TEST_METHOD(Parsing, Annotation);
     CALL_TEST_METHOD(Parsing, SwitchMatchHeading);
+    std::cout << "      " << tests_passed + tests_failed << " run, " << tests_failed << " failures" << std::endl;
+    total_run += tests_passed + tests_failed;
+
     std::cout << std::endl;
 
     for(string s : assert_failures)
     {
-        std::cout << s << std::endl;
+        std::cout << s << std::endl << std::endl;
     }
 
-    std::cout << total_test_count << " tests run" << std::endl;
-    std::cout << total_test_count - tests_failed << " tests passed" << std::endl;
-    std::cout << tests_failed << " tests failed" << std::endl;
+    std::cout << total_run << " tests run" << std::endl;
 }

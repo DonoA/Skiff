@@ -4,7 +4,6 @@
 
 void run_test( void (*f)(), string name)
 {
-    total_test_count++;
     last_failed = false;
     current_test = name;
     f();
@@ -15,6 +14,7 @@ void run_test( void (*f)(), string name)
     }
     else
     {
+        tests_passed++;
         std::cout << "\033[32;42m \033[0m";
     }
 }
@@ -23,7 +23,7 @@ void Assert::AreEqual(string s1, string s2)
 {
     if(s1 != s2)
     {
-        assert_failures.push_back(current_test + ": Got " + s2 + " expected " + s1);
+        assert_failures.push_back(current_test + ":\nExpect:\t" + s2 + "\nGot:\t" + s1);
         last_failed = true;
     }
 }

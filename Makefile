@@ -32,8 +32,9 @@ Target/main.o: Skiff/main.cpp
 
 test: Target/Test/main.o Target/Test/test_util.o
 	$(CC) $(CFLAGS) -o Target/SkiffTest Target/Test/*.o Target/Core/*.o
+	Target/SkiffTest
 
-Target/Test/main.o: Test/main.cpp
+Target/Test/main.o: Test/main.cpp Test/parse_test.cpp Test/util_test.cpp
 	$(CC) $(CFLAGS) -c -o Target/Test/main.o Test/main.cpp
 
 Target/Test/test_util.o: Test/test_util.cpp

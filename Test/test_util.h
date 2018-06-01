@@ -14,7 +14,7 @@ using std::vector;
 
 extern vector<string> assert_failures;
 extern bool last_failed;
-extern size_t total_test_count;
+extern size_t tests_passed;
 extern size_t tests_failed;
 extern string current_test;
 

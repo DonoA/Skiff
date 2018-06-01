@@ -36,7 +36,7 @@ namespace Test
 			// Assignment(Statement(x),Value(5))
 			skiff::statements::statement * s = skiff::parse_statement("x = 5");
 			skiff::statements::statement * p = new skiff::statements::assignment(
-				new skiff::statements::statement("x"), new skiff::statements::value("5"));
+				new skiff::statements::variable("x"), new skiff::statements::value("5"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -89,7 +89,7 @@ namespace Test
 			params = {
 				new skiff::statements::value("\"Hello World\""),
 				new skiff::statements::value("15"),
-				new skiff::statements::statement("x")
+				new skiff::statements::variable("x")
 			};
 			p = new skiff::statements::function_call("test", params);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
@@ -227,7 +227,7 @@ namespace Test
 
 			s = skiff::parse_statement("new Test(x)");
 			params = {
-				new skiff::statements::statement("x")
+				new skiff::statements::variable("x")
 			};
 			p = new skiff::statements::new_object_statement(skiff::statements::type_statement("Test"), 
 				params);
@@ -237,7 +237,7 @@ namespace Test
 			s = skiff::parse_statement("new Test(5, x)");
 			params = {
 				new skiff::statements::value("5"),
-				new skiff::statements::statement("x")
+				new skiff::statements::variable("x")
 			};
 			p = new skiff::statements::new_object_statement(skiff::statements::type_statement("Test"), 
 				params);
@@ -248,7 +248,7 @@ namespace Test
 		{
 			skiff::statements::statement * s = skiff::parse_statement("return x");
 			skiff::statements::statement * p = new skiff::statements::return_statement(
-				new skiff::statements::statement("x"));
+				new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -285,32 +285,32 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("x & y");
-			p = new skiff::statements::bitwise(new skiff::statements::statement("x"), 
-				skiff::statements::bitwise::operation::And, new skiff::statements::statement("y"));
+			p = new skiff::statements::bitwise(new skiff::statements::variable("x"), 
+				skiff::statements::bitwise::operation::And, new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x | y");
-			p = new skiff::statements::bitwise(new skiff::statements::statement("x"), 
-				skiff::statements::bitwise::operation::Or, new skiff::statements::statement("y"));
+			p = new skiff::statements::bitwise(new skiff::statements::variable("x"), 
+				skiff::statements::bitwise::operation::Or, new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x ^ y");
-			p = new skiff::statements::bitwise(new skiff::statements::statement("x"), 
-				skiff::statements::bitwise::operation::Xor, new skiff::statements::statement("y"));
+			p = new skiff::statements::bitwise(new skiff::statements::variable("x"), 
+				skiff::statements::bitwise::operation::Xor, new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x << 5");
-			p = new skiff::statements::bitwise(new skiff::statements::statement("x"), 
+			p = new skiff::statements::bitwise(new skiff::statements::variable("x"), 
 				skiff::statements::bitwise::operation::ShiftLeft, new skiff::statements::value("5"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x >> 5");
-			p = new skiff::statements::bitwise(new skiff::statements::statement("x"),
+			p = new skiff::statements::bitwise(new skiff::statements::variable("x"),
 				skiff::statements::bitwise::operation::ShiftRight, new skiff::statements::value("5"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("~x");
-			p = new skiff::statements::bitinvert(new skiff::statements::statement("x"));
+			p = new skiff::statements::bitinvert(new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -319,19 +319,19 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("x && y");
-			p = new skiff::statements::boolean_conjunction(new skiff::statements::statement("x"),
+			p = new skiff::statements::boolean_conjunction(new skiff::statements::variable("x"),
 				skiff::statements::boolean_conjunction::conjunction_type::And, 
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x || y");
-			p = new skiff::statements::boolean_conjunction(new skiff::statements::statement("x"),
+			p = new skiff::statements::boolean_conjunction(new skiff::statements::variable("x"),
 				skiff::statements::boolean_conjunction::conjunction_type::Or, 
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("!x");
-			p = new skiff::statements::invert(new skiff::statements::statement("x"));
+			p = new skiff::statements::invert(new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -341,39 +341,39 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("x == y");
-			p = new skiff::statements::comparison(new skiff::statements::statement("x"), 
+			p = new skiff::statements::comparison(new skiff::statements::variable("x"), 
 				skiff::statements::comparison::comparison_type::Equal,
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x < y");
-			p = new skiff::statements::comparison(new skiff::statements::statement("x"), 
+			p = new skiff::statements::comparison(new skiff::statements::variable("x"), 
 				skiff::statements::comparison::comparison_type::LessThan,
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x > y");
-			p = new skiff::statements::comparison(new skiff::statements::statement("x"), 
+			p = new skiff::statements::comparison(new skiff::statements::variable("x"), 
 				skiff::statements::comparison::comparison_type::GreaterThan,
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x <= y");
-			p = new skiff::statements::comparison(new skiff::statements::statement("x"), 
+			p = new skiff::statements::comparison(new skiff::statements::variable("x"), 
 				skiff::statements::comparison::comparison_type::LessThanEqualTo,
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x >= y");
-			p = new skiff::statements::comparison(new skiff::statements::statement("x"),
+			p = new skiff::statements::comparison(new skiff::statements::variable("x"),
 				skiff::statements::comparison::comparison_type::GreaterThanEqualTo,
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x != y");
-			p = new skiff::statements::comparison(new skiff::statements::statement("x"), 
+			p = new skiff::statements::comparison(new skiff::statements::variable("x"), 
 				skiff::statements::comparison::comparison_type::NotEqual,
-				new skiff::statements::statement("y"));
+				new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -388,8 +388,8 @@ namespace Test
 			{
 				s = skiff::parse_statement("x " + string(1, c) + " y");
 				operands = queue<skiff::statements::statement *>();
-				operands.push(new skiff::statements::statement("x"));
-				operands.push(new skiff::statements::statement("y"));
+				operands.push(new skiff::statements::variable("x"));
+				operands.push(new skiff::statements::variable("y"));
 				operators = queue<char>();
 				operators.push(c);
 				p = new skiff::statements::math_statement(operands, operators);
@@ -398,11 +398,11 @@ namespace Test
 
 				s = skiff::parse_statement("x " + string(1, c) + "= y");
 				operands = queue<skiff::statements::statement *>();
-				operands.push(new skiff::statements::statement("x"));
-				operands.push(new skiff::statements::statement("y"));
+				operands.push(new skiff::statements::variable("x"));
+				operands.push(new skiff::statements::variable("y"));
 				operators = queue<char>();
 				operators.push(c);
-				p = new skiff::statements::assignment(new skiff::statements::statement("x"), 
+				p = new skiff::statements::assignment(new skiff::statements::variable("x"), 
 					new skiff::statements::math_statement(operands, operators));
 				Assert::AreEqual(p->parse_string(), s->parse_string());
 			}
@@ -411,7 +411,7 @@ namespace Test
 			p = new skiff::statements::self_modifier(
 				skiff::statements::self_modifier::modifier_type::PLUS,
 				skiff::statements::self_modifier::modifier_time::POST, 
-				new skiff::statements::statement("x"));
+				new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
@@ -419,7 +419,7 @@ namespace Test
 			p = new skiff::statements::self_modifier(
 				skiff::statements::self_modifier::modifier_type::PLUS,
 				skiff::statements::self_modifier::modifier_time::PRE, 
-				new skiff::statements::statement("x"));
+				new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
@@ -427,7 +427,7 @@ namespace Test
 			p = new skiff::statements::self_modifier(
 				skiff::statements::self_modifier::modifier_type::MINUS,
 				skiff::statements::self_modifier::modifier_time::POST, 
-				new skiff::statements::statement("x"));
+				new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
@@ -435,7 +435,7 @@ namespace Test
 			p = new skiff::statements::self_modifier(
 				skiff::statements::self_modifier::modifier_type::MINUS,
 				skiff::statements::self_modifier::modifier_time::PRE, 
-				new skiff::statements::statement("x"));
+				new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -445,15 +445,15 @@ namespace Test
 
 			s = skiff::parse_statement("x[y]");
 			p = new skiff::statements::list_accessor(
-				new skiff::statements::statement("x"), new skiff::statements::statement("y"));
+				new skiff::statements::variable("x"), new skiff::statements::variable("y"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x[y] = z");
 			p = new skiff::statements::assignment(
 				new skiff::statements::list_accessor(
-					new skiff::statements::statement("x"), 
-					new skiff::statements::statement("y")), 
-				new skiff::statements::statement("z"));
+					new skiff::statements::variable("x"), 
+					new skiff::statements::variable("y")), 
+				new skiff::statements::variable("z"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -462,14 +462,14 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("if(x)");
-			p = new skiff::statements::if_heading(new skiff::statements::statement("x"));
+			p = new skiff::statements::if_heading(new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("if(x == y)");
 			p = new skiff::statements::if_heading(new skiff::statements::comparison(
-				new skiff::statements::statement("x"), 
+				new skiff::statements::variable("x"), 
 				skiff::statements::comparison::comparison_type::Equal, 
-				new skiff::statements::statement("y")));
+				new skiff::statements::variable("y")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -478,14 +478,14 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("while(x)");
-			p = new skiff::statements::while_heading(new skiff::statements::statement("x"));
+			p = new skiff::statements::while_heading(new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("while(x == y)");
 			p = new skiff::statements::while_heading(new skiff::statements::comparison(
-				new skiff::statements::statement("x"),
+				new skiff::statements::variable("x"),
 				skiff::statements::comparison::comparison_type::Equal, 
-				new skiff::statements::statement("y")));
+				new skiff::statements::variable("y")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -501,14 +501,14 @@ namespace Test
 					new skiff::statements::value("0")
 				), 
 				new skiff::statements::comparison(
-					new skiff::statements::statement("x"), 
+					new skiff::statements::variable("x"), 
 					skiff::statements::comparison::comparison_type::LessThan,
 					new skiff::statements::value("10")
 				), 
 				new skiff::statements::self_modifier(
 					skiff::statements::self_modifier::modifier_type::PLUS,
 					skiff::statements::self_modifier::modifier_time::POST,
-					new skiff::statements::statement("x")
+					new skiff::statements::variable("x")
 				)
 			);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
@@ -516,7 +516,7 @@ namespace Test
 			s = skiff::parse_statement("for(x: Int : lst)");
 			p = new skiff::statements::for_itterator_heading(
 				new skiff::statements::decleration("x", skiff::statements::type_statement("Int")), 
-				new skiff::statements::statement("lst")
+				new skiff::statements::variable("lst")
 			);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
@@ -611,7 +611,7 @@ namespace Test
 
 			s = skiff::parse_statement("@Anno(param) def test()");
 			anno_params = vector<skiff::statements::statement *>();
-			anno_params.push_back(new skiff::statements::statement("param"));
+			anno_params.push_back(new skiff::statements::variable("param"));
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
 					skiff::statements::type_statement("")));
@@ -620,8 +620,8 @@ namespace Test
 
 			s = skiff::parse_statement("@Anno(param, paramz) def test()");
 			anno_params = vector<skiff::statements::statement *>();
-			anno_params.push_back(new skiff::statements::statement("param"));
-			anno_params.push_back(new skiff::statements::statement("paramz"));
+			anno_params.push_back(new skiff::statements::variable("param"));
+			anno_params.push_back(new skiff::statements::variable("paramz"));
 			p = new skiff::statements::annotation_tag("Anno", anno_params,
 				new skiff::statements::function_heading("test", func_params,
 					skiff::statements::type_statement("")));
@@ -642,7 +642,7 @@ namespace Test
 
 			s = skiff::parse_statement("@Anno(param) def test(agrz: String): Int");
 			anno_params = vector<skiff::statements::statement *>();
-			anno_params.push_back(new skiff::statements::statement("param"));
+			anno_params.push_back(new skiff::statements::variable("param"));
 			func_params = vector<skiff::statements::function_heading::function_parameter>();
 			func_params.push_back(
 				skiff::statements::function_heading::create_function_parameter("argz",
@@ -656,8 +656,8 @@ namespace Test
 
 			s = skiff::parse_statement("@Anno(param, paramz) def test(agrz: String, a: Char): Int");
 			anno_params = vector<skiff::statements::statement *>();
-			anno_params.push_back(new skiff::statements::statement("param"));
-			anno_params.push_back(new skiff::statements::statement("paramz"));
+			anno_params.push_back(new skiff::statements::variable("param"));
+			anno_params.push_back(new skiff::statements::variable("paramz"));
 			func_params = vector<skiff::statements::function_heading::function_parameter>();
 			func_params.push_back(
 				skiff::statements::function_heading::create_function_parameter("argz",
@@ -681,13 +681,13 @@ namespace Test
 			s = skiff::parse_statement("switch(x)");
 			p = new skiff::statements::switch_heading(
 				skiff::statements::switch_heading::type::SWITCH,
-				new skiff::statements::statement("x"));
+				new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("match(x)");
 			p = new skiff::statements::switch_heading(
 				skiff::statements::switch_heading::type::MATCH,
-				new skiff::statements::statement("x"));
+				new skiff::statements::variable("x"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("case \"test\" =>");
@@ -712,7 +712,7 @@ namespace Test
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("case _ =>");
-			p = new skiff::statements::switch_case_heading(new skiff::statements::statement("_"));
+			p = new skiff::statements::switch_case_heading(new skiff::statements::variable("_"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 	};
