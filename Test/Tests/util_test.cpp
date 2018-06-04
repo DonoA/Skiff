@@ -1,5 +1,5 @@
-#include "../Core/utils.h"
-#include "test_util.h"
+#include "../../Core/utils.h"
+#include "../test_util.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -9,7 +9,7 @@ using std::vector;
 
 namespace Test
 {
-	TEST_CLASS(Utils)
+	TEST_CLASS(Utils, 1)
 	{
 		TEST_METHOD(Padding)
 		{

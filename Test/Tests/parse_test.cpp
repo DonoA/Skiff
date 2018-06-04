@@ -1,7 +1,7 @@
-#include "../Core/statement.h"
-#include "../Core/parsers.h"
-#include "../Core/utils.h"
-#include "test_util.h"
+#include "../../Core/statement.h"
+#include "../../Core/parsers.h"
+#include "../../Core/utils.h"
+#include "../test_util.h"
 #include <string>
 #include <vector>
 #include <queue>
@@ -13,7 +13,7 @@ using std::queue;
 
 namespace Test
 {
-	TEST_CLASS(Parsing)
+	TEST_CLASS(Parsing, 2)
 	{
 		TEST_METHOD(Declaration)
 		{
@@ -628,7 +628,7 @@ namespace Test
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
-			s = skiff::parse_statement("@Anno def test(agrz: String): Int");
+			s = skiff::parse_statement("@Anno def test(argz: String): Int");
 			func_params = vector<skiff::statements::function_heading::function_parameter>();
 			func_params.push_back(
 				skiff::statements::function_heading::create_function_parameter("argz",
@@ -640,7 +640,7 @@ namespace Test
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
-			s = skiff::parse_statement("@Anno(param) def test(agrz: String): Int");
+			s = skiff::parse_statement("@Anno(param) def test(argz: String): Int");
 			anno_params = vector<skiff::statements::statement *>();
 			anno_params.push_back(new skiff::statements::variable("param"));
 			func_params = vector<skiff::statements::function_heading::function_parameter>();
@@ -654,7 +654,7 @@ namespace Test
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
-			s = skiff::parse_statement("@Anno(param, paramz) def test(agrz: String, a: Char): Int");
+			s = skiff::parse_statement("@Anno(param, paramz) def test(argz: String, a: Char): Int");
 			anno_params = vector<skiff::statements::statement *>();
 			anno_params.push_back(new skiff::statements::variable("param"));
 			anno_params.push_back(new skiff::statements::variable("paramz"));

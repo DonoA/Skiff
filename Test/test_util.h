@@ -6,11 +6,9 @@
 using std::string;
 using std::vector;
 
-#define TEST_CLASS(name) namespace name ## _tests
+#define TEST_CLASS(name, ord) namespace name ## _tests
 
 #define TEST_METHOD(name) void name ## _test()
-
-#define CALL_TEST_METHOD(clazz, name) run_test(Test::clazz##_tests::name##_test, #name)
 
 extern vector<string> assert_failures;
 extern bool last_failed;

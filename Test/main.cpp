@@ -1,6 +1,7 @@
+
 #include "test_util.h"
-#include "util_test.cpp"
-#include "parse_test.cpp"
+#include "Tests/util_test.cpp"
+#include "Tests/parse_test.cpp"
 
 #include <vector>
 #include <string>
@@ -16,7 +17,6 @@ size_t tests_failed;
 string current_test;
 
 size_t total_run = 0;
-
 int main()
 {
     std::cout << "Running Skiff Tests:" << std::endl;
@@ -24,41 +24,41 @@ int main()
 
     tests_passed = 0;
     tests_failed = 0;
-    std::cout << "Utils:" << std::endl << "\t";
-    CALL_TEST_METHOD(Utils, Padding);
-    CALL_TEST_METHOD(Utils, BracedSplit);
+    std::cout << "Utils:" << std::endl << "	";
+    run_test(Test::Utils_tests::Padding_test, "Padding");
+    run_test(Test::Utils_tests::BracedSplit_test, "BracedSplit");
     std::cout << "      " << tests_passed + tests_failed << " run, " << tests_failed << " failures" << std::endl;
     total_run += tests_passed + tests_failed;
-
+    
     tests_passed = 0;
     tests_failed = 0;
-    std::cout << "Parsing:" << std::endl << "\t";
-    CALL_TEST_METHOD(Parsing, Declaration);
-    CALL_TEST_METHOD(Parsing, Assignment);
-    CALL_TEST_METHOD(Parsing, AssignmentAndDeclaration);
-    CALL_TEST_METHOD(Parsing, FunctionCall);
-    CALL_TEST_METHOD(Parsing, FunctionDef);
-    CALL_TEST_METHOD(Parsing, ClassDef);
-    CALL_TEST_METHOD(Parsing, StructDef);
-    CALL_TEST_METHOD(Parsing, InstanceClass);
-    CALL_TEST_METHOD(Parsing, ReturnStatement);
-    CALL_TEST_METHOD(Parsing, Literals);
-    CALL_TEST_METHOD(Parsing, Bitwise);
-    CALL_TEST_METHOD(Parsing, BooleanOperations);
-    CALL_TEST_METHOD(Parsing, Comparison);
-    CALL_TEST_METHOD(Parsing, BasicMath);
-    CALL_TEST_METHOD(Parsing, ListOperations);
-    CALL_TEST_METHOD(Parsing, IfStatement);
-    CALL_TEST_METHOD(Parsing, WhileStatement);
-    CALL_TEST_METHOD(Parsing, ForStatement);
-    CALL_TEST_METHOD(Parsing, FlowControls);
-    CALL_TEST_METHOD(Parsing, ImportStatement);
-    CALL_TEST_METHOD(Parsing, DeclarationModifiers);
-    CALL_TEST_METHOD(Parsing, Annotation);
-    CALL_TEST_METHOD(Parsing, SwitchMatchHeading);
+    std::cout << "Parsing:" << std::endl << "	";
+    run_test(Test::Parsing_tests::Declaration_test, "Declaration");
+    run_test(Test::Parsing_tests::Assignment_test, "Assignment");
+    run_test(Test::Parsing_tests::AssignmentAndDeclaration_test, "AssignmentAndDeclaration");
+    run_test(Test::Parsing_tests::FunctionCall_test, "FunctionCall");
+    run_test(Test::Parsing_tests::FunctionDef_test, "FunctionDef");
+    run_test(Test::Parsing_tests::ClassDef_test, "ClassDef");
+    run_test(Test::Parsing_tests::StructDef_test, "StructDef");
+    run_test(Test::Parsing_tests::InstanceClass_test, "InstanceClass");
+    run_test(Test::Parsing_tests::ReturnStatement_test, "ReturnStatement");
+    run_test(Test::Parsing_tests::Literals_test, "Literals");
+    run_test(Test::Parsing_tests::Bitwise_test, "Bitwise");
+    run_test(Test::Parsing_tests::BooleanOperations_test, "BooleanOperations");
+    run_test(Test::Parsing_tests::Comparison_test, "Comparison");
+    run_test(Test::Parsing_tests::BasicMath_test, "BasicMath");
+    run_test(Test::Parsing_tests::ListOperations_test, "ListOperations");
+    run_test(Test::Parsing_tests::IfStatement_test, "IfStatement");
+    run_test(Test::Parsing_tests::WhileStatement_test, "WhileStatement");
+    run_test(Test::Parsing_tests::ForStatement_test, "ForStatement");
+    run_test(Test::Parsing_tests::FlowControls_test, "FlowControls");
+    run_test(Test::Parsing_tests::ImportStatement_test, "ImportStatement");
+    run_test(Test::Parsing_tests::DeclarationModifiers_test, "DeclarationModifiers");
+    run_test(Test::Parsing_tests::Annotation_test, "Annotation");
+    run_test(Test::Parsing_tests::SwitchMatchHeading_test, "SwitchMatchHeading");
     std::cout << "      " << tests_passed + tests_failed << " run, " << tests_failed << " failures" << std::endl;
     total_run += tests_passed + tests_failed;
-
+    
     std::cout << std::endl;
 
     for(string s : assert_failures)

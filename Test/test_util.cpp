@@ -23,7 +23,7 @@ void Assert::AreEqual(string s1, string s2)
 {
     if(s1 != s2)
     {
-        assert_failures.push_back(current_test + ":\nExpect:\t" + s2 + "\nGot:\t" + s1);
+        assert_failures.push_back(current_test + ":\nExpect:\t'" + s2 + "'\nGot:\t'" + s1 + "'");
         last_failed = true;
     }
 }
