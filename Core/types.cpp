@@ -203,6 +203,15 @@ namespace skiff
 				std::cout << it->first << std::endl;
 			}
 		}
+		string scope::get_debug_string()
+		{
+			string rtn = "";
+			for(map<string, skiff_object>::iterator it = env.begin(); it != env.end(); ++it) {
+				string * str = (string *) it->second.get_class()->get_scope()->get_function("to_string").eval(it->second).get_value()->get_value();
+				rtn += it->first + ":" + it->second.get_class()->get_name() + "=" + *str + ";";
+			}
+			return rtn;
+		}
 		skiff_class::skiff_class(std::string name, skiff_class * parent)
 		{
 			this->name = name;

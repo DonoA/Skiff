@@ -121,6 +121,7 @@ namespace skiff
 			skiff_function get_function(std::string name);
 
 			void print_debug();
+			std::string get_debug_string();
 		private:
 			std::map<std::string, skiff_object> env;
 			scope * inherit;

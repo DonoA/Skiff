@@ -2,6 +2,7 @@ import os, re
 
 test_packs = {}
 test_order = []
+includes = []
 
 current_test_class = None
 
@@ -9,6 +10,7 @@ class_match = re.compile(r"TEST_CLASS\((\w+),\s*(\d+)\)")
 method_match = re.compile(r"TEST_METHOD\((\w+)\)")
 
 for file in os.listdir("Test/Tests"):
+    includes.append("#include \"Tests/{}\"".format(file))
     f = open("Test/Tests/" + file, "r")
     for line in f.readlines():
         is_class = class_match.search(line)
@@ -31,8 +33,8 @@ main_cpp = open("Test/main.cpp", "w+")
 
 main_cpp.write("""
 #include "test_util.h"
-#include "Tests/util_test.cpp"
-#include "Tests/parse_test.cpp"
+{}
+
 
 #include <vector>
 #include <string>
@@ -48,7 +50,7 @@ size_t tests_failed;
 string current_test;
 
 size_t total_run = 0;
-""")
+""".format("\n".join(includes)))
 
 main_cpp.write("int main()\n{")
 
