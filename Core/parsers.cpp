@@ -791,7 +791,7 @@ namespace skiff
 		return new statements::variable(stmt);
 	}
 
-	bool handle_line(string input, char c, stack<statements::braced_block *> * stmts)
+	bool handle_line(string input, char c, stack<statements::braced_block *> * stmts, bool debug)
 	{
 		input = utils::remove_pad(input);
 
@@ -805,7 +805,10 @@ namespace skiff
 			return true;
 		}
 		statements::statement * stmt = parse_statement(input);
-		std::cout << stmt->parse_string() << std::endl;
+		if(debug)
+		{
+			std::cout << stmt->parse_string() << std::endl;
+		}
 		stmts->top()->push_body(stmt);
 		if (c == '{')
 		{

@@ -49,7 +49,7 @@ namespace skiff
 			}
 		}
 
-		queue<statement *> parse_file(string infile)
+		queue<statement *> parse_file(string infile, bool debug)
 		{
 
 			stack<statements::braced_block *> blocks;
@@ -67,7 +67,7 @@ namespace skiff
 				}
 				if ((c == ';' || c == '{' || c == '}') && braces.empty())
 				{
-					running = handle_line(input, c, &blocks);
+					running = handle_line(input, c, &blocks, debug);
 					input = string();
 					c = '\0';
 				}

@@ -50,6 +50,7 @@ clean:
 	rm Target/Test/*.o || true
 	rm Target/SkiffTest || true
 	rm Target/Skiff || true
+	rm Test/main.cpp || true
 
 lines:
 	git ls-files | xargs wc -l

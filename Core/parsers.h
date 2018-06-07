@@ -14,5 +14,5 @@ namespace skiff
 {
 	skiff::statements::statement * parse_statement(std::string stmt);
 
-	bool handle_line(std::string input, char c, std::stack<skiff::statements::braced_block *> * stmts);
+	bool handle_line(std::string input, char c, std::stack<skiff::statements::braced_block *> * stmts, bool debug);
 }

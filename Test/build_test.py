@@ -35,7 +35,6 @@ main_cpp.write("""
 #include "test_util.h"
 {}
 
-
 #include <vector>
 #include <string>
 #include <iostream>
