@@ -187,8 +187,28 @@ namespace skiff
 			{
 				body->eval(env);
 			}
+			else
+			{
+				if(else_block != nullptr)
+				{
+					else_block->eval(env);
+				}
+			}
             return skiff_object();
         }
+
+		skiff_object else_heading::eval(environment::scope * env)
+		{
+			if(wrapping == nullptr)
+			{
+				body->eval(env);
+			}
+			else
+			{
+				wrapping->eval(env);
+			}
+			return skiff_object();
+		}
 
 		skiff_object comparison::eval(environment::scope * env)
 		{

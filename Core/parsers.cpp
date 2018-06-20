@@ -809,6 +809,7 @@ namespace skiff
 		{
 			std::cout << stmt->parse_string() << std::endl;
 		}
+		stmt->finalize(stmts);
 		stmts->top()->push_body(stmt);
 		if (c == '{')
 		{

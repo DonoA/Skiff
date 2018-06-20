@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <stack>
 #include "types.h"
 
 namespace skiff
@@ -30,6 +31,7 @@ namespace skiff
 			virtual std::string parse_string();
 			virtual int indent_mod();
 			virtual void add_body(braced_block *);
+			virtual void finalize(std::stack<braced_block *> * stmts);
 		private:
 			std::string raw;
 		};
@@ -77,6 +79,7 @@ namespace skiff
 			environment::skiff_object eval(environment::scope * env);
 			std::string parse_string();
 			void push_body(statement * s);
+			statement * get_last();
 		private:
 			std::queue<statement *> stmts;
 		};
@@ -176,6 +179,8 @@ namespace skiff
 			std::vector<statement *> params;
 		};
 
+		class else_heading;
+
 		class block_heading : public statement
 		{
 		public:
@@ -186,6 +191,7 @@ namespace skiff
 			virtual std::string parse_string() = 0;
 			void add_body(braced_block * s);
 			int indent_mod();
+			virtual void add_else_block(else_heading * stmt) {};
 		protected:
 			braced_block * body;
 		private:
@@ -209,24 +215,31 @@ namespace skiff
 			flow_statement::type typ;
 		};
 
-		class if_heading : public block_heading
-		{
-		public:
-			if_heading(statement * condition);
-			std::string parse_string();
-       		environment::skiff_object eval(environment::scope * env);
-		private:
-			statement * condition;
-		};
-
 		class else_heading : public block_heading
 		{
 		public:
 			else_heading() : else_heading(nullptr) {};
 			else_heading(block_heading * wrapping);
 			std::string parse_string();
+       		environment::skiff_object eval(environment::scope * env);
+			void add_body(braced_block * s);
+			void finalize(std::stack<braced_block *> * stmts);
+			void add_else_block(else_heading * stmt);
 		private:
 			block_heading * wrapping;
+			else_heading * next_else_block;
+		};
+
+		class if_heading : public block_heading
+		{
+		public:
+			if_heading(statement * condition);
+			std::string parse_string();
+       		environment::skiff_object eval(environment::scope * env);
+			void add_else_block(else_heading * stmt);
+		private:
+			statement * condition;
+			else_heading * else_block;
 		};
 
 		class try_heading : public block_heading

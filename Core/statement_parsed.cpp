@@ -43,6 +43,9 @@ namespace skiff
 			std::cout << "No body allowed" << std::endl;
 		}
 
+		void statement::finalize(std::stack<braced_block *> * stmts)
+		{ }
+
 		value::value(string val)
 		{
 			this->val = val;
@@ -67,6 +70,11 @@ namespace skiff
 		void braced_block::push_body(statement * s)
 		{
 			stmts.push(s);
+		}
+
+		statement * braced_block::get_last()
+		{
+			return stmts.back();
 		}
 
 		string decleration::parse_string()
@@ -280,11 +288,37 @@ namespace skiff
 		if_heading::if_heading(statement * condition)
 		{
 			this->condition = condition;
+			this->else_block = nullptr;
 		}
 
 		string if_heading::parse_string()
 		{
 			return "If(" + condition->parse_string() + ")";
+		}
+
+		void if_heading::add_else_block(else_heading * stmt)
+		{
+			else_block = stmt;
+		}
+
+		void else_heading::add_body(braced_block * s)
+		{
+			if(wrapping == nullptr)
+			{
+				body = s;
+			}
+			else
+			{
+				wrapping->add_body(s);
+			}
+		}
+
+		void else_heading::add_else_block(else_heading * stmt)
+		{
+			if(wrapping != nullptr)
+			{
+				wrapping->add_else_block(stmt);
+			}
 		}
 
 		class_heading::class_heading(class_heading::class_type type, string name) :
@@ -637,6 +671,12 @@ namespace skiff
 				return "Else()";
 			}
 			return "Else(" + wrapping->parse_string() + ")";
+		}
+
+		void else_heading::finalize(std::stack<braced_block *> * stmts)
+		{
+			block_heading * if_head = (block_heading *) stmts->top()->get_last();
+			if_head->add_else_block(this);
 		}
 
 		switch_heading::switch_heading(switch_heading::type typ, statement * on)
