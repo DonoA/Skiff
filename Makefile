@@ -4,7 +4,7 @@ PYTHON = python3
 
 default: build
 
-build: Target/Core/builtin.o Target/Core/modes.o Target/Core/parsers.o Target/Core/statement_parsed.o Target/Core/statement_eval.o Target/Core/types.o Target/Core/token.o Target/Core/utils.o Target/main.o
+build: Target/Core/builtin.o Target/Core/modes.o Target/Core/parser.o Target/Core/statement_parsed.o Target/Core/statement_eval.o Target/Core/types.o Target/Core/token.o Target/Core/utils.o Target/main.o
 	$(CC) $(CFLAGS) -o Target/Skiff Target/main.o Target/Core/*.o
 
 Target/Core/builtin.o: Core/builtin.cpp Core/builtin.h
@@ -13,8 +13,8 @@ Target/Core/builtin.o: Core/builtin.cpp Core/builtin.h
 Target/Core/modes.o: Core/modes.cpp Core/modes.h
 	$(CC) $(CFLAGS) -c -o Target/Core/modes.o Core/modes.cpp
 
-Target/Core/parsers.o: Core/parsers.cpp Core/parsers.h
-	$(CC) $(CFLAGS) -c -o Target/Core/parsers.o Core/parsers.cpp
+Target/Core/parser.o: Core/parser.cpp Core/parser.h
+	$(CC) $(CFLAGS) -c -o Target/Core/parser.o Core/parser.cpp
 
 Target/Core/statement_parsed.o: Core/statement_parsed.cpp Core/statement.h
 	$(CC) $(CFLAGS) -c -o Target/Core/statement_parsed.o Core/statement_parsed.cpp

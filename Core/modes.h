@@ -6,7 +6,7 @@
 
 #include "types.h"
 #include "statement.h"
-#include "parsers.h"
+#include "parser.h"
 #include "utils.h"
 #include "token.h"
 

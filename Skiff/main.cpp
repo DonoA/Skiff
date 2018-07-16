@@ -3,7 +3,7 @@
 #include <string>
 #include "../Core/types.h"
 #include "../Core/statement.h"
-#include "../Core/parsers.h"
+#include "../Core/parser.h"
 #include "../Core/utils.h"
 #include "../Core/builtin.h"
 #include "../Core/modes.h"
