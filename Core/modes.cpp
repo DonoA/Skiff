@@ -1,6 +1,5 @@
 #include "modes.h"
 
-
 namespace skiff
 {
 	namespace modes
@@ -51,31 +50,40 @@ namespace skiff
 
 		queue<statement *> parse_file(string infile, bool debug)
 		{
-
-			stack<statements::braced_block *> blocks;
-			blocks.push(new braced_block());
-
 			std::fstream fin(infile, std::fstream::in);
-			bool running = true;
-			string input = string();
-			stack<char> braces;
 			char c = '\0';
-			while (fin >> std::noskipws >> c && running) {
-				if (!braces.empty() || (c != ';' && c != '{' && c != '}'))
-				{
-					input += c;
-				}
-				if ((c == ';' || c == '{' || c == '}') && braces.empty())
-				{
-					running = handle_line(input, c, &blocks, debug);
-					input = string();
-					c = '\0';
-				}
-				utils::track_braces(input.length() == 0 ? '\0' : input[input.length() - 1], c, 
-					&braces);
+			string file;
+			string line;
+			while(std::getline(fin, line))
+			{
+				file += line + "\n";
 			}
+			vector<tokenizer::token> token_sequence = tokenizer::tokenize(file);
+			std::cout << tokenizer::sequencetostring(token_sequence) << std::endl;
+
+			// stack<statements::braced_block *> blocks;
+			// blocks.push(new braced_block());
+
+			// bool running = true;
+			// string input = string();
+			// stack<char> braces;
+			// char c = '\0';
+			// while (fin >> std::noskipws >> c && running) {
+			// 	if (!braces.empty() || (c != ';' && c != '{' && c != '}'))
+			// 	{
+			// 		input += c;
+			// 	}
+			// 	if ((c == ';' || c == '{' || c == '}') && braces.empty())
+			// 	{
+			// 		running = handle_line(input, c, &blocks, debug);
+			// 		input = string();
+			// 		c = '\0';
+			// 	}
+			// 	utils::track_braces(input.length() == 0 ? '\0' : input[input.length() - 1], c, 
+			// 		&braces);
+			// }
 			queue<statement *> stmts;
-			stmts.push(blocks.top());
+			// stmts.push(blocks.top());
 			return stmts;
 		}
 

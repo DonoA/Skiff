@@ -8,6 +8,7 @@
 #include "statement.h"
 #include "parsers.h"
 #include "utils.h"
+#include "token.h"
 
 namespace skiff
 {

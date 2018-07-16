@@ -4,7 +4,7 @@ PYTHON = python3
 
 default: build
 
-build: Target/Core/builtin.o Target/Core/modes.o Target/Core/parsers.o Target/Core/statement_parsed.o Target/Core/statement_eval.o Target/Core/types.o Target/Core/utils.o Target/main.o
+build: Target/Core/builtin.o Target/Core/modes.o Target/Core/parsers.o Target/Core/statement_parsed.o Target/Core/statement_eval.o Target/Core/types.o Target/Core/token.o Target/Core/utils.o Target/main.o
 	$(CC) $(CFLAGS) -o Target/Skiff Target/main.o Target/Core/*.o
 
 Target/Core/builtin.o: Core/builtin.cpp Core/builtin.h
@@ -24,6 +24,9 @@ Target/Core/statement_eval.o: Core/statement_eval.cpp  Core/statement.h
 
 Target/Core/types.o: Core/types.cpp Core/types.h
 	$(CC) $(CFLAGS) -c -o Target/Core/types.o Core/types.cpp
+
+Target/Core/token.o: Core/token.cpp Core/token.h
+	$(CC) $(CFLAGS) -c -o Target/Core/token.o Core/token.cpp
 
 Target/Core/utils.o: Core/utils.cpp Core/utils.h
 	$(CC) $(CFLAGS) -c -o Target/Core/utils.o Core/utils.cpp
