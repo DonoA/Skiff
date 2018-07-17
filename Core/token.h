@@ -22,14 +22,14 @@ namespace skiff {
 
             // LOGIC
             AND, OR, 
-            LESS_THAN, GREATER_THAN, BANG, BANG_EQUAL, DOUBLE_EQUAL, 
+            BANG, BANG_EQUAL, DOUBLE_EQUAL, // less than greater than is the generic syntax
             LESS_THAN_EQUAL, GREATER_THAN_EQUAL, TRU, FALS, NILL,
 
             LITERAL,
 
             // KEYWORDS
             STRUCT, PUBLIC, PRIVATE, STATIC, FINAL, MATCH, SWITCH, CASE, NEXT, 
-            BREAK, THROW, IF, WHILE, FOR, TRY, CATCH, FINALLY, THROWS, RETURN, ANNOTATION,
+            BREAK, THROW, IF, ELSE, WHILE, FOR, TRY, CATCH, FINALLY, THROWS, RETURN, ANNOTATION,
             NEW, CLASS, DEF, AT, ENUM, SUPER, THIS, IMPORT, NAME,
 
             FILEEND,

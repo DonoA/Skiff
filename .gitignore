@@ -8,3 +8,6 @@ Target/Skiff
 Core/.vscode/
 Target/SkiffTest
 Test/main.cpp
+.idea/
+CMakeLists.txt
+cmake-build-debug/
