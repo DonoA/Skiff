@@ -59,8 +59,9 @@ namespace skiff
 				file += line + "\n";
 			}
 			vector<tokenizer::token> token_sequence = tokenizer::tokenize(file);
-			vector<statement *> statements = parse_statement(token_sequence);
-			std::cout << tokenizer::sequencetostring(token_sequence) << std::endl;
+            std::cout << tokenizer::sequencetostring(token_sequence) << std::endl;
+            statement * statements = parser(token_sequence).parse();
+            std::cout << statements->parse_string() << std::endl;
 
 			// stack<statements::braced_block *> blocks;
 			// blocks.push(new braced_block());

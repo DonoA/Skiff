@@ -303,7 +303,7 @@ namespace skiff
                                 break;
                             }
                             default: {
-                                tokens.push_back(token(token_type::GREATER_THAN, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::RIGHT_ANGLE_BRACE, nullptr, line_id, col));
                                 break;
                             }
                         }
@@ -324,7 +324,7 @@ namespace skiff
                                 break;
                             }
                             default: {
-                                tokens.push_back(token(token_type::LESS_THAN, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::LEFT_ANGLE_BRACE, nullptr, line_id, col));
                                 break;
                             }
                         }

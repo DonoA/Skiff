@@ -15,25 +15,44 @@ using std::vector;
 using std::stack;
 using skiff::tokenizer::token;
 using skiff::tokenizer::token_type;
+using skiff::tokenizer::literal;
 using skiff::statements::statement;
 
 namespace skiff
 {
+
+    struct parse_match
+    {
+        vector<vector<token>> match_groups;
+        vector<literal *> selected_literals;
+    };
+
+    enum parse_pattern_type
+    {
+        TOKEN, CAPTURE, TERMINATE
+    };
+
+    struct parse_pattern_data
+    {
+        token_type tkn;
+        vector<token> cap;
+        token_type term;
+    };
+
     struct parse_pattern_part
     {
-        token_type * tkn;
-        vector<token> * cap;
-        token_type * term;
+        parse_pattern_type type;
+        parse_pattern_data value;
     };
 
     class parse_pattern
     {
     public:
-        parse_pattern(token_type tkn);
+        explicit parse_pattern(token_type tkn);
         parse_pattern then(token_type tkn);
         parse_pattern capture();
         parse_pattern terminate(token_type tkn);
-        vector<vector<token> *> * match(vector<token> tokens);
+        parse_match * match(vector<token> tokens);
     private:
         vector<parse_pattern_part> rules;
     };

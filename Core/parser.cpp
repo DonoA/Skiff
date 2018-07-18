@@ -5,19 +5,34 @@ namespace skiff
 {
     parse_pattern::parse_pattern(token_type tkn) {
         rules = vector<parse_pattern_part>();
-        rules.push_back({&tkn, nullptr, nullptr});
+        parse_pattern_part pp = parse_pattern_part();
+        pp.type = parse_pattern_type::TOKEN;
+        pp.value = {tkn, vector<token>(), tkn};
+        rules.push_back(pp);
     }
 
     parse_pattern parse_pattern::then(token_type tkn) {
-        rules.push_back({&tkn, nullptr, nullptr});
+        parse_pattern_part pp = parse_pattern_part();
+        pp.type = parse_pattern_type::TOKEN;
+        pp.value = {tkn, vector<token>(), tkn};
+        rules.push_back(pp);
+        return *this;
     }
 
     parse_pattern parse_pattern::capture() {
-        rules.push_back({nullptr, new vector<token>(), nullptr});
+        parse_pattern_part pp = parse_pattern_part();
+        pp.type = parse_pattern_type::CAPTURE;
+        pp.value = {token_type(0), vector<token>(), token_type(0)};
+        rules.push_back(pp);
+        return *this;
     }
 
     parse_pattern parse_pattern::terminate(token_type tkn) {
-        rules.push_back({nullptr, nullptr, tkn});
+        parse_pattern_part pp = parse_pattern_part();
+        pp.type = parse_pattern_type::TERMINATE;
+        pp.value = {tkn, vector<token>(), tkn};
+        rules.push_back(pp);
+        return *this;
     }
 
     void check_back_brace(token_type op, stack<token_type > * braces)
@@ -54,47 +69,63 @@ namespace skiff
         }
     }
 
-    vector<vector<token> *> * parse_pattern::match(vector<token> tokens) {
+    parse_match * parse_pattern::match(vector<token> tokens) {
         size_t rule_pos = 0;
         stack<token_type> braces;
-        vector<vector<token> *> * captures = new vector<vector<token> *>();
+        parse_match * match = new parse_match();
+        match->selected_literals = vector<literal *>();
+        match->match_groups = vector<vector<token>>();
         // rules must end with a token to match
         for(size_t i = 0; i < tokens.size(); i++)
         {
             track_brace(tokens.at(i).get_type(), &braces);
-            if(rules.at(rule_pos).tkn != nullptr)
+            if(rules.at(rule_pos).type == parse_pattern_type::TOKEN)
             {
-                if(*rules.at(rule_pos).tkn == tokens.at(i).get_type())
+                if(rules.at(rule_pos).value.tkn == tokens.at(i).get_type())
                 {
+                    match->selected_literals.push_back(tokens.at(i).get_lit());
                     rule_pos++;
                 }
                 else
                 {
-                    std::cout << "Did not expect token!" << std::endl;
+                    std::cout << "Unexpected token " << (int) tokens.at(i).get_type() << " wanted " << (int) rules.at(rule_pos).value.tkn << std::endl;
                     return nullptr;
                 }
             }
-            else if(rules.at(rule_pos).cap != nullptr)
+            else if(rules.at(rule_pos).type == parse_pattern_type::CAPTURE)
             {
                 // if we are not in a brace and (the next token matches our next rule or is the terminator and
                 // (we are at the end or the next token is it))
                 if(braces.empty() &&
-                        (rules.at(rule_pos + 1).tkn != nullptr &&
-                            *rules.at(rule_pos + 1).tkn == tokens.at(i).get_type()) ||
-                        (rules.at(rule_pos + 1).term != nullptr &&
-                            (*rules.at(rule_pos + 1).term == tokens.at(i).get_type()) || i + 1 >= tokens.size())
+                        (rules.at(rule_pos + 1).type == parse_pattern_type::TOKEN &&
+                            rules.at(rule_pos + 1).value.tkn == tokens.at(i).get_type()) ||
+                        (rules.at(rule_pos + 1).type == parse_pattern_type::TERMINATE &&
+                            (rules.at(rule_pos + 1).value.term == tokens.at(i).get_type()) || i + 1 >= tokens.size())
                         )
                 {
-                    captures->push_back(rules.at(rule_pos).cap);
+                    match->match_groups.push_back(rules.at(rule_pos).value.cap);
                     rule_pos++;
                 }
                 else
                 {
-                    rules.at(rule_pos).cap->push_back(tokens.at(i));
+                    rules.at(i).value.cap.push_back(tokens.at(i));
+                }
+            }
+            else if(rules.at(rule_pos).type == parse_pattern_type::TERMINATE)
+            {
+                if(rules.at(rule_pos).value.term == tokens.at(i).get_type())
+                {
+                    match->selected_literals.push_back(tokens.at(i).get_lit());
+                    return match;
+                }
+                else
+                {
+                    std::cout << "Unexpected token " << (int) tokens.at(i).get_type() << " wanted " << (int) rules.at(rule_pos).value.term << std::endl;
+                    return nullptr;
                 }
             }
         }
-        return captures;
+        return match;
     }
 
     parser::parser(vector<token> stmt) {
@@ -136,12 +167,10 @@ namespace skiff
 
 
 
-        vector<vector<token> *> * cap;
+        parse_match * cap;
         cap = DECLARE.match(stmt);
-        cap = ASSIGNMENT.match(stmt);
-        cap = DECLARE.match(stmt);
-        cap = DECLARE.match(stmt);
-
+        return new statements::decleration(cap->selected_literals.at(0)->to_string(),
+                                           statements::type_statement(cap->selected_literals.at(2)->to_string()));
     }
 
     token parser::peek(int i)
