@@ -503,7 +503,7 @@ namespace skiff
 		class boolean_conjunction : public statement
 		{
 		public:
-			enum conjunction_type { And, Or };
+			enum conjunction_type { AND, OR };
 			boolean_conjunction(statement * s1, boolean_conjunction::conjunction_type conj,
 				statement * s2);
 			std::string parse_string();

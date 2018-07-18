@@ -44,12 +44,12 @@ The language supports a wide range of syntactical styles:
     - [x] Add: `+`
     - [x] Substract: `-`
     - [x] Multiply: `*`
-    - [ ] Exponent: `**`
+    - [x] Exponent: `**`
     - [x] Divide: `/`
     - [x] Mod: `%`
-    - [x] Assignment with math: `+=`, `-=`, `*=`, `/=`, `%=`
-    - [x] Pre/Post increment `++`
-    - [x] Pre/Post decriment `--`
+    - [ ] Assignment with math: `+=`, `-=`, `*=`, `/=`, `%=`
+    - [ ] Pre/Post increment `++`
+    - [ ] Pre/Post decriment `--`
 - Generic types:
     - Class:
         - [x] Declare: `class ClassName<T> {}` or `class ClassName<T, U> {}`
@@ -60,18 +60,18 @@ The language supports a wide range of syntactical styles:
         - [x] Instanciate: `new ClassName<T>()`
         - [x] Required extension: `struct ClassName<T : MyClass> {}`
     - Function:
-        - [ ] Declare: `def functionName<T>(parameter: Type): ReturnType {}`
-        - [ ] Call: `functionName<T>(param1, param2)`
-        - [ ] Required extension: `def functionName<T : OtherClass> {}`
+        - [x] Declare: `def functionName<T>(parameter: Type): ReturnType {}`
+        - [x] Call: `functionName<T>(param1, param2)`
+        - [x] Required extension: `def functionName<T : OtherClass> {}`
 - [x] Inheritance: `class Child : Parent`
 - [x] List access: `list[index]`
 - [x] Include other source `import <system file>` or `import "localfile"` 
 - Function modifiers:
-    - [x] Static: `static def functionName() {}`
-    - [x] Private: `private def functionName() {}`
+    - [ ] Static: `static def functionName() {}`
+    - [ ] Private: `private def functionName() {}`
 - Instance variable modifiers:
-    - [x] Static: `static var: Type`
-    - [x] Private: `private var: Type`
+    - [ ] Static: `static var: Type`
+    - [ ] Private: `private var: Type`
 - [ ] Anonymous functions:
     - Creation: `(parameter: Type): ReturnType => {}`
     - As a type: `myFunction: (Type) => ReturnType`
@@ -101,8 +101,8 @@ The language supports a wide range of syntactical styles:
     - [x] throw: `throw new MyException()`
     - [x] try/catch: `try {} catch(e: MyException) {}`
     - [x] try/finally: `try {} finally {}`
-    - [ ] Define a function to throw an exception: `def myFunction(arg1: Type): ReturnType throws MyException {}`
-- [ ] Annotations:
+    - [x] Define a function to throw an exception: `def myFunction(arg1: Type): ReturnType throws MyException {}`
+- [x] Annotations:
     - On a function: 
     ```
     @MyAnnotation(param1, param2)
@@ -116,8 +116,8 @@ The language supports a wide range of syntactical styles:
     - definition: `annotation MyAnnotation {}`
 - Enum: 
     - [x] Basic: `enum MyEnum {}`
-    - [ ] Class: `enum class MyClass {}`
-    - [ ] Struct: `enum struct MyDataClass {}`
+    - [x] Class: `enum class MyClass {}`
+    - [x] Struct: `enum struct MyDataClass {}`
 
 ## Specifications:
 ### Baked in types

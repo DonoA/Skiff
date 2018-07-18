@@ -252,9 +252,9 @@ namespace skiff
 		{
 			switch (conj)
 			{
-			case And:
+			case AND:
 				return "&&";
-			case Or:
+			case OR:
 				return "||";
 			}
 			return "";
