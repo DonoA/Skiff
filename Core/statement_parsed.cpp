@@ -82,15 +82,15 @@ namespace skiff
 			return "Decleration(" + name + "," + type.parse_string() + ")";
 		}
 
-		function_call::function_call(string name, vector<statement*> params)
+		function_call::function_call(statement * name, vector<statement*> params)
 		{
-			this->name = utils::remove_pad(name);
+			this->name = name;
 			this->params = params;
 		}
 
 		string function_call::parse_string()
 		{
-			string rtn = "FunctionCall(" + name + ", Params(";
+			string rtn = "FunctionCall(" + name->parse_string() + ", Params(";
 			bool any = false;
 			for (statement * stmt : params)
 			{
@@ -488,8 +488,7 @@ namespace skiff
 			return "New(" + type.parse_string() + ", Params(" + paramz + ")";
 		}
 
-		annotation_tag::annotation_tag(string tag_name, vector<statement *> params,
-			statement * on) : modifier_base(on)
+		annotation_tag::annotation_tag(string tag_name, vector<statement *> params) : modifier_base(nullptr)
 		{
 			name = tag_name;
 			this->params = params;
@@ -614,8 +613,6 @@ namespace skiff
 			return "DeclareAndAssign(" + name + ", " + type.parse_string() + ", " +
 				value->parse_string() + ")";
 		}
-
-
 
 		import_statement::import_statement(string import_name)
 		{

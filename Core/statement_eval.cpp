@@ -126,19 +126,19 @@ namespace skiff
 
 		skiff_object function_call::eval(scope * env)
 		{
-			if (name == "print")
-			{
-				string tp;
-				for (statement * stmt : params)
-				{
-					skiff_object res = stmt->eval(env);
-					res = res.get_class()->get_scope()->get_function("to_string").eval(res);
-					tp += *((string *) res.get_value()->get_value());
-					tp += " ";
-				}
-				tp.erase(tp.length() - 1);
-				std::cout << tp << std::endl;
-			}
+//			if (name == "print")
+//			{
+//				string tp;
+//				for (statement * stmt : params)
+//				{
+//					skiff_object res = stmt->eval(env);
+//					res = res.get_class()->get_scope()->get_function("to_string").eval(res);
+//					tp += *((string *) res.get_value()->get_value());
+//					tp += " ";
+//				}
+//				tp.erase(tp.length() - 1);
+//				std::cout << tp << std::endl;
+//			}
 			return skiff_object();
 		}
 

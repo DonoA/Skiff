@@ -140,9 +140,8 @@ namespace skiff
         match->match_groups = vector<vector<token>>();
         match->captured = 0;
         // rules must end with a token or termination to match
-        for(size_t i = strt; i < tokens.size();)
+        for(size_t i = strt; i < tokens.size() && rule_pos < rules.size();)
         {
-            track_brace(tokens.at(i).get_type(), &braces);
             if(rules.at(rule_pos).type == parse_pattern_type::TOKEN)
             {
                 if(rules.at(rule_pos).value.tkn == tokens.at(i).get_type())
@@ -183,6 +182,7 @@ namespace skiff
                 }
                 else
                 {
+                    track_brace(tokens.at(i).get_type(), &braces);
                     rules.at(rule_pos).value.cap.push_back(tokens.at(i));
                     match->captured++;
                     i++;
@@ -209,7 +209,7 @@ namespace skiff
                     match->selected_literals.push_back(tokens.at(i).get_lit());
                     return match;
                 }
-                else if(rule_pos + 1 >= rules.size())
+                else if(i + 1 >= tokens.size())
                 {
                     return match;
                 }
@@ -219,7 +219,7 @@ namespace skiff
                 }
             }
         }
-        if(rules.at(rule_pos).type == parse_pattern_type::TERMINATE || rule_pos + 1 >= rules.size())
+        if(rule_pos + 1 >= rules.size() || rules.at(rule_pos).type == parse_pattern_type::TERMINATE)
         {
             return match;
         }
@@ -230,7 +230,36 @@ namespace skiff
     }
 
 
-
+    vector<statement *> split_and_parse(vector<token> tokens, token_type split)
+    {
+        vector<statement *> stmts = vector<statement *>();
+        vector<token> buffer = vector<token>();
+        stack<token_type> braces;
+        for(size_t i = 0; i < tokens.size(); i++)
+        {
+            track_brace(tokens.at(i).get_type(), &braces);
+            if(braces.empty() && tokens.at(i).get_type() == split)
+            {
+                vector<statement *> parsed = parser(buffer).parse();
+                for(statement * stmt : parsed)
+                {
+                    stmts.push_back(stmt);
+                }
+                buffer.clear();
+            }
+            else
+            {
+                buffer.push_back(tokens.at(i));
+            }
+        }
+        vector<statement *> parsed = parser(buffer).parse();
+        for(statement * stmt : parsed)
+        {
+            stmts.push_back(stmt);
+        }
+        buffer.clear();
+        return stmts;
+    }
 
     parser::parser(vector<token> stmt) {
         this->stmt = stmt;
@@ -253,7 +282,7 @@ namespace skiff
                         .capture().terminate(token_type::SEMICOLON);
 
         parse_pattern FUNCTION_CALL =
-                parse_pattern(token_type::NAME).capture().then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
+                parse_pattern().then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
                         .terminate(token_type::SEMICOLON);
 
         parse_pattern FUNCTION_DEF =
@@ -322,7 +351,7 @@ namespace skiff
                 parse_pattern().then(token_type::EXP).capture().terminate(token_type::SEMICOLON);
 
         parse_pattern LIST_ACCESS =
-                parse_pattern(token_type::NAME).then(token_type::LEFT_BRACKET).capture()
+                parse_pattern().then(token_type::LEFT_BRACKET).capture()
                         .then(token_type::RIGHT_BRACKET).terminate(token_type::SEMICOLON);
 
         parse_pattern IMPORT_LOCAL =
@@ -389,6 +418,19 @@ namespace skiff
         {
             parse_match * cap = nullptr;
 
+            cap = DECLARE_ASSIGN.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::declaration_with_assignment(
+                                cap->selected_literals.at(0)->to_string(),
+                                statements::type_statement(cap->selected_literals.at(2)->to_string()),
+                                parser(cap->match_groups.at(0)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
             cap = DECLARE.match(pos, stmt);
             if(cap)
             {
@@ -438,6 +480,56 @@ namespace skiff
                 pos += cap->captured + 1;
                 continue;
             }
+
+            cap = FUNCTION_CALL.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::function_call(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                split_and_parse(cap->match_groups.at(1), token_type::COMMA)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = LIST_ACCESS.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::list_accessor(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = ANNOTATION.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::annotation_tag(
+                                cap->selected_literals.at(0)->to_string(),
+                                vector<statement *>()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = ANNOTATION_PARAMS.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::annotation_tag(
+                                cap->selected_literals.at(0)->to_string(),
+                                split_and_parse(cap->match_groups.at(0), token_type::COMMA)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            // math here
 
             cap = LITERAL.match(pos, stmt);
             if(cap)

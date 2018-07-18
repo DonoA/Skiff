@@ -106,7 +106,7 @@ namespace skiff
 		class annotation_tag : public modifier_base
 		{
 		public:
-			annotation_tag(std::string name, std::vector<statement *> params, statement * on);
+			annotation_tag(std::string name, std::vector<statement *> params);
 			std::string parse_string();
 		private:
 			std::string name;
@@ -171,11 +171,11 @@ namespace skiff
 		class function_call : public statement
 		{
 		public:
-			function_call(std::string name, std::vector<statement *> params);
+			function_call(statement * name, std::vector<statement *> params);
 			std::string parse_string();
 			environment::skiff_object eval(environment::scope * env);
 		private:
-			std::string name;
+			statement * name;
 			std::vector<statement *> params;
 		};
 
