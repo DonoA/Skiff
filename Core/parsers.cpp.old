@@ -246,13 +246,13 @@ namespace skiff
 		size_t eq_i = other.find_first_of('=');
 		if (eq_i == string::npos)
 		{
-			return new statements::decleration(name, parse_type_statement_name(other));
+			return new statements::declaration(name, parse_type_statement_name(other));
 		}
 		else
 		{
 			string typ = utils::remove_pad(other.substr(0, eq_i));
 			string val = utils::remove_pad(other.substr(eq_i + 1));
-			return new statements::decleration_with_assignment(name,
+			return new statements::declaration_with_assignment(name,
 				parse_type_statement_name(typ), parse_statement(val));
 		}
 	}

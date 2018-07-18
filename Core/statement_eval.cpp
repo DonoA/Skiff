@@ -169,7 +169,7 @@ namespace skiff
 			return obj;
 		}
 
-		environment::skiff_object decleration_with_assignment::eval(environment::scope * env)
+		environment::skiff_object declaration_with_assignment::eval(environment::scope * env)
 		{
 			skiff_class * clazz = type.eval_class(env);
 			vector<skiff_object> params = {

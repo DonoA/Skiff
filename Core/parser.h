@@ -25,6 +25,7 @@ namespace skiff
     {
         vector<vector<token>> match_groups;
         vector<literal *> selected_literals;
+        size_t captured;
     };
 
     enum parse_pattern_type
@@ -49,10 +50,11 @@ namespace skiff
     {
     public:
         explicit parse_pattern(token_type tkn);
+        explicit parse_pattern();
         parse_pattern then(token_type tkn);
         parse_pattern capture();
         parse_pattern terminate(token_type tkn);
-        parse_match * match(vector<token> tokens);
+        parse_match * match(size_t strt, vector<token> tokens);
     private:
         vector<parse_pattern_part> rules;
     };
@@ -61,7 +63,7 @@ namespace skiff
     {
     public:
         parser(vector<token> stmt);
-        statement * parse();
+        vector<statement *> parse();
     private:
         token peek(int i);
         vector<token> consume_to(token_type tkn);

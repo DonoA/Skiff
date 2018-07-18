@@ -146,20 +146,20 @@ namespace skiff
 			statement * val;
 		};
 
-		class decleration : public statement
+		class declaration : public statement
 		{
 		public:
-			decleration(std::string name, type_statement type);
+			declaration(std::string name, type_statement type);
 			std::string parse_string();
 		private:
 			std::string name;
 			type_statement type;
 		};
 
-		class decleration_with_assignment : public statement
+		class declaration_with_assignment : public statement
 		{
 		public:
-			decleration_with_assignment(std::string name, type_statement type, statement * val);
+			declaration_with_assignment(std::string name, type_statement type, statement * val);
 			std::string parse_string();
 			environment::skiff_object eval(environment::scope * env);
 		private:

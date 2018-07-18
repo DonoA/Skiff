@@ -24,7 +24,7 @@ namespace Test
 			scope env = scope();
 			skiff::builtin::load::load_standards(&env);
 			
-			p = new skiff::statements::decleration_with_assignment(
+			p = new skiff::statements::declaration_with_assignment(
 				"x", skiff::statements::type_statement("Int"), 
 				new skiff::statements::value("5"));
 			p->eval(&env);

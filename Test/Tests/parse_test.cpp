@@ -21,13 +21,13 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("x: Int");
-			p = new skiff::statements::decleration("x", skiff::statements::type_statement("Int"));
+			p = new skiff::statements::declaration("x", skiff::statements::type_statement("Int"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 			s = skiff::parse_statement("x: List<Type>");
 			vector<skiff::statements::type_statement> et;
 			et.push_back(skiff::statements::type_statement("Type"));
-			p = new skiff::statements::decleration("x", skiff::statements::type_statement("List", et));
+			p = new skiff::statements::declaration("x", skiff::statements::type_statement("List", et));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}
 
@@ -46,7 +46,7 @@ namespace Test
 			skiff::statements::statement * s, *p;
 
 			s = skiff::parse_statement("x: Int = 5");
-			p = new skiff::statements::decleration_with_assignment(
+			p = new skiff::statements::declaration_with_assignment(
 				"x", skiff::statements::type_statement("Int"), 
 				new skiff::statements::value("5"));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
@@ -55,7 +55,7 @@ namespace Test
 			s = skiff::parse_statement("x: List<Type> = new List<Type>()");
 			vector<skiff::statements::type_statement> et;
 			et.push_back(skiff::statements::type_statement("Type"));
-			p = new skiff::statements::decleration_with_assignment(
+			p = new skiff::statements::declaration_with_assignment(
 				"x", skiff::statements::type_statement("List", et), 
 				new skiff::statements::new_object_statement(
 					skiff::statements::type_statement("List", et), 
@@ -495,7 +495,7 @@ namespace Test
 
 			s = skiff::parse_statement("for(x: Int = 0; x < 10; x++)");
 			p = new skiff::statements::for_classic_heading(
-				new skiff::statements::decleration_with_assignment(
+				new skiff::statements::declaration_with_assignment(
 					"x", 
 					skiff::statements::type_statement("Int"), 
 					new skiff::statements::value("0")
@@ -515,7 +515,7 @@ namespace Test
 
 			s = skiff::parse_statement("for(x: Int : lst)");
 			p = new skiff::statements::for_itterator_heading(
-				new skiff::statements::decleration("x", skiff::statements::type_statement("Int")), 
+				new skiff::statements::declaration("x", skiff::statements::type_statement("Int")),
 				new skiff::statements::variable("lst")
 			);
 			Assert::AreEqual(p->parse_string(), s->parse_string());
@@ -578,20 +578,20 @@ namespace Test
 
 			s = skiff::parse_statement("static test: String");
 			p = new skiff::statements::modifier(skiff::statements::modifier::modifier_type::STATIC,
-				new skiff::statements::decleration("test", skiff::statements::type_statement("String")));
+				new skiff::statements::declaration("test", skiff::statements::type_statement("String")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("private test: String");
 			p = new skiff::statements::modifier(skiff::statements::modifier::modifier_type::PRIVATE,
-				new skiff::statements::decleration("test", skiff::statements::type_statement("String")));
+				new skiff::statements::declaration("test", skiff::statements::type_statement("String")));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
 			s = skiff::parse_statement("private static test: String");
 			p = new skiff::statements::modifier(skiff::statements::modifier::modifier_type::PRIVATE,
 				new skiff::statements::modifier(skiff::statements::modifier::modifier_type::STATIC,
-					new skiff::statements::decleration("test", skiff::statements::type_statement("String"))
+					new skiff::statements::declaration("test", skiff::statements::type_statement("String"))
 				));
 			Assert::AreEqual(p->parse_string(), s->parse_string());
 		}

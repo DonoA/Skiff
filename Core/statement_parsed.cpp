@@ -56,7 +56,7 @@ namespace skiff
 			return "Value(" + val + ")";
 		}
 
-		decleration::decleration(string name, type_statement type)
+		declaration::declaration(string name, type_statement type)
 		{
 			this->name = name;
 			this->type = type;
@@ -77,7 +77,7 @@ namespace skiff
 			return stmts.back();
 		}
 
-		string decleration::parse_string()
+		string declaration::parse_string()
 		{
 			return "Decleration(" + name + "," + type.parse_string() + ")";
 		}
@@ -601,7 +601,7 @@ namespace skiff
 			return name + "(" + on->parse_string() + ")";
 		}
 
-		decleration_with_assignment::decleration_with_assignment(std::string name,
+		declaration_with_assignment::declaration_with_assignment(std::string name,
 			type_statement type, statement * val)
 		{
 			this->name = name;
@@ -609,7 +609,7 @@ namespace skiff
 			this->value = val;
 		}
 
-		string decleration_with_assignment::parse_string()
+		string declaration_with_assignment::parse_string()
 		{
 			return "DeclareAndAssign(" + name + ", " + type.parse_string() + ", " +
 				value->parse_string() + ")";

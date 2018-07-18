@@ -11,6 +11,14 @@ namespace skiff
         rules.push_back(pp);
     }
 
+    parse_pattern::parse_pattern() {
+        rules = vector<parse_pattern_part>();
+        parse_pattern_part pp = parse_pattern_part();
+        pp.type = parse_pattern_type::CAPTURE;
+        pp.value = {token_type(0), vector<token>(), token_type(0)};
+        rules.push_back(pp);
+    }
+
     parse_pattern parse_pattern::then(token_type tkn) {
         parse_pattern_part pp = parse_pattern_part();
         pp.type = parse_pattern_type::TOKEN;
@@ -69,14 +77,15 @@ namespace skiff
         }
     }
 
-    parse_match * parse_pattern::match(vector<token> tokens) {
+    parse_match * parse_pattern::match(size_t strt, vector<token> tokens) {
         size_t rule_pos = 0;
         stack<token_type> braces;
         parse_match * match = new parse_match();
         match->selected_literals = vector<literal *>();
         match->match_groups = vector<vector<token>>();
+        match->captured = 0;
         // rules must end with a token to match
-        for(size_t i = 0; i < tokens.size(); i++)
+        for(size_t i = strt; i < tokens.size();)
         {
             track_brace(tokens.at(i).get_type(), &braces);
             if(rules.at(rule_pos).type == parse_pattern_type::TOKEN)
@@ -85,10 +94,11 @@ namespace skiff
                 {
                     match->selected_literals.push_back(tokens.at(i).get_lit());
                     rule_pos++;
+                    match->captured++;
+                    i++;
                 }
                 else
                 {
-                    std::cout << "Unexpected token " << (int) tokens.at(i).get_type() << " wanted " << (int) rules.at(rule_pos).value.tkn << std::endl;
                     return nullptr;
                 }
             }
@@ -96,19 +106,21 @@ namespace skiff
             {
                 // if we are not in a brace and (the next token matches our next rule or is the terminator and
                 // (we are at the end or the next token is it))
-                if(braces.empty() &&
+                if(braces.empty() && (
                         (rules.at(rule_pos + 1).type == parse_pattern_type::TOKEN &&
                             rules.at(rule_pos + 1).value.tkn == tokens.at(i).get_type()) ||
                         (rules.at(rule_pos + 1).type == parse_pattern_type::TERMINATE &&
                             (rules.at(rule_pos + 1).value.term == tokens.at(i).get_type()) || i + 1 >= tokens.size())
-                        )
+                        ))
                 {
                     match->match_groups.push_back(rules.at(rule_pos).value.cap);
                     rule_pos++;
                 }
                 else
                 {
-                    rules.at(i).value.cap.push_back(tokens.at(i));
+                    rules.at(rule_pos).value.cap.push_back(tokens.at(i));
+                    match->captured++;
+                    i++;
                 }
             }
             else if(rules.at(rule_pos).type == parse_pattern_type::TERMINATE)
@@ -120,12 +132,18 @@ namespace skiff
                 }
                 else
                 {
-                    std::cout << "Unexpected token " << (int) tokens.at(i).get_type() << " wanted " << (int) rules.at(rule_pos).value.term << std::endl;
                     return nullptr;
                 }
             }
         }
-        return match;
+        if(rules.at(rule_pos).type == parse_pattern_type::TERMINATE)
+        {
+            return match;
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 
     parser::parser(vector<token> stmt) {
@@ -133,13 +151,13 @@ namespace skiff
         this->pos = 0;
     }
 
-    statement *parser::parse() {
+    vector<statement *> parser::parse() {
 
         parse_pattern DECLARE =
                 parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).terminate(token_type::SEMICOLON);
 
         parse_pattern ASSIGNMENT =
-                parse_pattern(token_type::NAME).then(token_type::EQUAL).capture().terminate(token_type::SEMICOLON);
+                parse_pattern().then(token_type::EQUAL).capture().terminate(token_type::SEMICOLON);
 
         parse_pattern DECLARE_ASSIGN =
                 parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).then(token_type::EQUAL)
@@ -165,12 +183,68 @@ namespace skiff
                         .then(token_type::RIGHT_PAREN).then(token_type::COLON).then(token_type::NAME)
                         .terminate(token_type::LEFT_BRACE);
 
+        parse_pattern LITERAL =
+                parse_pattern(token_type::LITERAL).terminate(token_type::SEMICOLON);
 
+        parse_pattern VARIABLE =
+                parse_pattern(token_type::NAME).terminate(token_type::SEMICOLON);
 
-        parse_match * cap;
-        cap = DECLARE.match(stmt);
-        return new statements::decleration(cap->selected_literals.at(0)->to_string(),
-                                           statements::type_statement(cap->selected_literals.at(2)->to_string()));
+        vector<statement *> statements = vector<statement *>();
+
+        while(peek(0).get_type() != token_type::FILEEND)
+        {
+            parse_match * cap = nullptr;
+
+            cap = DECLARE.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::declaration(
+                                cap->selected_literals.at(0)->to_string(),
+                                statements::type_statement(cap->selected_literals.at(2)->to_string())
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = ASSIGNMENT.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::assignment(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = LITERAL.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::value(
+                                cap->selected_literals.at(0)->to_string()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = VARIABLE.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::variable(
+                                cap->selected_literals.at(0)->to_string()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            pos++;
+        }
+
+        return statements;
     }
 
     token parser::peek(int i)
