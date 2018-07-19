@@ -402,7 +402,7 @@ namespace skiff
                 parse_pattern(token_type::AT).then(token_type::NAME).then(token_type::LEFT_PAREN).capture()
                         .then(token_type::RIGHT_PAREN);
 
-        parse_pattern ENUM =
+        parse_pattern DEF_ENUM =
                 parse_pattern(token_type::ENUM).capture().then(token_type::NAME).capture().then(token_type::LEFT_BRACE)
                         .capture().then(token_type::RIGHT_BRACE);
 
@@ -481,6 +481,33 @@ namespace skiff
                 continue;
             }
 
+            cap = BOOL_NOT.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::invert(
+                                parser(cap->match_groups.at(0)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = COMPARE.match(pos, stmt);
+            if(cap)
+            {
+                // handle comparison
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = BITWISE.match(pos, stmt);
+            if(cap)
+            {
+                //handle bitwise and the method used
+                pos += cap->captured + 1;
+                continue;
+            }
+
             cap = FUNCTION_CALL.match(pos, stmt);
             if(cap)
             {
@@ -488,6 +515,29 @@ namespace skiff
                         new statements::function_call(
                                 parser(cap->match_groups.at(0)).parse().at(0),
                                 split_and_parse(cap->match_groups.at(1), token_type::COMMA)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = NEW.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::new_object_statement(
+                                statements::type_statement(cap->selected_literals.at(0)->to_string()),
+                                split_and_parse(cap->match_groups.at(0), token_type::COMMA)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = RETURN.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::return_statement(
+                                parser(cap->match_groups.at(0)).parse().at(0)
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -505,31 +555,64 @@ namespace skiff
                 continue;
             }
 
-            cap = ANNOTATION.match(pos, stmt);
+            // PEMDAS
+            cap = EXP.match(pos, stmt);
+            if(cap)
+            {
+                // Exponents
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = DIV_MUL.match(pos, stmt);
+            if(cap)
+            {
+                // multiplication division
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = ADD_SUB.match(pos, stmt);
+            if(cap)
+            {
+                // addition subtraction
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            // the type needs denoting
+            cap = IMPORT_LOCAL.match(pos, stmt);
             if(cap)
             {
                 statements.push_back(
-                        new statements::annotation_tag(
-                                cap->selected_literals.at(0)->to_string(),
-                                vector<statement *>()
+                        new statements::import_statement(
+                                cap->selected_literals.at(1)->to_string()
                         ));
                 pos += cap->captured + 1;
                 continue;
             }
 
-            cap = ANNOTATION_PARAMS.match(pos, stmt);
+            cap = IMPORT_SYS.match(pos, stmt);
             if(cap)
             {
                 statements.push_back(
-                        new statements::annotation_tag(
-                                cap->selected_literals.at(0)->to_string(),
-                                split_and_parse(cap->match_groups.at(0), token_type::COMMA)
+                        new statements::import_statement(
+                                cap->selected_literals.at(2)->to_string()
                         ));
                 pos += cap->captured + 1;
                 continue;
             }
 
-            // math here
+            cap = THROW.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::throw_statement(
+                                parser(cap->match_groups.at(0)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
 
             cap = LITERAL.match(pos, stmt);
             if(cap)

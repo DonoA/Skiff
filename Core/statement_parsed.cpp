@@ -507,7 +507,7 @@ namespace skiff
 			{
 				parms = parms.substr(0, parms.length() - 1);
 			}
-			return "Annotation(" + name + ", Params(" + parms + "), On(" + on->parse_string() + "))";
+			return "Annotation(" + name + ", Params(" + parms + "))";
 		}
 
 		enum_heading::enum_heading(string name)
