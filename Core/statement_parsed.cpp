@@ -220,15 +220,15 @@ namespace skiff
 		{
 			switch (op)
 			{
-			case And:
+			case AND:
 				return "&";
-			case Or:
+			case OR:
 				return "|";
-			case Xor:
+			case XOR:
 				return "^";
-			case ShiftLeft:
+			case SHIFT_LEFT:
 				return "<<";
-			case ShiftRight:
+			case SHIFT_RIGHT:
 				return ">>";
 			}
 			return "";

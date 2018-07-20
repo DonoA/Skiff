@@ -318,8 +318,11 @@ namespace skiff
         parse_pattern BITWISE =
                 parse_pattern().then(
                         parse_pattern_logic(token_type::BIT_AND).maybe(token_type::BIT_OR).maybe(token_type::BIT_XOR)
-                            .maybe(token_type::BIT_RIGHT).maybe(token_type::BIT_LEFT).maybe(token_type::BIT_NOT)
+                            .maybe(token_type::BIT_RIGHT).maybe(token_type::BIT_LEFT)
                 ).capture().terminate(token_type::SEMICOLON);
+
+        parse_pattern BITWISE_NOT =
+                parse_pattern(token_type::BIT_NOT).capture().terminate(token_type::SEMICOLON);
 
         parse_pattern BOOL_AND =
                 parse_pattern().then(token_type::AND).capture().terminate(token_type::SEMICOLON);
@@ -496,7 +499,7 @@ namespace skiff
             if(cap)
             {
                 using cap_type = statements::comparison::comparison_type;
-                statements::comparison::comparison_type cp;
+                cap_type cp;
                 switch(cap->selected_tokens.at(0).get_type())
                 {
                     case token_type::DOUBLE_EQUAL: cp = cap_type::EQUAL; break;
@@ -520,7 +523,34 @@ namespace skiff
             cap = BITWISE.match(pos, stmt);
             if(cap)
             {
-                std::cout << "Bitwise Reached" << std::endl;
+                using bit_op = statements::bitwise::operation ;
+                bit_op op;
+                switch(cap->selected_tokens.at(0).get_type())
+                {
+                    case token_type::BIT_AND: op = bit_op::AND; break;
+                    case token_type::BIT_OR: op = bit_op::OR; break;
+                    case token_type::BIT_XOR: op = bit_op::XOR; break;
+                    case token_type::BIT_LEFT: op = bit_op::SHIFT_LEFT; break;
+                    case token_type::BIT_RIGHT: op = bit_op::SHIFT_RIGHT; break;
+                    default: std::cout << "Bad bitwise match" << std::endl;
+                }
+                statements.push_back(
+                        new statements::bitwise(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                op,
+                                parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = BITWISE_NOT.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::bitinvert(
+                                parser(cap->match_groups.at(0)).parse().at(0)
+                        ));
                 pos += cap->captured + 1;
                 continue;
             }

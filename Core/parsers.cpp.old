@@ -472,7 +472,7 @@ namespace skiff
 				statements::comparison * c1 = (statements::comparison *)parse_statement(p1);
 				statements::comparison * c2 = (statements::comparison *)parse_statement(p2);
 				return new statements::boolean_conjunction(c1, 
-					statements::boolean_conjunction::conjunction_type::And, c2);
+					statements::boolean_conjunction::conjunction_type::AND, c2);
 			}
 		}
 		return nullptr;
@@ -492,7 +492,7 @@ namespace skiff
 				statements::comparison * c1 = (statements::comparison *)parse_statement(p1);
 				statements::comparison * c2 = (statements::comparison *)parse_statement(p2);
 				return new statements::boolean_conjunction(c1,
-					statements::boolean_conjunction::conjunction_type::Or, c2);
+					statements::boolean_conjunction::conjunction_type::OR, c2);
 			}
 		}
 		return nullptr;
@@ -613,10 +613,10 @@ namespace skiff
 					p2 = stmt.substr(i + 1);
 					statements::statement * s1 = parse_statement(p1);
 					statements::statement * s2 = parse_statement(p2);
-					statements::bitwise::operation op = statements::bitwise::operation::And;
+					statements::bitwise::operation op = statements::bitwise::operation::AND;
 					if (stmt[i] == '|')
 					{
-						op = statements::bitwise::operation::Or;
+						op = statements::bitwise::operation::OR;
 					}
 					return new statements::bitwise(s1, op, s2);
 				}
@@ -626,7 +626,7 @@ namespace skiff
 					p2 = stmt.substr(i + 1);
 					statements::statement * s1 = parse_statement(p1);
 					statements::statement * s2 = parse_statement(p2);
-					statements::bitwise::operation op = statements::bitwise::operation::Xor;
+					statements::bitwise::operation op = statements::bitwise::operation::XOR;
 					return new statements::bitwise(s1, op, s2);
 				}
 				else if (stmt[i] == '>' && stmt[i + 1] == '>')
@@ -635,7 +635,7 @@ namespace skiff
 					p2 = stmt.substr(i + 2);
 					statements::statement * s1 = parse_statement(p1);
 					statements::statement * s2 = parse_statement(p2);
-					statements::bitwise::operation op = statements::bitwise::operation::ShiftRight;
+					statements::bitwise::operation op = statements::bitwise::operation::SHIFT_RIGHT;
 					return new statements::bitwise(s1, op, s2);
 				}
 				else if (stmt[i] == '<' && stmt[i + 1] == '<')
@@ -644,7 +644,7 @@ namespace skiff
 					p2 = stmt.substr(i + 2);
 					statements::statement * s1 = parse_statement(p1);
 					statements::statement * s2 = parse_statement(p2);
-					statements::bitwise::operation op = statements::bitwise::operation::ShiftLeft;
+					statements::bitwise::operation op = statements::bitwise::operation::SHIFT_LEFT;
 					return new statements::bitwise(s1, op, s2);
 				}
 			}

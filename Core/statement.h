@@ -490,7 +490,7 @@ namespace skiff
 		class bitwise : public statement
 		{
 		public:
-			enum operation { And, Or, Xor, ShiftLeft, ShiftRight };
+			enum operation { AND, OR, XOR, SHIFT_LEFT, SHIFT_RIGHT };
 			bitwise(statement * s1, bitwise::operation op, statement * s2);
 			std::string parse_string();
 		private:

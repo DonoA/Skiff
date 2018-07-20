@@ -91,6 +91,7 @@ namespace skiff
                     case '[': tokens.push_back(token(token_type::LEFT_BRACKET, nullptr, line_id, col)); break;
                     case ']': tokens.push_back(token(token_type::RIGHT_BRACKET, nullptr, line_id, col)); break;
                     case '.': tokens.push_back(token(token_type::DOT, nullptr, line_id, col)); break;
+                    case '~': tokens.push_back(token(token_type::BIT_NOT, nullptr, line_id, col)); break;
                     
                     case ' ':
                     case '\r':

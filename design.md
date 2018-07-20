@@ -24,15 +24,15 @@ The language supports a wide range of syntactical styles:
     - True: `true`
     - Flase: `false`
 - [x] Bitwise operations:
-    - And: `&`
-    - Or: `|`
-    - Xor: `^`
+    - AND: `&`
+    - OR: `|`
+    - XOR: `^`
     - Shift left `<<`
     - Shift right `>>`
     - Not `~`
 - [x] Boolean Operations:
-    - And `&&`
-    - Or `||`
+    - AND `&&`
+    - OR `||`
 - [x] Comparison:
     - Equals `==`
     - Less Than `<`
