@@ -456,8 +456,8 @@ namespace skiff
 		{
 		public:
 			enum comparison_type {
-				Equal, NotEqual, LessThan, LessThanEqualTo, GreaterThan,
-				GreaterThanEqualTo
+				EQUAL, NOT_EQUAL, LESS_THAN, LESS_THAN_EQUAL_TO, GREATER_THAN,
+				GREATER_THAN_EQUAL_TO
 			};
 			comparison(statement * s1, comparison::comparison_type typ, statement * s2);
 			std::string parse_string();

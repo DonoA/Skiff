@@ -167,17 +167,17 @@ namespace skiff
 		{
 			switch (typ)
 			{
-			case Equal:
+			case EQUAL:
 				return "==";
-			case NotEqual:
+			case NOT_EQUAL:
 				return "!=";
-			case LessThan:
+			case LESS_THAN:
 				return "<";
-			case LessThanEqualTo:
+			case LESS_THAN_EQUAL_TO:
 				return "<=";
-			case GreaterThan:
+			case GREATER_THAN:
 				return ">";
-			case GreaterThanEqualTo:
+			case GREATER_THAN_EQUAL_TO:
 				return ">=";
 			}
 			return "";

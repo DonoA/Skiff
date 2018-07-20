@@ -34,7 +34,7 @@ namespace skiff
     struct parse_match
     {
         vector<vector<token>> match_groups;
-        vector<literal *> selected_literals;
+        vector<token> selected_tokens;
         size_t captured;
     };
 

@@ -136,7 +136,7 @@ namespace skiff
         size_t rule_pos = 0;
         stack<token_type> braces;
         parse_match * match = new parse_match();
-        match->selected_literals = vector<literal *>();
+        match->selected_tokens = vector<token>();
         match->match_groups = vector<vector<token>>();
         match->captured = 0;
         // rules must end with a token or termination to match
@@ -146,7 +146,7 @@ namespace skiff
             {
                 if(rules.at(rule_pos).value.tkn == tokens.at(i).get_type())
                 {
-                    match->selected_literals.push_back(tokens.at(i).get_lit());
+                    match->selected_tokens.push_back(tokens.at(i));
                     rule_pos++;
                     match->captured++;
                     i++;
@@ -192,7 +192,7 @@ namespace skiff
             {
                 if(vec_contains_token(rules.at(rule_pos).value.multimatch, tokens.at(i).get_type()))
                 {
-                    match->selected_literals.push_back(tokens.at(i).get_lit());
+                    match->selected_tokens.push_back(tokens.at(i));
                     rule_pos++;
                     match->captured++;
                     i++;
@@ -206,7 +206,7 @@ namespace skiff
             {
                 if(rules.at(rule_pos).value.term == tokens.at(i).get_type())
                 {
-                    match->selected_literals.push_back(tokens.at(i).get_lit());
+                    match->selected_tokens.push_back(tokens.at(i));
                     return match;
                 }
                 else if(i + 1 >= tokens.size())
@@ -423,8 +423,8 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::declaration_with_assignment(
-                                cap->selected_literals.at(0)->to_string(),
-                                statements::type_statement(cap->selected_literals.at(2)->to_string()),
+                                cap->selected_tokens.at(0).get_lit()->to_string(),
+                                statements::type_statement(cap->selected_tokens.at(2).get_lit()->to_string()),
                                 parser(cap->match_groups.at(0)).parse().at(0)
                         ));
                 pos += cap->captured + 1;
@@ -436,8 +436,8 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::declaration(
-                                cap->selected_literals.at(0)->to_string(),
-                                statements::type_statement(cap->selected_literals.at(2)->to_string())
+                                cap->selected_tokens.at(0).get_lit()->to_string(),
+                                statements::type_statement(cap->selected_tokens.at(2).get_lit()->to_string())
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -495,7 +495,24 @@ namespace skiff
             cap = COMPARE.match(pos, stmt);
             if(cap)
             {
-                // handle comparison
+                using cap_type = statements::comparison::comparison_type;
+                statements::comparison::comparison_type cp;
+                switch(cap->selected_tokens.at(0).get_type())
+                {
+                    case token_type::DOUBLE_EQUAL: cp = cap_type::EQUAL; break;
+                    case token_type::BANG_EQUAL: cp = cap_type::NOT_EQUAL; break;
+                    case token_type::LEFT_ANGLE_BRACE: cp = cap_type::LESS_THAN; break;
+                    case token_type::LESS_THAN_EQUAL: cp = cap_type::LESS_THAN_EQUAL_TO; break;
+                    case token_type::RIGHT_ANGLE_BRACE: cp = cap_type::GREATER_THAN; break;
+                    case token_type::GREATER_THAN_EQUAL: cp = cap_type::GREATER_THAN_EQUAL_TO; break;
+                    default: std::cout << "Bad comparison match" << std::endl;
+                }
+                statements.push_back(
+                        new statements::comparison(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                cp,
+                                parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
                 pos += cap->captured + 1;
                 continue;
             }
@@ -503,7 +520,7 @@ namespace skiff
             cap = BITWISE.match(pos, stmt);
             if(cap)
             {
-                //handle bitwise and the method used
+                std::cout << "Bitwise Reached" << std::endl;
                 pos += cap->captured + 1;
                 continue;
             }
@@ -525,7 +542,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::new_object_statement(
-                                statements::type_statement(cap->selected_literals.at(0)->to_string()),
+                                statements::type_statement(cap->selected_tokens.at(0).get_lit()->to_string()),
                                 split_and_parse(cap->match_groups.at(0), token_type::COMMA)
                         ));
                 pos += cap->captured + 1;
@@ -559,7 +576,7 @@ namespace skiff
             cap = EXP.match(pos, stmt);
             if(cap)
             {
-                // Exponents
+                std::cout << "Exponent Reached" << std::endl;
                 pos += cap->captured + 1;
                 continue;
             }
@@ -567,7 +584,7 @@ namespace skiff
             cap = DIV_MUL.match(pos, stmt);
             if(cap)
             {
-                // multiplication division
+                std::cout << "Div/Mul Reached" << std::endl;
                 pos += cap->captured + 1;
                 continue;
             }
@@ -575,7 +592,7 @@ namespace skiff
             cap = ADD_SUB.match(pos, stmt);
             if(cap)
             {
-                // addition subtraction
+                std::cout << "Add/Sub Reached" << std::endl;
                 pos += cap->captured + 1;
                 continue;
             }
@@ -586,7 +603,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::import_statement(
-                                cap->selected_literals.at(1)->to_string()
+                                cap->selected_tokens.at(1).get_lit()->to_string()
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -597,7 +614,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::import_statement(
-                                cap->selected_literals.at(2)->to_string()
+                                cap->selected_tokens.at(2).get_lit()->to_string()
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -619,7 +636,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::value(
-                                cap->selected_literals.at(0)->to_string()
+                                cap->selected_tokens.at(0).get_lit()->to_string()
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -630,7 +647,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::variable(
-                                cap->selected_literals.at(0)->to_string()
+                                cap->selected_tokens.at(0).get_lit()->to_string()
                         ));
                 pos += cap->captured + 1;
                 continue;

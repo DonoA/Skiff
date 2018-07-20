@@ -37,8 +37,8 @@ The language supports a wide range of syntactical styles:
     - Equals `==`
     - Less Than `<`
     - Greater Than `>`
-    - Less Than Equal to `<=`
-    - Greater Than Equal to `>=`
+    - Less Than EQUAL to `<=`
+    - Greater Than EQUAL to `>=`
     - Not `!`
 - Math operations:
     - [x] Add: `+`

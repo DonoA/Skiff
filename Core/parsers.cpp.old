@@ -513,33 +513,33 @@ namespace skiff
 				statements::comparison::comparison_type typ;
 				if (stmt[i] == '<' && stmt[i - 1] != '<' && stmt[i + 1] != '<')
 				{
-					typ = statements::comparison::comparison_type::LessThan;
+					typ = statements::comparison::comparison_type::LESS_THAN;
 					if (stmt[i + 1] == '=')
 					{
-						typ = statements::comparison::comparison_type::LessThanEqualTo;
+						typ = statements::comparison::comparison_type::LESS_THAN_EQUAL_TO;
 						p2 = utils::remove_pad(stmt.substr(i + 2));
 					}
 					return new statements::comparison(parse_statement(p1), typ, parse_statement(p2));
 				}
 				else if (stmt[i] == '>' && stmt[i - 1] != '>' && stmt[i + 1] != '>')
 				{
-					typ = statements::comparison::comparison_type::GreaterThan;
+					typ = statements::comparison::comparison_type::GREATER_THAN;
 					if (stmt[i + 1] == '=')
 					{
-						typ = statements::comparison::comparison_type::GreaterThanEqualTo;
+						typ = statements::comparison::comparison_type::GREATER_THAN_EQUAL_TO;
 						p2 = utils::remove_pad(stmt.substr(i + 2));
 					}
 					return new statements::comparison(parse_statement(p1), typ, parse_statement(p2));
 				}
 				else if (stmt[i] == '!')
 				{
-					typ = statements::comparison::comparison_type::NotEqual;
+					typ = statements::comparison::comparison_type::NOT_EQUAL;
 					p2 = utils::remove_pad(stmt.substr(i + 2));
 					return new statements::comparison(parse_statement(p1), typ, parse_statement(p2));
 				}
 				else if (stmt[i] == '=' && stmt[i + 1] == '=')
 				{
-					typ = statements::comparison::comparison_type::Equal;
+					typ = statements::comparison::comparison_type::EQUAL;
 					p2 = utils::remove_pad(stmt.substr(i + 2));
 					return new statements::comparison(parse_statement(p1), typ, parse_statement(p2));
 				}

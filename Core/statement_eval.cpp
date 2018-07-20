@@ -219,18 +219,18 @@ namespace skiff
 			};
 			switch (typ)
 			{
-			case Equal:
+			case EQUAL:
 				return o1.get_class()->invoke_operator("==", p);
-			case NotEqual:
+			case NOT_EQUAL:
 			{
 				skiff_object res = o1.get_class()->invoke_operator("==", p);
 				bool * b = (bool *) res.get_value()->get_value();
 				*b = !(*b);
 				return res;
 			}
-			case LessThan:
+			case LESS_THAN:
 				return o1.get_class()->invoke_operator("<", p);;
-			case LessThanEqualTo:
+			case LESS_THAN_EQUAL_TO:
 			{
 				skiff_object lt = o1.get_class()->invoke_operator("<", p);
 				skiff_object et = o1.get_class()->invoke_operator("==", p);
@@ -241,9 +241,9 @@ namespace skiff
 
 				return lt;
 			}
-			case GreaterThan:
+			case GREATER_THAN:
 				return o1.get_class()->invoke_operator(">", p);
-			case GreaterThanEqualTo:
+			case GREATER_THAN_EQUAL_TO:
 			{
 				skiff_object gt = o1.get_class()->invoke_operator(">", p);
 				skiff_object et = o1.get_class()->invoke_operator("==", p);
