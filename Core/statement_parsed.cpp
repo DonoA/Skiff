@@ -16,8 +16,6 @@ namespace skiff
 		using ::skiff::environment::skiff_function;
 		using ::skiff::environment::scope;
 
-		statement::statement() { }
-
 		statement::statement(string raw)
 		{
 			this->raw = raw;

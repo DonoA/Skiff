@@ -49,14 +49,7 @@ namespace skiff
             else if (!val.empty() && (val == "true" || val == "false"))
             {
                 bool b;
-                if(val == "true")
-                {
-                    b = true;
-                }
-                else
-                {
-                    b = false;
-                }
+				b = val == "true";
                 return skiff_object(new skiff_value(::skiff::utils::allocate(b)), env->get_type("Boolean"));
             }
             return skiff_object();
