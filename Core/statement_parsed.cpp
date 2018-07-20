@@ -258,11 +258,6 @@ namespace skiff
 			return "";
 		}
 
-		block_heading::block_heading(string raw) : statement(raw)
-		{
-			this->raw = raw;
-		}
-
 		string block_heading::eval_c()
 		{
 			return string();
@@ -273,50 +268,9 @@ namespace skiff
 			return skiff_object();
 		}
 
-		int block_heading::indent_mod()
-		{
-			return 1;
-		}
-
-		void block_heading::add_body(braced_block * s)
-		{
-			body = s;
-		}
-
-		if_heading::if_heading(statement * condition)
-		{
-			this->condition = condition;
-			this->else_block = nullptr;
-		}
-
-		string if_heading::parse_string()
+		string if_directive::parse_string()
 		{
 			return "If(" + condition->parse_string() + ")";
-		}
-
-		void if_heading::add_else_block(else_heading * stmt)
-		{
-			else_block = stmt;
-		}
-
-		void else_heading::add_body(braced_block * s)
-		{
-			if(wrapping == nullptr)
-			{
-				body = s;
-			}
-			else
-			{
-				wrapping->add_body(s);
-			}
-		}
-
-		void else_heading::add_else_block(else_heading * stmt)
-		{
-			if(wrapping != nullptr)
-			{
-				wrapping->add_else_block(stmt);
-			}
 		}
 
 		class_heading::class_heading(class_heading::class_type type, string name) :
@@ -380,22 +334,22 @@ namespace skiff
 			return name;
 		}
 
-		class_heading::heading_generic class_heading::generate_generic_heading(string t_name, 
+		class_heading::heading_generic class_heading::generate_generic_heading(string t_name,
 			type_statement extends)
 		{
 			return { t_name, extends };
 		}
 
 
-		function_heading::function_parameter function_heading::create_function_parameter(std::string name, type_statement typ)
+		function_definition::function_parameter function_definition::create_function_parameter(std::string name, type_statement typ)
 		{
-			function_heading::function_parameter p;
+			function_definition::function_parameter p;
 			p.typ = typ;
 			p.name = name;
 			return p;
 		}
 
-		function_heading::function_heading(string name, vector<function_parameter> params,
+		function_definition::function_definition(string name, vector<function_parameter> params,
 			type_statement returns)
 		{
 			this->name = name;
@@ -403,7 +357,7 @@ namespace skiff
 			this->returns = returns;
 		}
 
-		string function_heading::parse_string()
+		string function_definition::parse_string()
 		{
 			string params_rtn = "Params(";
 			bool any = false;
@@ -421,36 +375,21 @@ namespace skiff
 				", Returns(" + returns.parse_string() + "))";
 		}
 
-		string function_heading::function_parameter_sig(function_parameter p)
+		string function_definition::function_parameter_sig(function_parameter p)
 		{
 			return "Param(" + p.name + +"," + p.typ.parse_string() + ")";
 		}
 
-		string function_heading::function_parameter_c_sig(function_parameter p)
+		string function_definition::function_parameter_c_sig(function_parameter p)
 		{
 			//builtin::type t = builtin::get_type_for(p.typ.get_class_id());
 			//return builtin::get_c_type_for(t) + " " + p.name;
 			return string();
 		}
 
-		while_heading::while_heading(statement * condition)
-		{
-			this->condition = condition;
-		}
-
-		string while_heading::parse_string()
+		string while_directive::parse_string()
 		{
 			return "While(" + condition->parse_string() + ")";
-		}
-
-		string end_block_statement::parse_string()
-		{
-			return "EndBlock()";
-		}
-
-		int end_block_statement::indent_mod()
-		{
-			return -1;
 		}
 
 		return_statement::return_statement(statement * returns)
@@ -654,33 +593,12 @@ namespace skiff
 			return "CompoundStatement(" + ops + ")";
 		}
 
-		else_heading::else_heading(block_heading * wrapping)
+		string else_directive::parse_string()
 		{
-			this->wrapping = wrapping;
+			return "Else()";
 		}
 
-		string else_heading::parse_string()
-		{
-			if (wrapping == nullptr)
-			{
-				return "Else()";
-			}
-			return "Else(" + wrapping->parse_string() + ")";
-		}
-
-		void else_heading::finalize(std::stack<braced_block *> * stmts)
-		{
-			block_heading * if_head = (block_heading *) stmts->top()->get_last();
-			if_head->add_else_block(this);
-		}
-
-		switch_heading::switch_heading(switch_heading::type typ, statement * on)
-		{
-			this->on = on;
-			this->typ = typ;
-		}
-
-		string switch_heading::parse_string()
+		string switch_directive::parse_string()
 		{
 			switch (typ)
 			{
@@ -692,27 +610,13 @@ namespace skiff
 			return "SwitchType(" + on->parse_string() + ")";
 		}
 
-		for_classic_heading::for_classic_heading(statement * init, statement * condition,
-			statement * tick)
-		{
-			this->init = init;
-			this->condition = condition;
-			this->tick = tick;
-		}
-
-		string for_classic_heading::parse_string()
+		string for_classic_directive::parse_string()
 		{
 			return "cFor(" + init->parse_string() + ", " + condition->parse_string() + ", " +
 				tick->parse_string() + ")";
 		}
 
-		for_itterator_heading::for_itterator_heading(statement * val, statement * list)
-		{
-			this->val = val;
-			this->list = list;
-		}
-
-		string for_itterator_heading::parse_string()
+		string for_itterator_directive::parse_string()
 		{
 			return "iFor(" + val->parse_string() + ", " + list->parse_string() + ")";
 		}
@@ -734,25 +638,12 @@ namespace skiff
 			return "UnknownFlow()";
 		}
 
-		switch_case_heading::switch_case_heading(statement * val)
-		{
-			this->val = val;
-		}
-
-		string switch_case_heading::parse_string()
+		string switch_case_directive::parse_string()
 		{
 			return "SwitchCase(" + val->parse_string() + ")";
 		}
 
-		match_case_heading::match_case_heading(string name, type_statement t, 
-			vector<string> struct_vals)
-		{
-			this->name = name;
-			this->t = t;
-			this->struct_vals = struct_vals;
-		}
-
-		string match_case_heading::parse_string()
+		string match_case_directive::parse_string()
 		{
 			string params;
 			bool any = false;
@@ -768,22 +659,17 @@ namespace skiff
 			return "MatchCase(" + name + " : " + t.parse_string() + ", Params(" + params + "))";
 		}
 
-		string try_heading::parse_string()
+		string try_directive::parse_string()
 		{
 			return "TryHeading()";
 		}
 
-		string finally_heading::parse_string()
+		string finally_directive::parse_string()
 		{
 			return "FinallyHeading()";
 		}
 
-		catch_heading::catch_heading(statement * var)
-		{
-			this->var = var;
-		}
-
-		string catch_heading::parse_string()
+		string catch_directive::parse_string()
 		{
 			return "CatchHeading(" + var->parse_string() + ")";
 		}

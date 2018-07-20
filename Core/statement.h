@@ -24,7 +24,7 @@ namespace skiff
         class statement
         {
         public:
-            statement();
+            statement() = default;
 
             explicit statement(std::string raw);
             virtual std::string eval_c();
@@ -187,24 +187,14 @@ namespace skiff
         public:
             block_heading() = default;
 
-            explicit block_heading(std::string raw);
+            explicit block_heading(std::vector<statement *> body);
             std::string eval_c() override;
             environment::skiff_object eval(environment::scope * env) override;
-            std::string parse_string() override = 0;
-            void add_body(braced_block * s) override;
-            int indent_mod() override;
-            virtual void add_else_block(else_heading * stmt) {};
+            std::string parse_string() override;
         protected:
-            braced_block * body;
+            std::vector<statement *> body;
         private:
             std::string raw;
-        };
-
-        class end_block_statement : public statement
-        {
-        public:
-            std::string parse_string() override;
-            int indent_mod() override;
         };
 
         class flow_statement : public statement
@@ -217,60 +207,56 @@ namespace skiff
             flow_statement::type typ;
         };
 
-        class else_heading : public block_heading
+        class else_directive : public block_heading
         {
         public:
-            else_heading() : else_heading(nullptr) {};
-            explicit else_heading(block_heading * wrapping);
+            explicit else_directive(std::vector<statement *> body) : block_heading(body) {};
             std::string parse_string() override;
             environment::skiff_object eval(environment::scope * env) override;
-            void add_body(braced_block * s) override;
-            void finalize(std::stack<braced_block *> * stmts) override;
-            void add_else_block(else_heading * stmt) override;
-        private:
-            block_heading * wrapping;
-            else_heading * next_else_block;
         };
 
-        class if_heading : public block_heading
+        class if_directive : public block_heading
         {
         public:
-            explicit if_heading(statement * condition);
+            explicit if_directive(statement * condition, std::vector<statement *> body) :
+                    block_heading(body), condition(condition) {};
             std::string parse_string() override;
             environment::skiff_object eval(environment::scope * env) override;
             void add_else_block(else_heading * stmt) override;
         private:
             statement * condition;
-            else_heading * else_block;
         };
 
-        class try_heading : public block_heading
+        class try_directive : public block_heading
         {
         public:
-            try_heading() = default;
+            try_directive(std::vector<statement *> body) : block_heading(body) {};
             std::string parse_string() override;
         };
 
-        class finally_heading : public block_heading
+        class finally_directive : public block_heading
         {
         public:
-            finally_heading() = default;
+            finally_directive(std::vector<statement *> body) : block_heading(body) {};
             std::string parse_string() override;
         };
 
-        class catch_heading : public block_heading
+        class catch_directive : public block_heading
         {
         public:
-            explicit catch_heading(statement * var);
+            explicit catch_directive(statement * var, std::vector<statement *> body) :
+                    block_heading(body), var(var) {};
             std::string parse_string() override;
         private:
             statement * var;
         };
 
-        class for_classic_heading : public block_heading
+        class for_classic_directive : public block_heading
         {
         public:
-            for_classic_heading(statement * init, statement * condition, statement * tick);
+            for_classic_directive(statement * init, statement * condition, statement * tick,
+                                std::vector<statement *> body) : block_heading(body),
+                    init(init), condition(condition), tick(tick) {};
             std::string parse_string() override;
         private:
             statement * init;
@@ -278,51 +264,55 @@ namespace skiff
             statement * tick;
         };
 
-        class for_itterator_heading : public block_heading
+        class for_itterator_directive : public block_heading
         {
         public:
-            for_itterator_heading(statement * val, statement * list);
+            for_itterator_directive(statement * val, statement * list, std::vector<statement *> body) :
+                    block_heading(body), val(val), list(list) {};
             std::string parse_string() override;
         private:
             statement * val;
             statement * list;
         };
 
-        class while_heading : public block_heading
+        class while_directive : public block_heading
         {
         public:
-            explicit while_heading(statement * condition);
+            explicit while_directive(statement * condition, std::vector<statement *> body) :
+                    block_heading(body) {};
             std::string parse_string() override;
         private:
             statement * condition;
         };
 
-        class switch_heading : public block_heading
+        class switch_directive : public block_heading
         {
         public:
             enum type { SWITCH, MATCH };
-            switch_heading(switch_heading::type typ, statement * on);
+            switch_directive(switch_directive::type typ, statement * on,
+                           std::vector<statement *> body) : block_heading(body) {};
             std::string parse_string() override;
         private:
-            switch_heading::type typ;
+            switch_directive::type typ;
             statement * on;
         };
 
-        class switch_case_heading : public block_heading
+        class switch_case_directive : public block_heading
         {
         public:
-            explicit switch_case_heading(statement * val);
+            explicit switch_case_directive(statement * val, std::vector<statement *> body) :
+                    block_heading(body), val(val) {};
             std::string parse_string() override;
         private:
             statement * val;
         };
 
-        class match_case_heading : public block_heading
+        class match_case_directive : public block_heading
         {
         public:
-            match_case_heading(std::string name, type_statement t) :
-                match_case_heading(name, t, std::vector<std::string>()) { };
-            match_case_heading(std::string name, type_statement t,
+            match_case_directive(std::string name, type_statement t) :
+                    match_case_directive(name, t, std::vector<std::string>()) { };
+            match_case_directive(std::string name, type_statement t,
                 std::vector<std::string> struct_vals);
             std::string parse_string() override;
         private:
@@ -430,7 +420,7 @@ namespace skiff
             std::vector<statement *> params;
         };
 
-        class function_heading : public block_heading
+        class function_definition : public block_heading
         {
         public:
             struct function_parameter
@@ -438,12 +428,9 @@ namespace skiff
                 type_statement typ;
                 std::string name;
             };
-            static function_heading::function_parameter create_function_parameter(std::string name,
+            static function_definition::function_parameter create_function_parameter(std::string name,
                 type_statement typ);
-            function_heading(std::string name) : function_heading(name,
-                std::vector<function_parameter>(),
-                type_statement("")) { }
-            function_heading(std::string name, std::vector<function_parameter> params,
+            function_definition(std::string name, std::vector<function_parameter> params,
                 type_statement returns);
             std::string parse_string();
         private:

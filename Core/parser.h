@@ -64,12 +64,13 @@ namespace skiff
     class parse_pattern
     {
     public:
-        explicit parse_pattern(parse_pattern_logic ppl);
+        explicit parse_pattern(parse_pattern_logic ppl, parse_pattern_type typ);
         explicit parse_pattern(token_type tkn);
         explicit parse_pattern();
         parse_pattern then(token_type tkn);
         parse_pattern then(parse_pattern_logic ppl);
         parse_pattern capture();
+        parse_pattern capture(parse_pattern_logic ppl);
         parse_pattern terminate(token_type tkn);
         parse_match * match(size_t strt, vector<token> tokens);
     private:

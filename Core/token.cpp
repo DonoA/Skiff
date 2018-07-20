@@ -241,17 +241,16 @@ namespace skiff
                         break;
                     }
 
-                    case 'r': {
-                        switch(next)
-                        {
-                            case '/': {
-                                tokens.push_back(token(token_type::R, nullptr, line_id, col));
-                                i++;
-                                break;
-                            }
-                        }
-                        break;
-                    }
+//                    case 'r': {
+//                        switch(next)
+//                        {
+//                            case '/': {
+//                                tokens.push_back(token(token_type::R, nullptr, line_id, col));
+//                                i++;
+//                                break;
+//                            }
+//                        }
+//                    }
 
                     case '&': {
                         switch(next)

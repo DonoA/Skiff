@@ -51,9 +51,9 @@ namespace skiff
         rules.push_back(pp);
     }
 
-    parse_pattern::parse_pattern(parse_pattern_logic ppl) {
+    parse_pattern::parse_pattern(parse_pattern_logic ppl, parse_pattern_type typ) {
         parse_pattern_part pp = parse_pattern_part();
-        pp.type = parse_pattern_type::MULTIMATCH;
+        pp.type = typ;
         pp.value = parse_pattern_data(ppl.get_rules());
         rules.push_back(pp);
     }
@@ -86,6 +86,14 @@ namespace skiff
         parse_pattern_part pp = parse_pattern_part();
         pp.type = parse_pattern_type::CAPTURE;
         pp.value = parse_pattern_data(vector<token>());
+        rules.push_back(pp);
+        return *this;
+    }
+
+    parse_pattern parse_pattern::capture(parse_pattern_logic ppl) {
+        parse_pattern_part pp = parse_pattern_part();
+        pp.type = parse_pattern_type::CAPTURE;
+        pp.value = parse_pattern_data(ppl.get_rules());
         rules.push_back(pp);
         return *this;
     }
@@ -173,19 +181,27 @@ namespace skiff
                     rule_pos++;
                 }
                 else if(braces.empty() && (rules.at(rule_pos + 1).type == parse_pattern_type::TERMINATE &&
-                                           (i + 1 >= tokens.size()))) {
+                                           (i + 1 >= tokens.size())) &&
+                                (rules.at(rule_pos).value.multimatch.empty() ||
+                                     vec_contains_token(rules.at(rule_pos).value.multimatch, tokens.at(i).get_type())))
+                {
                     rules.at(rule_pos).value.cap.push_back(tokens.at(i));
                     match->captured++;
                     i++;
                     match->match_groups.push_back(rules.at(rule_pos).value.cap);
                     rule_pos++;
                 }
-                else
+                else if(rules.at(rule_pos).value.multimatch.empty() ||
+                        vec_contains_token(rules.at(rule_pos).value.multimatch, tokens.at(i).get_type()))
                 {
                     track_brace(tokens.at(i).get_type(), &braces);
                     rules.at(rule_pos).value.cap.push_back(tokens.at(i));
                     match->captured++;
                     i++;
+                }
+                else
+                {
+                    return nullptr;
                 }
             }
             else if(rules.at(rule_pos).type == parse_pattern_type::MULTIMATCH)
@@ -228,6 +244,8 @@ namespace skiff
             return nullptr;
         }
     }
+
+
 
 
     vector<statement *> split_and_parse(vector<token> tokens, token_type split)
@@ -366,13 +384,15 @@ namespace skiff
 
         parse_pattern FLOW =
                 parse_pattern(
-                        parse_pattern_logic(token_type::IF).maybe(token_type::WHILE).maybe(token_type::FOR)
+                        parse_pattern_logic(token_type::IF).maybe(token_type::WHILE).maybe(token_type::FOR),
+                        parse_pattern_type::MULTIMATCH
                 ).then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
                         .terminate(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
 
         parse_pattern SWITCH_MATCH =
                 parse_pattern(
-                        parse_pattern_logic(token_type::SWITCH).maybe(token_type::MATCH)
+                        parse_pattern_logic(token_type::SWITCH).maybe(token_type::MATCH),
+                        parse_pattern_type::MULTIMATCH
                 ).then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
                         .terminate(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
 
@@ -458,6 +478,60 @@ namespace skiff
                 continue;
             }
 
+            cap = FUNCTION_DEF.match(pos, stmt);
+            if(cap)
+            {
+                std::cout << "function call" << std::endl;
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = NEW.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::new_object_statement(
+                                statements::type_statement(cap->selected_tokens.at(1).get_lit()->to_string()),
+                                split_and_parse(cap->match_groups.at(1), token_type::COMMA)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = RETURN.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::return_statement(
+                                parser(cap->match_groups.at(0)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            // the type needs denoting not terminated, causing problems
+            cap = IMPORT_LOCAL.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::import_statement(
+                                cap->selected_tokens.at(1).get_lit()->to_string()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = IMPORT_SYS.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::import_statement(
+                                cap->selected_tokens.at(2).get_lit()->to_string()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
             cap = BOOL_AND.match(pos, stmt);
             if(cap)
             {
@@ -489,7 +563,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::invert(
-                                parser(cap->match_groups.at(0)).parse().at(0)
+                                parser(cap->match_groups.at(1)).parse().at(0)
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -567,29 +641,6 @@ namespace skiff
                 continue;
             }
 
-            cap = NEW.match(pos, stmt);
-            if(cap)
-            {
-                statements.push_back(
-                        new statements::new_object_statement(
-                                statements::type_statement(cap->selected_tokens.at(0).get_lit()->to_string()),
-                                split_and_parse(cap->match_groups.at(0), token_type::COMMA)
-                        ));
-                pos += cap->captured + 1;
-                continue;
-            }
-
-            cap = RETURN.match(pos, stmt);
-            if(cap)
-            {
-                statements.push_back(
-                        new statements::return_statement(
-                                parser(cap->match_groups.at(0)).parse().at(0)
-                        ));
-                pos += cap->captured + 1;
-                continue;
-            }
-
             cap = LIST_ACCESS.match(pos, stmt);
             if(cap)
             {
@@ -623,29 +674,6 @@ namespace skiff
             if(cap)
             {
                 std::cout << "Add/Sub Reached" << std::endl;
-                pos += cap->captured + 1;
-                continue;
-            }
-
-            // the type needs denoting
-            cap = IMPORT_LOCAL.match(pos, stmt);
-            if(cap)
-            {
-                statements.push_back(
-                        new statements::import_statement(
-                                cap->selected_tokens.at(1).get_lit()->to_string()
-                        ));
-                pos += cap->captured + 1;
-                continue;
-            }
-
-            cap = IMPORT_SYS.match(pos, stmt);
-            if(cap)
-            {
-                statements.push_back(
-                        new statements::import_statement(
-                                cap->selected_tokens.at(2).get_lit()->to_string()
-                        ));
                 pos += cap->captured + 1;
                 continue;
             }
