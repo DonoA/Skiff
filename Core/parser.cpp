@@ -246,7 +246,33 @@ namespace skiff
     }
 
 
+    vector<statements::function_definition::function_parameter> parse_function_params(vector<token> tokens)
+    {
+        parse_pattern FX_PARAM =
+                parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).terminate(token_type::COMMA);
 
+        using param = statements::function_definition::function_parameter;
+        vector<param> params = vector<param>();
+        size_t pos = 0;
+        while(pos < tokens.size())
+        {
+            parse_match * cap = FX_PARAM.match(pos, tokens);
+            if(cap)
+            {
+                params.emplace_back(
+                        cap->selected_tokens.at(0).get_lit()->to_string(),
+                        statements::type_statement(cap->selected_tokens.at(2).get_lit()->to_string())
+                );
+                pos += cap->captured + 1;
+                continue;
+            }
+            else
+            {
+                std::cout << "Param messed" << std::endl;
+            }
+        }
+        return params;
+    }
 
     vector<statement *> split_and_parse(vector<token> tokens, token_type split)
     {
@@ -481,7 +507,15 @@ namespace skiff
             cap = FUNCTION_DEF.match(pos, stmt);
             if(cap)
             {
-                std::cout << "function call" << std::endl;
+                statements.push_back(
+                        new statements::function_definition(
+                                cap->selected_tokens.at(1).get_lit()->to_string(),
+                                parse_function_params(cap->match_groups.at(1)),
+                                statements::type_statement(
+                                        cap->selected_tokens.at(5).get_lit()->to_string()
+                                ),
+                                parser(cap->match_groups.at(2)).parse()
+                        ));
                 pos += cap->captured + 1;
                 continue;
             }
@@ -657,7 +691,12 @@ namespace skiff
             cap = EXP.match(pos, stmt);
             if(cap)
             {
-                std::cout << "Exponent Reached" << std::endl;
+                statements.push_back(
+                        new statements::math_statement(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                statements::math_statement::op::EXP,
+                                parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
                 pos += cap->captured + 1;
                 continue;
             }
@@ -665,7 +704,19 @@ namespace skiff
             cap = DIV_MUL.match(pos, stmt);
             if(cap)
             {
-                std::cout << "Div/Mul Reached" << std::endl;
+                statements::math_statement::op opr;
+                switch(cap->selected_tokens.at(0).get_type())
+                {
+                    case token_type::STAR: opr = statements::math_statement::MUL; break;
+                    case token_type::DIV: opr = statements::math_statement::DIV; break;
+                    default: std::cout << "Bad math op for div mul" << std::endl; break;
+                }
+                statements.push_back(
+                        new statements::math_statement(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                opr,
+                                parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
                 pos += cap->captured + 1;
                 continue;
             }
@@ -673,7 +724,19 @@ namespace skiff
             cap = ADD_SUB.match(pos, stmt);
             if(cap)
             {
-                std::cout << "Add/Sub Reached" << std::endl;
+                statements::math_statement::op op;
+                switch(cap->selected_tokens.at(0).get_type())
+                {
+                    case token_type::PLUS: op = statements::math_statement::ADD; break;
+                    case token_type::MINUS: op = statements::math_statement::SUB; break;
+                    default: std::cout << "Bad math op for add sub" << std::endl; break;
+                }
+                statements.push_back(
+                        new statements::math_statement(
+                                parser(cap->match_groups.at(0)).parse().at(0),
+                                op,
+                                parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
                 pos += cap->captured + 1;
                 continue;
             }

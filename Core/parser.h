@@ -82,6 +82,7 @@ namespace skiff
     public:
         parser(vector<token> stmt);
         vector<statement *> parse();
+        size_t get_pos() { return pos; };
     private:
         token peek(int i);
         vector<token> consume_to(token_type tkn);

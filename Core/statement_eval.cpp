@@ -64,20 +64,20 @@ namespace skiff
 
         // Math in functions does not parse correctly
 
-        skiff_object math_statement::eval(scope * env)
-		{
-			queue<char> ops = operators;
-			queue<statement *> stmts = operands;
-			skiff_object collect = stmts.front()->eval(env);
-			stmts.pop();
-			while (!ops.empty())
-			{
-				collect = math_statement::eval_single_op(collect, ops.front(), stmts.front()->eval(env));
-				stmts.pop();
-				ops.pop();
-			}
-			return collect;
-		}
+//        skiff_object math_statement::eval(scope * env)
+//		{
+//			queue<char> ops = operators;
+//			queue<statement *> stmts = operands;
+//			skiff_object collect = stmts.front()->eval(env);
+//			stmts.pop();
+//			while (!ops.empty())
+//			{
+//				collect = math_statement::eval_single_op(collect, ops.front(), stmts.front()->eval(env));
+//				stmts.pop();
+//				ops.pop();
+//			}
+//			return collect;
+//		}
         
 		skiff_object math_statement::eval_single_op(skiff_object s1, char op, skiff_object s2)
 		{
@@ -172,36 +172,36 @@ namespace skiff
 			return environment::skiff_object();
 		}
 
-        skiff_object if_heading::eval(environment::scope * env)
-        {
-			skiff_object obj = condition->eval(env);
-            bool passed = *((bool *) obj.get_value()->get_value());
-			if(passed)
-			{
-				body->eval(env);
-			}
-			else
-			{
-				if(else_block != nullptr)
-				{
-					else_block->eval(env);
-				}
-			}
-            return skiff_object();
-        }
+//        skiff_object if_heading::eval(environment::scope * env)
+//        {
+//			skiff_object obj = condition->eval(env);
+//            bool passed = *((bool *) obj.get_value()->get_value());
+//			if(passed)
+//			{
+//				body->eval(env);
+//			}
+//			else
+//			{
+//				if(else_block != nullptr)
+//				{
+//					else_block->eval(env);
+//				}
+//			}
+//            return skiff_object();
+//        }
 
-		skiff_object else_heading::eval(environment::scope * env)
-		{
-			if(wrapping == nullptr)
-			{
-				body->eval(env);
-			}
-			else
-			{
-				wrapping->eval(env);
-			}
-			return skiff_object();
-		}
+//		skiff_object else_heading::eval(environment::scope * env)
+//		{
+//			if(wrapping == nullptr)
+//			{
+//				body->eval(env);
+//			}
+//			else
+//			{
+//				wrapping->eval(env);
+//			}
+//			return skiff_object();
+//		}
 
 		skiff_object comparison::eval(environment::scope * env)
 		{
@@ -251,15 +251,15 @@ namespace skiff
 			return skiff_object();
 		}
 
-		skiff_object braced_block::eval(scope * env)
-		{
-			while(!this->stmts.empty())
-			{
-				stmts.front()->eval(env);
-				stmts.pop();
-			}
-			return skiff_object();
-		}
+//		skiff_object braced_block::eval(scope * env)
+//		{
+//			while(!this->stmts.empty())
+//			{
+//				stmts.front()->eval(env);
+//				stmts.pop();
+//			}
+//			return skiff_object();
+//		}
 
     }
 

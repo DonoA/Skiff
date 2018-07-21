@@ -31,8 +31,6 @@ namespace skiff
             virtual environment::skiff_object eval(environment::scope * env);
             virtual std::string parse_string();
             virtual int indent_mod();
-            virtual void add_body(braced_block *);
-            virtual void finalize(std::stack<braced_block *> * stmts);
         private:
             std::string raw;
         };
@@ -43,7 +41,8 @@ namespace skiff
             type_statement() : type_statement("") { };
             explicit type_statement(std::string name) : type_statement(name, std::vector<type_statement>())
             { }
-            type_statement(std::string name, std::vector<type_statement> generic_types);
+            type_statement(std::string name, std::vector<type_statement> generic_types) :
+                    name(name), generic_types(generic_types) { };
             std::string get_name();
             std::string parse_string() override;
             environment::skiff_class * eval_class(environment::scope * env);
@@ -55,7 +54,7 @@ namespace skiff
         class value : public statement
         {
         public:
-            explicit value(std::string val);
+            explicit value(std::string val) : val(val) { };
             environment::skiff_object eval(environment::scope * env) override;
             std::string parse_string() override;
         private:
@@ -66,23 +65,11 @@ namespace skiff
         class variable : public statement
         {
         public:
-            explicit variable(std::string name);
+            explicit variable(std::string name) : name(name) { };
             std::string parse_string() override;
             environment::skiff_object eval(environment::scope * env) override;
         private:
             std::string name;
-        };
-
-        class braced_block : public statement
-        {
-        public:
-            braced_block() = default;
-            environment::skiff_object eval(environment::scope * env) override;
-            std::string parse_string() override;
-            void push_body(statement * s);
-            statement * get_last();
-        private:
-            std::queue<statement *> stmts;
         };
 
         class modifier_base : public statement
@@ -117,12 +104,15 @@ namespace skiff
         class math_statement : public statement
         {
         public:
-            math_statement(std::queue<statement *> operands, std::queue<char> operators);
+            enum op {ADD, SUB, DIV, MUL, EXP};
+            math_statement(statement * statement1, math_statement::op op, statement * statement2) :
+                statement1(statement1), opr(op), statement2(statement2) { };
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+//            environment::skiff_object eval(environment::scope * env) override;
         private:
-            std::queue<statement*> operands;
-            std::queue<char> operators;
+            statement * statement1;
+            math_statement::op opr;
+            statement * statement2;
             static environment::skiff_object eval_single_op(environment::skiff_object s1, char op, environment::skiff_object s2);
             static environment::skiff_class * get_dominant_class(environment::skiff_object s1, environment::skiff_object s2);
         };
@@ -180,21 +170,17 @@ namespace skiff
             std::vector<statement *> params;
         };
 
-        class else_heading;
-
         class block_heading : public statement
         {
         public:
             block_heading() = default;
 
-            explicit block_heading(std::vector<statement *> body);
+            explicit block_heading(std::vector<statement *> body) : body(body) { };
             std::string eval_c() override;
             environment::skiff_object eval(environment::scope * env) override;
-            std::string parse_string() override;
+            std::string parse_string() override = 0;
         protected:
             std::vector<statement *> body;
-        private:
-            std::string raw;
         };
 
         class flow_statement : public statement
@@ -212,7 +198,7 @@ namespace skiff
         public:
             explicit else_directive(std::vector<statement *> body) : block_heading(body) {};
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+//            environment::skiff_object eval(environment::scope * env) override;
         };
 
         class if_directive : public block_heading
@@ -221,8 +207,7 @@ namespace skiff
             explicit if_directive(statement * condition, std::vector<statement *> body) :
                     block_heading(body), condition(condition) {};
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
-            void add_else_block(else_heading * stmt) override;
+//            environment::skiff_object eval(environment::scope * env) override;
         private:
             statement * condition;
         };
@@ -230,14 +215,14 @@ namespace skiff
         class try_directive : public block_heading
         {
         public:
-            try_directive(std::vector<statement *> body) : block_heading(body) {};
+            explicit try_directive(std::vector<statement *> body) : block_heading(body) {};
             std::string parse_string() override;
         };
 
         class finally_directive : public block_heading
         {
         public:
-            finally_directive(std::vector<statement *> body) : block_heading(body) {};
+            explicit finally_directive(std::vector<statement *> body) : block_heading(body) {};
             std::string parse_string() override;
         };
 
@@ -279,7 +264,7 @@ namespace skiff
         {
         public:
             explicit while_directive(statement * condition, std::vector<statement *> body) :
-                    block_heading(body) {};
+                    block_heading(body), condition(condition) { };
             std::string parse_string() override;
         private:
             statement * condition;
@@ -290,7 +275,7 @@ namespace skiff
         public:
             enum type { SWITCH, MATCH };
             switch_directive(switch_directive::type typ, statement * on,
-                           std::vector<statement *> body) : block_heading(body) {};
+                           std::vector<statement *> body) : block_heading(body), typ(typ), on(on) {};
             std::string parse_string() override;
         private:
             switch_directive::type typ;
@@ -310,10 +295,10 @@ namespace skiff
         class match_case_directive : public block_heading
         {
         public:
-            match_case_directive(std::string name, type_statement t) :
-                    match_case_directive(name, t, std::vector<std::string>()) { };
-            match_case_directive(std::string name, type_statement t,
-                std::vector<std::string> struct_vals);
+//            match_case_directive(std::string name, type_statement t) :
+//                    match_case_directive(name, t, std::vector<std::string>()) { };
+//            match_case_directive(std::string name, type_statement t,
+//                std::vector<std::string> struct_vals) : block_heading();
             std::string parse_string() override;
         private:
             std::string name;
@@ -425,13 +410,17 @@ namespace skiff
         public:
             struct function_parameter
             {
+                function_parameter(std::string name, type_statement typ)
+                {
+                    this->name = name;
+                    this->typ = typ;
+                }
                 type_statement typ;
                 std::string name;
             };
-            static function_definition::function_parameter create_function_parameter(std::string name,
-                type_statement typ);
             function_definition(std::string name, std::vector<function_parameter> params,
-                type_statement returns);
+                type_statement returns, std::vector<statement *> body) : block_heading(body),
+                name(name), params(params), returns(returns) { };
             std::string parse_string();
         private:
             std::string name;
