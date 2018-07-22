@@ -23,7 +23,7 @@ namespace skiff {
             // LOGIC
             AND, OR, 
             BANG, BANG_EQUAL, DOUBLE_EQUAL, // less than greater than is the generic syntax
-            LESS_THAN_EQUAL, GREATER_THAN_EQUAL, TRU, FALS, NILL,
+            LESS_THAN_EQUAL, GREATER_THAN_EQUAL, TRU, FALS, NONE,
 
             LITERAL,
 

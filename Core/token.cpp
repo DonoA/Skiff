@@ -241,17 +241,6 @@ namespace skiff
                         break;
                     }
 
-//                    case 'r': {
-//                        switch(next)
-//                        {
-//                            case '/': {
-//                                tokens.push_back(token(token_type::R, nullptr, line_id, col));
-//                                i++;
-//                                break;
-//                            }
-//                        }
-//                    }
-
                     case '&': {
                         switch(next)
                         {
@@ -428,6 +417,10 @@ namespace skiff
                             {
                                 tokens.push_back(token(token_type::IF, nullptr, line_id, start_i));
                             }
+                            else if(kw == "else")
+                            {
+                                tokens.push_back(token(token_type::ELSE, nullptr, line_id, start_i));
+                            }
                             else if(kw == "while")
                             {
                                 tokens.push_back(token(token_type::WHILE, nullptr, line_id, start_i));
@@ -487,6 +480,22 @@ namespace skiff
                             else if(kw == "import")
                             {
                                 tokens.push_back(token(token_type::IMPORT, nullptr, line_id, start_i));
+                            }
+                            else if(kw == "true")
+                            {
+                                tokens.push_back(token(token_type::TRU, nullptr, line_id, start_i));
+                            }
+                            else if(kw == "false")
+                            {
+                                tokens.push_back(token(token_type::FALS, nullptr, line_id, start_i));
+                            }
+                            else if(kw == "none")
+                            {
+                                tokens.push_back(token(token_type::NONE, nullptr, line_id, start_i));
+                            }
+                            else if(kw == "r")
+                            {
+                                tokens.push_back(token(token_type::R, nullptr, line_id, start_i));
                             }
                             else
                             {

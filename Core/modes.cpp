@@ -59,7 +59,7 @@ namespace skiff
                 file += line + "\n";
             }
             vector<tokenizer::token> token_sequence = tokenizer::tokenize(file);
-            std::cout << tokenizer::sequencetostring(token_sequence) << std::endl;
+//            std::cout << tokenizer::sequencetostring(token_sequence) << std::endl;
             vector<statement *> statements = parser(token_sequence).parse();
             for(statement * st : statements)
             {
