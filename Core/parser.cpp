@@ -335,11 +335,8 @@ namespace skiff
                         .then(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
 
         parse_pattern CLASS_DEF =
-                parse_pattern(token_type::CLASS).then(token_type::NAME).capture().then(token_type::LEFT_BRACE).capture()
-                        .then(token_type::RIGHT_BRACE);
-
-        parse_pattern STRUCT_DEF =
-                parse_pattern(token_type::STRUCT).then(token_type::NAME).capture().then(token_type::LEFT_BRACE).capture()
+                parse_pattern(parse_pattern_logic(token_type::CLASS).maybe(token_type::STRUCT), parse_pattern_type::MULTIMATCH)
+                        .then(token_type::NAME).capture().then(token_type::LEFT_BRACE).capture()
                         .then(token_type::RIGHT_BRACE);
 
         parse_pattern NEW =
@@ -388,6 +385,10 @@ namespace skiff
                 parse_pattern().then(
                         parse_pattern_logic(token_type::PLUS).maybe(token_type::MINUS)
                 ).capture().terminate(token_type::SEMICOLON);
+
+        parse_pattern FLOW_CONTROL =
+                parse_pattern(parse_pattern_logic(token_type::BREAK).maybe(token_type::NEXT), parse_pattern_type::MULTIMATCH)
+                        .then(token_type::SEMICOLON);
 
         parse_pattern DIV_MUL =
                 parse_pattern().then(
@@ -539,6 +540,22 @@ namespace skiff
                         new statements::return_statement(
                                 parser(cap->match_groups.at(0)).parse().at(0)
                         ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = FLOW_CONTROL.match(pos, stmt);
+            if(cap)
+            {
+                using type = statements::flow_statement::type;
+                type op;
+                switch(cap->selected_tokens.at(0).get_type())
+                {
+                    case token_type::BREAK: op = type::BREAK; break;
+                    case token_type::NEXT: op = type::NEXT; break;
+                    default: std::cout << "Not break or next" << std::endl;
+                }
+                statements.push_back(new statements::flow_statement(op));
                 pos += cap->captured + 1;
                 continue;
             }
