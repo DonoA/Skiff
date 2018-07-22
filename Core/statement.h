@@ -252,11 +252,12 @@ namespace skiff
         class for_itterator_directive : public block_heading
         {
         public:
-            for_itterator_directive(statement * val, statement * list, std::vector<statement *> body) :
-                    block_heading(body), val(val), list(list) {};
+            for_itterator_directive(std::string val, type_statement type, statement * list, std::vector<statement *> body) :
+                    block_heading(body), val(val), type(type), list(list) {};
             std::string parse_string() override;
         private:
-            statement * val;
+            std::string val;
+            type_statement type;
             statement * list;
         };
 

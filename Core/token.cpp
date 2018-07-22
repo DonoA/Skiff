@@ -20,12 +20,28 @@ namespace skiff
             this->pos = pos;
         }
 
+        bool token::operator==(const token &other) const {
+            bool same_type = this->type == other.type;
+            bool same_lit = true;
+            if(this->lit != nullptr)
+            {
+                if(other.lit == nullptr)
+                {
+                    same_lit = false;
+                }
+                else
+                {
+                    same_lit = other.lit->to_string() == this->lit->to_string();
+                }
+            }
+            return same_lit && same_type;
+        }
+
         string consumeTil(string seq, size_t * i, char del)
         {
             size_t start_i = *i;
             (*i)++;
             for(;!(seq.at(*i) == del && seq.at(*i - 1) != '\\') && *i < seq.length(); (*i)++);
-            std::cout << *i << " " << start_i << std::endl;
             return seq.substr(start_i + 1, *i - start_i - 1);
         }
 
@@ -51,14 +67,16 @@ namespace skiff
 
         string selectKeyword(string seq, size_t * i) {
             size_t start_i = *i;
-            while(isChar(seq.at(*i)) || isDigit(seq.at(*i)) || isUnderscore(seq.at(*i))) (*i)++;
+            while(*i < seq.length() &&
+                  (isChar(seq.at(*i)) || isDigit(seq.at(*i)) || isUnderscore(seq.at(*i)))) (*i)++;
             (*i)--;
             return seq.substr(start_i, (*i + 1) - start_i);
         }
 
         string selectNumber(string seq, size_t * i) {
             size_t start_i = *i;
-            while(isDigit(seq.at(*i)) || isDot(seq.at(*i))) (*i)++;
+            while(*i < seq.length() &&
+                    (isDigit(seq.at(*i)) || isDot(seq.at(*i)))) (*i)++;
             (*i)--;
             return seq.substr(start_i, (*i + 1) - start_i);
         }
@@ -343,7 +361,6 @@ namespace skiff
 
                     case '"': {
                         string * str = new string(consumeTil(segment, &i, '"'));
-                        std::cout << "proc str " << *str << std::endl;
                         tokens.push_back(token(
                             token_type::LITERAL, 
                             new literal(literal_type::STRING, str),
@@ -528,15 +545,20 @@ namespace skiff
 
         string sequencetostring(vector<token> seq)
         {
+            string rtn = "";
             for(token t : seq)
             {
-                std::cout << "Line " << t.get_line() << " ~> " << (int) t.get_type() << std::endl;
-                if(t.get_type() == token_type::LITERAL || t.get_type() == token_type::LINE_COMMENT)
+                rtn += std::to_string((int) t.get_type()) + "(";
+                if(t.get_lit() == nullptr)
                 {
-                    std::cout << t.get_lit()->to_string() << std::endl;
+                    rtn += "nullptr)";
+                }
+                else
+                {
+                    rtn += t.get_lit()->to_string() + ")";
                 }
             }
-            return "";
+            return rtn;
         }
     }
 }

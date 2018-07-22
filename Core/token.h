@@ -51,6 +51,7 @@ namespace skiff {
             size_t get_line() { return line; };
             size_t get_col() { return pos; };
             literal * get_lit() { return lit; };
+            bool operator==(const token& other) const;
         private:
             token_type type;
             literal * lit;

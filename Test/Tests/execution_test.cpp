@@ -16,7 +16,7 @@ using skiff::environment::scope;
 
 namespace Test
 {
-	TEST_CLASS(Execution, 3)
+	TEST_CLASS(Execution, 4)
 	{
 		TEST_METHOD(AssignmentAndDeclaration)
 		{

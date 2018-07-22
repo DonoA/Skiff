@@ -28,6 +28,8 @@ void Assert::AreEqual(string s1, string s2)
     }
 }
 
+
+
 void Assert::IsTrue(bool condition)
 {
     if(!condition)
@@ -36,3 +38,4 @@ void Assert::IsTrue(bool condition)
         last_failed = true;
     }
 }
+

@@ -409,22 +409,33 @@ namespace skiff
                 parse_pattern(token_type::IMPORT).then(token_type::LEFT_ANGLE_BRACE).then(token_type::NAME)
                         .then(token_type::RIGHT_ANGLE_BRACE);
 
+        parse_pattern ELSE =
+                parse_pattern(token_type::ELSE).capture().then(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
+
         parse_pattern FLOW =
                 parse_pattern(
                         parse_pattern_logic(token_type::IF).maybe(token_type::WHILE).maybe(token_type::FOR),
                         parse_pattern_type::MULTIMATCH
                 ).then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
-                        .terminate(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
+                        .then(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
+
+        parse_pattern BASIC_FOR_DIRECTIVE =
+                parse_pattern().then(token_type::SEMICOLON).capture().then(token_type::SEMICOLON).capture()
+                        .terminate(token_type::RIGHT_PAREN);
+
+        parse_pattern ITR_FOR_DIRECTIVE =
+                parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).then(token_type::COLON)
+                        .capture().terminate(token_type::RIGHT_PAREN);
 
         parse_pattern SWITCH_MATCH =
                 parse_pattern(
                         parse_pattern_logic(token_type::SWITCH).maybe(token_type::MATCH),
                         parse_pattern_type::MULTIMATCH
                 ).then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
-                        .terminate(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
+                        .then(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
 
         parse_pattern CASE =
-                parse_pattern(token_type::CASE).capture().then(token_type::ARROW).terminate(token_type::LEFT_BRACE)
+                parse_pattern(token_type::CASE).capture().then(token_type::ARROW).then(token_type::LEFT_BRACE)
                         .capture().then(token_type::RIGHT_BRACE);
 
         parse_pattern THROW =
@@ -688,6 +699,76 @@ namespace skiff
                                 parser(cap->match_groups.at(0)).parse().at(0),
                                 split_and_parse(cap->match_groups.at(1), token_type::COMMA)
                         ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = ELSE.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::else_directive(
+                                parser(cap->match_groups.at(1)).parse()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = FLOW.match(pos, stmt);
+            if(cap)
+            {
+                switch(cap->selected_tokens.at(0).get_type())
+                {
+                    case token_type::IF: {
+                        statements.push_back(
+                                new statements::if_directive(
+                                        parser(cap->match_groups.at(0)).parse().at(0),
+                                        parser(cap->match_groups.at(1)).parse()
+                                ));
+                        break;
+                    }
+                    case token_type::WHILE: {
+                        statements.push_back(
+                                new statements::while_directive(
+                                        parser(cap->match_groups.at(0)).parse().at(0),
+                                        parser(cap->match_groups.at(1)).parse()
+                                ));
+                        break;
+                    }
+                    case token_type::FOR: {
+                        parse_match * inner_cap = BASIC_FOR_DIRECTIVE.match(0, cap->match_groups.at(0));
+                        if(inner_cap)
+                        {
+                            statements.push_back(
+                                    new statements::for_classic_directive(
+                                            parser(inner_cap->match_groups.at(0)).parse().at(0),
+                                            parser(inner_cap->match_groups.at(1)).parse().at(0),
+                                            parser(inner_cap->match_groups.at(2)).parse().at(0),
+                                            parser(cap->match_groups.at(1)).parse()
+                                    ));
+                            break;
+                        }
+
+                        inner_cap = ITR_FOR_DIRECTIVE.match(0, cap->match_groups.at(0));
+                        if(inner_cap)
+                        {
+                            statements.push_back(
+                                    new statements::for_itterator_directive(
+                                            inner_cap->selected_tokens.at(0).get_lit()->to_string(),
+                                            statements::type_statement(
+                                                    inner_cap->selected_tokens.at(2).get_lit()->to_string()
+                                            ),
+                                            parser(inner_cap->match_groups.at(0)).parse().at(0),
+                                            parser(cap->match_groups.at(1)).parse()
+                                    ));
+                            break;
+                        }
+                        std::cout << "Bad for loop" << std::endl;
+                        break;
+                    }
+                    default: std::cout << "Unknown loop in flow match" << std::endl; break;
+                }
+
                 pos += cap->captured + 1;
                 continue;
             }

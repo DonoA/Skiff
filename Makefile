@@ -38,10 +38,10 @@ test: Target/Test/main.o Target/Test/test_util.o
 	$(CC) $(CFLAGS) -o Target/SkiffTest Target/Test/*.o Target/Core/*.o
 	Target/SkiffTest
 
-Target/Test/main.o: Test/main.cpp Test/Tests/parse_test.cpp Test/Tests/util_test.cpp Test/Tests/execution_test.cpp
+Target/Test/main.o: Test/main.cpp Test/Tests/parse_test.cpp Test/Tests/util_test.cpp Test/Tests/execution_test.cpp Test/Tests/tokenizer_test.cpp
 	$(CC) $(CFLAGS) -c -o Target/Test/main.o Test/main.cpp
 
-Test/main.cpp: Test/build_test.py Test/Tests/parse_test.cpp Test/Tests/util_test.cpp Test/Tests/execution_test.cpp
+Test/main.cpp: Test/build_test.py Test/Tests/parse_test.cpp Test/Tests/util_test.cpp Test/Tests/execution_test.cpp Test/Tests/tokenizer_test.cpp
 	$(PYTHON) Test/build_test.py
 
 Target/Test/test_util.o: Test/test_util.cpp

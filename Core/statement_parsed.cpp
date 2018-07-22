@@ -560,7 +560,7 @@ namespace skiff
 
         string for_itterator_directive::parse_string()
         {
-            return "iFor(" + val->parse_string() + ", " + list->parse_string() + ")";
+            return "iFor(" + val + ", " + type.parse_string() + ", " + list->parse_string() + ")";
         }
 
         flow_statement::flow_statement(type typ)
