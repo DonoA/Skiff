@@ -299,11 +299,11 @@ namespace skiff
                     case '>': {
                         switch(next)
                         {
-                            case '>': {
-                                tokens.push_back(token(token_type::BIT_RIGHT, nullptr, line_id, col));
-                                i++;
-                                break;
-                            }
+//                            case '>': {
+//                                tokens.push_back(token(token_type::BIT_RIGHT, nullptr, line_id, col));
+//                                i++;
+//                                break;
+//                            }
                             case '=': {
                                 tokens.push_back(token(token_type::GREATER_THAN_EQUAL, nullptr, line_id, col));
                                 i++;
@@ -320,11 +320,11 @@ namespace skiff
                     case '<': {
                         switch(next)
                         {
-                            case '<': {
-                                tokens.push_back(token(token_type::BIT_LEFT, nullptr, line_id, col));
-                                i++;
-                                break;
-                            }
+//                            case '<': {
+//                                tokens.push_back(token(token_type::BIT_LEFT, nullptr, line_id, col));
+//                                i++;
+//                                break;
+//                            }
                             case '=': {
                                 tokens.push_back(token(token_type::LESS_THAN_EQUAL, nullptr, line_id, col));
                                 i++;

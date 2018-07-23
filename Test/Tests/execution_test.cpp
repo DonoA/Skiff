@@ -25,7 +25,7 @@ namespace Test
 			skiff::builtin::load::load_standards(&env);
 			
 			p = new skiff::statements::declaration_with_assignment(
-				"x", skiff::statements::type_statement("Int"), 
+				"x", skiff::statements::type_statement(),
 				new skiff::statements::value("5"));
 			p->eval(&env);
 			Assert::AreEqual(env.get_debug_string(), "x:Int=5;");

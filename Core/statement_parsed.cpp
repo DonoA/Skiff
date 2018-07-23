@@ -52,15 +52,9 @@ namespace skiff
             return "Decleration(" + name + "," + type.parse_string() + ")";
         }
 
-        function_call::function_call(statement * name, vector<statement*> params)
-        {
-            this->name = name;
-            this->params = params;
-        }
-
         string function_call::parse_string()
         {
-            string rtn = "FunctionCall(" + name->parse_string() + ", Params(";
+            string rtn = "FunctionCall(" + name.parse_string() + ", Params(";
             bool any = false;
             for (statement * stmt : params)
             {
@@ -230,7 +224,7 @@ namespace skiff
 
         class_heading::class_heading(class_heading::class_type type, string name,
             vector<class_heading::heading_generic> generic_types) :
-            class_heading(type, name, generic_types, type_statement(""))
+            class_heading(type, name, generic_types, type_statement())
         { }
 
         class_heading::class_heading(class_heading::class_type type, string name, type_statement extends) :
@@ -364,7 +358,7 @@ namespace skiff
             {
                 paramz = paramz.substr(0, paramz.length() - 1);
             }
-            return "New(" + type.parse_string() + ", Params(" + paramz + ")";
+            return "New(" + type.parse_string() + ", Params(" + paramz + "))";
         }
 
         annotation_tag::annotation_tag(string tag_name, vector<statement *> params) : modifier_base(nullptr)
@@ -616,16 +610,11 @@ namespace skiff
             return "CatchHeading(" + var->parse_string() + ")";
         }
 
-        std::string type_statement::get_name()
-        {
-            return name;
-        }
-
         std::string type_statement::parse_string()
         {
             if (generic_types.empty())
             {
-                return "TypeClass(" + name + ")";
+                return "TypeClass(" + name->parse_string() + ")";
             }
             string params_rtn = "Generics(";
             bool any = false;
@@ -638,12 +627,13 @@ namespace skiff
             {
                 params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
             }
-            return "TypeClass(" + name + ", " + params_rtn + "))";
+            return "TypeClass(" + name->parse_string() + ", " + params_rtn + "))";
         }
 
         skiff_class * type_statement::eval_class(scope * env)
         {
-            return env->get_type(name);
+            // this is a quick fix
+            return env->get_type(name->parse_string());
         }
     }
 }

@@ -73,6 +73,8 @@ namespace skiff
         parse_pattern capture(parse_pattern_logic ppl);
         parse_pattern terminate(token_type tkn);
         parse_match * match(size_t strt, vector<token> tokens);
+        parse_match * match_with_brace_track(size_t strt, vector<token> tokens,
+                                             std::function<void(token_type, stack<token_type> *)>);
     private:
         vector<parse_pattern_part> rules;
     };

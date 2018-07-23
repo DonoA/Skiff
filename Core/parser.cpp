@@ -140,7 +140,26 @@ namespace skiff
         }
     }
 
+    void track_generic_brace(token_type tkn, stack<token_type> * braces)
+    {
+        switch (tkn)
+        {
+            case token_type::LEFT_ANGLE_BRACE:
+                braces->push(tkn);
+                break;
+            case token_type::RIGHT_ANGLE_BRACE:
+                check_back_brace(token_type::LEFT_ANGLE_BRACE, braces);
+                break;
+            default: break;
+        }
+    }
+
     parse_match * parse_pattern::match(size_t strt, vector<token> tokens) {
+        return this->match_with_brace_track(strt, tokens, track_brace);
+    }
+
+    parse_match *parse_pattern::match_with_brace_track(size_t strt, vector<token> tokens,
+                                                       std::function<void(token_type, stack<token_type> *)> brace_tracker) {
         size_t rule_pos = 0;
         stack<token_type> braces;
         parse_match * match = new parse_match();
@@ -170,20 +189,20 @@ namespace skiff
                 // (we are at the end or the next token is it))
                 if(braces.empty() && (
                         (rules.at(rule_pos + 1).type == parse_pattern_type::TOKEN &&
-                            rules.at(rule_pos + 1).value.tkn == tokens.at(i).get_type()) ||
+                         rules.at(rule_pos + 1).value.tkn == tokens.at(i).get_type()) ||
                         (rules.at(rule_pos + 1).type == parse_pattern_type::TERMINATE &&
-                            (rules.at(rule_pos + 1).value.term == tokens.at(i).get_type())) ||
+                         (rules.at(rule_pos + 1).value.term == tokens.at(i).get_type())) ||
                         (rules.at(rule_pos + 1).type == parse_pattern_type::MULTIMATCH &&
-                            vec_contains_token(rules.at(rule_pos + 1).value.multimatch, tokens.at(i).get_type()))
-                        ))
+                         vec_contains_token(rules.at(rule_pos + 1).value.multimatch, tokens.at(i).get_type()))
+                ))
                 {
                     match->match_groups.push_back(rules.at(rule_pos).value.cap);
                     rule_pos++;
                 }
                 else if(braces.empty() && (rules.at(rule_pos + 1).type == parse_pattern_type::TERMINATE &&
                                            (i + 1 >= tokens.size())) &&
-                                (rules.at(rule_pos).value.multimatch.empty() ||
-                                     vec_contains_token(rules.at(rule_pos).value.multimatch, tokens.at(i).get_type())))
+                        (rules.at(rule_pos).value.multimatch.empty() ||
+                         vec_contains_token(rules.at(rule_pos).value.multimatch, tokens.at(i).get_type())))
                 {
                     rules.at(rule_pos).value.cap.push_back(tokens.at(i));
                     match->captured++;
@@ -194,7 +213,7 @@ namespace skiff
                 else if(rules.at(rule_pos).value.multimatch.empty() ||
                         vec_contains_token(rules.at(rule_pos).value.multimatch, tokens.at(i).get_type()))
                 {
-                    track_brace(tokens.at(i).get_type(), &braces);
+                    brace_tracker(tokens.at(i).get_type(), &braces);
                     rules.at(rule_pos).value.cap.push_back(tokens.at(i));
                     match->captured++;
                     i++;
@@ -245,33 +264,27 @@ namespace skiff
         }
     }
 
-
-    vector<statements::function_definition::function_parameter> parse_function_params(vector<token> tokens)
+    vector<vector<token>> split_with_generic_braces(vector<token> tokens, token_type split)
     {
-        parse_pattern FX_PARAM =
-                parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).terminate(token_type::COMMA);
-
-        using param = statements::function_definition::function_parameter;
-        vector<param> params = vector<param>();
-        size_t pos = 0;
-        while(pos < tokens.size())
+        vector<vector<token>> bits = vector<vector<token>>();
+        vector<token> buffer = vector<token>();
+        stack<token_type> braces;
+        for(size_t i = 0; i < tokens.size(); i++)
         {
-            parse_match * cap = FX_PARAM.match(pos, tokens);
-            if(cap)
+            track_generic_brace(tokens.at(i).get_type(), &braces);
+            if(braces.empty() && tokens.at(i).get_type() == split)
             {
-                params.emplace_back(
-                        cap->selected_tokens.at(0).get_lit()->to_string(),
-                        statements::type_statement(cap->selected_tokens.at(2).get_lit()->to_string())
-                );
-                pos += cap->captured + 1;
-                continue;
+                bits.push_back(buffer);
+                buffer.clear();
             }
             else
             {
-                std::cout << "Param messed" << std::endl;
+                buffer.push_back(tokens.at(i));
             }
         }
-        return params;
+        bits.push_back(buffer);
+        buffer.clear();
+        return bits;
     }
 
     vector<statement *> split_and_parse(vector<token> tokens, token_type split)
@@ -310,23 +323,85 @@ namespace skiff
         this->pos = 0;
     }
 
+    statements::type_statement parse_type_call(vector<token> tkns)
+    {
+        parse_pattern GENERIC_TYPE =
+                parse_pattern().then(token_type::LEFT_ANGLE_BRACE).capture().then(token_type::RIGHT_ANGLE_BRACE);
+
+        parse_match * cap = GENERIC_TYPE.match_with_brace_track(0, tkns, track_generic_brace);
+
+        vector<statements::type_statement> generic_types = vector<statements::type_statement>();
+
+        if(cap)
+        {
+            vector<vector<token>>  typs = split_with_generic_braces(cap->match_groups.at(1), token_type::COMMA);
+            for(vector<token> seq : typs)
+            {
+                generic_types.push_back(parse_type_call(seq));
+                // delete it here
+            }
+            tkns = cap->match_groups.at(0);
+        }
+
+        statements::type_statement stmt = statements::type_statement(parser(tkns).parse().at(0), generic_types, nullptr);
+
+        return stmt;
+    }
+
+    vector<statements::function_definition::function_parameter> parse_function_params(vector<token> tokens)
+    {
+        parse_pattern FX_PARAM =
+                parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).terminate(token_type::COMMA);
+
+        using param = statements::function_definition::function_parameter;
+        vector<param> params = vector<param>();
+        size_t pos = 0;
+        while(pos < tokens.size())
+        {
+            parse_match * cap = FX_PARAM.match(pos, tokens);
+            if(cap)
+            {
+//                params.emplace_back(
+//                        cap->selected_tokens.at(0).get_lit()->to_string(),
+//                        statements::type_statement(cap->selected_tokens.at(2).get_lit()->to_string())
+//                );
+                pos += cap->captured + 1;
+                continue;
+            }
+            else
+            {
+                std::cout << "Param messed" << std::endl;
+            }
+        }
+        return params;
+    }
+
     vector<statement *> parser::parse() {
+
+        parse_pattern_logic TYPE_CALL = parse_pattern_logic(token_type::NAME).maybe(token_type::LEFT_ANGLE_BRACE)
+                .maybe(token_type::RIGHT_ANGLE_BRACE).maybe(token_type::COMMA).maybe(token_type::DOT);
+
+        parse_pattern_logic TYPE_DEF = parse_pattern_logic(token_type::NAME).maybe(token_type::LEFT_ANGLE_BRACE)
+                .maybe(token_type::RIGHT_ANGLE_BRACE).maybe(token_type::COMMA).maybe(token_type::DOT).maybe(token_type::COLON);
+
+
+
 
         parse_pattern PARENS =
                 parse_pattern(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN);
 
         parse_pattern DECLARE =
-                parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).terminate(token_type::SEMICOLON);
+                parse_pattern(token_type::NAME).then(token_type::COLON).capture(TYPE_CALL).terminate(token_type::SEMICOLON);
 
         parse_pattern ASSIGNMENT =
                 parse_pattern().then(token_type::EQUAL).capture().terminate(token_type::SEMICOLON);
 
         parse_pattern DECLARE_ASSIGN =
-                parse_pattern(token_type::NAME).then(token_type::COLON).then(token_type::NAME).then(token_type::EQUAL)
+                parse_pattern(token_type::NAME).then(token_type::COLON).capture(TYPE_CALL).then(token_type::EQUAL)
                         .capture().terminate(token_type::SEMICOLON);
 
         parse_pattern FUNCTION_CALL =
-                parse_pattern().then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
+                parse_pattern(TYPE_CALL, parse_pattern_type::CAPTURE).then(token_type::LEFT_PAREN).capture().then(token_type::RIGHT_PAREN)
                         .terminate(token_type::SEMICOLON);
 
         parse_pattern FUNCTION_DEF =
@@ -340,7 +415,7 @@ namespace skiff
                         .then(token_type::RIGHT_BRACE);
 
         parse_pattern NEW =
-                parse_pattern(token_type::NEW).then(token_type::NAME).capture().then(token_type::LEFT_PAREN)
+                parse_pattern(token_type::NEW).capture(TYPE_CALL).then(token_type::LEFT_PAREN)
                         .capture().then(token_type::RIGHT_PAREN).terminate(token_type::SEMICOLON);
 
         parse_pattern NEW_ANNON_CLASS =
@@ -359,8 +434,14 @@ namespace skiff
         parse_pattern BITWISE =
                 parse_pattern().then(
                         parse_pattern_logic(token_type::BIT_AND).maybe(token_type::BIT_OR).maybe(token_type::BIT_XOR)
-                            .maybe(token_type::BIT_RIGHT).maybe(token_type::BIT_LEFT)
                 ).capture().terminate(token_type::SEMICOLON);
+
+        parse_pattern BIT_SHIFT_LEFT =
+                parse_pattern().then(token_type::LEFT_ANGLE_BRACE).then(token_type::LEFT_ANGLE_BRACE).capture()
+                        .terminate(token_type::SEMICOLON);
+
+        parse_pattern BIT_SHIFT_RIGHT =
+                parse_pattern().then(token_type::RIGHT_ANGLE_BRACE).then(token_type::RIGHT_ANGLE_BRACE).capture().terminate(token_type::SEMICOLON);
 
         parse_pattern BITWISE_NOT =
                 parse_pattern(token_type::BIT_NOT).capture().terminate(token_type::SEMICOLON);
@@ -485,8 +566,8 @@ namespace skiff
                 statements.push_back(
                         new statements::declaration_with_assignment(
                                 cap->selected_tokens.at(0).get_lit()->to_string(),
-                                statements::type_statement(cap->selected_tokens.at(2).get_lit()->to_string()),
-                                parser(cap->match_groups.at(0)).parse().at(0)
+                                parse_type_call(cap->match_groups.at(0)),
+                                parser(cap->match_groups.at(1)).parse().at(0)
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -498,7 +579,7 @@ namespace skiff
                 statements.push_back(
                         new statements::declaration(
                                 cap->selected_tokens.at(0).get_lit()->to_string(),
-                                statements::type_statement(cap->selected_tokens.at(2).get_lit()->to_string())
+                                parse_type_call(cap->match_groups.at(0))
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -519,15 +600,15 @@ namespace skiff
             cap = FUNCTION_DEF.match(pos, stmt);
             if(cap)
             {
-                statements.push_back(
-                        new statements::function_definition(
-                                cap->selected_tokens.at(1).get_lit()->to_string(),
-                                parse_function_params(cap->match_groups.at(1)),
-                                statements::type_statement(
-                                        cap->selected_tokens.at(5).get_lit()->to_string()
-                                ),
-                                parser(cap->match_groups.at(2)).parse()
-                        ));
+//                statements.push_back(
+//                        new statements::function_definition(
+//                                cap->selected_tokens.at(1).get_lit()->to_string(),
+//                                parse_function_params(cap->match_groups.at(1)),
+//                                statements::type_statement(
+//                                        cap->selected_tokens.at(5).get_lit()->to_string()
+//                                ),
+//                                parser(cap->match_groups.at(2)).parse()
+//                        ));
                 pos += cap->captured + 1;
                 continue;
             }
@@ -537,7 +618,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::new_object_statement(
-                                statements::type_statement(cap->selected_tokens.at(1).get_lit()->to_string()),
+                                parse_type_call(cap->match_groups.at(0)),
                                 split_and_parse(cap->match_groups.at(1), token_type::COMMA)
                         ));
                 pos += cap->captured + 1;
@@ -589,6 +670,18 @@ namespace skiff
                 statements.push_back(
                         new statements::import_statement(
                                 cap->selected_tokens.at(2).get_lit()->to_string()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = FUNCTION_CALL.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::function_call(
+                                parse_type_call(cap->match_groups.at(0)),
+                                split_and_parse(cap->match_groups.at(1), token_type::COMMA)
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -666,8 +759,6 @@ namespace skiff
                     case token_type::BIT_AND: op = bit_op::AND; break;
                     case token_type::BIT_OR: op = bit_op::OR; break;
                     case token_type::BIT_XOR: op = bit_op::XOR; break;
-                    case token_type::BIT_LEFT: op = bit_op::SHIFT_LEFT; break;
-                    case token_type::BIT_RIGHT: op = bit_op::SHIFT_RIGHT; break;
                     default: std::cout << "Bad bitwise match" << std::endl;
                 }
                 statements.push_back(
@@ -686,18 +777,6 @@ namespace skiff
                 statements.push_back(
                         new statements::bitinvert(
                                 parser(cap->match_groups.at(0)).parse().at(0)
-                        ));
-                pos += cap->captured + 1;
-                continue;
-            }
-
-            cap = FUNCTION_CALL.match(pos, stmt);
-            if(cap)
-            {
-                statements.push_back(
-                        new statements::function_call(
-                                parser(cap->match_groups.at(0)).parse().at(0),
-                                split_and_parse(cap->match_groups.at(1), token_type::COMMA)
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -752,15 +831,15 @@ namespace skiff
                         inner_cap = ITR_FOR_DIRECTIVE.match(0, cap->match_groups.at(0));
                         if(inner_cap)
                         {
-                            statements.push_back(
-                                    new statements::for_itterator_directive(
-                                            inner_cap->selected_tokens.at(0).get_lit()->to_string(),
-                                            statements::type_statement(
-                                                    inner_cap->selected_tokens.at(2).get_lit()->to_string()
-                                            ),
-                                            parser(inner_cap->match_groups.at(0)).parse().at(0),
-                                            parser(cap->match_groups.at(1)).parse()
-                                    ));
+//                            statements.push_back(
+//                                    new statements::for_itterator_directive(
+//                                            inner_cap->selected_tokens.at(0).get_lit()->to_string(),
+//                                            statements::type_statement(
+//                                                    inner_cap->selected_tokens.at(2).get_lit()->to_string()
+//                                            ),
+//                                            parser(inner_cap->match_groups.at(0)).parse().at(0),
+//                                            parser(cap->match_groups.at(1)).parse()
+//                                    ));
                             break;
                         }
                         std::cout << "Bad for loop" << std::endl;

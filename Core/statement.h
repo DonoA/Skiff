@@ -38,17 +38,16 @@ namespace skiff
         class type_statement : public statement
         {
         public:
-            type_statement() : type_statement("") { };
-            explicit type_statement(std::string name) : type_statement(name, std::vector<type_statement>())
-            { }
-            type_statement(std::string name, std::vector<type_statement> generic_types) :
-                    name(name), generic_types(generic_types) { };
+            type_statement() : name(new statement("")), generic_types(std::vector<type_statement>()), extends(nullptr) { };
+            type_statement(statement * name, std::vector<type_statement> generic_types, type_statement * extends) :
+                    name(name), generic_types(generic_types), extends(extends) { };
             std::string get_name();
             std::string parse_string() override;
             environment::skiff_class * eval_class(environment::scope * env);
         private:
-            std::string name;
+            statement * name;
             std::vector<type_statement> generic_types;
+            type_statement * extends;
         };
 
         class value : public statement
@@ -59,7 +58,7 @@ namespace skiff
             std::string parse_string() override;
         private:
             std::string val;
-            type_statement typ;
+//            type_statement typ;
         };
 
         class variable : public statement
@@ -162,11 +161,12 @@ namespace skiff
         class function_call : public statement
         {
         public:
-            function_call(statement * name, std::vector<statement *> params);
+            function_call(type_statement name, std::vector<statement *> params) :
+                    name(name), params(params) { };
             std::string parse_string() override;
             environment::skiff_object eval(environment::scope * env) override;
         private:
-            statement * name;
+            type_statement name;
             std::vector<statement *> params;
         };
 
