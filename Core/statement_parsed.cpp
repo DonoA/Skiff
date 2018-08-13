@@ -213,9 +213,19 @@ namespace skiff
             return skiff_object();
         }
 
+        std::string block_heading::parse_body() {
+            string bdy = "{\n";
+            for(statement * s : body)
+            {
+                bdy += s->parse_string() + "\n";
+            }
+            bdy += "}";
+            return bdy;
+        }
+
         string if_directive::parse_string()
         {
-            return "If(" + condition->parse_string() + ")";
+            return "If(" + condition->parse_string() + ")" + parse_body();
         }
 
         class_heading::class_heading(class_heading::class_type type, string name) :
@@ -302,13 +312,7 @@ namespace skiff
             params_rtn += ")";
             string heading = "FunctionHeading(" + name + ", " + params_rtn +
                              ", Returns(" + returns.parse_string() + "))";
-            string bdy = "{\n";
-            for(statement * s : body)
-            {
-                bdy += s->parse_string() + "\n";
-            }
-            bdy += "}";
-            return heading + bdy;
+            return heading + parse_body();
         }
 
         string function_definition::function_parameter_sig(function_parameter p)
@@ -614,7 +618,7 @@ namespace skiff
         {
             if (generic_types.empty())
             {
-                return "TypeClass(" + name->parse_string() + ")";
+                return "TypeClass(" + name + ")";
             }
             string params_rtn = "Generics(";
             bool any = false;
@@ -627,13 +631,9 @@ namespace skiff
             {
                 params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
             }
-            return "TypeClass(" + name->parse_string() + ", " + params_rtn + "))";
+            return "TypeClass(" + name + ", " + params_rtn + "))";
         }
 
-        skiff_class * type_statement::eval_class(scope * env)
-        {
-            // this is a quick fix
-            return env->get_type(name->parse_string());
-        }
+
     }
 }

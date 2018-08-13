@@ -26,7 +26,7 @@ namespace skiff
         {
             T * t = (T *) malloc(sizeof(T));
             (*t) = val;
-            return t;
+            return (void *) t;
         }
     }
 }

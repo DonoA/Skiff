@@ -11,12 +11,15 @@ static const skiff::builtin::type type_by_id[] = {
 };
 
 static const std::map<skiff::builtin::type, std::string> name_by_type = {
-	{ skiff::builtin::type::Char, "Char" },
-	{ skiff::builtin::type::Int, "Int" },
-	{ skiff::builtin::type::Long, "Long" },
-	{ skiff::builtin::type::Float, "Float" },
-	{ skiff::builtin::type::Double, "Double" },
-	{ skiff::builtin::type::String, "String" }
+    { skiff::builtin::type::Class, "skiff.lang.Class" },
+
+    { skiff::builtin::type::None, "skiff.lang.None" },
+	{ skiff::builtin::type::Char, "skiff.lang.Char" },
+	{ skiff::builtin::type::Int, "skiff.lang.Int" },
+	{ skiff::builtin::type::Long, "skiff.lang.Long" },
+	{ skiff::builtin::type::Float, "skiff.lang.Float" },
+	{ skiff::builtin::type::Double, "skiff.lang.Double" },
+	{ skiff::builtin::type::String, "skiff.lang.String" }
 };
 
 static const std::map<skiff::builtin::type, std::string> cname_by_type = {
@@ -47,7 +50,7 @@ namespace skiff
 			{
 				return cname_by_type.at(nt);
 			}
-			return "None";
+			return builtin::get_name_for(builtin::type::None);
 		}
 
 		type get_type_for(size_t id)
@@ -77,7 +80,7 @@ namespace skiff
 			{
 				return name_by_type.at(nt);
 			}
-			return "None";
+			return builtin::get_name_for(builtin::type::None);
 		}
 
 		namespace generator
@@ -91,29 +94,31 @@ namespace skiff
 
 				skiff_object clone(vector<skiff_object> params, scope * env)
 				{
-					string * s = new string(*(std::string *)params[0].get_value()->get_value());
-					return skiff_object(new skiff_value((void *) s), params[0].get_class());
+					string * s = new string(*(std::string *)params[0].get_value());
+					return skiff_object((void *) s, params[0].get_class());
 				}
 			}
 		}
 
 		namespace load
 		{
-			skiff_class define_string_builtins(scope * env)
+			skiff_class * define_string_builtins(scope * env)
 			{
-				skiff_class t = skiff_class("String");
-				t.add_operator(string(1, '+'), skiff_function("add", env, 
+				skiff_class * t = new skiff_class(builtin::get_name_for(builtin::type::String));
+				t->add_operator(string(1, '+'), skiff_function("add", env,
 					skiff::builtin::generator::create_add<string>()));
-				t.get_scope()->define_function("to_string", skiff_function("to_string", env,
+				t->get_scope()->define_function("to_string", new skiff_function("to_string", env,
 					new environment::skiff_func_sig(&skiff::builtin::generator::strings::to_string)));
-				t.get_scope()->define_function("clone", skiff_function("clone", env,
+				t->get_scope()->define_function("clone", new skiff_function("clone", env,
 					new environment::skiff_func_sig(&skiff::builtin::generator::strings::clone)));
 				return t;
 			}
 
 			void load_standards(scope * env)
 			{
-				env->define_type(builtin::get_name_for(builtin::type::Char), 
+                env->define_class_type(new skiff_class(builtin::get_name_for(builtin::type::Class)));
+
+                env->define_type(builtin::get_name_for(builtin::type::Char),
 					define_native_fixpoint_builtins<char>(env, builtin::type::Char));
 				env->define_type(builtin::get_name_for(builtin::type::Int), 
 					define_native_fixpoint_builtins<int>(env, builtin::type::Int));

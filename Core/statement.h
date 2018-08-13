@@ -4,7 +4,7 @@
 #include <map>
 #include <queue>
 #include <stack>
-#include "types.h"
+#include "evaluated_types.h"
 
 namespace skiff
 {
@@ -38,14 +38,13 @@ namespace skiff
         class type_statement : public statement
         {
         public:
-            type_statement() : name(new statement("")), generic_types(std::vector<type_statement>()), extends(nullptr) { };
-            type_statement(statement * name, std::vector<type_statement> generic_types, type_statement * extends) :
+            type_statement() : name(""), generic_types(std::vector<type_statement>()), extends(nullptr) { };
+            type_statement(std::string name, std::vector<type_statement> generic_types, type_statement * extends) :
                     name(name), generic_types(generic_types), extends(extends) { };
-            std::string get_name();
             std::string parse_string() override;
-            environment::skiff_class * eval_class(environment::scope * env);
+            environment::skiff_object eval(environment::scope * env);
         private:
-            statement * name;
+            std::string name;
             std::vector<type_statement> generic_types;
             type_statement * extends;
         };
@@ -181,6 +180,7 @@ namespace skiff
             std::string parse_string() override = 0;
         protected:
             std::vector<statement *> body;
+            std::string parse_body();
         };
 
         class flow_statement : public statement

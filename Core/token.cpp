@@ -68,7 +68,7 @@ namespace skiff
         string selectKeyword(string seq, size_t * i) {
             size_t start_i = *i;
             while(*i < seq.length() &&
-                  (isChar(seq.at(*i)) || isDigit(seq.at(*i)) || isUnderscore(seq.at(*i)))) (*i)++;
+                  (isChar(seq.at(*i)) || isDigit(seq.at(*i)) || isUnderscore(seq.at(*i)) || isDot(seq.at(*i)))) (*i)++;
             (*i)--;
             return seq.substr(start_i, (*i + 1) - start_i);
         }
@@ -108,7 +108,6 @@ namespace skiff
                     case '}': tokens.push_back(token(token_type::RIGHT_BRACE, nullptr, line_id, col)); break;
                     case '[': tokens.push_back(token(token_type::LEFT_BRACKET, nullptr, line_id, col)); break;
                     case ']': tokens.push_back(token(token_type::RIGHT_BRACKET, nullptr, line_id, col)); break;
-                    case '.': tokens.push_back(token(token_type::DOT, nullptr, line_id, col)); break;
                     case '~': tokens.push_back(token(token_type::BIT_NOT, nullptr, line_id, col)); break;
                     
                     case ' ':

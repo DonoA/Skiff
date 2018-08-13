@@ -21,43 +21,20 @@ namespace skiff
 
 		using skiff_func_sig = std::function<skiff_object(std::vector<skiff_object>,scope *)>;
 
-		class skiff_value
-		{
-		public:
-			skiff_value() : skiff_value(nullptr) { };
-			skiff_value(void * v);
-			~skiff_value();
-			void set_value(void * v);
-			void * get_value();
-		protected:
-			void * value;
-		};
-
-		template<class T>
-		class skiff_native_value : public skiff_value {
-		public:
-			skiff_native_value(T v);
-			void set_value(T v);
-			T get_value();
-		private:
-			T v;
-		};
-
 		class skiff_object
 		{
 		public:
 			skiff_object() : skiff_object(nullptr, nullptr) { }
-			skiff_object(skiff_value * str, skiff_class * type);
+			skiff_object(void * str, skiff_class * type);
 
 			skiff_class * get_class();
 			void set_class(skiff_class * clazz);
 			std::string to_string();
-			skiff_value * get_value();
-			void set_value(skiff_value * v);
-			void update_value(void * v);
+			void * get_value();
+			void set_value(void * v);
 		private:
 			skiff_class * type;
-			skiff_value * value;
+			void * value;
 		};
 
 		class skiff_function
@@ -82,7 +59,6 @@ namespace skiff
 			std::string name;
 			std::vector<function_parameter> params;
 			skiff_class * returns;
-			//std::vector<statements::statement *> statements;
 			skiff_func_sig * builtin;
 		};
 
@@ -115,18 +91,20 @@ namespace skiff
 			scope(scope * inherit);
 			void define_variable(std::string name, skiff_object val);
 			skiff_object get_variable(std::string name);
-			void define_type(std::string name, skiff_class cls);
+			void define_type(std::string name, skiff_class * cls);
 			skiff_class * get_type(std::string name);
-			void define_function(std::string name, skiff_function func);
-			skiff_function get_function(std::string name);
+			void define_class_type(skiff_class * cls);
+			skiff_class * get_class_type();
+			void define_function(std::string name, skiff_function * func);
+			skiff_function * get_function(std::string name);
 
 			void print_debug();
 			std::string get_debug_string();
 		private:
 			std::map<std::string, skiff_object> env;
 			scope * inherit;
-			std::map<std::string, skiff_class> known_types;
-			std::map<std::string, skiff_function> known_functions;
+//			std::map<std::string, skiff_class> known_types;
+//			std::map<std::string, skiff_function> known_functions;
 		};
 	}
 }

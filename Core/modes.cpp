@@ -48,7 +48,7 @@ namespace skiff
             }
         }
 
-        queue<statement *> parse_file(string infile, bool debug)
+        vector<statement *> parse_file(string infile, bool debug)
         {
             std::fstream fin(infile, std::fstream::in);
             char c = '\0';
@@ -87,9 +87,8 @@ namespace skiff
             // 	utils::track_braces(input.length() == 0 ? '\0' : input[input.length() - 1], c,
             // 		&braces);
             // }
-            queue<statement *> stmts;
             // stmts.push(blocks.top());
-            return stmts;
+            return statements;
         }
 
         void print_parse(queue<statement *> statements)
@@ -128,12 +127,10 @@ namespace skiff
             }
         }
 
-        void evaluate(scope * env, queue<statement *> statements)
+        void evaluate(scope * env, vector<statement *> statements)
         {
-            while (!statements.empty())
+            for(statement * s : statements)
             {
-                statement * s = statements.front();
-                statements.pop();
                 s->eval(env);
             }
         }

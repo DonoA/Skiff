@@ -343,7 +343,7 @@ namespace skiff
             tkns = cap->match_groups.at(0);
         }
 
-        statements::type_statement stmt = statements::type_statement(parser(tkns).parse().at(0), generic_types, nullptr);
+        statements::type_statement stmt = statements::type_statement(tkns.at(0).get_lit()->to_string(), generic_types, nullptr);
 
         return stmt;
     }
