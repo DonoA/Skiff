@@ -26,35 +26,32 @@ namespace skiff
 		}
 
 		environment::skiff_object type_statement::eval(environment::scope *env) {
-			return skiff_object(env->get_type(this->name), env->get_type("skiff.lang.Class"));
+			return skiff_object((void *) env->get_type(this->name), env->get_type("skiff.lang.Class"));
 		}
 
 		skiff_object value::eval(scope * env)
 		{
             if (!val.empty() && val.find_first_not_of("0123456789") == std::string::npos)
 		    {
-                void * v = ::skiff::utils::allocate(atoi(val.c_str()));
-			    return skiff_object(v, env->get_type("skiff.lang.Int"));
+			    return skiff_object(atoi(val.c_str()), env->get_type("skiff.lang.Int"));
 		    }
 		    else if (!val.empty() && val.find_first_not_of("0123456789.") == std::string::npos)
 		    {
-                void * v = ::skiff::utils::allocate(atof(val.c_str()));
-			    return skiff_object(v, env->get_type("skiff.lang.Double"));
+			    return skiff_object(atof(val.c_str()), env->get_type("skiff.lang.Double"));
 		    }
 		    else if (!val.empty() && val[0] == '"' && val[val.length() - 1] == '"')
             {
-                void * s = (void *) new string(val.substr(1, val.length() - 2));
-                return skiff_object(s, env->get_type("skiff.lang.String"));
+                return skiff_object(string(val.substr(1, val.length() - 2)), env->get_type("skiff.lang.String"));
             }
             else if (!val.empty() && val[0] == '\'' && val[val.length() - 1] == '\'')
             {
-                return skiff_object((void *) new string(val), env->get_type("skiff.lang.Sequence"));
+                return skiff_object(string(val), env->get_type("skiff.lang.Sequence"));
             }
             else if (!val.empty() && (val == "true" || val == "false"))
             {
                 bool b;
 				b = val == "true";
-                return skiff_object(::skiff::utils::allocate(b), env->get_type("skiff.lang.Boolean"));
+                return skiff_object(b, env->get_type("skiff.lang.Boolean"));
             }
             return skiff_object();
         }
@@ -62,7 +59,8 @@ namespace skiff
         skiff_object assignment::eval(environment::scope * env)
         {
             skiff_object obj = name->eval(env);
-//            obj.update_value(val->eval(env).get_value()->get_value());
+
+//            obj.set_value(val->eval(env).get);
             return obj;
         }
 
@@ -96,6 +94,7 @@ namespace skiff
 //                skiff_object(new skiff_value((void *) clazz), nullptr)
 //            };
 //			return clazz->invoke_operator(string(1, op), p);
+			return skiff_object();
 		}
 
         skiff_class * math_statement::get_dominant_class(skiff_object s1, skiff_object s2)
@@ -118,7 +117,7 @@ namespace skiff
 //						return s2.get_class();
 //					}
 //				}
-//				return nullptr;
+			return nullptr;
         }
 
 		skiff_object function_call::eval(scope * env)
@@ -141,7 +140,7 @@ namespace skiff
 
 		skiff_object variable::eval(environment::scope * env)
 		{
-//			return env->get_variable(name);
+			return env->get_variable(name);
 		}
 
 		skiff_object self_modifier::eval(environment::scope * env)
@@ -168,8 +167,9 @@ namespace skiff
 
 		environment::skiff_object declaration_with_assignment::eval(environment::scope * env)
 		{
-			skiff_class * clazz = (skiff_class *) type.eval(env).get_value();
-			env->define_variable(name, value->eval(env));
+			skiff_object obj = type.eval(env);
+			skiff_class * clazz = (skiff_class *) type.eval(env).get_raw_value();
+			env->set_variable(name, value->eval(env));
 			return environment::skiff_object();
 		}
 

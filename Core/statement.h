@@ -42,7 +42,7 @@ namespace skiff
             type_statement(std::string name, std::vector<type_statement> generic_types, type_statement * extends) :
                     name(name), generic_types(generic_types), extends(extends) { };
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env);
+            environment::skiff_object eval(environment::scope * env) override;
         private:
             std::string name;
             std::vector<type_statement> generic_types;

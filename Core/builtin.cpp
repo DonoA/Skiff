@@ -12,6 +12,7 @@ static const skiff::builtin::type type_by_id[] = {
 
 static const std::map<skiff::builtin::type, std::string> name_by_type = {
     { skiff::builtin::type::Class, "skiff.lang.Class" },
+    { skiff::builtin::type::Function, "skiff.lang.Function" },
 
     { skiff::builtin::type::None, "skiff.lang.None" },
 	{ skiff::builtin::type::Char, "skiff.lang.Char" },
@@ -94,8 +95,7 @@ namespace skiff
 
 				skiff_object clone(vector<skiff_object> params, scope * env)
 				{
-					string * s = new string(*(std::string *)params[0].get_value());
-					return skiff_object((void *) s, params[0].get_class());
+					return skiff_object(string(*(std::string *)params[0].get_value()->get_value()), params[0].get_class());
 				}
 			}
 		}
@@ -117,6 +117,8 @@ namespace skiff
 			void load_standards(scope * env)
 			{
                 env->define_class_type(new skiff_class(builtin::get_name_for(builtin::type::Class)));
+                env->define_type(builtin::get_name_for(builtin::type::Function),
+                                 new skiff_class(builtin::get_name_for(builtin::type::Function)));
 
                 env->define_type(builtin::get_name_for(builtin::type::Char),
 					define_native_fixpoint_builtins<char>(env, builtin::type::Char));

@@ -14,10 +14,7 @@ namespace skiff
 {
 	namespace modes
 	{
-		void interactive_mode();
-		std::vector<statements::statement *> parse_file(std::string infile, bool debug);
-		void print_parse(std::queue<statements::statement *> statements);
-		void translate_c(std::queue<statements::statement *> statements);
+		std::vector<statements::statement *> parse_file(std::string infile);
 		void evaluate(environment::scope * env, std::vector<statements::statement *> statements);
 	}
 }

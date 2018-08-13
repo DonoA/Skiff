@@ -18,15 +18,15 @@ namespace skiff
 
         std::vector<std::string> braced_split(std::string list, char del);
 
-        template<class T>
-        void * allocate(T val);
-
-        template<class T>
-        void * allocate(T val)
-        {
-            T * t = (T *) malloc(sizeof(T));
-            (*t) = val;
-            return (void *) t;
-        }
+//        template<class T>
+//        void * allocate(T val);
+//
+//        template<class T>
+//        void * allocate(T val)
+//        {
+//            T * t = (T *) malloc(sizeof(T));
+//            (*t) = val;
+//            return (void *) t;
+//        }
     }
 }

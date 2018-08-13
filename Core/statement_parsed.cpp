@@ -74,7 +74,7 @@ namespace skiff
             return "Variable(" + name + ")";
         }
 
-        assignment::assignment(statement * name, statement * value)
+        assignment::assignment(statement * name, statement *value)
         {
             this->name = name;
             this->val = value;

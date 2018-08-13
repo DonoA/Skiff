@@ -197,6 +197,7 @@ namespace skiff
                 ))
                 {
                     match->match_groups.push_back(rules.at(rule_pos).value.cap);
+                    rules.at(rule_pos).value.cap = vector<token>();
                     rule_pos++;
                 }
                 else if(braces.empty() && (rules.at(rule_pos + 1).type == parse_pattern_type::TERMINATE &&
@@ -208,6 +209,7 @@ namespace skiff
                     match->captured++;
                     i++;
                     match->match_groups.push_back(rules.at(rule_pos).value.cap);
+                    rules.at(rule_pos).value.cap = vector<token>();
                     rule_pos++;
                 }
                 else if(rules.at(rule_pos).value.multimatch.empty() ||

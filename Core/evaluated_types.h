@@ -21,21 +21,76 @@ namespace skiff
 
 		using skiff_func_sig = std::function<skiff_object(std::vector<skiff_object>,scope *)>;
 
-		class skiff_object
+		class skiff_value
+        {
+        public:
+            skiff_value(void * val, skiff_class * clazz);
+            template<class T>
+            skiff_value(T val, skiff_class * clazz);
+
+            void set_value(void * val);
+            void * get_value();
+
+            skiff_class * get_class();
+
+            template<class T>
+            T get_value_as();
+        private:
+            void * value;
+            skiff_class * clazz;
+        };
+
+        template<class T>
+        skiff_value::skiff_value(T val, skiff_class *clazz) {
+            T * t = (T *) malloc(sizeof(T));
+            (*t) = val;
+            this->value = (void *) t;
+            this->clazz = clazz;
+        }
+
+        template<class T>
+        T skiff_value::get_value_as() {
+            T * t = (T *) this->get_value();
+            return *t;
+        }
+
+        class skiff_object
 		{
 		public:
-			skiff_object() : skiff_object(nullptr, nullptr) { }
-			skiff_object(void * str, skiff_class * type);
+			skiff_object();
+            skiff_object(skiff_class * type);
+            skiff_object(void * val, skiff_class * clazz);
+
+            //            template<class T>
+//            skiff_object(T * val, skiff_class * clazz);
+            template<class T>
+            skiff_object(T val, skiff_class * clazz);
 
 			skiff_class * get_class();
 			void set_class(skiff_class * clazz);
 			std::string to_string();
-			void * get_value();
-			void set_value(void * v);
+			skiff_value * get_value();
+            void * get_raw_value();
+            void set_value(skiff_value *);
+
+            template<class T>
+            T get_value_as();
 		private:
 			skiff_class * type;
-			void * value;
+			skiff_value * value;
 		};
+
+        template<class T>
+        T skiff_object::get_value_as() {
+            T * v = (T *) this->value->get_value();
+            return *v;
+        }
+
+        template<class T>
+        skiff_object::skiff_object(T val, skiff_class *clazz) {
+            this->value = new skiff_value(val, clazz);
+            this->type = clazz;
+        }
 
 		class skiff_function
 		{
@@ -89,7 +144,7 @@ namespace skiff
 		public:
 			scope() : scope(nullptr) { };
 			scope(scope * inherit);
-			void define_variable(std::string name, skiff_object val);
+			void set_variable(std::string name, skiff_object val);
 			skiff_object get_variable(std::string name);
 			void define_type(std::string name, skiff_class * cls);
 			skiff_class * get_type(std::string name);
