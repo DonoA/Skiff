@@ -31,6 +31,7 @@ namespace skiff
             void set_value(void * val);
             void * get_value();
 
+            void set_class(skiff_class * clazz);
             skiff_class * get_class();
 
             template<class T>

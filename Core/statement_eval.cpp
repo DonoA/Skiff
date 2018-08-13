@@ -59,8 +59,9 @@ namespace skiff
         skiff_object assignment::eval(environment::scope * env)
         {
             skiff_object obj = name->eval(env);
-
-//            obj.set_value(val->eval(env).get);
+            skiff_object new_obj = val->eval(env);
+            obj.get_value()->set_value(new_obj.get_raw_value());
+			obj.get_value()->set_class(new_obj.get_value()->get_class());
             return obj;
         }
 

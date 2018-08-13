@@ -36,6 +36,10 @@ namespace skiff
             return this->value;
         }
 
+        void skiff_value::set_class(skiff_class *clazz) {
+            this->clazz = clazz;
+        }
+
 //        skiff_object::xskiff_object(skiff_value * val, skiff_class * type)
 //		{
 //			this->type = type;
@@ -209,13 +213,13 @@ namespace skiff
 			string rtn = "";
 			for(map<string, skiff_object>::iterator it = env.begin(); it != env.end(); ++it) {
 				string str;
-				skiff_function * to_string = it->second.get_class()->get_scope()->get_function("to_string");
+				skiff_function * to_string = it->second.get_value()->get_class()->get_scope()->get_function("to_string");
 				if(to_string != nullptr) {
 				    str = to_string->eval(it->second).get_value_as<string>();
 				} else {
 				    str = it->second.to_string();
 				}
-				rtn += it->first + ": " + it->second.get_class()->get_name() + " = " + str + ";\n";
+				rtn += it->first + ": " + it->second.get_class()->get_name() + " = " + str + " (" + it->second.get_value()->get_class()->get_name() + ");\n";
 			}
 			return rtn;
 		}

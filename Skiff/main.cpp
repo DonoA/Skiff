@@ -25,7 +25,7 @@ int main(int argc, char * argv[])
 
 	skiff::modes::evaluate(&env, test_statements);
 	std::cout << "=== Ending Scope ===" << std::endl;
-	double * a = (double *) env.get_variable("a").get_raw_value();
+	void * a = (void *) env.get_variable("a").get_raw_value();
 	std::cout << env.get_debug_string() << std::endl;
 #if (defined (_WIN32) || defined (_WIN64))
 	system("pause");
