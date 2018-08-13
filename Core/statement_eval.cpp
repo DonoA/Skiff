@@ -47,14 +47,12 @@ namespace skiff
             {
                 return skiff_object(string(val), env->get_type("skiff.lang.Sequence"));
             }
-            else if (!val.empty() && (val == "true" || val == "false"))
-            {
-                bool b;
-				b = val == "true";
-                return skiff_object(b, env->get_type("skiff.lang.Boolean"));
-            }
             return skiff_object();
         }
+
+		environment::skiff_object boolean_value::eval(environment::scope *env) {
+			return skiff_object(val, env->get_type("skiff.lang.Boolean"));
+		}
 
         skiff_object assignment::eval(environment::scope * env)
         {

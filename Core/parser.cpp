@@ -553,6 +553,10 @@ namespace skiff
         parse_pattern LITERAL =
                 parse_pattern(token_type::LITERAL).terminate(token_type::SEMICOLON);
 
+        parse_pattern BOOLEAN_LITERAL =
+                parse_pattern(parse_pattern_logic(token_type::TRU).maybe(token_type::FALS), parse_pattern_type::MULTIMATCH)
+                        .terminate(token_type::SEMICOLON);
+
         parse_pattern VARIABLE =
                 parse_pattern(token_type::NAME).terminate(token_type::SEMICOLON);
 
@@ -937,6 +941,17 @@ namespace skiff
                 statements.push_back(
                         new statements::value(
                                 cap->selected_tokens.at(0).get_lit()->to_string()
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = BOOLEAN_LITERAL.match(pos, stmt);
+            if(cap)
+            {
+                statements.push_back(
+                        new statements::boolean_value(
+                                cap->selected_tokens.at(0).get_type() == token_type::TRU
                         ));
                 pos += cap->captured + 1;
                 continue;

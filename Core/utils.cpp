@@ -50,8 +50,6 @@ namespace skiff
             return rtn;
         }
 
-
-
         void check_back_brace(char op, stack<char> * braces)
         {
             if (braces->empty() || braces->top() != op)

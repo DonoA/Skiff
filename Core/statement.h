@@ -60,6 +60,16 @@ namespace skiff
 //            type_statement typ;
         };
 
+        class boolean_value : public statement
+        {
+        public:
+            explicit boolean_value(bool val) : val(val) { };
+            environment::skiff_object eval(environment::scope * env) override;
+            std::string parse_string() override;
+        private:
+            bool val;
+        };
+
         class variable : public statement
         {
         public:

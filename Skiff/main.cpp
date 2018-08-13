@@ -2,11 +2,9 @@
 #include <iostream>
 #include <string>
 #include "evaluated_types.h"
-#include "../Core/statement.h"
-#include "../Core/parser.h"
-#include "../Core/utils.h"
-#include "../Core/builtin.h"
-#include "../Core/modes.h"
+#include "statement.h"
+#include "builtin.h"
+#include "modes.h"
 
 int main(int argc, char * argv[])
 {
@@ -25,7 +23,7 @@ int main(int argc, char * argv[])
 
 	skiff::modes::evaluate(&env, test_statements);
 	std::cout << "=== Ending Scope ===" << std::endl;
-	void * a = (void *) env.get_variable("a").get_raw_value();
+	skiff::environment::skiff_object a = env.get_variable("a");
 	std::cout << env.get_debug_string() << std::endl;
 #if (defined (_WIN32) || defined (_WIN64))
 	system("pause");

@@ -204,14 +204,14 @@ namespace skiff
 		void scope::print_debug()
 		{
 			std::cout << "== Known Variables ==" << std::endl;
-			for(map<string, skiff_object>::iterator it = env.begin(); it != env.end(); ++it) {
+			for(auto it = env.begin(); it != env.end(); ++it) {
 				std::cout << it->first << std::endl;
 			}
 		}
 		string scope::get_debug_string()
 		{
 			string rtn = "";
-			for(map<string, skiff_object>::iterator it = env.begin(); it != env.end(); ++it) {
+			for(auto it = env.begin(); it != env.end(); ++it) {
 				string str;
 				skiff_function * to_string = it->second.get_value()->get_class()->get_scope()->get_function("to_string");
 				if(to_string != nullptr) {

@@ -20,7 +20,8 @@ static const std::map<skiff::builtin::type, std::string> name_by_type = {
 	{ skiff::builtin::type::Long, "skiff.lang.Long" },
 	{ skiff::builtin::type::Float, "skiff.lang.Float" },
 	{ skiff::builtin::type::Double, "skiff.lang.Double" },
-	{ skiff::builtin::type::String, "skiff.lang.String" }
+	{ skiff::builtin::type::String, "skiff.lang.String" },
+    { skiff::builtin::type::Boolean, "skiff.lang.Boolean" }
 };
 
 static const std::map<skiff::builtin::type, std::string> cname_by_type = {
@@ -126,12 +127,15 @@ namespace skiff
 					define_native_fixpoint_builtins<int>(env, builtin::type::Int));
 				env->define_type(builtin::get_name_for(builtin::type::Long), 
 					define_native_fixpoint_builtins<long>(env, builtin::type::Long));
-				env->define_type(builtin::get_name_for(builtin::type::Float), 
-					define_native_builtins<float>(env, builtin::type::Float));
-				env->define_type(builtin::get_name_for(builtin::type::Double), 
-					define_native_builtins<double>(env, builtin::type::Double));
+				env->define_type(builtin::get_name_for(builtin::type::Float),
+                     define_native_number_builtins<float>(env, builtin::type::Float));
+				env->define_type(builtin::get_name_for(builtin::type::Double),
+                     define_native_number_builtins<double>(env, builtin::type::Double));
 				env->define_type(builtin::get_name_for(builtin::type::String), 
 					define_string_builtins(env));
+
+                env->define_type(builtin::get_name_for(builtin::type::Boolean),
+                                 define_native_builtins<bool>(env, builtin::type::Boolean));
 			}
 		}
 

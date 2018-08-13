@@ -634,6 +634,10 @@ namespace skiff
             return "TypeClass(" + name + ", " + params_rtn + "))";
         }
 
+        std::string boolean_value::parse_string() {
+            return "BooleanValue(" + string(val ? "true" : "false") + ")";
+        }
+
 
     }
 }
