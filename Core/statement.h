@@ -432,7 +432,7 @@ namespace skiff
             function_definition(std::string name, std::vector<function_parameter> params,
                 type_statement returns, std::vector<statement *> body) : block_heading(body),
                 name(name), params(params), returns(returns) { };
-            std::string parse_string();
+            std::string parse_string() override;
         private:
             std::string name;
             std::vector<function_parameter> params;
@@ -440,6 +440,30 @@ namespace skiff
             std::string function_parameter_sig(function_parameter);
             std::string function_parameter_c_sig(function_parameter);
         };
+
+        class extern_function_definition : public statement
+        {
+        public:
+            struct function_parameter
+            {
+                function_parameter(std::string name, type_statement typ)
+                {
+                    this->name = name;
+                    this->typ = typ;
+                }
+                type_statement typ;
+                std::string name;
+            };
+            extern_function_definition(std::string name, std::vector<function_parameter> params,
+                                type_statement returns) : name(name), params(params), returns(returns) { };
+            std::string parse_string() override;
+        private:
+            std::string name;
+            std::vector<function_parameter> params;
+            type_statement returns;
+            std::string function_parameter_sig(function_parameter);
+        };
+
 
         class comparison : public statement
         {

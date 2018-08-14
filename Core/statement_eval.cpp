@@ -17,8 +17,9 @@ namespace skiff
 		using ::skiff::environment::skiff_function;
 		using ::skiff::environment::scope;
         using ::skiff::environment::skiff_value;
+		using ::skiff::environment::builtin_operation;
 
-        // It might be worth adding a flag for things that can be deallocated immediately
+		// It might be worth adding a flag for things that can be deallocated immediately
 
 		skiff_object statement::eval(scope * env)
 		{
@@ -58,8 +59,12 @@ namespace skiff
         {
             skiff_object obj = name->eval(env);
             skiff_object new_obj = val->eval(env);
+
+            obj.get_class()
+
             obj.get_value()->set_value(new_obj.get_raw_value());
 			obj.get_value()->set_class(new_obj.get_value()->get_class());
+
             return obj;
         }
 
@@ -144,24 +149,31 @@ namespace skiff
 
 		skiff_object self_modifier::eval(environment::scope * env)
 		{
-//			skiff_object obj = on->eval(env);
-//			vector<skiff_object> params = {
-//				obj,
-//				skiff_object(new skiff_value(::skiff::utils::allocate(1)), env->get_type("Int")),
-//                skiff_object(new skiff_value(obj.get_class()), nullptr)
-//			};
-//
-//			// this was not the intent for this function, it should be fixed to match the design doc
-//			if(type == PLUS)
-//			{
-//				obj.get_class()->invoke_operator(std::string(1, '+'), params);
-//			}
-//			else
-//			{
-//				obj.get_class()->invoke_operator(std::string(1, '-'), params);
-//			}
-//
-//			return obj;
+			skiff_object obj = on->eval(env);
+			vector<skiff_object> p = {
+					obj
+			};
+			skiff_value * return_obj_value = new skiff_value(obj.get_raw_value(), obj.get_class());
+			switch(this->type)
+			{
+				case modifier_type::PLUS:
+					obj.get_value()->set_value(
+							obj.get_value_class()->invoke_operator(builtin_operation::INC, p).get_raw_value()
+					);
+					break;
+				case modifier_type::MINUS:
+					obj.get_value()->set_value(
+							obj.get_value_class()->invoke_operator(builtin_operation::DEC, p).get_raw_value()
+					);
+					break;
+			}
+			if(this->time == modifier_time::POST) {
+				delete return_obj_value;
+				return_obj_value = new skiff_value(obj.get_raw_value(), obj.get_class());
+			}
+			skiff_object rtn_obj = skiff_object(obj.get_class());
+			rtn_obj.set_value(return_obj_value);
+			return rtn_obj;
 		}
 
 		environment::skiff_object declaration_with_assignment::eval(environment::scope * env)
@@ -205,62 +217,45 @@ namespace skiff
 
 		skiff_object comparison::eval(environment::scope * env)
 		{
-//			skiff_object o1 = s1->eval(env);
-//			skiff_object o2 = s2->eval(env);
-//			vector<skiff_object> p = {
-//				o1, o2
-//			};
-//			switch (typ)
-//			{
-//			case EQUAL:
-//				return o1.get_class()->invoke_operator("==", p);
-//			case NOT_EQUAL:
-//			{
-//				skiff_object res = o1.get_class()->invoke_operator("==", p);
-//				bool * b = (bool *) res.get_value()->get_value();
-//				*b = !(*b);
-//				return res;
-//			}
-//			case LESS_THAN:
-//				return o1.get_class()->invoke_operator("<", p);;
-//			case LESS_THAN_EQUAL_TO:
-//			{
-//				skiff_object lt = o1.get_class()->invoke_operator("<", p);
-//				skiff_object et = o1.get_class()->invoke_operator("==", p);
-//				bool * lt_b = (bool *) lt.get_value()->get_value();
-//				bool * et_b = (bool *) et.get_value()->get_value();
-//
-//				*lt_b = (*lt_b) || (*et_b);
-//
-//				return lt;
-//			}
-//			case GREATER_THAN:
-//				return o1.get_class()->invoke_operator(">", p);
-//			case GREATER_THAN_EQUAL_TO:
-//			{
-//				skiff_object gt = o1.get_class()->invoke_operator(">", p);
-//				skiff_object et = o1.get_class()->invoke_operator("==", p);
-//				bool * gt_b = (bool *) gt.get_value()->get_value();
-//				bool * et_b = (bool *) et.get_value()->get_value();
-//
-//				*gt_b = (*gt_b) || (*et_b);
-//
-//				return gt;
-//			}
-//			}
-			return skiff_object();
+			skiff_object o1 = s1->eval(env);
+			skiff_object o2 = s2->eval(env);
+			vector<skiff_object> p = {
+				o1, o2
+			};
+			switch (typ) {
+				case EQUAL:
+					return o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+				case NOT_EQUAL: {
+					skiff_object res = o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+					bool *b = (bool *) res.get_raw_value();
+					*b = !(*b);
+					return res;
+				}
+				case LESS_THAN:
+					return o1.get_value_class()->invoke_operator(builtin_operation::LESS, p);
+				case LESS_THAN_EQUAL_TO: {
+					skiff_object lt = o1.get_value_class()->invoke_operator(builtin_operation::LESS, p);
+					skiff_object et = o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+					bool lt_b = lt.get_value_as<bool>();
+					bool et_b = et.get_value_as<bool>();
+
+					bool lt_e = lt_b || et_b;
+
+					return skiff_object(lt_e, env->get_type("skiff.lang.Boolean"));
+				}
+				case GREATER_THAN:
+					return o1.get_value_class()->invoke_operator(builtin_operation::GREATER, p);
+				case GREATER_THAN_EQUAL_TO: {
+					skiff_object gt = o1.get_value_class()->invoke_operator(builtin_operation::GREATER, p);
+					skiff_object et = o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+					bool gt_b = gt.get_value_as<bool>();
+					bool et_b = et.get_value_as<bool>();
+
+					bool gt_e = gt_b || et_b;
+
+					return skiff_object(gt_e, env->get_type("skiff.lang.Boolean"));
+				}
+			}
 		}
-
-//		skiff_object braced_block::eval(scope * env)
-//		{
-//			while(!this->stmts.empty())
-//			{
-//				stmts.front()->eval(env);
-//				stmts.pop();
-//			}
-//			return skiff_object();
-//		}
-
     }
-
 }

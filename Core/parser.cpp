@@ -411,6 +411,10 @@ namespace skiff
                         .then(token_type::RIGHT_PAREN).then(token_type::COLON).then(token_type::NAME)
                         .then(token_type::LEFT_BRACE).capture().then(token_type::RIGHT_BRACE);
 
+        parse_pattern EXTERN_FUNCTION_DEF =
+                parse_pattern(token_type::EXTERN).then(token_type::DEF).then(token_type::NAME).capture().then(token_type::LEFT_PAREN).capture()
+                        .then(token_type::RIGHT_PAREN).then(token_type::COLON).then(token_type::NAME).then(token_type::SEMICOLON);
+
         parse_pattern CLASS_DEF =
                 parse_pattern(parse_pattern_logic(token_type::CLASS).maybe(token_type::STRUCT), parse_pattern_type::MULTIMATCH)
                         .then(token_type::NAME).capture().then(token_type::LEFT_BRACE).capture()
@@ -468,6 +472,13 @@ namespace skiff
                 parse_pattern().then(
                         parse_pattern_logic(token_type::PLUS).maybe(token_type::MINUS)
                 ).capture().terminate(token_type::SEMICOLON);
+
+        parse_pattern PRE_DEC =
+                parse_pattern(parse_pattern_logic(token_type::INC).maybe(token_type::DEC), parse_pattern_type::MULTIMATCH)
+                        .capture().terminate(token_type::SEMICOLON);
+
+        parse_pattern POST_DEC =
+                parse_pattern().then(parse_pattern_logic(token_type::INC).maybe(token_type::DEC)).terminate(token_type::SEMICOLON);
 
         parse_pattern FLOW_CONTROL =
                 parse_pattern(parse_pattern_logic(token_type::BREAK).maybe(token_type::NEXT), parse_pattern_type::MULTIMATCH)
@@ -614,6 +625,19 @@ namespace skiff
 //                                        cap->selected_tokens.at(5).get_lit()->to_string()
 //                                ),
 //                                parser(cap->match_groups.at(2)).parse()
+//                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = EXTERN_FUNCTION_DEF.match(pos, stmt);
+            if(cap)
+            {
+//                statements.push_back(
+//                        new statements::extern_function_definition(
+//                                cap->selected_tokens.at(1).get_lit()->to_string(),
+//                                parse_function_params(cap->match_groups.at(1)),
+//                                parse_type_call(cap->match_groups.at(0))
 //                        ));
                 pos += cap->captured + 1;
                 continue;
@@ -919,6 +943,56 @@ namespace skiff
                                 parser(cap->match_groups.at(0)).parse().at(0),
                                 op,
                                 parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = PRE_DEC.match(pos, stmt);
+            if(cap) {
+                statements::self_modifier::modifier_type op;
+                switch (cap->selected_tokens.at(0).get_type()) {
+                    case token_type::INC:
+                        op = statements::self_modifier::modifier_type::PLUS;
+                        break;
+                    case token_type::DEC:
+                        op = statements::self_modifier::modifier_type::MINUS;
+                        break;
+                    default:
+                        std::cout << "Bad symbol for self mod" << std::endl;
+                        break;
+                }
+
+                statements.push_back(
+                        new statements::self_modifier(
+                                op,
+                                statements::self_modifier::modifier_time::PRE,
+                                parser(cap->match_groups.at(0)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = POST_DEC.match(pos, stmt);
+            if(cap) {
+                statements::self_modifier::modifier_type op;
+                switch (cap->selected_tokens.at(0).get_type()) {
+                    case token_type::INC:
+                        op = statements::self_modifier::modifier_type::PLUS;
+                        break;
+                    case token_type::DEC:
+                        op = statements::self_modifier::modifier_type::MINUS;
+                        break;
+                    default:
+                        std::cout << "Bad symbol for self mod" << std::endl;
+                        break;
+                }
+
+                statements.push_back(
+                        new statements::self_modifier(
+                                op,
+                                statements::self_modifier::modifier_time::POST,
+                                parser(cap->match_groups.at(0)).parse().at(0)
                         ));
                 pos += cap->captured + 1;
                 continue;

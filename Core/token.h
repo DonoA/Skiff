@@ -30,7 +30,7 @@ namespace skiff {
             // KEYWORDS
             STRUCT, PUBLIC, PRIVATE, STATIC, FINAL, MATCH, SWITCH, CASE, NEXT, 
             BREAK, THROW, IF, ELSE, WHILE, FOR, TRY, CATCH, FINALLY, THROWS, RETURN, ANNOTATION,
-            NEW, CLASS, DEF, AT, ENUM, SUPER, THIS, IMPORT, NAME,
+            NEW, CLASS, DEF, AT, ENUM, SUPER, THIS, IMPORT, NAME, EXTERN,
 
             FILEEND,
         };

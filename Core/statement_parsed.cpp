@@ -639,5 +639,27 @@ namespace skiff
         }
 
 
+        std::string extern_function_definition::parse_string() {
+            string params_rtn = "Params(";
+            bool any = false;
+            for (function_parameter p : params)
+            {
+                params_rtn += function_parameter_sig(p) + ",";
+                any = true;
+            }
+            if (any)
+            {
+                params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
+            }
+            params_rtn += ")";
+            string heading = "ExternalFunctionHeading(" + name + ", " + params_rtn +
+                             ", Returns(" + returns.parse_string() + "))";
+            return heading;
+        }
+
+        std::string extern_function_definition::function_parameter_sig(extern_function_definition::function_parameter p)
+        {
+            return "Param(" + p.name + +"," + p.typ.parse_string() + ")";
+        }
     }
 }

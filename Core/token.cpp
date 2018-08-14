@@ -509,6 +509,10 @@ namespace skiff
                             {
                                 tokens.push_back(token(token_type::NONE, nullptr, line_id, start_i));
                             }
+                            else if(kw == "extern")
+                            {
+                                tokens.push_back(token(token_type::EXTERN, nullptr, line_id, start_i));
+                            }
                             else if(kw == "r")
                             {
                                 tokens.push_back(token(token_type::R, nullptr, line_id, start_i));

@@ -21,6 +21,8 @@ namespace skiff
 
 		using skiff_func_sig = std::function<skiff_object(std::vector<skiff_object>,scope *)>;
 
+		enum builtin_operation { ADD, SUB, MUL, DIV, EXP, MOD, EQUAL, LESS, GREATER, INC, DEC };
+
 		class skiff_value
         {
         public:
@@ -36,6 +38,9 @@ namespace skiff
 
             template<class T>
             T get_value_as();
+
+            skiff_object invoke(std::string name, std::vector<skiff_object> params);
+//            skiff_object invoke(std::string name, std::vector<skiff_object> params);
         private:
             void * value;
             skiff_class * clazz;
@@ -62,8 +67,6 @@ namespace skiff
             skiff_object(skiff_class * type);
             skiff_object(void * val, skiff_class * clazz);
 
-            //            template<class T>
-//            skiff_object(T * val, skiff_class * clazz);
             template<class T>
             skiff_object(T val, skiff_class * clazz);
 
@@ -73,6 +76,7 @@ namespace skiff
 			skiff_value * get_value();
             void * get_raw_value();
             void set_value(skiff_value *);
+            skiff_class * get_value_class();
 
             template<class T>
             T get_value_as();
@@ -121,14 +125,16 @@ namespace skiff
 		class skiff_class
 		{
 		public:
-			skiff_class() : skiff_class("") { }
-			skiff_class(std::string name) : skiff_class(name, nullptr) { }
-			skiff_class(std::string name, skiff_class * parent);
+			skiff_class(std::string name) : skiff_class(name, false, nullptr) { }
+            skiff_class(std::string name, skiff_class * parent);
+            skiff_class(std::string name, bool isval, skiff_class * parent);
 			scope * get_scope();
 			std::string get_name();
 
-			void add_operator(std::string key, skiff_function op);
-			skiff_object invoke_operator(std::string op, std::vector<skiff_object> params);
+			void add_operator(builtin_operation key, skiff_function op);
+			skiff_object invoke_operator(builtin_operation op, std::vector<skiff_object> params);
+
+			bool is_val();
 			
 			void add_constructor(skiff_function constructor_);
 			skiff_object construct(std::vector<skiff_object> params);
@@ -136,8 +142,9 @@ namespace skiff
 			std::string name;
 			skiff_class * parent;
 			scope * class_env;
+			bool isval;
 			skiff_function constructor;
-			std::map<std::string, skiff_function> ops;
+			std::map<builtin_operation, skiff_function> ops;
 		};
 
 		class scope
@@ -147,8 +154,12 @@ namespace skiff
 			scope(scope * inherit);
 			void set_variable(std::string name, skiff_object val);
 			skiff_object get_variable(std::string name);
-			void define_type(std::string name, skiff_class * cls);
+
+            void define_struct(std::string name, skiff_class * cls);
+			void define_class(std::string name, skiff_class * cls);
+
 			skiff_class * get_type(std::string name);
+
 			void define_class_type(skiff_class * cls);
 			skiff_class * get_class_type();
 			void define_function(std::string name, skiff_function * func);
@@ -159,8 +170,6 @@ namespace skiff
 		private:
 			std::map<std::string, skiff_object> env;
 			scope * inherit;
-//			std::map<std::string, skiff_class> known_types;
-//			std::map<std::string, skiff_function> known_functions;
 		};
 	}
 }

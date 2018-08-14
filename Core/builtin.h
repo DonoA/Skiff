@@ -11,7 +11,7 @@ namespace skiff
 {
 	namespace builtin
 	{
-		enum type { Int, Float, Double, Char, Long, String, Boolean, None, Class, Function };
+		enum type { Int, Float, Double, Char, Long, String, Boolean, None, Class, Struct, Function, Any };
 		type get_type_for(size_t id);
 		size_t get_id_for(type nt);
 		std::string get_name_for(type nt);
@@ -119,9 +119,7 @@ namespace skiff
 				return new environment::skiff_func_sig(
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
-					T n1 = *((T *)params[0].get_value()->get_value());
-					return environment::skiff_object(params[0].get_value_as<T>() + 1,
-						(environment::skiff_class *) params[1].get_value()->get_value());
+					return environment::skiff_object(params[0].get_value_as<T>() + 1, params[0].get_class());
 				});
 			}
 
@@ -132,8 +130,7 @@ namespace skiff
 						[](std::vector<environment::skiff_object> params, environment::scope * env)
 				{
 					T n1 = *((T *)params[0].get_value()->get_value());
-					return environment::skiff_object(params[0].get_value_as<T>() - 1,
-						(environment::skiff_class *) params[1].get_value()->get_value());
+					return environment::skiff_object(params[0].get_value_as<T>() - 1, params[0].get_class());
 				});
 			}
 
@@ -222,18 +219,18 @@ namespace skiff
 			{
                 environment::skiff_class * t = define_native_builtins<T>(env, nt);
 
-                t->add_operator(std::string(1, '+'), environment::skiff_function("add", env,
+                t->add_operator(environment::builtin_operation::ADD, environment::skiff_function("add", env,
 					generator::create_add<T>()));
-				t->add_operator(std::string(1, '-'), environment::skiff_function("sub", env,
+				t->add_operator(environment::builtin_operation::SUB, environment::skiff_function("sub", env,
 					generator::create_sub<T>()));
-				t->add_operator(std::string(1, '*'), environment::skiff_function("mul", env,
+				t->add_operator(environment::builtin_operation::MUL, environment::skiff_function("mul", env,
 					generator::create_mul<T>()));
-				t->add_operator(std::string(1, '/'), environment::skiff_function("div", env,
+				t->add_operator(environment::builtin_operation::DIV, environment::skiff_function("div", env,
 					generator::create_div<T>()));
 
-				t->add_operator("++", environment::skiff_function("inc", env,
+				t->add_operator(environment::builtin_operation::INC, environment::skiff_function("inc", env,
 					generator::create_incriment<T>()));
-				t->add_operator("--", environment::skiff_function("dec", env,
+				t->add_operator(environment::builtin_operation::DEC, environment::skiff_function("dec", env,
 					generator::create_decriment<T>()));
 
 				return t;
@@ -245,7 +242,7 @@ namespace skiff
 			{
 				environment::skiff_class * t = define_native_number_builtins<T>(env, nt);
 
-				t->add_operator(std::string(1, '%'), environment::skiff_function("mod", env,
+				t->add_operator(environment::builtin_operation::MOD, environment::skiff_function("mod", env,
 					generator::create_mod<T>()));
 
 				return t;
@@ -255,11 +252,11 @@ namespace skiff
             environment::skiff_class *define_native_builtins(environment::scope *env, builtin::type nt) {
                 environment::skiff_class * t = new environment::skiff_class(builtin::get_name_for(nt));
 
-                t->add_operator("==", environment::skiff_function("equals", env,
+                t->add_operator(environment::builtin_operation::EQUAL, environment::skiff_function("equals", env,
                                                                   generator::create_equals<T>()));
-                t->add_operator(">", environment::skiff_function("gt", env,
+                t->add_operator(environment::builtin_operation::GREATER, environment::skiff_function("gt", env,
                                                                  generator::create_greater_than<T>()));
-                t->add_operator("<", environment::skiff_function("lt", env,
+                t->add_operator(environment::builtin_operation::LESS, environment::skiff_function("lt", env,
                                                                  generator::create_less_than<T>()));
 
                 t->get_scope()->define_function("to_string", new environment::skiff_function("to_string", env,
