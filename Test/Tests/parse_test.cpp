@@ -18,89 +18,89 @@ using namespace skiff::statements;
 
 namespace Test
 {
-	TEST_CLASS(Parsing, 3)
-	{
-		TEST_METHOD(Declaration)
-		{
-			// Decleration(x,TypeClass(Int))
-			statement * s, *p;
+    TEST_CLASS(Parsing, 3)
+    {
+        TEST_METHOD(Declaration)
+        {
+            // Decleration(x,TypeClass(Int))
+            statement *s, *p;
 
-			s = parser(tokenize("x: Int")).parse().at(0);
-			p = new declaration("x", type_statement("Int"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("x: Int")).parse().at(0);
+            p = new declaration("x", type_statement("Int"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
 //			s = parser(tokenize("x: List<Type>");
 //			vector<type_statement> et;
 //			et.push_back(type_statement("Type"));
 //			p = new declaration("x", type_statement("List", et));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(Assignment)
-		{
-			// Assignment(Statement(x),Value(5))
-			statement * s = parser(tokenize("x = 5")).parse().at(0);
-			statement * p = new assignment(
-				new variable("x"), new value("5"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        TEST_METHOD(Assignment)
+        {
+            // Assignment(Statement(x),Value(5))
+            statement *s = parser(tokenize("x = 5")).parse().at(0);
+            statement *p = new assignment(
+                    new variable("x"), new value("5"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-		TEST_METHOD(AssignmentAndDeclaration)
-		{
-			// DeclareAndAssign(Statement(x), TypeClass(Int), Value(5))
-			statement * s, *p;
+        TEST_METHOD(AssignmentAndDeclaration)
+        {
+            // DeclareAndAssign(Statement(x), TypeClass(Int), Value(5))
+            statement *s, *p;
 
-			s = parser(tokenize("x: Int = 5")).parse().at(0);
-			p = new declaration_with_assignment(
-				"x", type_statement("Int"),
-				new value("5"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-
-			s = parser(tokenize("x: List<Type> = new List<Type>()")).parse().at(0);
-			vector<type_statement> et;
-			et.push_back(type_statement("Type"));
-			p = new declaration_with_assignment(
-				"x", type_statement("List", et),
-				new new_object_statement(
-					type_statement("List", et),
-					vector<statement *>()));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
-
-		TEST_METHOD(FunctionCall)
-		{
-			statement * s, *p;
-			vector<statement *> params;
-
-			// FunctionCall(test, Params())
-			s = parser(tokenize("test()")).parse().at(0);
-			p = new function_call(new variable("test"), vector<statement *>());
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("x: Int = 5")).parse().at(0);
+            p = new declaration_with_assignment(
+                    "x", type_statement("Int"),
+                    new value("5"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
-			// FunctionCall(test, Params(Value("Hello World")))
-			s = parser(tokenize("test(\"Hello World\")")).parse().at(0);
-			params = {
-				new value("\"Hello World\"")
-			};
-			p = new function_call(new variable("test"), params);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("x: List<Type> = new List<Type>()")).parse().at(0);
+            vector<type_statement> et;
+            et.push_back(type_statement("Type"));
+            p = new declaration_with_assignment(
+                    "x", type_statement("List", et),
+                    new new_object_statement(
+                            type_statement("List", et),
+                            vector<statement *>()));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
+
+        TEST_METHOD(FunctionCall)
+        {
+            statement *s, *p;
+            vector<statement *> params;
+
+            // FunctionCall(test, Params())
+            s = parser(tokenize("test()")).parse().at(0);
+            p = new function_call(new variable("test"), vector<statement *>());
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
-			// FunctionCall(test, Params(Value("Hello World"),Value(15),Statement(x)))
-			s = parser(tokenize("test(\"Hello World\", 15, x)")).parse().at(0);
-			params = {
-				new value("\"Hello World\""),
-				new value("15"),
-				new variable("x")
-			};
-			p = new function_call(new variable("test"), params);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            // FunctionCall(test, Params(Value("Hello World")))
+            s = parser(tokenize("test(\"Hello World\")")).parse().at(0);
+            params = {
+                    new value("\"Hello World\"")
+            };
+            p = new function_call(new variable("test"), params);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-		TEST_METHOD(FunctionDef)
-		{
+
+            // FunctionCall(test, Params(Value("Hello World"),Value(15),Statement(x)))
+            s = parser(tokenize("test(\"Hello World\", 15, x)")).parse().at(0);
+            params = {
+                    new value("\"Hello World\""),
+                    new value("15"),
+                    new variable("x")
+            };
+            p = new function_call(new variable("test"), params);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
+
+        TEST_METHOD(FunctionDef)
+        {
 //			statement * s, *p;
 //			vector<function_heading::function_parameter> params;
 //
@@ -138,251 +138,251 @@ namespace Test
 //			p = new function_heading("test", params,
 //				type_statement(""));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(ClassDef)
-		{
-			statement * s, *p;
-			vector<class_heading::heading_generic> gt;
+        TEST_METHOD(ClassDef)
+        {
+            statement *s, *p;
+            vector<class_heading::heading_generic> gt;
 
-			s = parser(tokenize("class Test")).parse().at(0);
-			p = new class_heading(
-				class_heading::class_type::CLASS, "Test");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("class Test")).parse().at(0);
+            p = new class_heading(
+                    class_heading::class_type::CLASS, "Test");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("class Test<T>")).parse().at(0);
-			gt.push_back(
-				class_heading::generate_generic_heading("T",
-					type_statement("")));
-			p = new class_heading(
-				class_heading::class_type::CLASS, "Test", gt);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("class Test<T>")).parse().at(0);
+            gt.push_back(
+                    class_heading::generate_generic_heading("T",
+                                                            type_statement("")));
+            p = new class_heading(
+                    class_heading::class_type::CLASS, "Test", gt);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("class Test<T> : Parent")).parse().at(0);
-			gt = vector<class_heading::heading_generic>();
-			gt.push_back(
-				class_heading::generate_generic_heading("T",
-					type_statement("")));
-			p = new class_heading(
-				class_heading::class_type::CLASS, "Test", gt,
-				type_statement("Parent"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("class Test<T> : Parent")).parse().at(0);
+            gt = vector<class_heading::heading_generic>();
+            gt.push_back(
+                    class_heading::generate_generic_heading("T",
+                                                            type_statement("")));
+            p = new class_heading(
+                    class_heading::class_type::CLASS, "Test", gt,
+                    type_statement("Parent"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("class Test<T:Extends> : Parent")).parse().at(0);
-			gt = vector<class_heading::heading_generic>();
-			gt.push_back(
-				class_heading::generate_generic_heading("T",
-					type_statement("Extends")));
-			p = new class_heading(
-				class_heading::class_type::CLASS, "Test", gt,
-				type_statement("Parent"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            s = parser(tokenize("class Test<T:Extends> : Parent")).parse().at(0);
+            gt = vector<class_heading::heading_generic>();
+            gt.push_back(
+                    class_heading::generate_generic_heading("T",
+                                                            type_statement("Extends")));
+            p = new class_heading(
+                    class_heading::class_type::CLASS, "Test", gt,
+                    type_statement("Parent"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-		TEST_METHOD(StructDef)
-		{
-			statement * s, *p;
-			vector<class_heading::heading_generic> gt;
+        TEST_METHOD(StructDef)
+        {
+            statement *s, *p;
+            vector<class_heading::heading_generic> gt;
 
-			s = parser(tokenize("struct Test")).parse().at(0);
-			p = new class_heading(
-				class_heading::class_type::STRUCT, "Test");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("struct Test")).parse().at(0);
+            p = new class_heading(
+                    class_heading::class_type::STRUCT, "Test");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("struct Test<T>")).parse().at(0);
-			gt.push_back(
-				class_heading::generate_generic_heading("T",
-					type_statement("")));
-			p = new class_heading(
-				class_heading::class_type::STRUCT, "Test", gt);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("struct Test<T>")).parse().at(0);
+            gt.push_back(
+                    class_heading::generate_generic_heading("T",
+                                                            type_statement("")));
+            p = new class_heading(
+                    class_heading::class_type::STRUCT, "Test", gt);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("struct Test<T> : Parent")).parse().at(0);
-			gt = vector<class_heading::heading_generic>();
-			gt.push_back(
-				class_heading::generate_generic_heading("T",
-					type_statement("")));
-			p = new class_heading(
-				class_heading::class_type::STRUCT, "Test", gt,
-				type_statement("Parent"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("struct Test<T> : Parent")).parse().at(0);
+            gt = vector<class_heading::heading_generic>();
+            gt.push_back(
+                    class_heading::generate_generic_heading("T",
+                                                            type_statement("")));
+            p = new class_heading(
+                    class_heading::class_type::STRUCT, "Test", gt,
+                    type_statement("Parent"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("struct Test<T:Extends> : Parent")).parse().at(0);
-			gt = vector<class_heading::heading_generic>();
-			gt.push_back(
-				class_heading::generate_generic_heading("T",
-					type_statement("Extends")));
-			p = new class_heading(
-				class_heading::class_type::STRUCT, "Test", gt,
-				type_statement("Parent"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            s = parser(tokenize("struct Test<T:Extends> : Parent")).parse().at(0);
+            gt = vector<class_heading::heading_generic>();
+            gt.push_back(
+                    class_heading::generate_generic_heading("T",
+                                                            type_statement("Extends")));
+            p = new class_heading(
+                    class_heading::class_type::STRUCT, "Test", gt,
+                    type_statement("Parent"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-		TEST_METHOD(InstanceClass)
-		{
-			statement * s, *p;
-			vector<statement *> params;
+        TEST_METHOD(InstanceClass)
+        {
+            statement *s, *p;
+            vector<statement *> params;
 
-			s = parser(tokenize("new Test()")).parse().at(0);
-			p = new new_object_statement(type_statement("Test"),
-				vector<statement *>());
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-
-			s = parser(tokenize("new Test(x)")).parse().at(0);
-			params = {
-				new variable("x")
-			};
-			p = new new_object_statement(type_statement("Test"),
-				params);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("new Test()")).parse().at(0);
+            p = new new_object_statement(type_statement("Test"),
+                                         vector<statement *>());
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
-			s = parser(tokenize("new Test(5, x)")).parse().at(0);
-			params = {
-				new value("5"),
-				new variable("x")
-			};
-			p = new new_object_statement(type_statement("Test"),
-				params);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
-
-		TEST_METHOD(ReturnStatement)
-		{
-			statement * s = parser(tokenize("return x")).parse().at(0);
-			statement * p = new return_statement(
-				new variable("x"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
-
-		TEST_METHOD(Literals)
-		{
-			statement * s, *p;
-			s = parser(tokenize("\"Hello, World!\"")).parse().at(0);
-			p = new value("\"Hello, World!\"");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("'Hello, World!'")).parse().at(0);
-			p = new value("'Hello, World!'");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("true")).parse().at(0);
-			p = new value("true");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("false")).parse().at(0);
-			p = new value("false");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("5")).parse().at(0);
-			p = new value("5");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("5.5")).parse().at(0);
-			p = new value("5.5");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
-
-		TEST_METHOD(Bitwise)
-		{
-			statement * s, *p;
-
-			s = parser(tokenize("x & y")).parse().at(0);
-			p = new bitwise(new variable("x"),
-				bitwise::operation::AND, new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("x | y")).parse().at(0);
-			p = new bitwise(new variable("x"),
-				bitwise::operation::OR, new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("x ^ y")).parse().at(0);
-			p = new bitwise(new variable("x"),
-				bitwise::operation::XOR, new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("x << 5")).parse().at(0);
-			p = new bitwise(new variable("x"),
-				bitwise::operation::SHIFT_LEFT, new value("5"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("x >> 5")).parse().at(0);
-			p = new bitwise(new variable("x"),
-				bitwise::operation::SHIFT_RIGHT, new value("5"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("~x")).parse().at(0);
-			p = new bitinvert(new variable("x"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
-
-		TEST_METHOD(BooleanOperations)
-		{
-			statement * s, *p;
-
-			s = parser(tokenize("x && y")).parse().at(0);
-			p = new boolean_conjunction(new variable("x"),
-				boolean_conjunction::conjunction_type::AND,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("x || y")).parse().at(0);
-			p = new boolean_conjunction(new variable("x"),
-				boolean_conjunction::conjunction_type::AND,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-
-			s = parser(tokenize("!x")).parse().at(0);
-			p = new invert(new variable("x"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            s = parser(tokenize("new Test(x)")).parse().at(0);
+            params = {
+                    new variable("x")
+            };
+            p = new new_object_statement(type_statement("Test"),
+                                         params);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
 
-		TEST_METHOD(Comparison)
-		{
-			statement * s, *p;
+            s = parser(tokenize("new Test(5, x)")).parse().at(0);
+            params = {
+                    new value("5"),
+                    new variable("x")
+            };
+            p = new new_object_statement(type_statement("Test"),
+                                         params);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-			s = parser(tokenize("x == y")).parse().at(0);
-			p = new comparison(new variable("x"),
-				comparison::comparison_type::EQUAL,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+        TEST_METHOD(ReturnStatement)
+        {
+            statement *s = parser(tokenize("return x")).parse().at(0);
+            statement *p = new return_statement(
+                    new variable("x"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-			s = parser(tokenize("x < y")).parse().at(0);
-			p = new comparison(new variable("x"),
-				comparison::comparison_type::LESS_THAN,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+        TEST_METHOD(Literals)
+        {
+            statement *s, *p;
+            s = parser(tokenize("\"Hello, World!\"")).parse().at(0);
+            p = new value("\"Hello, World!\"");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("x > y")).parse().at(0);
-			p = new comparison(new variable("x"),
-				comparison::comparison_type::GREATER_THAN,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("'Hello, World!'")).parse().at(0);
+            p = new value("'Hello, World!'");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("x <= y")).parse().at(0);
-			p = new comparison(new variable("x"),
-				comparison::comparison_type::LESS_THAN_EQUAL_TO,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("true")).parse().at(0);
+            p = new value("true");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("x >= y")).parse().at(0);
-			p = new comparison(new variable("x"),
-				comparison::comparison_type::GREATER_THAN_EQUAL_TO,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("false")).parse().at(0);
+            p = new value("false");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("x != y")).parse().at(0);
-			p = new comparison(new variable("x"),
-				comparison::comparison_type::NOT_EQUAL,
-				new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            s = parser(tokenize("5")).parse().at(0);
+            p = new value("5");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-		TEST_METHOD(BasicMath)
-		{
+            s = parser(tokenize("5.5")).parse().at(0);
+            p = new value("5.5");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
+
+        TEST_METHOD(Bitwise)
+        {
+            statement *s, *p;
+
+            s = parser(tokenize("x & y")).parse().at(0);
+            p = new bitwise(new variable("x"),
+                            bitwise::operation::AND, new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x | y")).parse().at(0);
+            p = new bitwise(new variable("x"),
+                            bitwise::operation::OR, new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x ^ y")).parse().at(0);
+            p = new bitwise(new variable("x"),
+                            bitwise::operation::XOR, new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x << 5")).parse().at(0);
+            p = new bitwise(new variable("x"),
+                            bitwise::operation::SHIFT_LEFT, new value("5"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x >> 5")).parse().at(0);
+            p = new bitwise(new variable("x"),
+                            bitwise::operation::SHIFT_RIGHT, new value("5"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("~x")).parse().at(0);
+            p = new bitinvert(new variable("x"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
+
+        TEST_METHOD(BooleanOperations)
+        {
+            statement *s, *p;
+
+            s = parser(tokenize("x && y")).parse().at(0);
+            p = new boolean_conjunction(new variable("x"),
+                                        boolean_conjunction::conjunction_type::AND,
+                                        new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x || y")).parse().at(0);
+            p = new boolean_conjunction(new variable("x"),
+                                        boolean_conjunction::conjunction_type::AND,
+                                        new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("!x")).parse().at(0);
+            p = new invert(new variable("x"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
+
+
+        TEST_METHOD(Comparison)
+        {
+            statement *s, *p;
+
+            s = parser(tokenize("x == y")).parse().at(0);
+            p = new comparison(new variable("x"),
+                               comparison::comparison_type::EQUAL,
+                               new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x < y")).parse().at(0);
+            p = new comparison(new variable("x"),
+                               comparison::comparison_type::LESS_THAN,
+                               new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x > y")).parse().at(0);
+            p = new comparison(new variable("x"),
+                               comparison::comparison_type::GREATER_THAN,
+                               new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x <= y")).parse().at(0);
+            p = new comparison(new variable("x"),
+                               comparison::comparison_type::LESS_THAN_EQUAL_TO,
+                               new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x >= y")).parse().at(0);
+            p = new comparison(new variable("x"),
+                               comparison::comparison_type::GREATER_THAN_EQUAL_TO,
+                               new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+
+            s = parser(tokenize("x != y")).parse().at(0);
+            p = new comparison(new variable("x"),
+                               comparison::comparison_type::NOT_EQUAL,
+                               new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
+
+        TEST_METHOD(BasicMath)
+        {
 //			statement * s, *p;
 //			queue<statement *> operands;
 //			queue<char> operators;
@@ -441,28 +441,28 @@ namespace Test
 //				self_modifier::modifier_time::PRE,
 //				new variable("x"));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(ListOperations)
-		{
-			statement * s, *p;
+        TEST_METHOD(ListOperations)
+        {
+            statement *s, *p;
 
-			s = parser(tokenize("x[y]")).parse().at(0);
-			p = new list_accessor(
-				new variable("x"), new variable("y"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("x[y]")).parse().at(0);
+            p = new list_accessor(
+                    new variable("x"), new variable("y"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("x[y] = z")).parse().at(0);
-			p = new assignment(
-				new list_accessor(
-					new variable("x"),
-					new variable("y")),
-				new variable("z"));
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            s = parser(tokenize("x[y] = z")).parse().at(0);
+            p = new assignment(
+                    new list_accessor(
+                            new variable("x"),
+                            new variable("y")),
+                    new variable("z"));
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-		TEST_METHOD(IfStatement)
-		{
+        TEST_METHOD(IfStatement)
+        {
 //			statement * s, *p;
 //
 //			s = parser(tokenize("if(x)")).parse().at(0);
@@ -475,10 +475,10 @@ namespace Test
 //				comparison::comparison_type::Equal,
 //				new variable("y")));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(WhileStatement)
-		{
+        TEST_METHOD(WhileStatement)
+        {
 //			statement * s, *p;
 //
 //			s = parser(tokenize("while(x)")).parse().at(0);
@@ -491,10 +491,10 @@ namespace Test
 //				comparison::comparison_type::Equal,
 //				new variable("y")));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(ForStatement)
-		{
+        TEST_METHOD(ForStatement)
+        {
 //			statement * s, *p;
 //
 //			s = parser(tokenize("for(x: Int = 0; x < 10; x++)")).parse().at(0);
@@ -523,38 +523,38 @@ namespace Test
 //				new variable("lst")
 //			);
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(FlowControls)
-		{
-			statement * s, *p;
+        TEST_METHOD(FlowControls)
+        {
+            statement *s, *p;
 
-			s = parser(tokenize("break")).parse().at(0);
-			p = new flow_statement(
-				flow_statement::type::BREAK);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("break")).parse().at(0);
+            p = new flow_statement(
+                    flow_statement::type::BREAK);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("next")).parse().at(0);
-			p = new flow_statement(
-				flow_statement::type::NEXT);
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            s = parser(tokenize("next")).parse().at(0);
+            p = new flow_statement(
+                    flow_statement::type::NEXT);
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-		TEST_METHOD(ImportStatement)
-		{
-			statement * s, *p;
+        TEST_METHOD(ImportStatement)
+        {
+            statement *s, *p;
 
-			s = parser(tokenize("import \"localfile\"")).parse().at(0);
-			p = new import_statement("\"localfile\"");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
+            s = parser(tokenize("import \"localfile\"")).parse().at(0);
+            p = new import_statement("\"localfile\"");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
 
-			s = parser(tokenize("import <extenfile>")).parse().at(0);
-			p = new import_statement("<extenfile>");
-			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+            s = parser(tokenize("import <extenfile>")).parse().at(0);
+            p = new import_statement("<extenfile>");
+            Assert::AreEqual(p->parse_string(), s->parse_string());
+        }
 
-		TEST_METHOD(DeclarationModifiers)
-		{
+        TEST_METHOD(DeclarationModifiers)
+        {
 //			statement * s, *p;
 //
 //			s = parser(tokenize("static def test()")).parse().at(0);
@@ -598,10 +598,10 @@ namespace Test
 //					new declaration("test", type_statement("String"))
 //				));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(Annotation)
-		{
+        TEST_METHOD(Annotation)
+        {
 //			statement * s, *p;
 //			vector<statement *> anno_params;
 //			vector<function_heading::function_parameter> func_params;
@@ -675,10 +675,10 @@ namespace Test
 //				new function_heading("test", func_params,
 //					type_statement("Int")));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
+        }
 
-		TEST_METHOD(SwitchMatchHeading)
-		{
+        TEST_METHOD(SwitchMatchHeading)
+        {
 //			statement * s, *p;
 //			vector<string> struct_params;
 //
@@ -718,6 +718,6 @@ namespace Test
 //			s = parser(tokenize("case _ =>")).parse().at(0);
 //			p = new switch_case_heading(new variable("_"));
 //			Assert::AreEqual(p->parse_string(), s->parse_string());
-		}
-	};
+        }
+    };
 }

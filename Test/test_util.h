@@ -16,10 +16,11 @@ extern size_t tests_passed;
 extern size_t tests_failed;
 extern string current_test;
 
-void run_test( void (*f)(), string name);
+void run_test(void (*f)(), string name);
 
 namespace Assert
 {
     void AreEqual(string first, string second);
+
     void IsTrue(bool condition);
 }

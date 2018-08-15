@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <queue>
 #include <iostream>
@@ -25,8 +26,11 @@ namespace skiff
     {
     public:
         explicit parse_pattern_logic(token_type tkn);
+
         parse_pattern_logic maybe(token_type tkn);
+
         vector<token_type> get_rules();
+
     private:
         vector<token_type> rules;
     };
@@ -46,9 +50,13 @@ namespace skiff
     struct parse_pattern_data
     {
         parse_pattern_data();
+
         explicit parse_pattern_data(token_type tkn);
+
         explicit parse_pattern_data(vector<token> cap);
+
         explicit parse_pattern_data(vector<token_type> multimatch);
+
         token_type tkn;
         vector<token> cap;
         token_type term;
@@ -65,16 +73,26 @@ namespace skiff
     {
     public:
         explicit parse_pattern(parse_pattern_logic ppl, parse_pattern_type typ);
+
         explicit parse_pattern(token_type tkn);
+
         explicit parse_pattern();
+
         parse_pattern then(token_type tkn);
+
         parse_pattern then(parse_pattern_logic ppl);
+
         parse_pattern capture();
+
         parse_pattern capture(parse_pattern_logic ppl);
+
         parse_pattern terminate(token_type tkn);
-        parse_match * match(size_t strt, vector<token> tokens);
-        parse_match * match_with_brace_track(size_t strt, vector<token> tokens,
-                                             std::function<void(token_type, stack<token_type> *)>);
+
+        parse_match *match(size_t strt, vector<token> tokens);
+
+        parse_match *match_with_brace_track(size_t strt, vector<token> tokens,
+                                            std::function<void(token_type, stack<token_type> *)>);
+
     private:
         vector<parse_pattern_part> rules;
     };
@@ -83,14 +101,19 @@ namespace skiff
     {
     public:
         parser(vector<token> stmt);
+
         vector<statement *> parse();
+
     private:
         token peek(int i);
+
         vector<token> consume_to(token_type tkn);
+
         void expect_next(token_type tkn);
+
         vector<token> stmt;
         size_t pos;
     };
 
-    bool handle_line(std::string input, char c, std::stack<skiff::statements::braced_block *> * stmts, bool debug);
+    bool handle_line(std::string input, char c, std::stack<skiff::statements::braced_block *> *stmts, bool debug);
 }

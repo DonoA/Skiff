@@ -1,4 +1,5 @@
-import os, re
+import os
+import re
 
 test_packs = {}
 test_order = []
@@ -83,4 +84,3 @@ main_cpp.write("""
 """)
 
 main_cpp.write("}")
-

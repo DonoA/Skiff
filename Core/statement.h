@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <map>
@@ -11,9 +12,13 @@ namespace skiff
     namespace environment
     {
         class scope;
+
         class skiff_value;
+
         class skiff_object;
+
         class skiff_function;
+
         class skiff_class;
     }
 
@@ -27,10 +32,15 @@ namespace skiff
             statement() = default;
 
             explicit statement(std::string raw);
+
             virtual std::string eval_c();
-            virtual environment::skiff_object eval(environment::scope * env);
+
+            virtual environment::skiff_object eval(environment::scope *env);
+
             virtual std::string parse_string();
+
             virtual int indent_mod();
+
         private:
             std::string raw;
         };
@@ -39,22 +49,29 @@ namespace skiff
         {
         public:
             type_statement() : name(""), generic_types(std::vector<type_statement>()), extends(nullptr) { };
-            type_statement(std::string name, std::vector<type_statement> generic_types, type_statement * extends) :
+
+            type_statement(std::string name, std::vector<type_statement> generic_types, type_statement *extends) :
                     name(name), generic_types(generic_types), extends(extends) { };
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
             std::string name;
             std::vector<type_statement> generic_types;
-            type_statement * extends;
+            type_statement *extends;
         };
 
         class value : public statement
         {
         public:
             explicit value(std::string val) : val(val) { };
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
             std::string parse_string() override;
+
         private:
             std::string val;
 //            type_statement typ;
@@ -64,8 +81,11 @@ namespace skiff
         {
         public:
             explicit boolean_value(bool val) : val(val) { };
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
             std::string parse_string() override;
+
         private:
             bool val;
         };
@@ -74,8 +94,11 @@ namespace skiff
         {
         public:
             explicit variable(std::string name) : name(name) { };
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
             std::string name;
         };
@@ -83,27 +106,33 @@ namespace skiff
         class modifier_base : public statement
         {
         public:
-            explicit modifier_base(statement * on);
+            explicit modifier_base(statement *on);
+
             int indent_mod() override;
+
         protected:
-            statement * on;
+            statement *on;
         };
 
         class list_accessor : public statement
         {
         public:
-            list_accessor(statement * list, statement * index);
+            list_accessor(statement *list, statement *index);
+
             std::string parse_string() override;
+
         protected:
-            statement * list;
-            statement * index;
+            statement *list;
+            statement *index;
         };
 
         class annotation_tag : public modifier_base
         {
         public:
             annotation_tag(std::string name, std::vector<statement *> params);
+
             std::string parse_string() override;
+
         private:
             std::string name;
             std::vector<statement *> params;
@@ -112,24 +141,35 @@ namespace skiff
         class math_statement : public statement
         {
         public:
-            enum op {ADD, SUB, DIV, MUL, EXP};
-            math_statement(statement * statement1, math_statement::op op, statement * statement2) :
-                statement1(statement1), opr(op), statement2(statement2) { };
+            enum op
+            {
+                ADD, SUB, DIV, MUL, EXP
+            };
+
+            math_statement(statement *statement1, math_statement::op op, statement *statement2) :
+                    statement1(statement1), opr(op), statement2(statement2) { };
+
             std::string parse_string() override;
 //            environment::skiff_object eval(environment::scope * env) override;
         private:
-            statement * statement1;
+            statement *statement1;
             math_statement::op opr;
-            statement * statement2;
-            static environment::skiff_object eval_single_op(environment::skiff_object s1, char op, environment::skiff_object s2);
-            static environment::skiff_class * get_dominant_class(environment::skiff_object s1, environment::skiff_object s2);
+            statement *statement2;
+
+            static environment::skiff_object
+            eval_single_op(environment::skiff_object s1, char op, environment::skiff_object s2);
+
+            static environment::skiff_class *
+            get_dominant_class(environment::skiff_object s1, environment::skiff_object s2);
         };
 
         class compund_statement : public statement
         {
         public:
             explicit compund_statement(std::vector<statement *> operations);
+
             std::string parse_string() override;
+
         private:
             std::vector<statement *> operations;
         };
@@ -137,19 +177,24 @@ namespace skiff
         class assignment : public statement
         {
         public:
-            assignment(statement * name, statement * value);
+            assignment(statement *name, statement *value);
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
-            statement * name;
-            statement * val;
+            statement *name;
+            statement *val;
         };
 
         class declaration : public statement
         {
         public:
             declaration(std::string name, type_statement type);
+
             std::string parse_string() override;
+
         private:
             std::string name;
             type_statement type;
@@ -158,13 +203,16 @@ namespace skiff
         class declaration_with_assignment : public statement
         {
         public:
-            declaration_with_assignment(std::string name, type_statement type, statement * val);
+            declaration_with_assignment(std::string name, type_statement type, statement *val);
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
             std::string name;
             type_statement type;
-            statement * value;
+            statement *value;
         };
 
         class function_call : public statement
@@ -172,8 +220,11 @@ namespace skiff
         public:
             function_call(type_statement name, std::vector<statement *> params) :
                     name(name), params(params) { };
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
             type_statement name;
             std::vector<statement *> params;
@@ -185,21 +236,33 @@ namespace skiff
             block_heading() = default;
 
             explicit block_heading(std::vector<statement *> body) : body(body) { };
+
             std::string eval_c() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
             std::string parse_string() override = 0;
+
         protected:
             std::vector<statement *> body;
+
             std::string parse_body();
-            void eval_body(environment::scope * env);
+
+            void eval_body(environment::scope *env);
         };
 
         class flow_statement : public statement
         {
         public:
-            enum type { BREAK, NEXT };
+            enum type
+            {
+                BREAK, NEXT
+            };
+
             explicit flow_statement(type typ);
+
             std::string parse_string() override;
+
         private:
             flow_statement::type typ;
         };
@@ -207,7 +270,8 @@ namespace skiff
         class else_directive : public block_heading
         {
         public:
-            explicit else_directive(std::vector<statement *> body) : block_heading(body) {};
+            explicit else_directive(std::vector<statement *> body) : block_heading(body) { };
+
             std::string parse_string() override;
 //            environment::skiff_object eval(environment::scope * env) override;
         };
@@ -215,93 +279,115 @@ namespace skiff
         class if_directive : public block_heading
         {
         public:
-            explicit if_directive(statement * condition, std::vector<statement *> body) :
-                    block_heading(body), condition(condition) {};
+            explicit if_directive(statement *condition, std::vector<statement *> body) :
+                    block_heading(body), condition(condition) { };
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
-            statement * condition;
+            statement *condition;
         };
 
         class try_directive : public block_heading
         {
         public:
-            explicit try_directive(std::vector<statement *> body) : block_heading(body) {};
+            explicit try_directive(std::vector<statement *> body) : block_heading(body) { };
+
             std::string parse_string() override;
         };
 
         class finally_directive : public block_heading
         {
         public:
-            explicit finally_directive(std::vector<statement *> body) : block_heading(body) {};
+            explicit finally_directive(std::vector<statement *> body) : block_heading(body) { };
+
             std::string parse_string() override;
         };
 
         class catch_directive : public block_heading
         {
         public:
-            explicit catch_directive(statement * var, std::vector<statement *> body) :
-                    block_heading(body), var(var) {};
+            explicit catch_directive(statement *var, std::vector<statement *> body) :
+                    block_heading(body), var(var) { };
+
             std::string parse_string() override;
+
         private:
-            statement * var;
+            statement *var;
         };
 
         class for_classic_directive : public block_heading
         {
         public:
-            for_classic_directive(statement * init, statement * condition, statement * tick,
-                                std::vector<statement *> body) : block_heading(body),
-                    init(init), condition(condition), tick(tick) {};
+            for_classic_directive(statement *init, statement *condition, statement *tick,
+                                  std::vector<statement *> body) : block_heading(body),
+                                                                   init(init), condition(condition), tick(tick) { };
+
             std::string parse_string() override;
+
         private:
-            statement * init;
-            statement * condition;
-            statement * tick;
+            statement *init;
+            statement *condition;
+            statement *tick;
         };
 
         class for_itterator_directive : public block_heading
         {
         public:
-            for_itterator_directive(std::string val, type_statement type, statement * list, std::vector<statement *> body) :
-                    block_heading(body), val(val), type(type), list(list) {};
+            for_itterator_directive(std::string val, type_statement type, statement *list,
+                                    std::vector<statement *> body) :
+                    block_heading(body), val(val), type(type), list(list) { };
+
             std::string parse_string() override;
+
         private:
             std::string val;
             type_statement type;
-            statement * list;
+            statement *list;
         };
 
         class while_directive : public block_heading
         {
         public:
-            explicit while_directive(statement * condition, std::vector<statement *> body) :
+            explicit while_directive(statement *condition, std::vector<statement *> body) :
                     block_heading(body), condition(condition) { };
+
             std::string parse_string() override;
+
         private:
-            statement * condition;
+            statement *condition;
         };
 
         class switch_directive : public block_heading
         {
         public:
-            enum type { SWITCH, MATCH };
-            switch_directive(switch_directive::type typ, statement * on,
-                           std::vector<statement *> body) : block_heading(body), typ(typ), on(on) {};
+            enum type
+            {
+                SWITCH, MATCH
+            };
+
+            switch_directive(switch_directive::type typ, statement *on,
+                             std::vector<statement *> body) : block_heading(body), typ(typ), on(on) { };
+
             std::string parse_string() override;
+
         private:
             switch_directive::type typ;
-            statement * on;
+            statement *on;
         };
 
         class switch_case_directive : public block_heading
         {
         public:
-            explicit switch_case_directive(statement * val, std::vector<statement *> body) :
-                    block_heading(body), val(val) {};
+            explicit switch_case_directive(statement *val, std::vector<statement *> body) :
+                    block_heading(body), val(val) { };
+
             std::string parse_string() override;
+
         private:
-            statement * val;
+            statement *val;
         };
 
         class match_case_directive : public block_heading
@@ -312,6 +398,7 @@ namespace skiff
 //            match_case_directive(std::string name, type_statement t,
 //                std::vector<std::string> struct_vals) : block_heading();
             std::string parse_string() override;
+
         private:
             std::string name;
             type_statement t;
@@ -321,23 +408,34 @@ namespace skiff
         class class_heading : public block_heading
         {
         public:
-            enum class_type { CLASS, STRUCT, ANNOTATION };
+            enum class_type
+            {
+                CLASS, STRUCT, ANNOTATION
+            };
             struct heading_generic
             {
                 std::string t_name;
                 type_statement extends;
             };
+
             class_heading(class_heading::class_type type, std::string name);
+
             class_heading(class_heading::class_type type, std::string name,
-                std::vector<heading_generic> generic_types);
+                          std::vector<heading_generic> generic_types);
+
             class_heading(class_heading::class_type type, std::string name,
-                type_statement extends);
+                          type_statement extends);
+
             class_heading(class_heading::class_type type, std::string name,
-                std::vector<heading_generic> generic_types, type_statement extends);
+                          std::vector<heading_generic> generic_types, type_statement extends);
+
             std::string parse_string() override;
+
             std::string get_name();
+
             static class_heading::heading_generic generate_generic_heading(std::string t_name,
-                type_statement extends);
+                                                                           type_statement extends);
+
         private:
             std::string name;
             class_heading::class_type type;
@@ -349,19 +447,28 @@ namespace skiff
         {
         public:
             explicit enum_heading(std::string name);
-            enum_heading(std::string name, class_heading * basetype);
+
+            enum_heading(std::string name, class_heading *basetype);
+
             std::string parse_string() override;
+
         private:
             std::string name;
-            statement * basetype;
+            statement *basetype;
         };
 
         class modifier : public modifier_base
         {
         public:
-            enum modifier_type { STATIC, PRIVATE };
-            modifier(modifier::modifier_type type, statement * modof);
+            enum modifier_type
+            {
+                STATIC, PRIVATE
+            };
+
+            modifier(modifier::modifier_type type, statement *modof);
+
             std::string parse_string() override;
+
         private:
             modifier::modifier_type type;
         };
@@ -369,12 +476,22 @@ namespace skiff
         class self_modifier : public modifier_base
         {
         public:
-            enum modifier_type { PLUS, MINUS };
-            enum modifier_time { PRE, POST };
+            enum modifier_type
+            {
+                PLUS, MINUS
+            };
+            enum modifier_time
+            {
+                PRE, POST
+            };
+
             self_modifier(self_modifier::modifier_type type,
-                self_modifier::modifier_time time, statement * on);
+                          self_modifier::modifier_time time, statement *on);
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
             self_modifier::modifier_type type;
             self_modifier::modifier_time time;
@@ -383,17 +500,21 @@ namespace skiff
         class return_statement : public statement
         {
         public:
-            explicit return_statement(statement * returns);
+            explicit return_statement(statement *returns);
+
             std::string parse_string() override;
+
         private:
-            statement * returns;
+            statement *returns;
         };
 
         class import_statement : public statement
         {
         public:
             explicit import_statement(std::string import_name);
+
             std::string parse_string() override;
+
         private:
             std::string import_name;
         };
@@ -401,17 +522,21 @@ namespace skiff
         class throw_statement : public statement
         {
         public:
-            explicit throw_statement(statement * throws);
+            explicit throw_statement(statement *throws);
+
             std::string parse_string() override;
+
         private:
-            statement * throws;
+            statement *throws;
         };
 
         class new_object_statement : public statement
         {
         public:
             new_object_statement(type_statement type, std::vector<statement *> params);
+
             std::string parse_string() override;
+
         private:
             type_statement type;
             std::vector<statement *> params;
@@ -427,18 +552,25 @@ namespace skiff
                     this->name = name;
                     this->typ = typ;
                 }
+
                 type_statement typ;
                 std::string name;
             };
+
             function_definition(std::string name, std::vector<function_parameter> params,
-                type_statement returns, std::vector<statement *> body) : block_heading(body),
-                name(name), params(params), returns(returns) { };
+                                type_statement returns, std::vector<statement *> body) : block_heading(body),
+                                                                                         name(name), params(params),
+                                                                                         returns(returns) { };
+
             std::string parse_string() override;
+
         private:
             std::string name;
             std::vector<function_parameter> params;
             type_statement returns;
+
             std::string function_parameter_sig(function_parameter);
+
             std::string function_parameter_c_sig(function_parameter);
         };
 
@@ -452,16 +584,21 @@ namespace skiff
                     this->name = name;
                     this->typ = typ;
                 }
+
                 type_statement typ;
                 std::string name;
             };
+
             extern_function_definition(std::string name, std::vector<function_parameter> params,
-                                type_statement returns) : name(name), params(params), returns(returns) { };
+                                       type_statement returns) : name(name), params(params), returns(returns) { };
+
             std::string parse_string() override;
+
         private:
             std::string name;
             std::vector<function_parameter> params;
             type_statement returns;
+
             std::string function_parameter_sig(function_parameter);
         };
 
@@ -469,62 +606,86 @@ namespace skiff
         class comparison : public statement
         {
         public:
-            enum comparison_type {
+            enum comparison_type
+            {
                 EQUAL, NOT_EQUAL, LESS_THAN, LESS_THAN_EQUAL_TO, GREATER_THAN,
                 GREATER_THAN_EQUAL_TO
             };
-            comparison(statement * s1, comparison::comparison_type typ, statement * s2);
+
+            comparison(statement *s1, comparison::comparison_type typ, statement *s2);
+
             std::string parse_string() override;
-            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope *env) override;
+
         private:
-            statement * s1;
-            statement * s2;
+            statement *s1;
+            statement *s2;
             comparison_type typ;
+
             std::string comparison_string();
         };
 
         class invert : public statement
         {
         public:
-            explicit invert(statement * value);
+            explicit invert(statement *value);
+
             std::string parse_string() override;
+
         private:
-            statement * val;
+            statement *val;
         };
 
         class bitinvert : public statement
         {
         public:
-            explicit bitinvert(statement * value);
+            explicit bitinvert(statement *value);
+
             std::string parse_string() override;
+
         private:
-            statement * val;
+            statement *val;
         };
 
         class bitwise : public statement
         {
         public:
-            enum operation { AND, OR, XOR, SHIFT_LEFT, SHIFT_RIGHT };
-            bitwise(statement * s1, bitwise::operation op, statement * s2);
+            enum operation
+            {
+                AND, OR, XOR, SHIFT_LEFT, SHIFT_RIGHT
+            };
+
+            bitwise(statement *s1, bitwise::operation op, statement *s2);
+
             std::string parse_string() override;
+
         private:
-            statement * s1;
-            statement * s2;
+            statement *s1;
+            statement *s2;
             bitwise::operation op;
+
             std::string operation_string();
         };
 
         class boolean_conjunction : public statement
         {
         public:
-            enum conjunction_type { AND, OR };
-            boolean_conjunction(statement * s1, boolean_conjunction::conjunction_type conj,
-                statement * s2);
+            enum conjunction_type
+            {
+                AND, OR
+            };
+
+            boolean_conjunction(statement *s1, boolean_conjunction::conjunction_type conj,
+                                statement *s2);
+
             std::string parse_string() override;
+
         private:
-            statement * s1;
-            statement * s2;
+            statement *s1;
+            statement *s2;
             boolean_conjunction::conjunction_type conj;
+
             std::string conj_string();
         };
     }

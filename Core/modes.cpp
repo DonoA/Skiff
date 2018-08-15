@@ -18,7 +18,7 @@ namespace skiff
             char c = '\0';
             string file;
             string line;
-            while(std::getline(fin, line))
+            while (std::getline(fin, line))
             {
                 file += line + "\n";
             }
@@ -28,9 +28,9 @@ namespace skiff
             return statements;
         }
 
-        void evaluate(scope * env, vector<statement *> statements)
+        void evaluate(scope *env, vector<statement *> statements)
         {
-            for(statement * s : statements)
+            for (statement *s : statements)
             {
                 s->eval(env);
             }

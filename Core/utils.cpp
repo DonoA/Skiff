@@ -15,10 +15,10 @@ namespace skiff
                 return str;
             }
             int i, j;
-            for (i = 0; str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t'; i++);
+            for (i = 0; str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t'; i++) { }
             for (j = str.length() - 1;
-                j >= 0 && (str[j] == ' ' || str[j] == '\n' || str[j] == '\r' || str[i] == '\t');
-                j--);
+                 j >= 0 && (str[j] == ' ' || str[j] == '\n' || str[j] == '\r' || str[i] == '\t');
+                 j--) { }
 
             return str.substr(i, (j + 1) - i);
         }
@@ -28,7 +28,8 @@ namespace skiff
             vector<string> rtn;
             size_t pos = 0;
             std::string token;
-            while ((pos = str.find(d)) != std::string::npos) {
+            while ((pos = str.find(d)) != std::string::npos)
+            {
                 token = str.substr(0, pos);
                 if (token.length() != 0)
                 {
@@ -50,7 +51,7 @@ namespace skiff
             return rtn;
         }
 
-        void check_back_brace(char op, stack<char> * braces)
+        void check_back_brace(char op, stack<char> *braces)
         {
             if (braces->empty() || braces->top() != op)
             {
@@ -62,7 +63,7 @@ namespace skiff
             }
         }
 
-        void try_push(char op, stack<char> * braces)
+        void try_push(char op, stack<char> *braces)
         {
             if (!braces->empty() && braces->top() == op)
             {
@@ -74,36 +75,32 @@ namespace skiff
             }
         }
 
-        void track_braces(char lc, char c, stack<char> * braces)
+        void track_braces(char lc, char c, stack<char> *braces)
         {
             switch (c)
             {
-            case '[':
-            case '(':
-            case '{':
-                braces->push(c);
-                break;
-            case '"':
-                if (lc != '\\')
-                {
-                    try_push(c, braces);
-                }
-                break;
-            case '\'':
-                if (lc != '\\')
-                {
-                    try_push(c, braces);
-                }
-                break;
-            case ']':
-                check_back_brace('[', braces);
-                break;
-            case ')':
-                check_back_brace('(', braces);
-                break;
-            case '}':
-                check_back_brace('{', braces);
-                break;
+                case '[':
+                case '(':
+                case '{':braces->push(c);
+                    break;
+                case '"':
+                    if (lc != '\\')
+                    {
+                        try_push(c, braces);
+                    }
+                    break;
+                case '\'':
+                    if (lc != '\\')
+                    {
+                        try_push(c, braces);
+                    }
+                    break;
+                case ']':check_back_brace('[', braces);
+                    break;
+                case ')':check_back_brace('(', braces);
+                    break;
+                case '}':check_back_brace('{', braces);
+                    break;
             }
         }
 

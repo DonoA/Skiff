@@ -1,6 +1,4 @@
 #include "statement.h"
-#include "utils.h"
-#include <iostream>
 
 namespace skiff
 {
@@ -56,7 +54,7 @@ namespace skiff
         {
             string rtn = "FunctionCall(" + name.parse_string() + ", Params(";
             bool any = false;
-            for (statement * stmt : params)
+            for (statement *stmt : params)
             {
                 rtn += stmt->parse_string() + ",";
                 any = true;
@@ -74,7 +72,7 @@ namespace skiff
             return "Variable(" + name + ")";
         }
 
-        assignment::assignment(statement * name, statement *value)
+        assignment::assignment(statement *name, statement *value)
         {
             this->name = name;
             this->val = value;
@@ -93,7 +91,7 @@ namespace skiff
                    statement2->parse_string() + ")";
         }
 
-        comparison::comparison(statement * s1, comparison::comparison_type typ, statement * s2)
+        comparison::comparison(statement *s1, comparison::comparison_type typ, statement *s2)
         {
             this->s1 = s1;
             this->s2 = s2;
@@ -103,30 +101,24 @@ namespace skiff
         string comparison::parse_string()
         {
             return "Comparison(" + s1->parse_string() + " " + this->comparison_string() + " " +
-                s2->parse_string() + ")";
+                   s2->parse_string() + ")";
         }
 
         string comparison::comparison_string()
         {
             switch (typ)
             {
-            case EQUAL:
-                return "==";
-            case NOT_EQUAL:
-                return "!=";
-            case LESS_THAN:
-                return "<";
-            case LESS_THAN_EQUAL_TO:
-                return "<=";
-            case GREATER_THAN:
-                return ">";
-            case GREATER_THAN_EQUAL_TO:
-                return ">=";
+                case EQUAL:return "==";
+                case NOT_EQUAL:return "!=";
+                case LESS_THAN:return "<";
+                case LESS_THAN_EQUAL_TO:return "<=";
+                case GREATER_THAN:return ">";
+                case GREATER_THAN_EQUAL_TO:return ">=";
             }
             return "";
         }
 
-        invert::invert(statement * value)
+        invert::invert(statement *value)
         {
             this->val = value;
         }
@@ -136,7 +128,7 @@ namespace skiff
             return "Invert(" + val->parse_string() + ")";
         }
 
-        bitinvert::bitinvert(statement * value)
+        bitinvert::bitinvert(statement *value)
         {
             this->val = value;
         }
@@ -146,7 +138,7 @@ namespace skiff
             return "BitInvert(" + val->parse_string() + ")";
         }
 
-        bitwise::bitwise(statement * s1, bitwise::operation op, statement * s2)
+        bitwise::bitwise(statement *s1, bitwise::operation op, statement *s2)
         {
             this->s1 = s1;
             this->op = op;
@@ -156,29 +148,24 @@ namespace skiff
         string bitwise::parse_string()
         {
             return "Bitwise(" + s1->parse_string() + " " + this->operation_string() + " " +
-                s2->parse_string() + ")";
+                   s2->parse_string() + ")";
         }
 
         string bitwise::operation_string()
         {
             switch (op)
             {
-            case AND:
-                return "&";
-            case OR:
-                return "|";
-            case XOR:
-                return "^";
-            case SHIFT_LEFT:
-                return "<<";
-            case SHIFT_RIGHT:
-                return ">>";
+                case AND:return "&";
+                case OR:return "|";
+                case XOR:return "^";
+                case SHIFT_LEFT:return "<<";
+                case SHIFT_RIGHT:return ">>";
             }
             return "";
         }
 
-        boolean_conjunction::boolean_conjunction(statement * s1,
-            boolean_conjunction::conjunction_type conj, statement * s2)
+        boolean_conjunction::boolean_conjunction(statement *s1,
+                                                 boolean_conjunction::conjunction_type conj, statement *s2)
         {
             this->s1 = s1;
             this->s2 = s2;
@@ -188,17 +175,15 @@ namespace skiff
         string boolean_conjunction::parse_string()
         {
             return "BooleanConjunction(" + s1->parse_string() + " " + this->conj_string() + " " +
-                s2->parse_string() + ")";
+                   s2->parse_string() + ")";
         }
 
         string boolean_conjunction::conj_string()
         {
             switch (conj)
             {
-            case AND:
-                return "&&";
-            case OR:
-                return "||";
+                case AND:return "&&";
+                case OR:return "||";
             }
             return "";
         }
@@ -208,14 +193,15 @@ namespace skiff
             return string();
         }
 
-        skiff_object block_heading::eval(scope * env)
+        skiff_object block_heading::eval(scope *env)
         {
             return skiff_object();
         }
 
-        std::string block_heading::parse_body() {
+        std::string block_heading::parse_body()
+        {
             string bdy = "{\n";
-            for(statement * s : body)
+            for (statement *s : body)
             {
                 bdy += s->parse_string() + "\n";
             }
@@ -224,27 +210,23 @@ namespace skiff
         }
 
 
-
         string if_directive::parse_string()
         {
             return "If(" + condition->parse_string() + ")" + parse_body();
         }
 
         class_heading::class_heading(class_heading::class_type type, string name) :
-            class_heading(type, name, vector<class_heading::heading_generic>())
-        { }
+                class_heading(type, name, vector<class_heading::heading_generic>()) { }
 
         class_heading::class_heading(class_heading::class_type type, string name,
-            vector<class_heading::heading_generic> generic_types) :
-            class_heading(type, name, generic_types, type_statement())
-        { }
+                                     vector<class_heading::heading_generic> generic_types) :
+                class_heading(type, name, generic_types, type_statement()) { }
 
         class_heading::class_heading(class_heading::class_type type, string name, type_statement extends) :
-            class_heading(type, name, vector<class_heading::heading_generic>(), extends)
-        { }
+                class_heading(type, name, vector<class_heading::heading_generic>(), extends) { }
 
         class_heading::class_heading(class_heading::class_type type, string name,
-            vector<heading_generic> generic_types, type_statement extends)
+                                     vector<heading_generic> generic_types, type_statement extends)
         {
             this->type = type;
             this->name = name;
@@ -257,15 +239,12 @@ namespace skiff
             string heading;
             switch (type)
             {
-            case CLASS:
-                heading = "ClassHeading";
-                break;
-            case STRUCT:
-                heading = "StructHeading";
-                break;
-            case ANNOTATION:
-                heading = "AnnotationHeading";
-                break;
+                case CLASS:heading = "ClassHeading";
+                    break;
+                case STRUCT:heading = "StructHeading";
+                    break;
+                case ANNOTATION:heading = "AnnotationHeading";
+                    break;
             }
             if (generic_types.empty())
             {
@@ -292,9 +271,9 @@ namespace skiff
         }
 
         class_heading::heading_generic class_heading::generate_generic_heading(string t_name,
-            type_statement extends)
+                                                                               type_statement extends)
         {
-            return { t_name, extends };
+            return {t_name, extends};
         }
 
 
@@ -334,7 +313,7 @@ namespace skiff
             return "While(" + condition->parse_string() + ")";
         }
 
-        return_statement::return_statement(statement * returns)
+        return_statement::return_statement(statement *returns)
         {
             this->returns = returns;
         }
@@ -345,7 +324,7 @@ namespace skiff
         }
 
         new_object_statement::new_object_statement(type_statement type,
-            vector<statement*> params)
+                                                   vector<statement *> params)
         {
             this->type = type;
             this->params = params;
@@ -355,7 +334,7 @@ namespace skiff
         {
             string paramz;
             bool any = false;
-            for (statement * p : params)
+            for (statement *p : params)
             {
                 paramz += p->parse_string() + ",";
                 any = true;
@@ -377,7 +356,7 @@ namespace skiff
         {
             string parms;
             bool any = false;
-            for (statement * stmt : params)
+            for (statement *stmt : params)
             {
                 parms += stmt->parse_string() + ",";
                 any = true;
@@ -395,7 +374,7 @@ namespace skiff
             this->name = name;
         }
 
-        enum_heading::enum_heading(string name, class_heading * basetype) : enum_heading(name)
+        enum_heading::enum_heading(string name, class_heading *basetype) : enum_heading(name)
         {
             this->basetype = basetype;
         }
@@ -411,7 +390,7 @@ namespace skiff
             return rtn;
         }
 
-        modifier::modifier(modifier::modifier_type type, statement * modof) : modifier_base(modof)
+        modifier::modifier(modifier::modifier_type type, statement *modof) : modifier_base(modof)
         {
             this->type = type;
         }
@@ -420,15 +399,13 @@ namespace skiff
         {
             switch (type)
             {
-            case STATIC:
-                return "StaticMod(" + on->parse_string() + ")";
-            case PRIVATE:
-                return "PrivateMod(" + on->parse_string() + ")";
+                case STATIC:return "StaticMod(" + on->parse_string() + ")";
+                case PRIVATE:return "PrivateMod(" + on->parse_string() + ")";
             }
             return string();
         }
 
-        throw_statement::throw_statement(statement * throws)
+        throw_statement::throw_statement(statement *throws)
         {
             this->throws = throws;
         }
@@ -438,7 +415,7 @@ namespace skiff
             return "Throw(" + throws->parse_string() + ")";
         }
 
-        modifier_base::modifier_base(statement * on)
+        modifier_base::modifier_base(statement *on)
         {
             this->on = on;
         }
@@ -449,7 +426,7 @@ namespace skiff
         }
 
         self_modifier::self_modifier(self_modifier::modifier_type type,
-            self_modifier::modifier_time time, statement * on) : modifier_base(on)
+                                     self_modifier::modifier_time time, statement *on) : modifier_base(on)
         {
             this->type = type;
             this->time = time;
@@ -460,27 +437,23 @@ namespace skiff
             string name;
             switch (time)
             {
-            case PRE:
-                name = "Pre";
-                break;
-            case POST:
-                name = "Post";
-                break;
+                case PRE:name = "Pre";
+                    break;
+                case POST:name = "Post";
+                    break;
             }
             switch (type)
             {
-            case PLUS:
-                name += "Increment";
-                break;
-            case MINUS:
-                name += "Decriment";
-                break;
+                case PLUS:name += "Increment";
+                    break;
+                case MINUS:name += "Decriment";
+                    break;
             }
             return name + "(" + on->parse_string() + ")";
         }
 
         declaration_with_assignment::declaration_with_assignment(std::string name,
-            type_statement type, statement * val)
+                                                                 type_statement type, statement *val)
         {
             this->name = name;
             this->type = type;
@@ -490,7 +463,7 @@ namespace skiff
         string declaration_with_assignment::parse_string()
         {
             return "DeclareAndAssign(" + name + ", " + type.parse_string() + ", " +
-                value->parse_string() + ")";
+                   value->parse_string() + ")";
         }
 
         import_statement::import_statement(string import_name)
@@ -503,7 +476,7 @@ namespace skiff
             return "Import(" + import_name + ")";
         }
 
-        list_accessor::list_accessor(statement * list, statement * index)
+        list_accessor::list_accessor(statement *list, statement *index)
         {
             this->list = list;
             this->index = index;
@@ -514,7 +487,7 @@ namespace skiff
             return "ListAccessor(" + list->parse_string() + ", " + index->parse_string() + ")";
         }
 
-        compund_statement::compund_statement(vector<statement*> operations)
+        compund_statement::compund_statement(vector<statement *> operations)
         {
             this->operations = operations;
         }
@@ -523,7 +496,7 @@ namespace skiff
         {
             string ops;
             bool any = false;
-            for (statement * stmt : operations)
+            for (statement *stmt : operations)
             {
                 ops += stmt->parse_string() + ",";
                 any = true;
@@ -544,10 +517,8 @@ namespace skiff
         {
             switch (typ)
             {
-            case SWITCH:
-                return "Switch(" + on->parse_string() + ")";
-            case MATCH:
-                return "Match(" + on->parse_string() + ")";
+                case SWITCH:return "Switch(" + on->parse_string() + ")";
+                case MATCH:return "Match(" + on->parse_string() + ")";
             }
             return "SwitchType(" + on->parse_string() + ")";
         }
@@ -555,7 +526,7 @@ namespace skiff
         string for_classic_directive::parse_string()
         {
             return "cFor(" + init->parse_string() + ", " + condition->parse_string() + ", " +
-                tick->parse_string() + ")";
+                   tick->parse_string() + ")";
         }
 
         string for_itterator_directive::parse_string()
@@ -572,10 +543,8 @@ namespace skiff
         {
             switch (typ)
             {
-            case BREAK:
-                return "Break()";
-            case NEXT:
-                return "Next()";
+                case BREAK:return "Break()";
+                case NEXT:return "Next()";
             }
             return "UnknownFlow()";
         }
@@ -636,12 +605,14 @@ namespace skiff
             return "TypeClass(" + name + ", " + params_rtn + "))";
         }
 
-        std::string boolean_value::parse_string() {
+        std::string boolean_value::parse_string()
+        {
             return "BooleanValue(" + string(val ? "true" : "false") + ")";
         }
 
 
-        std::string extern_function_definition::parse_string() {
+        std::string extern_function_definition::parse_string()
+        {
             string params_rtn = "Params(";
             bool any = false;
             for (function_parameter p : params)
@@ -659,7 +630,8 @@ namespace skiff
             return heading;
         }
 
-        std::string extern_function_definition::function_parameter_sig(extern_function_definition::function_parameter p)
+        std::string
+        extern_function_definition::function_parameter_sig(extern_function_definition::function_parameter p)
         {
             return "Param(" + p.name + +"," + p.typ.parse_string() + ")";
         }

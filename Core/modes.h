@@ -1,4 +1,5 @@
 #pragma once
+
 #include <queue>
 #include <string>
 #include <fstream>
@@ -12,11 +13,12 @@
 
 namespace skiff
 {
-	namespace modes
-	{
-		std::vector<statements::statement *> parse_file(std::string infile);
-		void evaluate(environment::scope * env, std::vector<statements::statement *> statements);
-	}
+    namespace modes
+    {
+        std::vector<statements::statement *> parse_file(std::string infile);
+
+        void evaluate(environment::scope *env, std::vector<statements::statement *> statements);
+    }
 }
 
 

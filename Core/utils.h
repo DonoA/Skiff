@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <stack>
@@ -14,7 +15,7 @@ namespace skiff
 
         std::string generate_indent(size_t len);
 
-        void track_braces(char lc, char c, std::stack<char> * braces);
+        void track_braces(char lc, char c, std::stack<char> *braces);
 
         std::vector<std::string> braced_split(std::string list, char del);
 

@@ -14,16 +14,16 @@ using skiff::tokenizer::sequencetostring;
 using skiff::tokenizer::token;
 using skiff::tokenizer::literal;
 using skiff::tokenizer::token_type;
-using skiff::tokenizer::literal_type ;
+using skiff::tokenizer::literal_type;
 
 namespace Test
 {
     TEST_CLASS(Tokenizing, 2)
     {
-        void run_basic_token_test(string str, token_type typ, string * lit)
+        void run_basic_token_test(string str, token_type typ, string *lit)
         {
             vector<token> tkns = vector<token>();
-            if(lit == nullptr)
+            if (lit == nullptr)
             {
                 tkns.push_back(token(typ, nullptr, 0, 0));
             }
