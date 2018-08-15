@@ -104,9 +104,9 @@ namespace skiff
 
 		namespace load
 		{
-			skiff_class * define_string_builtins(scope * env)
+			skiff_class * define_string_builtins(scope * env, skiff_class * extnds)
 			{
-				skiff_class * t = new skiff_class(builtin::get_name_for(builtin::type::String));
+				skiff_class * t = new skiff_class(builtin::get_name_for(builtin::type::String), extnds);
 				t->add_operator(environment::builtin_operation::ADD, skiff_function("add", env,
 					skiff::builtin::generator::create_add<string>()));
 				t->get_scope()->define_function("to_string", new skiff_function("to_string", env,
@@ -120,38 +120,26 @@ namespace skiff
 			{
 			    skiff_class * anyClass = new skiff_class(builtin::get_name_for(builtin::type::Any));
 
-			    skiff_class * classClass = new skiff_class(builtin::get_name_for(builtin::type::Class));
+			    skiff_class * classClass = new skiff_class(builtin::get_name_for(builtin::type::Class), anyClass);
 
-			    anyClass->
+			    env->define_type(anyClass, classClass);
+                env->define_type(classClass, classClass);
 
-                env->define_class_type();
+                env->define_type(new skiff_class(builtin::get_name_for(builtin::type::Function), anyClass), classClass);
 
-                env->define_class(builtin::get_name_for(builtin::type::Function),
-                                  new skiff_class(builtin::get_name_for(builtin::type::Function)));
+                skiff_class * structClass = new skiff_class(builtin::get_name_for(builtin::type::Struct), true, anyClass);
 
-                env->define_class(builtin::get_name_for(builtin::type::Struct),
-                                  new skiff_class(builtin::get_name_for(builtin::type::Struct), false));
-
-                env->define_class(builtin::get_name_for(builtin::type::Function),
-                                 new skiff_class(builtin::get_name_for(builtin::type::Function)));
+                env->define_type(structClass, classClass);
 
 
+                env->define_type(define_native_fixpoint_builtins<char>(env, builtin::type::Char, structClass), classClass);
+				env->define_type(define_native_fixpoint_builtins<int>(env, builtin::type::Int, structClass), classClass);
+				env->define_type(define_native_fixpoint_builtins<long>(env, builtin::type::Long, structClass), classClass);
+				env->define_type(define_native_number_builtins<float>(env, builtin::type::Float, structClass), classClass);
+				env->define_type(define_native_number_builtins<double>(env, builtin::type::Double, structClass), classClass);
+				env->define_type(define_string_builtins(env, structClass), classClass);
 
-                env->define_struct(builtin::get_name_for(builtin::type::Char),
-					define_native_fixpoint_builtins<char>(env, builtin::type::Char));
-				env->define_struct(builtin::get_name_for(builtin::type::Int),
-					define_native_fixpoint_builtins<int>(env, builtin::type::Int));
-				env->define_struct(builtin::get_name_for(builtin::type::Long),
-					define_native_fixpoint_builtins<long>(env, builtin::type::Long));
-				env->define_struct(builtin::get_name_for(builtin::type::Float),
-                     define_native_number_builtins<float>(env, builtin::type::Float));
-				env->define_struct(builtin::get_name_for(builtin::type::Double),
-                     define_native_number_builtins<double>(env, builtin::type::Double));
-				env->define_struct(builtin::get_name_for(builtin::type::String),
-					define_string_builtins(env));
-
-                env->define_struct(builtin::get_name_for(builtin::type::Boolean),
-                                 define_native_builtins<bool>(env, builtin::type::Boolean));
+                env->define_type(define_native_builtins<bool>(env, builtin::type::Boolean, structClass), classClass);
 			}
 		}
 

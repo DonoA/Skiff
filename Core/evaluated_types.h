@@ -78,6 +78,8 @@ namespace skiff
             void set_value(skiff_value *);
             skiff_class * get_value_class();
 
+            void assign_reference_value(skiff_object other);
+
             template<class T>
             T get_value_as();
 		private:
@@ -125,7 +127,7 @@ namespace skiff
 		class skiff_class
 		{
 		public:
-			skiff_class(std::string name) : skiff_class(name, false, nullptr) { }
+            explicit skiff_class(std::string name) : skiff_class(name, false, nullptr) { }
             skiff_class(std::string name, skiff_class * parent);
             skiff_class(std::string name, bool isval, skiff_class * parent);
 			scope * get_scope();
@@ -133,8 +135,9 @@ namespace skiff
 
 			void add_operator(builtin_operation key, skiff_function op);
 			skiff_object invoke_operator(builtin_operation op, std::vector<skiff_object> params);
+            skiff_object invoke_function(std::string name, std::vector<skiff_object> params);
 
-			bool is_val();
+            bool is_val();
 			
 			void add_constructor(skiff_function constructor_);
 			skiff_object construct(std::vector<skiff_object> params);
@@ -155,15 +158,15 @@ namespace skiff
 			void set_variable(std::string name, skiff_object val);
 			skiff_object get_variable(std::string name);
 
-            void define_struct(std::string name, skiff_class * cls);
-			void define_class(std::string name, skiff_class * cls);
-
+			void define_type(skiff_class * cls, skiff_class * typ);
 			skiff_class * get_type(std::string name);
 
-			void define_class_type(skiff_class * cls);
-			skiff_class * get_class_type();
 			void define_function(std::string name, skiff_function * func);
 			skiff_function * get_function(std::string name);
+
+			skiff_class * get_none_type();
+
+			skiff_object get_none_object();
 
 			void print_debug();
 			std::string get_debug_string();

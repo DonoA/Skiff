@@ -88,7 +88,28 @@ namespace skiff
             return this->value->get_class();
         }
 
-        skiff_function::function_parameter skiff_function::create_function_parameter(
+        void skiff_object::assign_reference_value(skiff_object other)
+        {
+            if(this->value == nullptr)
+            {
+                this->value = new skiff_value(nullptr, this->type);
+            }
+            if(this->type->is_val())
+            {
+                vector<skiff_object> clone_params = {
+                        other
+                };
+
+                this->value->set_value(other.get_class()->invoke_function("clone", clone_params).get_raw_value());
+            }
+            else
+            {
+                this->value->set_value(other.get_raw_value());
+            }
+            this->value->set_class(other.get_value()->get_class());
+        }
+
+        skiff_function::function_parameter skiff_function::create_function_parameter (
 			std::string name, skiff_class * typ)
 		{
 			return function_parameter();
@@ -154,12 +175,6 @@ namespace skiff
 			return inherit->get_variable(name);
 		}
 
-		void scope::define_class(string name, skiff_class * cls)
-		{
-			skiff_object class_wrapper = skiff_object((void *) cls, this->get_class_type());
-			env[name] = class_wrapper;
-		}
-
 		skiff_class * scope::get_type(string name)
 		{
 			if (env.count(name))
@@ -216,26 +231,24 @@ namespace skiff
 			return rtn;
 		}
 
-        void scope::define_class_type(skiff_class *cls)
+        void scope::define_type(skiff_class *cls, skiff_class *typ)
         {
-            skiff_object class_wrapper = skiff_object((void *) cls, cls);
-            // TODO: remove this hard coded name
-            env["skiff.lang.Class"] = class_wrapper;
+            skiff_object class_wrapper = skiff_object((void *) cls, typ);
+            env[cls->get_name()] = class_wrapper;
         }
 
-        skiff_class *scope::get_class_type() {
-            return this->get_type("skiff.lang.Class");
+        skiff_class *scope::get_none_type() {
+            return this->get_type("skiff.lang.None");
         }
 
-        void scope::define_struct(std::string name, skiff_class *cls) {
-            skiff_object class_wrapper = skiff_object((void *) cls, this->get_type("skiff.lang.Struct"));
-            env[name] = class_wrapper;
+        skiff_object scope::get_none_object() {
+            return skiff_object((void *) nullptr, this->get_none_type());
         }
 
         skiff_class::skiff_class(std::string name, bool isval, skiff_class * parent)
 		{
 			this->name = name;
-			this->isval = isval
+			this->isval = isval;
 			this->parent = parent;
 			this->class_env = new scope();
 		}
@@ -275,6 +288,10 @@ namespace skiff
             {
                 this->isval = parent->is_val();
             }
+        }
+
+        skiff_object skiff_class::invoke_function(std::string name, std::vector<skiff_object> params) {
+            return this->class_env->get_function(name)->eval(params);
         }
 
     }

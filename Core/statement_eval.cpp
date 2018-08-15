@@ -48,7 +48,7 @@ namespace skiff
             {
                 return skiff_object(string(val), env->get_type("skiff.lang.Sequence"));
             }
-            return skiff_object();
+            return env->get_none_object();
         }
 
 		environment::skiff_object boolean_value::eval(environment::scope *env) {
@@ -60,10 +60,7 @@ namespace skiff
             skiff_object obj = name->eval(env);
             skiff_object new_obj = val->eval(env);
 
-            obj.get_class()
-
-            obj.get_value()->set_value(new_obj.get_raw_value());
-			obj.get_value()->set_class(new_obj.get_value()->get_class());
+			obj.assign_reference_value(new_obj);
 
             return obj;
         }
@@ -158,12 +155,12 @@ namespace skiff
 			{
 				case modifier_type::PLUS:
 					obj.get_value()->set_value(
-							obj.get_value_class()->invoke_operator(builtin_operation::INC, p).get_raw_value()
+							obj.get_class()->invoke_operator(builtin_operation::INC, p).get_raw_value()
 					);
 					break;
 				case modifier_type::MINUS:
 					obj.get_value()->set_value(
-							obj.get_value_class()->invoke_operator(builtin_operation::DEC, p).get_raw_value()
+							obj.get_class()->invoke_operator(builtin_operation::DEC, p).get_raw_value()
 					);
 					break;
 			}
@@ -178,20 +175,21 @@ namespace skiff
 
 		environment::skiff_object declaration_with_assignment::eval(environment::scope * env)
 		{
-			skiff_object obj = type.eval(env);
 			skiff_class * clazz = (skiff_class *) type.eval(env).get_raw_value();
-			env->set_variable(name, value->eval(env));
-			return environment::skiff_object();
+			skiff_object new_obj = skiff_object(clazz);
+			new_obj.assign_reference_value(value->eval(env));
+			env->set_variable(name, new_obj);
+			return env->get_none_object();
 		}
 
-//        skiff_object if_heading::eval(environment::scope * env)
-//        {
-//			skiff_object obj = condition->eval(env);
-//            bool passed = *((bool *) obj.get_value()->get_value());
-//			if(passed)
-//			{
-//				body->eval(env);
-//			}
+        skiff_object if_directive::eval(environment::scope * env)
+        {
+			skiff_object obj = condition->eval(env);
+			if(obj.get_value_as<bool>())
+			{
+				scope inner_scope = scope(env);
+				this->eval_body(&inner_scope);
+			}
 //			else
 //			{
 //				if(else_block != nullptr)
@@ -199,8 +197,8 @@ namespace skiff
 //					else_block->eval(env);
 //				}
 //			}
-//            return skiff_object();
-//        }
+            return env->get_none_object();
+        }
 
 //		skiff_object else_heading::eval(environment::scope * env)
 //		{
@@ -224,18 +222,18 @@ namespace skiff
 			};
 			switch (typ) {
 				case EQUAL:
-					return o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+					return o1.get_class()->invoke_operator(builtin_operation::EQUAL, p);
 				case NOT_EQUAL: {
-					skiff_object res = o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+					skiff_object res = o1.get_class()->invoke_operator(builtin_operation::EQUAL, p);
 					bool *b = (bool *) res.get_raw_value();
 					*b = !(*b);
 					return res;
 				}
 				case LESS_THAN:
-					return o1.get_value_class()->invoke_operator(builtin_operation::LESS, p);
+					return o1.get_class()->invoke_operator(builtin_operation::LESS, p);
 				case LESS_THAN_EQUAL_TO: {
-					skiff_object lt = o1.get_value_class()->invoke_operator(builtin_operation::LESS, p);
-					skiff_object et = o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+					skiff_object lt = o1.get_class()->invoke_operator(builtin_operation::LESS, p);
+					skiff_object et = o1.get_class()->invoke_operator(builtin_operation::EQUAL, p);
 					bool lt_b = lt.get_value_as<bool>();
 					bool et_b = et.get_value_as<bool>();
 
@@ -244,10 +242,10 @@ namespace skiff
 					return skiff_object(lt_e, env->get_type("skiff.lang.Boolean"));
 				}
 				case GREATER_THAN:
-					return o1.get_value_class()->invoke_operator(builtin_operation::GREATER, p);
+					return o1.get_class()->invoke_operator(builtin_operation::GREATER, p);
 				case GREATER_THAN_EQUAL_TO: {
-					skiff_object gt = o1.get_value_class()->invoke_operator(builtin_operation::GREATER, p);
-					skiff_object et = o1.get_value_class()->invoke_operator(builtin_operation::EQUAL, p);
+					skiff_object gt = o1.get_class()->invoke_operator(builtin_operation::GREATER, p);
+					skiff_object et = o1.get_class()->invoke_operator(builtin_operation::EQUAL, p);
 					bool gt_b = gt.get_value_as<bool>();
 					bool et_b = et.get_value_as<bool>();
 
@@ -255,6 +253,14 @@ namespace skiff
 
 					return skiff_object(gt_e, env->get_type("skiff.lang.Boolean"));
 				}
+			}
+		}
+
+		void block_heading::eval_body(environment::scope *env)
+		{
+			for(statement * s : body)
+			{
+				s->eval(env);
 			}
 		}
     }

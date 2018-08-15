@@ -207,17 +207,18 @@ namespace skiff
 		namespace load
 		{
 			template<class T>
-			environment::skiff_class * define_native_builtins(environment::scope * env, builtin::type nt);
+			environment::skiff_class * define_native_builtins(environment::scope * env, builtin::type nt, environment::skiff_class * exnds);
 			template<class T>
-			environment::skiff_class * define_native_fixpoint_builtins(environment::scope * env, builtin::type nt);
-            environment::skiff_class * define_native_number_builtins(environment::scope * env, builtin::type nt);
-            environment::skiff_class * define_string_builtins(environment::scope * env);
+			environment::skiff_class * define_native_fixpoint_builtins(environment::scope * env, builtin::type nt, environment::skiff_class * exnds);
+            environment::skiff_class * define_native_number_builtins(environment::scope * env, builtin::type nt, environment::skiff_class * exnds);
+            environment::skiff_class * define_string_builtins(environment::scope * env, environment::skiff_class * exnds);
 			void load_standards(environment::scope * env);
 
 			template<class T>
-			inline environment::skiff_class * define_native_number_builtins(environment::scope * env, builtin::type nt)
+			inline environment::skiff_class * define_native_number_builtins(environment::scope * env, builtin::type nt,
+                                                                            environment::skiff_class * exnds)
 			{
-                environment::skiff_class * t = define_native_builtins<T>(env, nt);
+                environment::skiff_class * t = define_native_builtins<T>(env, nt, exnds);
 
                 t->add_operator(environment::builtin_operation::ADD, environment::skiff_function("add", env,
 					generator::create_add<T>()));
@@ -238,9 +239,9 @@ namespace skiff
 
 			template<class T>
 			inline environment::skiff_class * define_native_fixpoint_builtins(environment::scope * env,
-				builtin::type nt)
+				builtin::type nt, environment::skiff_class * exnds)
 			{
-				environment::skiff_class * t = define_native_number_builtins<T>(env, nt);
+				environment::skiff_class * t = define_native_number_builtins<T>(env, nt, exnds);
 
 				t->add_operator(environment::builtin_operation::MOD, environment::skiff_function("mod", env,
 					generator::create_mod<T>()));
@@ -249,8 +250,8 @@ namespace skiff
 			}
 
             template<class T>
-            environment::skiff_class *define_native_builtins(environment::scope *env, builtin::type nt) {
-                environment::skiff_class * t = new environment::skiff_class(builtin::get_name_for(nt));
+            environment::skiff_class *define_native_builtins(environment::scope *env, builtin::type nt, environment::skiff_class * exnds) {
+                environment::skiff_class * t = new environment::skiff_class(builtin::get_name_for(nt), exnds);
 
                 t->add_operator(environment::builtin_operation::EQUAL, environment::skiff_function("equals", env,
                                                                   generator::create_equals<T>()));

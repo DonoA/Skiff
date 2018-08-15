@@ -191,6 +191,7 @@ namespace skiff
         protected:
             std::vector<statement *> body;
             std::string parse_body();
+            void eval_body(environment::scope * env);
         };
 
         class flow_statement : public statement
@@ -217,7 +218,7 @@ namespace skiff
             explicit if_directive(statement * condition, std::vector<statement *> body) :
                     block_heading(body), condition(condition) {};
             std::string parse_string() override;
-//            environment::skiff_object eval(environment::scope * env) override;
+            environment::skiff_object eval(environment::scope * env) override;
         private:
             statement * condition;
         };
