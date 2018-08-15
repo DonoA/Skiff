@@ -119,6 +119,11 @@ namespace skiff
             this->value->set_class(other.get_value()->get_class());
         }
 
+        skiff_object::skiff_object(skiff_value *val, skiff_class *type) : skiff_object(type)
+        {
+            this->value = val;
+        }
+
         skiff_function::function_parameter skiff_function::create_function_parameter(
                 std::string name, skiff_class *typ)
         {

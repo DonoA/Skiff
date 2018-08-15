@@ -150,14 +150,13 @@ namespace skiff
                     statement1(statement1), opr(op), statement2(statement2) { };
 
             std::string parse_string() override;
-//            environment::skiff_object eval(environment::scope * env) override;
+
+            environment::skiff_object eval(environment::scope * env) override;
+
         private:
             statement *statement1;
             math_statement::op opr;
             statement *statement2;
-
-            static environment::skiff_object
-            eval_single_op(environment::skiff_object s1, char op, environment::skiff_object s2);
 
             static environment::skiff_class *
             get_dominant_class(environment::skiff_object s1, environment::skiff_object s2);

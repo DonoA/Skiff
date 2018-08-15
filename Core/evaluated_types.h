@@ -80,6 +80,8 @@ namespace skiff
 
             skiff_object(skiff_class *type);
 
+            skiff_object(skiff_value * val, skiff_class *type);
+
             skiff_object(void *val, skiff_class *clazz);
 
             template<class T>

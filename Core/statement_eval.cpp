@@ -66,58 +66,58 @@ namespace skiff
 
         // Math in functions does not parse correctly
 
-//        skiff_object math_statement::eval(scope * env)
-//		{
-//			queue<char> ops = operators;
-//			queue<statement *> stmts = operands;
-//			skiff_object collect = stmts.front()->eval(env);
-//			stmts.pop();
-//			while (!ops.empty())
-//			{
-//				collect = math_statement::eval_single_op(collect, ops.front(), stmts.front()->eval(env));
-//				stmts.pop();
-//				ops.pop();
-//			}
-//			return collect;
-//		}
-
-        skiff_object math_statement::eval_single_op(skiff_object s1, char op, skiff_object s2)
-        {
-//			skiff_class * clazz = math_statement::get_dominant_class(s1, s2);
-//			if (clazz == nullptr)
-//			{
-//				clazz = s1.get_class();
-//			}
-//			vector<skiff_object> p = {
-//                s1,
-//                s2,
-//                skiff_object(new skiff_value((void *) clazz), nullptr)
-//            };
-//			return clazz->invoke_operator(string(1, op), p);
-            return skiff_object();
-        }
+        skiff_object math_statement::eval(scope * env)
+		{
+		    skiff_object rtn_obj;
+		    skiff_object obj1 = this->statement1->eval(env);
+            skiff_object obj2 = this->statement2->eval(env);
+		    skiff_class * dom_class = get_dominant_class(obj1, obj1);
+		    skiff_value class_wrap = skiff_value((void *) dom_class, env->get_type("skiff.lang.Class"));
+            vector<skiff_object> params = {
+                    obj1, obj2, skiff_object(&class_wrap, env->get_type("skiff.lang.Class"))
+            };
+            switch(this->opr)
+            {
+                case op::ADD:
+                    rtn_obj = dom_class->invoke_operator(builtin_operation::ADD, params);
+                    break;
+                case op::SUB:
+                    rtn_obj = dom_class->invoke_operator(builtin_operation::SUB, params);
+                    break;
+                case op::MUL:
+                    rtn_obj = dom_class->invoke_operator(builtin_operation::MUL, params);
+                    break;
+                case op::DIV:
+                    rtn_obj = dom_class->invoke_operator(builtin_operation::DIV, params);
+                    break;
+                case op::EXP:
+                    rtn_obj = dom_class->invoke_operator(builtin_operation::EXP, params);
+                    break;
+            }
+		    return rtn_obj;
+		}
 
         skiff_class *math_statement::get_dominant_class(skiff_object s1, skiff_object s2)
         {
-//                string type_order[] = {
-//					"Double"
-//					"Float",
-//					"Long",
-//					"Int",
-//					"Char"
-//				};
-//				for (string s : type_order)
-//				{
-//					if (s1.get_class()->get_name() == s)
-//					{
-//						return s1.get_class();
-//					}
-//					if (s1.get_class()->get_name() == s)
-//					{
-//						return s2.get_class();
-//					}
-//				}
-            return nullptr;
+            string type_order[] = {
+                "skiff.lang.Double",
+                "skiff.lang.Float",
+                "skiff.lang.Long",
+                "skiff.lang.Int",
+                "skiff.lang.Char"
+            };
+            for (string s : type_order)
+            {
+                if (s1.get_class()->get_name() == s)
+                {
+                    return s1.get_class();
+                }
+                if (s1.get_class()->get_name() == s)
+                {
+                    return s2.get_class();
+                }
+            }
+            return s1.get_class();
         }
 
         skiff_object function_call::eval(scope *env)

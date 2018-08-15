@@ -48,8 +48,8 @@ The language supports a wide range of syntactical styles:
     - [x] Divide: `/`
     - [x] Mod: `%`
     - [ ] Assignment with math: `+=`, `-=`, `*=`, `/=`, `%=`
-    - [ ] Pre/Post increment `++`
-    - [ ] Pre/Post decriment `--`
+    - [x] Pre/Post increment `++`
+    - [x] Pre/Post decriment `--`
 - Generic types:
     - Class:
         - [x] Declare: `class ClassName<T> {}` or `class ClassName<T, U> {}`

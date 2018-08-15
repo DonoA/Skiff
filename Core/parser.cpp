@@ -503,6 +503,12 @@ namespace skiff
                 parse_pattern().then(parse_pattern_logic(token_type::INC).maybe(token_type::DEC)).terminate(
                         token_type::SEMICOLON);
 
+        parse_pattern MATH_ASSIGN =
+                parse_pattern().then(
+                        parse_pattern_logic(token_type::PLUS_EQUAL).maybe(token_type::MINUS_EQUAL).maybe(token_type::STAR_EQUAL)
+                                .maybe(token_type::DIV_EQUAL))
+                        .capture().terminate(token_type::SEMICOLON);
+
         parse_pattern FLOW_CONTROL =
                 parse_pattern(parse_pattern_logic(token_type::BREAK).maybe(token_type::NEXT),
                               parse_pattern_type::MULTIMATCH)
@@ -635,6 +641,39 @@ namespace skiff
                         new statements::assignment(
                                 parser(cap->match_groups.at(0)).parse().at(0),
                                 parser(cap->match_groups.at(1)).parse().at(0)
+                        ));
+                pos += cap->captured + 1;
+                continue;
+            }
+
+            cap = MATH_ASSIGN.match(pos, stmt);
+            if (cap)
+            {
+                statements::math_statement::op op;
+                switch (cap->selected_tokens.at(0).get_type())
+                {
+                    case token_type::PLUS_EQUAL: op = statements::math_statement::ADD;
+                        break;
+                    case token_type::MINUS_EQUAL: op = statements::math_statement::SUB;
+                        break;
+                    case token_type::STAR_EQUAL: op = statements::math_statement::MUL;
+                        break;
+                    case token_type::DIV_EQUAL: op = statements::math_statement::DIV;
+                        break;
+                    default:std::cout << "Bad math op for math assign" << std::endl;
+                        break;
+                }
+
+                statement * on = parser(cap->match_groups.at(0)).parse().at(0);
+
+                statements.push_back(
+                        new statements::assignment(
+                                on,
+                                new statements::math_statement(
+                                        on,
+                                        op,
+                                        parser(cap->match_groups.at(1)).parse().at(0)
+                                )
                         ));
                 pos += cap->captured + 1;
                 continue;
