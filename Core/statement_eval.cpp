@@ -25,7 +25,9 @@ namespace skiff
 
         environment::skiff_object type_statement::eval(environment::scope *env)
         {
-            return skiff_object((void *) env->get_type(this->name), env->get_type("skiff.lang.Class"));
+            skiff_object typ = env->get_variable(this->name);
+            // attach generic types in some way
+            return typ;
         }
 
         skiff_object value::eval(scope *env)
@@ -122,20 +124,14 @@ namespace skiff
 
         skiff_object function_call::eval(scope *env)
         {
-//			if (name == "print")
-//			{
-//				string tp;
-//				for (statement * stmt : params)
-//				{
-//					skiff_object res = stmt->eval(env);
-//					res = res.get_class()->get_scope()->get_function("to_string").eval(res);
-//					tp += *((string *) res.get_value()->get_value());
-//					tp += " ";
-//				}
-//				tp.erase(tp.length() - 1);
-//				std::cout << tp << std::endl;
-//			}
-            return skiff_object();
+            skiff_object wrapped_func = name.eval(env);
+            skiff_function func = wrapped_func.get_value_as<skiff_function>();
+            vector<skiff_object> params = vector<skiff_object>();
+            for(statement * s : this->params)
+            {
+                params.push_back(s->eval(env));
+            }
+            return func.eval(params);
         }
 
         skiff_object variable::eval(environment::scope *env)

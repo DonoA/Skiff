@@ -329,5 +329,13 @@ namespace skiff
             return this->class_env->get_function(name)->eval(params);
         }
 
+        skiff_object skiff_class::invoke_function(std::string name, skiff_object self)
+        {
+            vector<skiff_object> params = {
+                    self
+            };
+            return this->invoke_function(name, params);
+        }
+
     }
 }

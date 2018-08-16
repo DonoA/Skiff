@@ -101,6 +101,19 @@ namespace skiff
                                         params[0].get_class());
                 }
             }
+
+            environment::skiff_object
+            function_builtins::print(std::vector<environment::skiff_object> params, environment::scope *env)
+            {
+                string tp;
+                for (skiff_object p : params)
+                {
+                    tp += p.get_class()->invoke_function("to_string", p).get_value_as<string>();
+                    tp += " ";
+                }
+                tp.erase(tp.length() - 1);
+                std::cout << tp << std::endl;
+            }
         }
 
         namespace load
@@ -128,7 +141,7 @@ namespace skiff
                 env->define_type(anyClass, classClass);
                 env->define_type(classClass, classClass);
 
-                env->define_type(new skiff_class(builtin::get_name_for(builtin::type::Function), anyClass), classClass);
+                env->define_type(define_function_builtins(env, classClass), classClass);
 
                 skiff_class *structClass = new skiff_class(builtin::get_name_for(builtin::type::Struct), true,
                                                            anyClass);
@@ -146,9 +159,30 @@ namespace skiff
                                  classClass);
                 env->define_type(define_native_number_builtins<double>(env, builtin::type::Double, structClass),
                                  classClass);
+
                 env->define_type(define_string_builtins(env, structClass), classClass);
 
                 env->define_type(define_native_builtins<bool>(env, builtin::type::Boolean, structClass), classClass);
+
+                load_builtin_functions(env);
+            }
+
+            environment::skiff_class *define_function_builtins(environment::scope *env, environment::skiff_class *exnds)
+            {
+                skiff_class * func_class = new skiff_class(builtin::get_name_for(builtin::type::Function), exnds);
+
+//                func_class->get_scope()->define_function("invoke", new skiff_function("invoke", env,
+//                                                                                      new environment::skiff_func_sig(
+//                                                                                              &skiff::builtin::generator::function_builtins::invoke)));
+
+                return func_class;
+            }
+
+            void load_builtin_functions(environment::scope *env)
+            {
+                env->define_function("print", new skiff_function("print", env,
+                                                                 new environment::skiff_func_sig(
+                                                                         &skiff::builtin::generator::function_builtins::print)));
             }
         }
 

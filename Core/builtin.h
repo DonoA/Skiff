@@ -74,6 +74,10 @@ namespace skiff
                 environment::skiff_object clone(std::vector<environment::skiff_object> params, environment::scope *env);
             }
 
+            namespace function_builtins
+            {
+                environment::skiff_object print(std::vector<environment::skiff_object> params, environment::scope *env);
+            }
 
             template<class T>
             inline environment::skiff_func_sig *create_add()
@@ -239,6 +243,10 @@ namespace skiff
             define_native_number_builtins(environment::scope *env, builtin::type nt, environment::skiff_class *exnds);
 
             environment::skiff_class *define_string_builtins(environment::scope *env, environment::skiff_class *exnds);
+
+            environment::skiff_class *define_function_builtins(environment::scope *env, environment::skiff_class *exnds);
+
+            void load_builtin_functions(environment::scope *env);
 
             void load_standards(environment::scope *env);
 

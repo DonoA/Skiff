@@ -175,6 +175,8 @@ namespace skiff
 
             skiff_object invoke_function(std::string name, std::vector<skiff_object> params);
 
+            skiff_object invoke_function(std::string name, skiff_object self);
+
             bool is_val();
 
             void add_constructor(skiff_function constructor_);
