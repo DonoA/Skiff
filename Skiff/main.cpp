@@ -1,8 +1,8 @@
 #include <queue>
 #include <iostream>
-#include "evaluated_types.h"
-#include "builtin.h"
-#include "modes.h"
+#include "../Core/evaluated_types.h"
+#include "../Core/builtin.h"
+#include "../Core/modes.h"
 
 int main(int argc, char *argv[])
 {

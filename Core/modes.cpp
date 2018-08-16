@@ -15,7 +15,6 @@ namespace skiff
         vector<statement *> parse_file(string infile)
         {
             std::fstream fin(infile, std::fstream::in);
-            char c = '\0';
             string file;
             string line;
             while (std::getline(fin, line))

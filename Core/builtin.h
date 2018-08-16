@@ -151,7 +151,6 @@ namespace skiff
                 return new environment::skiff_func_sig(
                         [](std::vector<environment::skiff_object> params, environment::scope *env)
                         {
-                            T n1 = *((T *) params[0].get_value()->get_value());
                             return environment::skiff_object(params[0].get_value_as<T>() - 1, params[0].get_class());
                         });
             }

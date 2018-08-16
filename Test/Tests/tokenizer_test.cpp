@@ -80,11 +80,6 @@ namespace Test
             run_basic_token_test("]", token_type::RIGHT_BRACKET, nullptr);
         }
 
-        TEST_METHOD(Dot)
-        {
-            run_basic_token_test(".", token_type::DOT, nullptr);
-        }
-
         TEST_METHOD(Tilde)
         {
             run_basic_token_test("~", token_type::BIT_NOT, nullptr);
@@ -221,11 +216,6 @@ namespace Test
             run_basic_token_test(">", token_type::RIGHT_ANGLE_BRACE, nullptr);
         }
 
-        TEST_METHOD(RightAngleBraceRightAngleBrace)
-        {
-            run_basic_token_test(">>", token_type::BIT_RIGHT, nullptr);
-        }
-
         TEST_METHOD(RightAngleBraceEqual)
         {
             run_basic_token_test(">=", token_type::GREATER_THAN_EQUAL, nullptr);
@@ -234,11 +224,6 @@ namespace Test
         TEST_METHOD(LeftAngleBrace)
         {
             run_basic_token_test("<", token_type::LEFT_ANGLE_BRACE, nullptr);
-        }
-
-        TEST_METHOD(LeftAngleBraceLeftAngleBrace)
-        {
-            run_basic_token_test("<<", token_type::BIT_LEFT, nullptr);
         }
 
         TEST_METHOD(LeftAngleBraceEqual)

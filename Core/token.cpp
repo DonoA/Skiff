@@ -600,7 +600,7 @@ namespace skiff
                         }
                         else
                         {
-                            std::cout << "Reached word matcher" << std::endl;
+//                            std::cout << "Reached word matcher" << std::endl;
                         }
                         break;
                     }

@@ -1,7 +1,7 @@
 #include "../../Core/statement.h"
 #include "../../Core/builtin.h"
 #include "../../Core/utils.h"
-#include "evaluated_types.h"
+#include "../../Core/evaluated_types.h"
 #include "../test_util.h"
 #include <string>
 #include <vector>
@@ -14,21 +14,23 @@ using std::queue;
 
 using skiff::environment::scope;
 
+using namespace skiff::statements;
+
 namespace Test
 {
     TEST_CLASS(Execution, 4)
     {
         TEST_METHOD(AssignmentAndDeclaration)
         {
-            skiff::statements::statement *p;
+            statement *p;
             scope env = scope();
             skiff::builtin::load::load_standards(&env);
 
-            p = new skiff::statements::declaration_with_assignment(
-                    "x", skiff::statements::type_statement(),
-                    new skiff::statements::value("5"));
+            p = new declaration_with_assignment(
+                    "x", type_statement("skiff.lang.Int", vector<type_statement>(), nullptr),
+                    new value("5"));
             p->eval(&env);
-            Assert::AreEqual(env.get_debug_string(), "x:Int=5;");
+            Assert::AreEqual(env.get_debug_string(), "x:skiff.lang.Int=5;");
         }
     }
 }

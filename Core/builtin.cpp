@@ -113,6 +113,8 @@ namespace skiff
                 }
                 tp.erase(tp.length() - 1);
                 std::cout << tp << std::endl;
+
+                return env->get_none_object();
             }
         }
 
