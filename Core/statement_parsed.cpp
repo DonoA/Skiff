@@ -36,7 +36,7 @@ namespace skiff
 
         string value::parse_string()
         {
-            return "Value(" + val + ")";
+            return "Value(" + val.get_value() + ")";
         }
 
         declaration::declaration(string name, type_statement type)

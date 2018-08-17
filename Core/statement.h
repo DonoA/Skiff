@@ -6,6 +6,7 @@
 #include <queue>
 #include <stack>
 #include "evaluated_types.h"
+#include "token.h"
 
 namespace skiff
 {
@@ -66,14 +67,14 @@ namespace skiff
         class value : public statement
         {
         public:
-            explicit value(std::string val) : val(val) { };
+            explicit value(tokenizer::literal val) : val(val) { };
 
             environment::skiff_object eval(environment::scope *env) override;
 
             std::string parse_string() override;
 
         private:
-            std::string val;
+            tokenizer::literal val;
 //            type_statement typ;
         };
 

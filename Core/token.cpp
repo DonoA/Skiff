@@ -6,16 +6,16 @@ namespace skiff
     namespace tokenizer
     {
 
-        literal::literal(literal_type type, void *value)
+        literal::literal(literal_type type, string value)
         {
             this->type = type;
             this->literal_value = value;
         }
 
-        token::token(token_type type, literal *lit, size_t line, size_t pos)
+        token::token(token_type type, literal lit, size_t line, size_t pos)
         {
-            this->type = type;
             this->lit = lit;
+            this->type = type;
             this->line = line;
             this->pos = pos;
         }
@@ -24,15 +24,15 @@ namespace skiff
         {
             bool same_type = this->type == other.type;
             bool same_lit = true;
-            if (this->lit != nullptr)
+            if (this->lit.get_type() == literal_type::EMPTY)
             {
-                if (other.lit == nullptr)
+                if (other.lit.get_type() == literal_type::EMPTY)
                 {
                     same_lit = false;
                 }
                 else
                 {
-                    same_lit = other.lit->to_string() == this->lit->to_string();
+                    same_lit = other.lit.get_value() == this->lit.get_value();
                 }
             }
             return same_lit && same_type;
@@ -108,25 +108,25 @@ namespace skiff
 
                 switch (self)
                 {
-                    case ':':tokens.push_back(token(token_type::COLON, nullptr, line_id, col));
+                    case ':':tokens.push_back(token(token_type::COLON, literal(), line_id, col));
                         break;
-                    case ';':tokens.push_back(token(token_type::SEMICOLON, nullptr, line_id, col));
+                    case ';':tokens.push_back(token(token_type::SEMICOLON, literal(), line_id, col));
                         break;
-                    case ',':tokens.push_back(token(token_type::COMMA, nullptr, line_id, col));
+                    case ',':tokens.push_back(token(token_type::COMMA, literal(), line_id, col));
                         break;
-                    case '(':tokens.push_back(token(token_type::LEFT_PAREN, nullptr, line_id, col));
+                    case '(':tokens.push_back(token(token_type::LEFT_PAREN, literal(), line_id, col));
                         break;
-                    case ')':tokens.push_back(token(token_type::RIGHT_PAREN, nullptr, line_id, col));
+                    case ')':tokens.push_back(token(token_type::RIGHT_PAREN, literal(), line_id, col));
                         break;
-                    case '{':tokens.push_back(token(token_type::LEFT_BRACE, nullptr, line_id, col));
+                    case '{':tokens.push_back(token(token_type::LEFT_BRACE, literal(), line_id, col));
                         break;
-                    case '}':tokens.push_back(token(token_type::RIGHT_BRACE, nullptr, line_id, col));
+                    case '}':tokens.push_back(token(token_type::RIGHT_BRACE, literal(), line_id, col));
                         break;
-                    case '[':tokens.push_back(token(token_type::LEFT_BRACKET, nullptr, line_id, col));
+                    case '[':tokens.push_back(token(token_type::LEFT_BRACKET, literal(), line_id, col));
                         break;
-                    case ']':tokens.push_back(token(token_type::RIGHT_BRACKET, nullptr, line_id, col));
+                    case ']':tokens.push_back(token(token_type::RIGHT_BRACKET, literal(), line_id, col));
                         break;
-                    case '~':tokens.push_back(token(token_type::BIT_NOT, nullptr, line_id, col));
+                    case '~':tokens.push_back(token(token_type::BIT_NOT, literal(), line_id, col));
                         break;
 
                     case ' ':
@@ -146,19 +146,19 @@ namespace skiff
                         {
                             case '=':
                             {
-                                tokens.push_back(token(token_type::DOUBLE_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::DOUBLE_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             case '>':
                             {
-                                tokens.push_back(token(token_type::ARROW, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::ARROW, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::EQUAL, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -171,19 +171,19 @@ namespace skiff
                         {
                             case '=':
                             {
-                                tokens.push_back(token(token_type::PLUS_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::PLUS_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             case '+':
                             {
-                                tokens.push_back(token(token_type::INC, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::INC, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::PLUS, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::PLUS, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -196,19 +196,19 @@ namespace skiff
                         {
                             case '=':
                             {
-                                tokens.push_back(token(token_type::MINUS_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::MINUS_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             case '-':
                             {
-                                tokens.push_back(token(token_type::DEC, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::DEC, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::MINUS, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::MINUS, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -221,25 +221,25 @@ namespace skiff
                         {
                             case '=':
                             {
-                                tokens.push_back(token(token_type::STAR_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::STAR_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             case '*':
                             {
-                                tokens.push_back(token(token_type::EXP, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::EXP, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             case '/':
                             {
-                                tokens.push_back(token(token_type::COMMENT_END, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::COMMENT_END, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::STAR, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::STAR, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -252,31 +252,31 @@ namespace skiff
                         {
                             case '=':
                             {
-                                tokens.push_back(token(token_type::DIV_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::DIV_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             case '/':
                             {
                                 i++;
-                                string *comment = new string(consumeTil(segment, &i, '\n'));
+                                string comment = consumeTil(segment, &i, '\n');
                                 i--;
                                 tokens.push_back(token(
                                         token_type::LINE_COMMENT,
-                                        new literal(literal_type::STRING, comment),
+                                        literal(literal_type::STRING, comment),
                                         line_id,
                                         col));
                                 break;
                             }
                             case '*':
                             {
-                                tokens.push_back(token(token_type::COMMENT_START, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::COMMENT_START, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::DIV, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::DIV, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -289,13 +289,13 @@ namespace skiff
                         {
                             case '=':
                             {
-                                tokens.push_back(token(token_type::MOD_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::MOD_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::MOD, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::MOD, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -308,13 +308,13 @@ namespace skiff
                         {
                             case '&':
                             {
-                                tokens.push_back(token(token_type::AND, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::AND, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::BIT_AND, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::BIT_AND, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -327,13 +327,13 @@ namespace skiff
                         {
                             case '|':
                             {
-                                tokens.push_back(token(token_type::OR, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::OR, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::BIT_OR, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::BIT_OR, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -342,7 +342,7 @@ namespace skiff
 
                     case '^':
                     {
-                        tokens.push_back(token(token_type::BIT_XOR, nullptr, line_id, col));
+                        tokens.push_back(token(token_type::BIT_XOR, literal(), line_id, col));
                         break;
                     }
 
@@ -351,19 +351,19 @@ namespace skiff
                         switch (next)
                         {
 //                            case '>': {
-//                                tokens.push_back(token(token_type::BIT_RIGHT, nullptr, line_id, col));
+//                                tokens.push_back(token(token_type::BIT_RIGHT, literal(), line_id, col));
 //                                i++;
 //                                break;
 //                            }
                             case '=':
                             {
-                                tokens.push_back(token(token_type::GREATER_THAN_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::GREATER_THAN_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::RIGHT_ANGLE_BRACE, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::RIGHT_ANGLE_BRACE, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -375,19 +375,19 @@ namespace skiff
                         switch (next)
                         {
 //                            case '<': {
-//                                tokens.push_back(token(token_type::BIT_LEFT, nullptr, line_id, col));
+//                                tokens.push_back(token(token_type::BIT_LEFT, literal(), line_id, col));
 //                                i++;
 //                                break;
 //                            }
                             case '=':
                             {
-                                tokens.push_back(token(token_type::LESS_THAN_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::LESS_THAN_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::LEFT_ANGLE_BRACE, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::LEFT_ANGLE_BRACE, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -400,13 +400,13 @@ namespace skiff
                         {
                             case '=':
                             {
-                                tokens.push_back(token(token_type::BANG_EQUAL, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::BANG_EQUAL, literal(), line_id, col));
                                 i++;
                                 break;
                             }
                             default:
                             {
-                                tokens.push_back(token(token_type::BANG, nullptr, line_id, col));
+                                tokens.push_back(token(token_type::BANG, literal(), line_id, col));
                                 break;
                             }
                         }
@@ -415,16 +415,16 @@ namespace skiff
 
                     case '@':
                     {
-                        tokens.push_back(token(token_type::AT, nullptr, line_id, col));
+                        tokens.push_back(token(token_type::AT, literal(), line_id, col));
                         break;
                     }
 
                     case '"':
                     {
-                        string *str = new string(consumeTil(segment, &i, '"'));
+                        string str = consumeTil(segment, &i, '"');
                         tokens.push_back(token(
                                 token_type::LITERAL,
-                                new literal(literal_type::STRING, str),
+                                literal(literal_type::STRING, str),
                                 line_id,
                                 col));
                         break;
@@ -432,10 +432,10 @@ namespace skiff
 
                     case '\'':
                     {
-                        string *str = new string(consumeTil(segment, &i, '\''));
+                        string str = consumeTil(segment, &i, '\'');
                         tokens.push_back(token(
                                 token_type::LITERAL,
-                                new literal(literal_type::SEQUENCE, str),
+                                literal(literal_type::SEQUENCE, str),
                                 line_id,
                                 col));
                         break;
@@ -451,140 +451,140 @@ namespace skiff
 
                             if (kw == "struct")
                             {
-                                tokens.push_back(token(token_type::STRUCT, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::STRUCT, literal(), line_id, start_i));
                             }
                             else if (kw == "public")
                             {
-                                tokens.push_back(token(token_type::PUBLIC, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::PUBLIC, literal(), line_id, start_i));
                             }
                             else if (kw == "private")
                             {
-                                tokens.push_back(token(token_type::PRIVATE, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::PRIVATE, literal(), line_id, start_i));
                             }
                             else if (kw == "static")
                             {
-                                tokens.push_back(token(token_type::STATIC, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::STATIC, literal(), line_id, start_i));
                             }
                             else if (kw == "final")
                             {
-                                tokens.push_back(token(token_type::FINAL, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::FINAL, literal(), line_id, start_i));
                             }
                             else if (kw == "match")
                             {
-                                tokens.push_back(token(token_type::MATCH, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::MATCH, literal(), line_id, start_i));
                             }
                             else if (kw == "switch")
                             {
-                                tokens.push_back(token(token_type::SWITCH, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::SWITCH, literal(), line_id, start_i));
                             }
                             else if (kw == "case")
                             {
-                                tokens.push_back(token(token_type::CASE, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::CASE, literal(), line_id, start_i));
                             }
                             else if (kw == "next")
                             {
-                                tokens.push_back(token(token_type::NEXT, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::NEXT, literal(), line_id, start_i));
                             }
                             else if (kw == "break")
                             {
-                                tokens.push_back(token(token_type::BREAK, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::BREAK, literal(), line_id, start_i));
                             }
                             else if (kw == "throw")
                             {
-                                tokens.push_back(token(token_type::THROW, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::THROW, literal(), line_id, start_i));
                             }
                             else if (kw == "if")
                             {
-                                tokens.push_back(token(token_type::IF, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::IF, literal(), line_id, start_i));
                             }
                             else if (kw == "else")
                             {
-                                tokens.push_back(token(token_type::ELSE, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::ELSE, literal(), line_id, start_i));
                             }
                             else if (kw == "while")
                             {
-                                tokens.push_back(token(token_type::WHILE, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::WHILE, literal(), line_id, start_i));
                             }
                             else if (kw == "for")
                             {
-                                tokens.push_back(token(token_type::FOR, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::FOR, literal(), line_id, start_i));
                             }
                             else if (kw == "try")
                             {
-                                tokens.push_back(token(token_type::TRY, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::TRY, literal(), line_id, start_i));
                             }
                             else if (kw == "catch")
                             {
-                                tokens.push_back(token(token_type::CATCH, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::CATCH, literal(), line_id, start_i));
                             }
                             else if (kw == "finally")
                             {
-                                tokens.push_back(token(token_type::FINALLY, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::FINALLY, literal(), line_id, start_i));
                             }
                             else if (kw == "throws")
                             {
-                                tokens.push_back(token(token_type::THROWS, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::THROWS, literal(), line_id, start_i));
                             }
                             else if (kw == "return")
                             {
-                                tokens.push_back(token(token_type::RETURN, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::RETURN, literal(), line_id, start_i));
                             }
                             else if (kw == "annotation")
                             {
-                                tokens.push_back(token(token_type::ANNOTATION, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::ANNOTATION, literal(), line_id, start_i));
                             }
                             else if (kw == "new")
                             {
-                                tokens.push_back(token(token_type::NEW, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::NEW, literal(), line_id, start_i));
                             }
                             else if (kw == "class")
                             {
-                                tokens.push_back(token(token_type::CLASS, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::CLASS, literal(), line_id, start_i));
                             }
                             else if (kw == "def")
                             {
-                                tokens.push_back(token(token_type::DEF, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::DEF, literal(), line_id, start_i));
                             }
                             else if (kw == "enum")
                             {
-                                tokens.push_back(token(token_type::ENUM, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::ENUM, literal(), line_id, start_i));
                             }
                             else if (kw == "super")
                             {
-                                tokens.push_back(token(token_type::SUPER, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::SUPER, literal(), line_id, start_i));
                             }
                             else if (kw == "this")
                             {
-                                tokens.push_back(token(token_type::THIS, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::THIS, literal(), line_id, start_i));
                             }
                             else if (kw == "import")
                             {
-                                tokens.push_back(token(token_type::IMPORT, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::IMPORT, literal(), line_id, start_i));
                             }
                             else if (kw == "true")
                             {
-                                tokens.push_back(token(token_type::TRU, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::TRU, literal(), line_id, start_i));
                             }
                             else if (kw == "false")
                             {
-                                tokens.push_back(token(token_type::FALS, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::FALS, literal(), line_id, start_i));
                             }
                             else if (kw == "none")
                             {
-                                tokens.push_back(token(token_type::NONE, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::NONE, literal(), line_id, start_i));
                             }
                             else if (kw == "extern")
                             {
-                                tokens.push_back(token(token_type::EXTERN, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::EXTERN, literal(), line_id, start_i));
                             }
                             else if (kw == "r")
                             {
-                                tokens.push_back(token(token_type::R, nullptr, line_id, start_i));
+                                tokens.push_back(token(token_type::R, literal(), line_id, start_i));
                             }
                             else
                             {
                                 tokens.push_back(token(token_type::NAME,
-                                                       new literal(literal_type::STRING, new string(kw)),
+                                                       literal(literal_type::STRING, kw),
                                                        line_id,
                                                        start_i));
                             }
@@ -594,7 +594,7 @@ namespace skiff
                             size_t start_i = i;
                             string num = selectNumber(segment, &i);
                             tokens.push_back(token(token_type::LITERAL,
-                                                   new literal(literal_type::STRING, new string(num)),
+                                                   literal(literal_type::NUMBER, num),
                                                    line_id,
                                                    start_i));
                         }
@@ -606,7 +606,7 @@ namespace skiff
                     }
                 }
             }
-            tokens.push_back(token(tokenizer::token_type::FILEEND, nullptr, line_id, 0));
+            tokens.push_back(token(tokenizer::token_type::FILEEND, literal(), line_id, 0));
             return tokens;
         }
 
@@ -616,13 +616,13 @@ namespace skiff
             for (token t : seq)
             {
                 rtn += std::to_string((int) t.get_type()) + "(";
-                if (t.get_lit() == nullptr)
+                if (t.get_lit().get_type() == literal_type::EMPTY)
                 {
-                    rtn += "nullptr)";
+                    rtn += ")";
                 }
                 else
                 {
-                    rtn += t.get_lit()->to_string() + ")";
+                    rtn += t.get_lit().get_value() + ")";
                 }
             }
             return rtn;

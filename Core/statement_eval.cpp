@@ -20,7 +20,7 @@ namespace skiff
 
         skiff_object statement::eval(scope *env)
         {
-            return skiff_object();
+            return env->get_none_object();
         }
 
         environment::skiff_object type_statement::eval(environment::scope *env)
@@ -32,21 +32,23 @@ namespace skiff
 
         skiff_object value::eval(scope *env)
         {
-            if (!val.empty() && val.find_first_not_of("0123456789") == std::string::npos)
+            using tokenizer::literal_type;
+            switch(val.get_type())
             {
-                return skiff_object(atoi(val.c_str()), env->get_type("skiff.lang.Int"));
-            }
-            else if (!val.empty() && val.find_first_not_of("0123456789.") == std::string::npos)
-            {
-                return skiff_object(atof(val.c_str()), env->get_type("skiff.lang.Double"));
-            }
-            else if (!val.empty() && val[0] == '"' && val[val.length() - 1] == '"')
-            {
-                return skiff_object(string(val.substr(1, val.length() - 2)), env->get_type("skiff.lang.String"));
-            }
-            else if (!val.empty() && val[0] == '\'' && val[val.length() - 1] == '\'')
-            {
-                return skiff_object(string(val), env->get_type("skiff.lang.Sequence"));
+                case literal_type::STRING:
+                    return skiff_object(val.get_value(), env->get_type("skiff.lang.String"));
+                case literal_type::SEQUENCE:
+                    return skiff_object(val.get_value(), env->get_type("skiff.lang.Sequence"));
+                case literal_type::NUMBER: {
+                    if (!val.get_value().empty() && val.get_value().find_first_not_of("0123456789") == std::string::npos)
+                    {
+                        return skiff_object(atoi(val.get_value().c_str()), env->get_type("skiff.lang.Int"));
+                    }
+                    else if (!val.get_value().empty() && val.get_value().find_first_not_of("0123456789.") == std::string::npos)
+                    {
+                        return skiff_object(atof(val.get_value().c_str()), env->get_type("skiff.lang.Double"));
+                    }
+                }
             }
             return env->get_none_object();
         }

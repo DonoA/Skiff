@@ -357,7 +357,7 @@ namespace skiff
             tkns = cap->match_groups.at(0);
         }
 
-        statements::type_statement stmt = statements::type_statement(tkns.at(0).get_lit()->to_string(), generic_types,
+        statements::type_statement stmt = statements::type_statement(tkns.at(0).get_lit().get_value(), generic_types,
                                                                      nullptr);
 
         return stmt;
@@ -614,7 +614,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::declaration_with_assignment(
-                                cap->selected_tokens.at(0).get_lit()->to_string(),
+                                cap->selected_tokens.at(0).get_lit().get_value(),
                                 parse_type_call(cap->match_groups.at(0)),
                                 parser(cap->match_groups.at(1)).parse().at(0)
                         ));
@@ -627,7 +627,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::declaration(
-                                cap->selected_tokens.at(0).get_lit()->to_string(),
+                                cap->selected_tokens.at(0).get_lit().get_value(),
                                 parse_type_call(cap->match_groups.at(0))
                         ));
                 pos += cap->captured + 1;
@@ -755,7 +755,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::import_statement(
-                                cap->selected_tokens.at(1).get_lit()->to_string()
+                                cap->selected_tokens.at(1).get_lit().get_value()
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -766,7 +766,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::import_statement(
-                                cap->selected_tokens.at(2).get_lit()->to_string()
+                                cap->selected_tokens.at(2).get_lit().get_value()
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -1098,7 +1098,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::value(
-                                cap->selected_tokens.at(0).get_lit()->to_string()
+                                cap->selected_tokens.at(0).get_lit()
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -1120,7 +1120,7 @@ namespace skiff
             {
                 statements.push_back(
                         new statements::variable(
-                                cap->selected_tokens.at(0).get_lit()->to_string()
+                                cap->selected_tokens.at(0).get_lit().get_value()
                         ));
                 pos += cap->captured + 1;
                 continue;
@@ -1136,7 +1136,7 @@ namespace skiff
     {
         if (this->pos + i >= stmt.size())
         {
-            return token(token_type::FILEEND, nullptr, 0, 0);
+            return token(token_type::FILEEND, literal(), 0, 0);
         }
         else
         {

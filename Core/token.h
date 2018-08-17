@@ -12,7 +12,7 @@ namespace skiff
     {
         enum literal_type
         {
-            STRING, SEQUENCE, NUMBER, DECIMAL,
+            STRING, SEQUENCE, NUMBER, EMPTY,
         };
 
         enum token_type
@@ -43,19 +43,22 @@ namespace skiff
         class literal
         {
         public:
-            literal(literal_type type, void *value);
+            literal() : literal(literal_type::EMPTY, "") { }
+            literal(literal_type type, string value);
 
-            string to_string() { return *((string *) literal_value); }
+            string get_value() const { return literal_value; }
+
+            literal_type get_type() const { return type; }
 
         private:
             literal_type type;
-            void *literal_value;
+            string literal_value;
         };
 
         class token
         {
         public:
-            token(token_type type, literal *literal, size_t line, size_t pos);
+            token(token_type type, literal literal, size_t line, size_t pos);
 
             token_type get_type() { return type; };
 
@@ -63,13 +66,13 @@ namespace skiff
 
             size_t get_col() { return pos; };
 
-            literal *get_lit() { return lit; };
+            literal get_lit() { return lit; };
 
             bool operator==(const token &other) const;
 
         private:
             token_type type;
-            literal *lit;
+            literal lit;
             size_t line;
             size_t pos;
         };
