@@ -125,6 +125,10 @@ namespace skiff
                 skiff_class *t = new skiff_class(builtin::get_name_for(builtin::type::String), extnds);
                 t->add_operator(environment::builtin_operation::ADD, skiff_function("add", env,
                                                                                     skiff::builtin::generator::create_add<string>()));
+
+                t->add_operator(environment::builtin_operation::EQUAL, skiff_function("equals", env,
+                                                                                    skiff::builtin::generator::create_equals<string>()));
+
                 t->get_scope()->define_function("to_string", new skiff_function("to_string", env,
                                                                                 new environment::skiff_func_sig(
                                                                                         &skiff::builtin::generator::strings::to_string)));
