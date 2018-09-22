@@ -124,5 +124,16 @@ namespace skiff
             }
             return params;
         }
+
+        std::string join(std::vector<std::string> bits, std::string bit)
+        {
+            string rtn = "";
+            for(size_t i = 0; i < bits.size() - 1; i++)
+            {
+                rtn += bits.at(i) + bit;
+            }
+            rtn += bits.at(bits.size()-1);
+            return rtn;
+        }
     }
 }

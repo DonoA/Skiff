@@ -1,7 +1,7 @@
 #include "../../Core/statement.h"
-#include "../../Core/builtin.h"
+#include "interpreter/builtin.h"
 #include "../../Core/utils.h"
-#include "../../Core/evaluated_types.h"
+#include "interpreter/evaluated_types.h"
 #include "../test_util.h"
 #include <string>
 #include <vector>

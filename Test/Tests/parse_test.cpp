@@ -1,5 +1,5 @@
 #include "../../Core/statement.h"
-#include "../../Core/parser.h"
+#include "parser/parser.h"
 #include "../../Core/utils.h"
 #include "../test_util.h"
 #include <string>

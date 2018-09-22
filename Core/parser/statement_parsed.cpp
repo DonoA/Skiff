@@ -19,11 +19,6 @@ namespace skiff
             this->raw = raw;
         }
 
-        string statement::eval_c()
-        {
-            return raw;
-        }
-
         string statement::parse_string()
         {
             return "Statement(" + raw + ")";
@@ -66,6 +61,8 @@ namespace skiff
             rtn += "))";
             return rtn;
         }
+
+
 
         string variable::parse_string()
         {
@@ -186,11 +183,6 @@ namespace skiff
                 case OR:return "||";
             }
             return "";
-        }
-
-        string block_heading::eval_c()
-        {
-            return string();
         }
 
         skiff_object block_heading::eval(scope *env)
@@ -604,6 +596,8 @@ namespace skiff
             }
             return "TypeClass(" + name + ", " + params_rtn + "))";
         }
+
+
 
         std::string boolean_value::parse_string()
         {

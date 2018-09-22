@@ -19,6 +19,8 @@ namespace skiff
 
         std::vector<std::string> braced_split(std::string list, char del);
 
+        std::string join(std::vector<std::string> bits, std::string bit);
+
 //        template<class T>
 //        void * allocate(T val);
 //

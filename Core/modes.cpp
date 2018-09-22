@@ -8,6 +8,7 @@ namespace skiff
         using ::std::vector;
         using ::std::queue;
         using ::std::stack;
+        using ::std::ofstream;
         using statements::statement;
         using statements::braced_block;
         using environment::scope;
@@ -33,6 +34,17 @@ namespace skiff
             {
                 s->eval(env);
             }
+        }
+
+        void compile(compilation_types::compilation_scope *env, vector<statement *> statements, string outfile)
+        {
+            ofstream output;
+            output.open(outfile);
+            for (statement *s : statements)
+            {
+                std::cout << s->compile(env) << ";\n";
+            }
+            output.close();
         }
     }
 }

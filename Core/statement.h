@@ -5,8 +5,9 @@
 #include <map>
 #include <queue>
 #include <stack>
-#include "evaluated_types.h"
-#include "token.h"
+#include "interpreter/evaluated_types.h"
+#include "parser/token.h"
+#include "compiler/compilation_types.h"
 
 namespace skiff
 {
@@ -34,7 +35,7 @@ namespace skiff
 
             explicit statement(std::string raw);
 
-            virtual std::string eval_c();
+            virtual std::string compile(compilation_types::compilation_scope *env);
 
             virtual environment::skiff_object eval(environment::scope *env);
 
@@ -58,6 +59,8 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
+            std::string compile(compilation_types::compilation_scope *env);
+
         private:
             std::string name;
             std::vector<type_statement> generic_types;
@@ -70,6 +73,8 @@ namespace skiff
             explicit value(tokenizer::literal val) : val(val) { };
 
             environment::skiff_object eval(environment::scope *env) override;
+
+            std::string compile(compilation_types::compilation_scope *env) override;
 
             std::string parse_string() override;
 
@@ -97,6 +102,8 @@ namespace skiff
             explicit variable(std::string name) : name(name) { };
 
             std::string parse_string() override;
+
+            std::string compile(compilation_types::compilation_scope *env) override;
 
             environment::skiff_object eval(environment::scope *env) override;
 
@@ -181,6 +188,8 @@ namespace skiff
 
             std::string parse_string() override;
 
+            std::string compile(compilation_types::compilation_scope *env) override;
+
             environment::skiff_object eval(environment::scope *env) override;
 
         private:
@@ -209,6 +218,8 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
+            std::string compile(compilation_types::compilation_scope *env) override;
+
         private:
             std::string name;
             type_statement type;
@@ -225,6 +236,8 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
+            std::string compile(compilation_types::compilation_scope *env) override;
+
         private:
             type_statement name;
             std::vector<statement *> params;
@@ -236,8 +249,6 @@ namespace skiff
             block_heading() = default;
 
             explicit block_heading(std::vector<statement *> body) : body(body) { };
-
-            std::string eval_c() override;
 
             environment::skiff_object eval(environment::scope *env) override;
 
