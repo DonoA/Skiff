@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     if(compile)
     {
-        skiff::compilation_types::compilation_scope *env;
+        skiff::compilation_types::compilation_scope *env = new skiff::compilation_types::compilation_scope();
 
         std::cout << "=== Compilation ===" << std::endl;
 

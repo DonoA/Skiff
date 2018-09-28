@@ -7,29 +7,29 @@ default: build
 build: Target/Core/builtin.o Target/Core/evaluated_types.o Target/Core/modes.o Target/Core/parser.o Target/Core/statement_eval.o Target/Core/statement_parsed.o Target/Core/token.o Target/Core/utils.o Target/main.o
 	$(CC) $(CFLAGS) -o Target/Skiff Target/main.o Target/Core/*.o
 
-Target/Core/builtin.o: Core/builtin.cpp Core/builtin.h
-	$(CC) $(CFLAGS) -c -o Target/Core/builtin.o Core/builtin.cpp
+Target/Core/interpreter/builtin.o: Core/interpreter/builtin.cpp Core/interpreter/builtin.h
+	$(CC) $(CFLAGS) -c -o $@ Core/interpreter/builtin.cpp
 
-Target/Core/evaluated_types.o: Core/evaluated_types.cpp Core/evaluated_types.h
-	$(CC) $(CFLAGS) -c -o Target/Core/evaluated_types.o Core/evaluated_types.cpp
+Target/Core/interpreter/evaluated_types.o: Core/interpreter/evaluated_types.cpp Core/interpreter/evaluated_types.h
+	$(CC) $(CFLAGS) -c -o $@ Core/interpreter/evaluated_types.cpp
 
 Target/Core/modes.o: Core/modes.cpp Core/modes.h
-	$(CC) $(CFLAGS) -c -o Target/Core/modes.o Core/modes.cpp
+	$(CC) $(CFLAGS) -c -o $@ Core/modes.cpp
 
-Target/Core/parser.o: Core/parser.cpp Core/parser.h
-	$(CC) $(CFLAGS) -c -o Target/Core/parser.o Core/parser.cpp
+Target/Core/parser/parser.o: Core/parser/parser.cpp Core/parser/parser.h
+	$(CC) $(CFLAGS) -c -o $@ Core/parser/parser.cpp
 
-Target/Core/statement_eval.o: Core/statement_eval.cpp  Core/statement.h
-	$(CC) $(CFLAGS) -c -o Target/Core/statement_eval.o Core/statement_eval.cpp 
+Target/Core/interpreter/statement_eval.o: Core/interpreter/statement_eval.cpp  Core/interpreter/statement.h
+	$(CC) $(CFLAGS) -c -o $@ Core/interpreter/statement_eval.cpp
 
-Target/Core/statement_parsed.o: Core/statement_parsed.cpp Core/statement.h
-	$(CC) $(CFLAGS) -c -o Target/Core/statement_parsed.o Core/statement_parsed.cpp
+Target/Core/parser/statement_parsed.o: Core/parser/statement_parsed.cpp Core/parser/statement.h
+	$(CC) $(CFLAGS) -c -o $@ Core/parser/statement_parsed.cpp
 
-Target/Core/token.o: Core/token.cpp Core/token.h
-	$(CC) $(CFLAGS) -c -o Target/Core/token.o Core/token.cpp
+Target/Core/parser/token.o: Core/parser/token.cpp Core/parser/token.h
+	$(CC) $(CFLAGS) -c -o $@ Core/parser/token.cpp
 
 Target/Core/utils.o: Core/utils.cpp Core/utils.h
-	$(CC) $(CFLAGS) -c -o Target/Core/utils.o Core/utils.cpp
+	$(CC) $(CFLAGS) -c -o $@ Core/utils.cpp
 
 Target/main.o: Skiff/main.cpp
 	$(CC) $(CFLAGS) -c -o Target/main.o Skiff/main.cpp

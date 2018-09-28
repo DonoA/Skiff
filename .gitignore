@@ -4,6 +4,7 @@ Debug/
 SuperCC/Debug/
 *.o
 *.su
+*.c
 Target/Skiff
 Core/.vscode/
 Target/SkiffTest
