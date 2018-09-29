@@ -23,9 +23,16 @@ namespace skiff
                 file += line + "\n";
             }
             vector<tokenizer::token> token_sequence = tokenizer::tokenize(file);
-            vector<statement *> statements = parser(token_sequence).parse();
 
-            return statements;
+            new_parser parser(token_sequence);
+
+            parser.parse_statement();
+
+//            std::cout << tokenizer::sequencetostring(token_sequence) << std::endl;
+
+            //            vector<statement *> statements = parser(token_sequence).parse();
+
+            return vector<statement *>();//statements;
         }
 
         void evaluate(scope *env, vector<statement *> statements)
