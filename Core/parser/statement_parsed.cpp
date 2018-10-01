@@ -629,5 +629,15 @@ namespace skiff
         {
             return "Param(" + p.name + +"," + p.typ.parse_string() + ")";
         }
+
+        std::string compound::parse_string()
+        {
+            vector<string> ss;
+            for(statement * s : stmts)
+            {
+                ss.push_back(s->parse_string());
+            }
+            return "Compound(" + utils::join(ss, ",") + ")";
+        }
     }
 }

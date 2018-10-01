@@ -14,6 +14,8 @@ int main(int argc, char *argv[])
     std::vector<skiff::statements::statement *> test_statements =
             skiff::modes::parse_file((argc == 2 ? std::string(argv[1]) : "test.su"));
 
+    std::cout << std::endl;
+
     for (statement *st : test_statements)
     {
         std::cout << st->parse_string() << std::endl;

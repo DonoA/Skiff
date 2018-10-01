@@ -26,13 +26,9 @@ namespace skiff
 
             new_parser parser(token_sequence);
 
-            parser.parse_statement();
+            vector<statement *> statements = parser.parse_statement();
 
-//            std::cout << tokenizer::sequencetostring(token_sequence) << std::endl;
-
-            //            vector<statement *> statements = parser(token_sequence).parse();
-
-            return vector<statement *>();//statements;
+            return statements;
         }
 
         void evaluate(scope *env, vector<statement *> statements)

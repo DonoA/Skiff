@@ -74,63 +74,102 @@ statement * skiff::new_parser::parse_expression()
         switch(results.on)
         {
             case token_type::EQUAL:
+            {
                 std::cout << "assign ";
-                new_parser(results.match.at(0)).parse_expression();
+                statement * name = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " to ";
-                new_parser(results.match.at(1)).parse_expression();
+                statement * value = new_parser(results.match.at(1)).parse_expression();
+                return new statements::assignment(name, value);
                 break;
-
+            }
             case token_type::OR:
-                new_parser(results.match.at(0)).parse_expression();
+            {
+                statement *p1 = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " or ";
-                new_parser(results.match.at(1)).parse_expression();
+                statement *p2 = new_parser(results.match.at(1)).parse_expression();
+                return new statements::boolean_conjunction(p1, statements::boolean_conjunction::OR, p2);
                 break;
-
+            }
             case token_type::AND:
-                new_parser(results.match.at(0)).parse_expression();
+            {
+                statement *p1 = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " and ";
-                new_parser(results.match.at(1)).parse_expression();
+                statement *p2 = new_parser(results.match.at(1)).parse_expression();
+                return new statements::boolean_conjunction(p1, statements::boolean_conjunction::AND, p2);
                 break;
-
+            }
             case token_type::LEFT_ANGLE_BRACE:
-                new_parser(results.match.at(0)).parse_expression();
+            {
+                statement * p1 = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " less than ";
-                new_parser(results.match.at(1)).parse_expression();
+                statement * p2 = new_parser(results.match.at(1)).parse_expression();
+                return new statements::comparison(p1, statements::comparison::LESS_THAN, p2);
                 break;
-
+            }
             case token_type::RIGHT_ANGLE_BRACE:
-                new_parser(results.match.at(0)).parse_expression();
+            {
+                statement *p1 = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " greater than ";
-                new_parser(results.match.at(1)).parse_expression();
+                statement *p2 = new_parser(results.match.at(1)).parse_expression();
+                return new statements::comparison(p1, statements::comparison::GREATER_THAN, p2);
                 break;
-
+            }
             case token_type::DOUBLE_EQUAL:
-                new_parser(results.match.at(0)).parse_expression();
+            {
+                statement *p1 = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " is equal to ";
-                new_parser(results.match.at(1)).parse_expression();
+                statement *p2 = new_parser(results.match.at(1)).parse_expression();
+                return new statements::comparison(p1, statements::comparison::EQUAL, p2);
                 break;
+            }
         }
         return nullptr;
+    }
+
+    split_results compund_segments = braced_split({token_type::DOT}, -1);
+
+    if(compund_segments.match.size() != 1)
+    {
+        vector<statement *> cmp_bits;
+        for(vector<token> seg : compund_segments.match)
+        {
+            cmp_bits.push_back(new_parser(seg).parse_expression());
+        }
+        return new statements::compound(cmp_bits);
     }
 
     if(get_current().get_type() == token_type::NAME && get_next().get_type() == token_type::LEFT_PAREN)
     {
         std::cout << "call to ";
-        new_parser({get_current()}).parse_expression();
+        statements::type_statement ts(get_current().get_lit().get_value());
         consume(token_type::NAME);
         vector<token> parens = consume_parens(token_type::LEFT_PAREN, token_type::RIGHT_PAREN);
         slice_ends(&parens);
         split_results params = new_parser(parens).braced_split({token_type::COMMA}, -1);
-        std::cout << " on ";
+        vector<statement *> param_stmts;
+        std::cout << " on (";
         for(vector<token> s : params.match)
         {
-            new_parser(s).parse_expression();
+            param_stmts.push_back(new_parser(s).parse_expression());
             std::cout << " with ";
         }
-        return nullptr;
+        std::cout << ") ";
+        return new statements::function_call(ts, param_stmts);
     }
 
     std::cout << tokenizer::sequencetostring(tokens);
+    if(tokens.size() == 1)
+    {
+        if(get_current().get_type() == token_type::NAME)
+        {
+            return new statements::variable(get_current().get_lit().get_value());
+        }
+        if(get_current().get_type() == token_type::LITERAL)
+        {
+            return new statements::value(get_current().get_lit());
+        }
+    }
+    return new statements::statement(tokenizer::sequencetostring(tokens));
 }
 
 vector<skiff::tokenizer::token> skiff::new_parser::consume_parens(tokenizer::token_type leftparen, tokenizer::token_type rightparen)

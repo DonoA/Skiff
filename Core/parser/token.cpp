@@ -70,7 +70,7 @@ namespace skiff
         {
             size_t start_i = *i;
             while (*i < seq.length() &&
-                   (isChar(seq.at(*i)) || isDigit(seq.at(*i)) || isUnderscore(seq.at(*i)) || isDot(seq.at(*i))))
+                   (isChar(seq.at(*i)) || isDigit(seq.at(*i)) || isUnderscore(seq.at(*i))))
             {
                 (*i)++;
             }
@@ -127,6 +127,8 @@ namespace skiff
                     case ']':tokens.push_back(token(token_type::RIGHT_BRACKET, literal(), line_id, col));
                         break;
                     case '~':tokens.push_back(token(token_type::BIT_NOT, literal(), line_id, col));
+                        break;
+                    case '.':tokens.push_back(token(token_type::DOT, literal(), line_id, col));
                         break;
 
                     case ' ':

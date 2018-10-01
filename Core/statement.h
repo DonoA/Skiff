@@ -52,6 +52,8 @@ namespace skiff
         public:
             type_statement() : name(""), generic_types(std::vector<type_statement>()), extends(nullptr) { };
 
+            type_statement(string name) : name(name), generic_types(std::vector<type_statement>()), extends(nullptr) { };
+
             type_statement(std::string name, std::vector<type_statement> generic_types, type_statement *extends) :
                     name(name), generic_types(generic_types), extends(extends) { };
 
@@ -81,6 +83,21 @@ namespace skiff
         private:
             tokenizer::literal val;
 //            type_statement typ;
+        };
+
+        class compound : public statement
+        {
+        public:
+            explicit compound(vector<statement *> stmts) : stmts(stmts) { };
+
+//            environment::skiff_object eval(environment::scope *env) override;
+
+//            std::string compile(compilation_types::compilation_scope *env) override;
+
+            std::string parse_string() override;
+
+        private:
+            vector<statement *> stmts;
         };
 
         class boolean_value : public statement
