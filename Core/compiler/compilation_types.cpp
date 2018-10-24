@@ -9,21 +9,22 @@ namespace skiff
             this->includes[name] = local;
         }
 
-        void compilation_scope::declare_function(string proto, string content)
+        void compilation_scope::declare_function(string proto, vector<string> content)
         {
             this->defined_functions.push_back({proto, content});
         }
 
         void compilation_scope::add_to_main_function(string content)
         {
-            if(this->defined_functions.size() == 0)
+            if(main_adr == -1)
             {
+                main_adr = (int) defined_functions.size();
                 c_function func;
                 func.proto = "int main(int argc, char **argv)";
-                func.content = "";
+                func.content = vector<string>();
                 this->defined_functions.push_back(func);
             }
-            this->defined_functions.at(0).content += content;
+            defined_functions.at(main_adr).content.push_back("\t" + content);
         }
 
         void compilation_scope::unroll(std::ofstream * output)
@@ -31,19 +32,21 @@ namespace skiff
             for(auto const& include : includes)
             {
                 (*output) << "#include " << (include.second ? "\"" : "<") << include.first << (include.second ? "\"" : ">") << std::endl;
-                std::cout << "#include " << (include.second ? "\"" : "<") << include.first << (include.second ? "\"" : ">") << std::endl;
             }
 
             for(c_function c : this->defined_functions)
             {
                 (*output) << c.proto << ";" << std::endl;
-                std::cout << c.proto << ";" << std::endl;
             }
 
             for(c_function c : this->defined_functions)
             {
-                (*output) << c.proto << "\n{\n" << c.content << "}\n";
-                std::cout << c.proto << "\n{\n" << c.content << "}\n";
+                (*output) << c.proto << "\n{\n";
+                for(string s : c.content)
+                {
+                    (*output) << s;
+                }
+                (*output) << "}\n";
             }
         }
 

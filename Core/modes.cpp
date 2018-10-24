@@ -46,7 +46,7 @@ namespace skiff
             for (statement *s : statements)
             {
 //
-                env->add_to_main_function(s->compile(env).content + ";\n");
+                env->add_to_main_function(s->compile(env).get_line() + ";\n");
             }
             env->unroll(&output);
             output.close();

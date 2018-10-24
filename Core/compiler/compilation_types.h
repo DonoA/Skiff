@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <optional>
 
 using std::string;
 using std::vector;
@@ -28,8 +29,10 @@ namespace skiff
         {
         public:
             compiled_skiff(string str) : compiled_skiff(str, statements::type_statement()) { }
-            compiled_skiff(string content, statements::type_statement typ) : content(content), type(typ) { }
-            string content;
+            compiled_skiff(string content, statements::type_statement typ) : content({content}), type(typ) { }
+            compiled_skiff(vector<string> content, statements::type_statement typ) : content(content), type(typ) { }
+            string get_line() { return content.at(0); }
+            vector<string> content;
             statements::type_statement type;
         };
 
@@ -38,10 +41,10 @@ namespace skiff
         public:
             struct c_function {
                 string proto;
-                string content;
+                vector<string> content;
             };
             void add_include(string name, bool local);
-            void declare_function(string proto, string content);
+            void declare_function(string proto, vector<string> content);
             void add_to_main_function(string content);
             void unroll(std::ofstream * output);
             string get_running_id();
@@ -51,6 +54,7 @@ namespace skiff
             size_t running_id = 0;
             map<string, bool> includes;
             vector<c_function> defined_functions;
+            int main_adr = -1;
             map<string, statements::type_statement> variable_table;
         };
     }

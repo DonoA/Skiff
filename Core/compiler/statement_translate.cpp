@@ -26,13 +26,13 @@ namespace skiff
         compiled_skiff assignment::compile(compilation_scope *env)
         {
             compiled_skiff value = this->val->compile(env);
-            return {this->name->compile(env).content + " = " + value.content, value.type};
+            return {this->name->compile(env).get_line() + " = " + value.get_line(), value.type};
         }
 
         compiled_skiff declaration_with_assignment::compile(compilation_scope *env)
         {
             env->define_variable(name, type.get_name());
-            return {type.compile(env).content + " " + name + " = " + value->compile(env).content};
+            return {type.compile(env).get_line() + " " + name + " = " + value->compile(env).get_line()};
         }
 
         compiled_skiff type_statement::compile(compilation_scope *env)
@@ -71,7 +71,7 @@ namespace skiff
         compiled_skiff function_call::compile(compilation_scope *env)
         {
             vector<string> compile_params;
-            string compiled_name = name.compile(env).content;
+            string compiled_name = name.compile(env).get_line();
             if(compiled_name == "print")
             {
                 compiled_name = "printf";
@@ -80,7 +80,7 @@ namespace skiff
                 for(statement *s : params)
                 {
                     compiled_skiff p = s->compile(env);
-                    compile_params.push_back(p.content);
+                    compile_params.push_back(p.get_line());
                     format.push_back(p.type.get_c_symbol());
                 }
                 compile_params.insert(compile_params.begin(), "\"" + utils::join(format, " ") + "\\n\"");
@@ -89,9 +89,9 @@ namespace skiff
 
             for(statement *s : params)
             {
-                compile_params.push_back(s->compile(env).content);
+                compile_params.push_back(s->compile(env).get_line());
             }
-            return "(*" + name.compile(env).content + ")(" + utils::join(compile_params, ",") + ")";
+            return "(*" + name.compile(env).get_line() + ")(" + utils::join(compile_params, ",") + ")";
         }
 
         compiled_skiff function_definition::compile(compilation_types::compilation_scope *env)
@@ -100,8 +100,8 @@ namespace skiff
             vector<string> params_typed;
             for(function_parameter fp : this->params)
             {
-                params_named.push_back(fp.typ.compile(env).content + " " + fp.name);
-                params_typed.push_back(fp.typ.compile(env).content);
+                params_named.push_back(fp.typ.compile(env).get_line() + " " + fp.name);
+                params_typed.push_back(fp.typ.compile(env).get_line());
             }
             if(this->params.empty())
             {
@@ -109,15 +109,26 @@ namespace skiff
                 params_typed.push_back("void");
             }
             string name = this->name + "_" + env->get_running_id();
-            string return_comp = this->returns.compile(env).content;
+            string return_comp = this->returns.compile(env).get_line();
             string sig = return_comp + " " +
                     name + " " +
                     "(" + utils::join(params_named, ",") + ")";
 
-            string body;
+            vector<string> body;
             for(statement * s : this->body)
             {
-                body += s->compile(env).content + ";\n";
+                compiled_skiff compiled_line = s->compile(env);
+                if(compiled_line.content.size() == 1)
+                {
+                    body.push_back("\t" + compiled_line.get_line() + ";\n");
+                }
+                else
+                {
+                    for(string line : compiled_line.content)
+                    {
+                        body.push_back("\t" + line + "\n");
+                    }
+                }
             }
             env->declare_function(sig, body);
             env->define_variable(this->name, this->returns.get_name());
@@ -135,12 +146,12 @@ namespace skiff
                     break;
             }
             compiled_skiff compiledSkiff = this->statement1->compile(env);
-            return {compiledSkiff.content + " " + o + " " + this->statement2->compile(env).content, compiledSkiff.type};
+            return {compiledSkiff.get_line() + " " + o + " " + this->statement2->compile(env).get_line(), compiledSkiff.type};
         }
 
         compiled_skiff return_statement::compile(compilation_types::compilation_scope *env)
         {
-            return {"return " + this->returns->compile(env).content};
+            return {"return " + this->returns->compile(env).get_line()};
         }
     }
 }
