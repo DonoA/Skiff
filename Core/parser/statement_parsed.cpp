@@ -84,7 +84,7 @@ namespace skiff
         {
             string rtn = "MathStatement(";
             return "MathStatement(" + statement1->parse_string() + " " +
-                   std::to_string((int) opr) + " " +
+                   this->string_math_op() + " " +
                    statement2->parse_string() + ")";
         }
 

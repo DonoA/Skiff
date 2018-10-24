@@ -14,6 +14,29 @@ void slice_ends(vector<token> * tokens)
     tokens->pop_back();
     tokens->erase(tokens->begin());
 }
+statement * parse_math(skiff::new_parser::split_results results, skiff::statements::math_statement::op opr,
+                       bool self_assign)
+{
+    statement *var = skiff::new_parser(results.match.at(0)).parse_expression();
+    statement *math = skiff::new_parser(results.match.at(1)).parse_expression();
+    if(self_assign)
+    {
+        return new skiff::statements::assignment(
+                var,
+                new skiff::statements::math_statement(var, opr, math));
+    }
+    else
+    {
+        return new skiff::statements::math_statement(var, opr, math);
+    }
+}
+
+statement * parse_compare(skiff::new_parser::split_results results, skiff::statements::comparison::comparison_type typ)
+{
+    statement * p1 = skiff::new_parser(results.match.at(0)).parse_expression();
+    statement * p2 = skiff::new_parser(results.match.at(1)).parse_expression();
+    return new skiff::statements::comparison(p1, typ, p2);
+}
 
 // Parse top level statement, cannot be contained within an expression
 vector<statement *> skiff::new_parser::parse_statement()
@@ -94,20 +117,15 @@ statement * skiff::new_parser::parse_expression()
                 split_results name_split = new_parser(results.match.at(0)).braced_split({token_type::COLON}, 1);
                 if (name_split.match.size() != 2)
                 {
-                    std::cout << "assign ";
                     statement *name = new_parser(results.match.at(0)).parse_expression();
-                    std::cout << " to ";
                     statement *value = new_parser(results.match.at(1)).parse_expression();
                     return new statements::assignment(name, value);
                 }
                 else
                 {
                     string name = name_split.match.at(0).at(0).get_lit().get_value();
-                    std::cout << "define " << name;
                     statements::type_statement typ =
                             statements::type_statement(name_split.match.at(1).at(0).get_lit().get_value());
-                    std::cout << " of " << typ.parse_string();
-                    std::cout << " to ";
                     statement *value = new_parser(results.match.at(1)).parse_expression();
                     return new statements::declaration_with_assignment(name, typ, value);
                 }
@@ -116,58 +134,32 @@ statement * skiff::new_parser::parse_expression()
             case token_type::OR:
             {
                 statement *p1 = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " or ";
                 statement *p2 = new_parser(results.match.at(1)).parse_expression();
                 return new statements::boolean_conjunction(p1, statements::boolean_conjunction::OR, p2);
             }
             case token_type::AND:
             {
                 statement *p1 = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " and ";
                 statement *p2 = new_parser(results.match.at(1)).parse_expression();
                 return new statements::boolean_conjunction(p1, statements::boolean_conjunction::AND, p2);
             }
             // Compares
-            case token_type::LEFT_ANGLE_BRACE:
-            {
-                statement * p1 = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " less than ";
-                statement * p2 = new_parser(results.match.at(1)).parse_expression();
-                return new statements::comparison(p1, statements::comparison::LESS_THAN, p2);
-            }
-            case token_type::RIGHT_ANGLE_BRACE:
-            {
-                statement *p1 = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " greater than ";
-                statement *p2 = new_parser(results.match.at(1)).parse_expression();
-                return new statements::comparison(p1, statements::comparison::GREATER_THAN, p2);
-            }
-            case token_type::DOUBLE_EQUAL:
-            {
-                statement *p1 = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " is equal to ";
-                statement *p2 = new_parser(results.match.at(1)).parse_expression();
-                return new statements::comparison(p1, statements::comparison::EQUAL, p2);
-            }
+            case token_type::LEFT_ANGLE_BRACE: return parse_compare(results, statements::comparison::LESS_THAN);
+            case token_type::RIGHT_ANGLE_BRACE: return parse_compare(results, statements::comparison::GREATER_THAN);
+            case token_type::LESS_THAN_EQUAL: return parse_compare(results, statements::comparison::LESS_THAN_EQUAL_TO);
+            case token_type::GREATER_THAN_EQUAL: return parse_compare(results, statements::comparison::GREATER_THAN_EQUAL_TO);
+            case token_type::DOUBLE_EQUAL: return parse_compare(results, statements::comparison::EQUAL);
+            case token_type::BANG_EQUAL: return parse_compare(results, statements::comparison::NOT_EQUAL);
             // Self assign
-            case token_type::PLUS_EQUAL:
-            {
-                statement *var = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " plus equal ";
-                statement *math = new_parser(results.match.at(1)).parse_expression();
-                return new statements::assignment(
-                        var,
-                        new statements::math_statement(var, statements::math_statement::ADD, math)
-                );
-            }
+            case token_type::PLUS_EQUAL: return parse_math(results, statements::math_statement::ADD, true);
+            case token_type::MINUS_EQUAL: return parse_math(results, statements::math_statement::SUB, true);
+            case token_type::STAR_EQUAL: return parse_math(results, statements::math_statement::MUL, true);
+            case token_type::DIV_EQUAL: return parse_math(results, statements::math_statement::DIV, true);
             // Math
-            case token_type::PLUS:
-            {
-                statement *var = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " plus ";
-                statement *math = new_parser(results.match.at(1)).parse_expression();
-                return new statements::math_statement(var, statements::math_statement::ADD, math);
-            }
+            case token_type::PLUS: return parse_math(results, statements::math_statement::ADD, false);
+            case token_type::MINUS: return parse_math(results, statements::math_statement::SUB, false);
+            case token_type::STAR: return parse_math(results, statements::math_statement::MUL, false);
+            case token_type::DIV: return parse_math(results, statements::math_statement::DIV, false);
         }
         return nullptr;
     }

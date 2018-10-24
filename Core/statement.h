@@ -5,6 +5,7 @@
 #include <map>
 #include <queue>
 #include <stack>
+#include <interpreter/evaluated_types.h>
 #include "interpreter/evaluated_types.h"
 #include "parser/token.h"
 
@@ -195,6 +196,8 @@ namespace skiff
             statement *statement1;
             math_statement::op opr;
             statement *statement2;
+
+            std::string string_math_op();
 
             static environment::skiff_class *
             get_dominant_class(environment::skiff_object s1, environment::skiff_object s2);

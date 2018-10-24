@@ -147,15 +147,21 @@ namespace skiff
 
         compiled_skiff math_statement::compile(compilation_types::compilation_scope *env)
         {
-            string o = "";
-            switch(this->opr)
-            {
-                case math_statement::ADD:
-                    o = "+";
-                    break;
-            }
+            string o = this->string_math_op();
             compiled_skiff compiledSkiff = this->statement1->compile(env);
-            return {compiledSkiff.get_line() + " " + o + " " + this->statement2->compile(env).get_line(), compiledSkiff.type};
+            return {"(" + compiledSkiff.get_line() + " " + o + " " + this->statement2->compile(env).get_line() + ")", compiledSkiff.type};
+        }
+
+        std::string math_statement::string_math_op()
+        {
+           switch(this->opr)
+           {
+               case op::ADD: return "+";
+               case op::SUB: return "-";
+               case op::MUL: return "*";
+               case op::DIV: return "/";
+               case op::EXP: return "**";
+           }
         }
 
         compiled_skiff return_statement::compile(compilation_types::compilation_scope *env)
@@ -198,7 +204,7 @@ namespace skiff
 
             if(p1.type.get_name() == "String")
             {
-                env->add_include("stdlib.h", false);
+                env->add_include("string.h", false);
                 return "strcmp (" + p1.get_line() + ", " + p2.get_line() + ") " + comp_sign + " 0";
             }
 
