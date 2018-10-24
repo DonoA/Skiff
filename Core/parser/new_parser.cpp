@@ -15,6 +15,7 @@ void slice_ends(vector<token> * tokens)
     tokens->erase(tokens->begin());
 }
 
+// Parse top level statement, cannot be contained within an expression
 vector<statement *> skiff::new_parser::parse_statement()
 {
     using tokenizer::token_type;
@@ -34,6 +35,13 @@ vector<statement *> skiff::new_parser::parse_statement()
             case token_type::DEF:
                 stmts.push_back(parse_def());
                 break;
+            case token_type::RETURN:
+            {
+                consume(token_type::RETURN);
+                new_parser return_parser = new_parser(consume_til(token_type::SEMICOLON));
+                stmts.push_back(new statements::return_statement(return_parser.parse_expression()));
+                break;
+            }
             default: {
                 new_parser subparser = new_parser(consume_til(token_type::SEMICOLON));
                 stmts.push_back(subparser.parse_expression());
@@ -46,8 +54,10 @@ vector<statement *> skiff::new_parser::parse_statement()
     return stmts;
 }
 
+// Parse an expression, can contain other expressions
 statement * skiff::new_parser::parse_expression()
 {
+    // Split based on the priorities provided (inefficient, yet effective)
     vector<vector<token_type>> precedence = {
             {token_type::EQUAL},
             {token_type::OR},
@@ -69,26 +79,42 @@ statement * skiff::new_parser::parse_expression()
 
     split_results results = precedence_braced_split(precedence);
 
-    if(results.match.size() != 0)
+    // Act upon split results
+    if(!results.match.empty())
     {
         switch(results.on)
         {
+            // Assign declare
             case token_type::EQUAL:
             {
-                std::cout << "assign ";
-                statement * name = new_parser(results.match.at(0)).parse_expression();
-                std::cout << " to ";
-                statement * value = new_parser(results.match.at(1)).parse_expression();
-                return new statements::assignment(name, value);
-                break;
+                split_results name_split = new_parser(results.match.at(0)).braced_split({token_type::COLON}, 1);
+                if (name_split.match.size() != 2)
+                {
+                    std::cout << "assign ";
+                    statement *name = new_parser(results.match.at(0)).parse_expression();
+                    std::cout << " to ";
+                    statement *value = new_parser(results.match.at(1)).parse_expression();
+                    return new statements::assignment(name, value);
+                }
+                else
+                {
+                    string name = name_split.match.at(0).at(0).get_lit().get_value();
+                    std::cout << "define " << name;
+                    statements::type_statement typ =
+                            statements::type_statement(name_split.match.at(1).at(0).get_lit().get_value());
+                    std::cout << " of " << typ.parse_string();
+                    std::cout << " to ";
+                    statement *value = new_parser(results.match.at(1)).parse_expression();
+                    return new statements::declaration_with_assignment(name, typ, value);
+                }
             }
+            // Logic joins
             case token_type::OR:
             {
                 statement *p1 = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " or ";
                 statement *p2 = new_parser(results.match.at(1)).parse_expression();
                 return new statements::boolean_conjunction(p1, statements::boolean_conjunction::OR, p2);
-                break;
             }
             case token_type::AND:
             {
@@ -96,15 +122,14 @@ statement * skiff::new_parser::parse_expression()
                 std::cout << " and ";
                 statement *p2 = new_parser(results.match.at(1)).parse_expression();
                 return new statements::boolean_conjunction(p1, statements::boolean_conjunction::AND, p2);
-                break;
             }
+            // Compares
             case token_type::LEFT_ANGLE_BRACE:
             {
                 statement * p1 = new_parser(results.match.at(0)).parse_expression();
                 std::cout << " less than ";
                 statement * p2 = new_parser(results.match.at(1)).parse_expression();
                 return new statements::comparison(p1, statements::comparison::LESS_THAN, p2);
-                break;
             }
             case token_type::RIGHT_ANGLE_BRACE:
             {
@@ -112,7 +137,6 @@ statement * skiff::new_parser::parse_expression()
                 std::cout << " greater than ";
                 statement *p2 = new_parser(results.match.at(1)).parse_expression();
                 return new statements::comparison(p1, statements::comparison::GREATER_THAN, p2);
-                break;
             }
             case token_type::DOUBLE_EQUAL:
             {
@@ -120,24 +144,44 @@ statement * skiff::new_parser::parse_expression()
                 std::cout << " is equal to ";
                 statement *p2 = new_parser(results.match.at(1)).parse_expression();
                 return new statements::comparison(p1, statements::comparison::EQUAL, p2);
-                break;
+            }
+            // Self assign
+            case token_type::PLUS_EQUAL:
+            {
+                statement *var = new_parser(results.match.at(0)).parse_expression();
+                std::cout << " plus equal ";
+                statement *math = new_parser(results.match.at(1)).parse_expression();
+                return new statements::assignment(
+                        var,
+                        new statements::math_statement(var, statements::math_statement::ADD, math)
+                );
+            }
+            // Math
+            case token_type::PLUS:
+            {
+                statement *var = new_parser(results.match.at(0)).parse_expression();
+                std::cout << " plus ";
+                statement *math = new_parser(results.match.at(1)).parse_expression();
+                return new statements::math_statement(var, statements::math_statement::ADD, math);
             }
         }
         return nullptr;
     }
 
-    split_results compund_segments = braced_split({token_type::DOT}, -1);
+    // If not split on anything, test for compound dotted statement
+    split_results compound_segments = braced_split({token_type::DOT}, -1);
 
-    if(compund_segments.match.size() != 1)
+    if(compound_segments.match.size() != 1)
     {
         vector<statement *> cmp_bits;
-        for(vector<token> seg : compund_segments.match)
+        for(vector<token> seg : compound_segments.match)
         {
             cmp_bits.push_back(new_parser(seg).parse_expression());
         }
         return new statements::compound(cmp_bits);
     }
 
+    // If no dots to split on, the expression must be a function call, treat it as such
     if(get_current().get_type() == token_type::NAME && get_next().get_type() == token_type::LEFT_PAREN)
     {
         std::cout << "call to ";
@@ -157,6 +201,7 @@ statement * skiff::new_parser::parse_expression()
         return new statements::function_call(ts, param_stmts);
     }
 
+    // If nothing else, the expression must be a variable name or literal value
     std::cout << tokenizer::sequencetostring(tokens);
     if(tokens.size() == 1)
     {
@@ -172,6 +217,7 @@ statement * skiff::new_parser::parse_expression()
     return new statements::statement(tokenizer::sequencetostring(tokens));
 }
 
+// Select next parens, keeping track of other parens so as not to split up statements
 vector<skiff::tokenizer::token> skiff::new_parser::consume_parens(tokenizer::token_type leftparen, tokenizer::token_type rightparen)
 {
     vector<token> selected;
@@ -197,6 +243,7 @@ vector<skiff::tokenizer::token> skiff::new_parser::consume_parens(tokenizer::tok
     return selected;
 }
 
+// Get the currently examined token, or EOF
 token skiff::new_parser::get_current()
 {
     if(this->current_token >= this->tokens.size())
@@ -206,6 +253,7 @@ token skiff::new_parser::get_current()
     return this->tokens.at(this->current_token);
 }
 
+// Look ahead one token
 token skiff::new_parser::get_next()
 {
     if(this->current_token + 1 >= this->tokens.size())
@@ -214,6 +262,7 @@ token skiff::new_parser::get_next()
     }
     return this->tokens.at(this->current_token + 1);
 }
+
 
 bool is_left_paren(token_type typ)
 {
@@ -251,6 +300,7 @@ int vector_contains_token_type(vector<token_type> v, token_type t)
     return -1;
 }
 
+// Split up to count times on the given token types
 skiff::new_parser::split_results skiff::new_parser::braced_split(vector<token_type> on, int count)
 {
     vector<vector<token>> segments;
@@ -260,6 +310,7 @@ skiff::new_parser::split_results skiff::new_parser::braced_split(vector<token_ty
     int used_id = -1;
     int check_id;
 
+    // Loop through tokens
     for(size_t i = this->current_token; i < tokens.size(); i++)
     {
         if(is_left_paren(tokens.at(i).get_type()))
@@ -277,6 +328,7 @@ skiff::new_parser::split_results skiff::new_parser::braced_split(vector<token_ty
                 // Bad brace match
             }
         }
+        // Check for search token type
         if((check_id = vector_contains_token_type(on, tokens.at(i).get_type())) != -1 &&
                 braces.empty() && (count == -1 || segments.size() < count))
         {
@@ -289,7 +341,10 @@ skiff::new_parser::split_results skiff::new_parser::braced_split(vector<token_ty
             segment.push_back(tokens.at(i));
         }
     }
-    segments.push_back(segment);
+    if(segment.size() != 0)
+    {
+        segments.push_back(segment);
+    }
 
     skiff::new_parser::split_results result;
     result.match = segments;
@@ -300,6 +355,7 @@ skiff::new_parser::split_results skiff::new_parser::braced_split(vector<token_ty
     return result;
 }
 
+// try to split on any of the given split precedences
 skiff::new_parser::split_results skiff::new_parser::precedence_braced_split(vector<vector<token_type>> rankings)
 {
     skiff::new_parser::split_results result;
@@ -315,6 +371,7 @@ skiff::new_parser::split_results skiff::new_parser::precedence_braced_split(vect
     return skiff::new_parser::split_results();
 }
 
+// advance search slot with expectation
 void skiff::new_parser::consume(token_type typ)
 {
     if(get_current().get_type() != typ)
@@ -324,6 +381,7 @@ void skiff::new_parser::consume(token_type typ)
     this->current_token++;
 }
 
+// advance search slot as many times as needed to locate token
 vector<token> skiff::new_parser::consume_til(token_type typ)
 {
     vector<token> segment;
@@ -361,6 +419,7 @@ vector<token> skiff::new_parser::consume_til(token_type typ)
     return vector<token>();
 }
 
+// Consume an IF block
 statement *skiff::new_parser::parse_if()
 {
     consume(token_type::IF);
@@ -375,14 +434,17 @@ statement *skiff::new_parser::parse_if()
     statement * stmt_condition = new_parser(condition).parse_expression();
     std::cout << std::endl;
     vector<statement *> stmt_body = new_parser(body).parse_statement();
+    return new statements::if_directive(stmt_condition, stmt_body);
 }
 
+// Consume a function declaration
 statement *skiff::new_parser::parse_def()
 {
+    using skiff::statements::function_definition;
     consume(token_type::DEF);
 
     std::cout << "def ";
-    new_parser({get_current()}).parse_expression();
+    string name = get_current().get_lit().get_value();
     consume(token_type::NAME);
 
     std::cout << " parameterized by ";
@@ -390,17 +452,27 @@ statement *skiff::new_parser::parse_def()
     slice_ends(&param_list);
     split_results params = new_parser(param_list).braced_split({token_type::COMMA}, -1);
 
+    vector<function_definition::function_parameter> func_params;
+
     for(vector<token> s : params.match)
     {
         new_parser(s).parse_expression();
+        split_results bits = new_parser(s).braced_split({token_type::COLON}, 1);
+        func_params.push_back(function_definition::function_parameter(
+                bits.match.at(0).at(0).get_lit().get_value(),
+                statements::type_statement(bits.match.at(1).at(0).get_lit().get_value())
+        ));
         std::cout << " with ";
     }
+
+    statements::type_statement typ_stmt("None");
 
     if(get_current().get_type() == token_type::COLON)
     {
         consume(token_type::COLON);
         std::cout << "returns ";
         new_parser({get_current()}).parse_expression();
+        typ_stmt = statements::type_statement(get_current().get_lit().get_value());
         consume(token_type::NAME);
     }
 
@@ -409,6 +481,8 @@ statement *skiff::new_parser::parse_def()
     std::cout << std::endl;
 
     vector<statement *> stmt_body = new_parser(body).parse_statement();
+
+    return new statements::function_definition(name, func_params, typ_stmt, stmt_body);
 }
 
 

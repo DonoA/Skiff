@@ -9,14 +9,9 @@ namespace skiff
             this->includes.push_back({name, local});
         }
 
-        void compilation_scope::declare_function(string proto)
+        void compilation_scope::declare_function(string proto, string content)
         {
-            this->defined_functions.push_back({proto, ""});
-        }
-
-        void compilation_scope::add_to_top_function(string content)
-        {
-            this->defined_functions.at(this->defined_functions.size()-1).content += content;
+            this->defined_functions.push_back({proto, content});
         }
 
         void compilation_scope::add_to_main_function(string content)
@@ -31,12 +26,41 @@ namespace skiff
             this->defined_functions.at(0).content += content;
         }
 
-        void compilation_scope::unroll()
+        void compilation_scope::unroll(std::ofstream * output)
         {
+            for(include i : includes)
+            {
+                (*output) << "#include " << (i.local ? "\"" : "<") << i.name << (i.local ? "\"" : ">") << std::endl;
+                std::cout << "#include " << (i.local ? "\"" : "<") << i.name << (i.local ? "\"" : ">") << std::endl;
+            }
+
             for(c_function c : this->defined_functions)
             {
+                (*output) << c.proto << ";" << std::endl;
+                std::cout << c.proto << ";" << std::endl;
+            }
+
+            for(c_function c : this->defined_functions)
+            {
+                (*output) << c.proto << "\n{\n" << c.content << "}\n";
                 std::cout << c.proto << "\n{\n" << c.content << "}\n";
             }
+        }
+
+        string compilation_scope::get_running_id()
+        {
+            this->running_id++;
+            return std::to_string(this->running_id);
+        }
+
+        void compilation_scope::define_variable(string name, statements::type_statement class_name)
+        {
+            this->variable_table[name] = class_name;
+        }
+
+        statements::type_statement compilation_scope::get_variable(string name)
+        {
+            return this->variable_table[name];
         }
     }
 }

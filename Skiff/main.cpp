@@ -4,6 +4,7 @@
 #include "interpreter/builtin.h"
 #include "../Core/modes.h"
 #include "compiler/compilation_types.h"
+#include "statement.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,18 +17,18 @@ int main(int argc, char *argv[])
 
     std::cout << std::endl;
 
-    for (statement *st : test_statements)
+    for (skiff::statements::statement *st : test_statements)
     {
         std::cout << st->parse_string() << std::endl;
     }
 
     if(compile)
     {
-//        skiff::compilation_types::compilation_scope *env = new skiff::compilation_types::compilation_scope();
-//
-//        std::cout << "=== Compilation ===" << std::endl;
-//
-//        skiff::modes::compile(env, test_statements, "test.c");
+        skiff::compilation_types::compilation_scope *env = new skiff::compilation_types::compilation_scope();
+
+        std::cout << "=== Compilation ===" << std::endl;
+
+        skiff::modes::compile(env, test_statements, "test.c");
 
     }
     else

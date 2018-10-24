@@ -7,7 +7,8 @@
 #include <stack>
 #include "interpreter/evaluated_types.h"
 #include "parser/token.h"
-#include "compiler/compilation_types.h"
+
+
 
 namespace skiff
 {
@@ -24,6 +25,12 @@ namespace skiff
         class skiff_class;
     }
 
+    namespace compilation_types
+    {
+        struct compiled_skiff;
+        class compilation_scope;
+    }
+
     namespace statements
     {
         class braced_block;
@@ -35,7 +42,7 @@ namespace skiff
 
             explicit statement(std::string raw);
 
-            virtual std::string compile(compilation_types::compilation_scope *env);
+            virtual compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env);
 
             virtual environment::skiff_object eval(environment::scope *env);
 
@@ -61,7 +68,11 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
-            std::string compile(compilation_types::compilation_scope *env);
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
+
+            std::string get_name();
+
+            std::string get_c_symbol();
 
         private:
             std::string name;
@@ -76,7 +87,7 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
-            std::string compile(compilation_types::compilation_scope *env) override;
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
             std::string parse_string() override;
 
@@ -120,7 +131,7 @@ namespace skiff
 
             std::string parse_string() override;
 
-            std::string compile(compilation_types::compilation_scope *env) override;
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
             environment::skiff_object eval(environment::scope *env) override;
 
@@ -178,6 +189,8 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope * env) override;
 
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
+
         private:
             statement *statement1;
             math_statement::op opr;
@@ -205,7 +218,7 @@ namespace skiff
 
             std::string parse_string() override;
 
-            std::string compile(compilation_types::compilation_scope *env) override;
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
             environment::skiff_object eval(environment::scope *env) override;
 
@@ -235,7 +248,7 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
-            std::string compile(compilation_types::compilation_scope *env) override;
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
         private:
             std::string name;
@@ -253,7 +266,7 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
-            std::string compile(compilation_types::compilation_scope *env) override;
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
         private:
             type_statement name;
@@ -532,6 +545,8 @@ namespace skiff
 
             std::string parse_string() override;
 
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
+
         private:
             statement *returns;
         };
@@ -592,14 +607,14 @@ namespace skiff
 
             std::string parse_string() override;
 
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
+
         private:
             std::string name;
             std::vector<function_parameter> params;
             type_statement returns;
 
             std::string function_parameter_sig(function_parameter);
-
-            std::string function_parameter_c_sig(function_parameter);
         };
 
         class extern_function_definition : public statement
@@ -718,3 +733,5 @@ namespace skiff
         };
     }
 }
+
+#include "compiler/compilation_types.h"

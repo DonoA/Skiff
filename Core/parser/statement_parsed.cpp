@@ -293,13 +293,6 @@ namespace skiff
             return "Param(" + p.name + +"," + p.typ.parse_string() + ")";
         }
 
-        string function_definition::function_parameter_c_sig(function_parameter p)
-        {
-            //builtin::type t = builtin::get_type_for(p.typ.get_class_id());
-            //return builtin::get_c_type_for(t) + " " + p.name;
-            return string();
-        }
-
         string while_directive::parse_string()
         {
             return "While(" + condition->parse_string() + ")";
@@ -596,6 +589,12 @@ namespace skiff
             }
             return "TypeClass(" + name + ", " + params_rtn + "))";
         }
+
+        std::string type_statement::get_name()
+        {
+            return name;
+        }
+
 
 
 

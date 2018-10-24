@@ -45,10 +45,10 @@ namespace skiff
             output.open(outfile);
             for (statement *s : statements)
             {
-//                std::cout << s->compile(env) + ";\n";
-                env->add_to_main_function(s->compile(env) + ";\n");
+//
+                env->add_to_main_function(s->compile(env).content + ";\n");
             }
-            env->unroll();
+            env->unroll(&output);
             output.close();
         }
     }
