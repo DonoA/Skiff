@@ -36,10 +36,6 @@ namespace skiff
         class compilation_scope
         {
         public:
-            struct include {
-                string name;
-                bool local;
-            };
             struct c_function {
                 string proto;
                 string content;
@@ -53,7 +49,7 @@ namespace skiff
             statements::type_statement get_variable(string name);
         private:
             size_t running_id = 0;
-            vector<include> includes;
+            map<string, bool> includes;
             vector<c_function> defined_functions;
             map<string, statements::type_statement> variable_table;
         };

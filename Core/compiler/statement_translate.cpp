@@ -45,6 +45,10 @@ namespace skiff
             {
                 return {"unsigned char *"};
             }
+            else if(name == "None")
+            {
+                return {"void"};
+            }
             return {name};
         }
 

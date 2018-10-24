@@ -57,6 +57,10 @@ vector<statement *> skiff::new_parser::parse_statement()
 // Parse an expression, can contain other expressions
 statement * skiff::new_parser::parse_expression()
 {
+    if(tokens.empty())
+    {
+        return new statement();
+    }
     // Split based on the priorities provided (inefficient, yet effective)
     vector<vector<token_type>> precedence = {
             {token_type::EQUAL},

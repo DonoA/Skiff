@@ -6,7 +6,7 @@ namespace skiff
     {
         void compilation_scope::add_include(string name, bool local)
         {
-            this->includes.push_back({name, local});
+            this->includes[name] = local;
         }
 
         void compilation_scope::declare_function(string proto, string content)
@@ -28,10 +28,10 @@ namespace skiff
 
         void compilation_scope::unroll(std::ofstream * output)
         {
-            for(include i : includes)
+            for(auto const& include : includes)
             {
-                (*output) << "#include " << (i.local ? "\"" : "<") << i.name << (i.local ? "\"" : ">") << std::endl;
-                std::cout << "#include " << (i.local ? "\"" : "<") << i.name << (i.local ? "\"" : ">") << std::endl;
+                (*output) << "#include " << (include.second ? "\"" : "<") << include.first << (include.second ? "\"" : ">") << std::endl;
+                std::cout << "#include " << (include.second ? "\"" : "<") << include.first << (include.second ? "\"" : ">") << std::endl;
             }
 
             for(c_function c : this->defined_functions)
