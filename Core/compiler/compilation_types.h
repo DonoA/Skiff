@@ -30,7 +30,9 @@ namespace skiff
         public:
             compiled_skiff(string str) : compiled_skiff(str, statements::type_statement()) { }
             compiled_skiff(string content, statements::type_statement typ) : content({content}), type(typ) { }
+            compiled_skiff(vector<string> content) : compiled_skiff(content, statements::type_statement()) { }
             compiled_skiff(vector<string> content, statements::type_statement typ) : content(content), type(typ) { }
+
             string get_line() { return content.at(0); }
             vector<string> content;
             statements::type_statement type;
@@ -43,6 +45,9 @@ namespace skiff
                 string proto;
                 vector<string> content;
             };
+            compilation_scope() : compilation_scope(nullptr) {}
+            explicit compilation_scope(compilation_scope * parent);
+
             void add_include(string name, bool local);
             void declare_function(string proto, vector<string> content);
             void add_to_main_function(string content);
@@ -51,6 +56,8 @@ namespace skiff
             void define_variable(string name, statements::type_statement class_name);
             statements::type_statement get_variable(string name);
         private:
+            compilation_scope * parent;
+
             size_t running_id = 0;
             map<string, bool> includes;
             vector<c_function> defined_functions;

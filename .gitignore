@@ -12,3 +12,4 @@ Test/main.cpp
 .idea/
 CMakeLists.txt
 cmake-build-debug/
+test.c

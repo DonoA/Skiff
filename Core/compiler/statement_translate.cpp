@@ -14,8 +14,13 @@ namespace skiff
 
         compiled_skiff value::compile(compilation_scope *env)
         {
-            return compiled_skiff(val.get_type() == tokenizer::literal_type::STRING ?
-                   "\"" + val.get_value() + "\"" : val.get_value());
+            if(val.get_type() == tokenizer::literal_type::STRING)
+            {
+                return compiled_skiff("\"" + val.get_value() + "\"", type_statement("String"));
+            }
+
+            return compiled_skiff(val.get_value(), type_statement("Int"));
+
         }
 
         compiled_skiff variable::compile(compilation_scope *env)
@@ -98,10 +103,14 @@ namespace skiff
         {
             vector<string> params_named;
             vector<string> params_typed;
+
+            compilation_types::compilation_scope * scoped_env = new compilation_types::compilation_scope(env);
+
             for(function_parameter fp : this->params)
             {
                 params_named.push_back(fp.typ.compile(env).get_line() + " " + fp.name);
                 params_typed.push_back(fp.typ.compile(env).get_line());
+                scoped_env->define_variable(fp.name, fp.typ);
             }
             if(this->params.empty())
             {
@@ -117,16 +126,16 @@ namespace skiff
             vector<string> body;
             for(statement * s : this->body)
             {
-                compiled_skiff compiled_line = s->compile(env);
+                compiled_skiff compiled_line = s->compile(scoped_env);
                 if(compiled_line.content.size() == 1)
                 {
-                    body.push_back("\t" + compiled_line.get_line() + ";\n");
+                    body.push_back("\t" + compiled_line.get_line() + ";");
                 }
                 else
                 {
                     for(string line : compiled_line.content)
                     {
-                        body.push_back("\t" + line + "\n");
+                        body.push_back("\t" + line);
                     }
                 }
             }
@@ -152,6 +161,48 @@ namespace skiff
         compiled_skiff return_statement::compile(compilation_types::compilation_scope *env)
         {
             return {"return " + this->returns->compile(env).get_line()};
+        }
+
+        compilation_types::compiled_skiff if_directive::compile(compilation_types::compilation_scope *env)
+        {
+            vector<string> content;
+            content.push_back("if (" + this->condition->compile(env).get_line() + ")");
+            content.push_back("{");
+
+            for(statement * s : this->body)
+            {
+                compiled_skiff compiled_line = s->compile(env);
+                if(compiled_line.content.size() == 1)
+                {
+                    content.push_back("\t" + compiled_line.get_line() + ";");
+                }
+                else
+                {
+                    for(string line : compiled_line.content)
+                    {
+                        content.push_back("\t" + line);
+                    }
+                }
+            }
+
+            content.push_back("}");
+            return compiled_skiff(content);
+        }
+
+        compilation_types::compiled_skiff comparison::compile(compilation_types::compilation_scope *env)
+        {
+            compiled_skiff p1 = this->s1->compile(env);
+            compiled_skiff p2 = this->s2->compile(env);
+
+            string comp_sign = this->comparison_string();
+
+            if(p1.type.get_name() == "String")
+            {
+                env->add_include("stdlib.h", false);
+                return "strcmp (" + p1.get_line() + ", " + p2.get_line() + ") " + comp_sign + " 0";
+            }
+
+            return p1.get_line() + " " + comp_sign + " " + p2.get_line();
         }
     }
 }

@@ -327,6 +327,8 @@ namespace skiff
 
             environment::skiff_object eval(environment::scope *env) override;
 
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
+
         private:
             statement *condition;
         };
@@ -660,6 +662,8 @@ namespace skiff
             std::string parse_string() override;
 
             environment::skiff_object eval(environment::scope *env) override;
+
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
         private:
             statement *s1;
