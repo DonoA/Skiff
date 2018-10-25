@@ -75,6 +75,8 @@ namespace skiff
 
             std::string get_c_symbol();
 
+            size_t get_c_len();
+
         private:
             std::string name;
             std::vector<type_statement> generic_types;

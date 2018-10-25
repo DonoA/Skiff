@@ -38,30 +38,60 @@ namespace skiff
             statements::type_statement type;
         };
 
+        class scratch_manager
+        {
+        public:
+            void allocate_var(string name, size_t length);
+            size_t get_var(string name);
+        private:
+            size_t current;
+            map<string, size_t> offsets;
+        };
+
         class compilation_scope
         {
         public:
             struct c_function {
+                string compiled_name;
                 string proto;
                 vector<string> content;
+                statements::type_statement return_type;
             };
-            compilation_scope() : compilation_scope(nullptr) {}
-            explicit compilation_scope(compilation_scope * parent);
+
+            struct marked_var_commit {
+                vector<string> preamble;
+                vector<string> commits;
+            };
+
+            compilation_scope() : compilation_scope(nullptr, false) {}
+            compilation_scope(compilation_scope * parent, bool functional_scope);
 
             void add_include(string name, bool local);
-            void declare_function(string proto, vector<string> content);
+            void declare_function(string real_name, string comp_name, string proto, vector<string> content,
+                                  statements::type_statement returns);
             void add_to_main_function(string content);
             void unroll(std::ofstream * output);
             string get_running_id();
             void define_variable(string name, statements::type_statement class_name);
             statements::type_statement get_variable(string name);
-        private:
-            compilation_scope * parent;
+            c_function get_function(string name);
 
+            marked_var_commit commit_marked_vars();
+        private:
+            struct var_search {
+                bool found;
+                statements::type_statement result;
+            };
+            var_search get_internal_variable(string name);
+            scratch_manager * get_scratch_manager();
+
+            compilation_scope * parent;
+            vector<string> marked_vars;
             size_t running_id = 0;
             map<string, bool> includes;
-            vector<c_function> defined_functions;
-            int main_adr = -1;
+            scratch_manager scratch;
+            map<string, c_function> defined_functions;
+            bool functional_scope = false;
             map<string, statements::type_statement> variable_table;
         };
     }

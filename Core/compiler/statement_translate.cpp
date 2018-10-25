@@ -44,11 +44,11 @@ namespace skiff
         {
             if(name == "Int")
             {
-                return {"signed int"};
+                return {"int32_t"};
             }
             else if(name == "String")
             {
-                return {"unsigned char *"};
+                return {"uint8_t *"};
             }
             else if(name == "None")
             {
@@ -73,6 +73,23 @@ namespace skiff
             }
         }
 
+        size_t type_statement::get_c_len()
+        {
+            if(name == "Int")
+            {
+                return 4;
+            }
+            else if(name == "String")
+            {
+                return 4;
+            }
+            else if(name == "None")
+            {
+                return 0;
+            }
+            return 0;
+        }
+
         compiled_skiff function_call::compile(compilation_scope *env)
         {
             vector<string> compile_params;
@@ -89,14 +106,16 @@ namespace skiff
                     format.push_back(p.type.get_c_symbol());
                 }
                 compile_params.insert(compile_params.begin(), "\"" + utils::join(format, " ") + "\\n\"");
-                return compiled_skiff(compiled_name + "(" + utils::join(compile_params, ",") + ")", env->get_variable(compiled_name));
+                return compiled_skiff(compiled_name + "(" + utils::join(compile_params, ",") + ")", type_statement("Int"));
             }
+
+            compilation_scope::c_function comp_func = env->get_function(compiled_name);
 
             for(statement *s : params)
             {
                 compile_params.push_back(s->compile(env).get_line());
             }
-            return "(*" + name.compile(env).get_line() + ")(" + utils::join(compile_params, ",") + ")";
+            return {comp_func.compiled_name + "(" + utils::join(compile_params, ",") + ")", comp_func.return_type};
         }
 
         compiled_skiff function_definition::compile(compilation_types::compilation_scope *env)
@@ -104,7 +123,7 @@ namespace skiff
             vector<string> params_named;
             vector<string> params_typed;
 
-            compilation_types::compilation_scope * scoped_env = new compilation_types::compilation_scope(env);
+            auto * scoped_env = new compilation_types::compilation_scope(env, true);
 
             for(function_parameter fp : this->params)
             {
@@ -117,10 +136,10 @@ namespace skiff
                 params_named.push_back("void");
                 params_typed.push_back("void");
             }
-            string name = this->name + "_" + env->get_running_id();
+            string comp_name = this->name + "_" + env->get_running_id();
             string return_comp = this->returns.compile(env).get_line();
             string sig = return_comp + " " +
-                    name + " " +
+                    comp_name + " " +
                     "(" + utils::join(params_named, ",") + ")";
 
             vector<string> body;
@@ -139,10 +158,16 @@ namespace skiff
                     }
                 }
             }
-            env->declare_function(sig, body);
-            env->define_variable(this->name, this->returns.get_name());
+            auto pass_through_commits = scoped_env->commit_marked_vars();
 
-            return {return_comp + " (*" + this->name + ")(" + utils::join(params_typed, ",") + ") = &" + name};
+            for(string c : pass_through_commits.preamble)
+            {
+                body.insert(body.begin(), "\t" + c + ";");
+            }
+
+            env->declare_function(this->name, comp_name, sig, body, this->returns);
+
+            return compiled_skiff(pass_through_commits.commits);//{return_comp + " (*" + this->name + ")(" + utils::join(params_typed, ",") + ") = &" + comp_name};
         }
 
         compiled_skiff math_statement::compile(compilation_types::compilation_scope *env)
@@ -175,9 +200,11 @@ namespace skiff
             content.push_back("if (" + this->condition->compile(env).get_line() + ")");
             content.push_back("{");
 
+            auto * scoped_env = new compilation_types::compilation_scope(env, false);
+
             for(statement * s : this->body)
             {
-                compiled_skiff compiled_line = s->compile(env);
+                compiled_skiff compiled_line = s->compile(scoped_env);
                 if(compiled_line.content.size() == 1)
                 {
                     content.push_back("\t" + compiled_line.get_line() + ";");

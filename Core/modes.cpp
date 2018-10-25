@@ -45,8 +45,10 @@ namespace skiff
             output.open(outfile);
             for (statement *s : statements)
             {
-//
-                env->add_to_main_function(s->compile(env).get_line() + ";");
+                for(string ln : s->compile(env).content)
+                {
+                    env->add_to_main_function(ln + ";");
+                }
             }
             env->unroll(&output);
             output.close();
