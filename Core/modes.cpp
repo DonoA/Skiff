@@ -43,13 +43,19 @@ namespace skiff
         {
             ofstream output;
             output.open(outfile);
+            vector<string> main_body = {"\tscratch = malloc(1024 *4); // Malloc scratch region"};
             for (statement *s : statements)
             {
                 for(string ln : s->compile(env).content)
                 {
-                    env->add_to_main_function(ln + ";");
+                    main_body.push_back("\t" + ln + ";");
                 }
             }
+            env->declare_function(
+                    "main",
+                    "main",
+                    "int main (int argc, char **argv)",
+                    main_body, statements::type_statement("Int"));
             env->unroll(&output);
             output.close();
         }

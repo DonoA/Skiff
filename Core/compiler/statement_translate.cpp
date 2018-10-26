@@ -81,7 +81,7 @@ namespace skiff
             }
             else if(name == "String")
             {
-                return 4;
+                return 8; // pointer size on 64 bit systems with gcc (needs to be changed for portability)
             }
             else if(name == "None")
             {

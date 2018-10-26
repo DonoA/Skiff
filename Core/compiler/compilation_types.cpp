@@ -19,27 +19,15 @@ namespace skiff
         void compilation_scope::declare_function(string real_name, string comp_name, string proto,
                                                  vector<string> content, statements::type_statement returns)
         {
-            if(this->parent == nullptr)
+            this->local_functions[real_name]  = {comp_name, proto, content, returns};
+            if(this->parent != nullptr)
             {
-                this->defined_functions[real_name]  = {comp_name, proto, content, returns};
+                this->parent->define_global_function(proto, content);
             }
             else
             {
-                this->parent->declare_function(real_name, comp_name, proto, content, returns);
+                this->define_global_function(proto, content);
             }
-        }
-
-        void compilation_scope::add_to_main_function(string content)
-        {
-            if(defined_functions["main"].compiled_name.empty())
-            {
-                c_function func;
-                func.compiled_name = "main";
-                func.proto = "int main (int argc, char **argv)";
-                func.content = {"\tscratch = malloc(1024 *4); // Malloc scratch region"};
-                this->defined_functions[func.compiled_name] = func;
-            }
-            defined_functions["main"].content.push_back("\t" + content);
         }
 
         void compilation_scope::unroll(std::ofstream * output)
@@ -49,17 +37,17 @@ namespace skiff
                 (*output) << "#include " << (include.second ? "\"" : "<") << include.first << (include.second ? "\"" : ">") << std::endl;
             }
 
-            for(auto const& func : this->defined_functions)
+            for(auto const& func : this->global_functions)
             {
-                (*output) << func.second.proto << ";" << std::endl;
+                (*output) << func.proto << ";" << std::endl;
             }
 
             (*output) << "uint8_t * scratch; // For emulating stacking scopes" << std::endl;
 
-            for(auto const& func : this->defined_functions)
+            for(auto const& func : this->global_functions)
             {
-                (*output) << func.second.proto << "\n{\n";
-                for(string s : func.second.content)
+                (*output) << func.proto << "\n{\n";
+                for(string s : func.content)
                 {
                     (*output) << s << "\n";
                 }
@@ -97,7 +85,7 @@ namespace skiff
                 var_search search = this->parent->get_internal_variable(name);
                 if(search.found)
                 {
-                    this->marked_vars.push_back(name);
+                    this->marked_vars.insert(name);
                     return search.result;
                 }
             }
@@ -105,7 +93,8 @@ namespace skiff
         }
 
         compilation_scope::compilation_scope(compilation_scope *parent, bool functional_scope) : includes(),
-                                                                                                 defined_functions(),
+                                                                                                 local_functions(),
+                                                                                                 global_functions(),
                                                                                                  variable_table(),
                                                                                                  parent(parent),
                                                                                                  functional_scope(functional_scope)
@@ -120,8 +109,8 @@ namespace skiff
 
         compilation_scope::c_function compilation_scope::get_function(string name)
         {
-            auto it = defined_functions.find(name);
-            if(it != defined_functions.end())
+            auto it = local_functions.find(name);
+            if(it != local_functions.end())
             {
                 return it->second;
             }
@@ -145,7 +134,7 @@ namespace skiff
                 var_search search = this->parent->get_internal_variable(name);
                 if(search.found)
                 {
-                    this->marked_vars.push_back(name);
+                    this->marked_vars.insert(name);
                     return search;
                 }
             }
@@ -154,6 +143,7 @@ namespace skiff
 
         compilation_scope::marked_var_commit compilation_scope::commit_marked_vars()
         {
+            // TODO: This scratch mech is bad news if there are double pointers from the stack (they will get erased)
             marked_var_commit commit = {vector<string>(),vector<string>()};
             for(string s : this->marked_vars)
             {
@@ -163,7 +153,8 @@ namespace skiff
                 sm->allocate_var(s, ts.get_c_len());
                 string offset = std::to_string(sm->get_var(s));
                 commit.preamble.push_back(type_name + " " + s + " = *((" + type_name + " *)(scratch + " + offset + "))");
-                commit.commits.push_back("*((" + type_name + " *)(scratch + " + offset + ")) = " + s);
+                // commits are not parsed as single lines and thus the semicolon needs to be added here
+                commit.commits.push_back("*((" + type_name + " *)(scratch + " + offset + ")) = " + s + ";");
             }
             return commit;
         }
@@ -175,6 +166,18 @@ namespace skiff
                 return this->parent->get_scratch_manager();
             }
             return &this->scratch;
+        }
+
+        void compilation_scope::define_global_function(string proto, vector<string> content)
+        {
+            if(this->parent == nullptr)
+            {
+                this->global_functions.push_back({"", proto, content, statements::type_statement()});
+            }
+            else
+            {
+                this->parent->define_global_function(proto, content);
+            }
         }
 
         void scratch_manager::allocate_var(string name, size_t length)
