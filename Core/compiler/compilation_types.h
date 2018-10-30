@@ -34,14 +34,17 @@ namespace skiff
             compiled_skiff(vector<string> content, statements::type_statement typ) : content(content), type(typ) { }
 
             string get_line() { return content.at(0); }
+
+            bool requires_allocation = false;
             vector<string> content;
             statements::type_statement type;
         };
 
-        class scratch_manager
+        class heap_manager
         {
         public:
             void allocate_var(string name, size_t length);
+
             size_t get_var(string name);
         private:
             size_t current;
@@ -76,20 +79,21 @@ namespace skiff
             c_function get_function(string name);
 
             marked_var_commit commit_marked_vars();
+
+            heap_manager * get_heap_manager();
         private:
             struct var_search {
                 bool found;
                 statements::type_statement result;
             };
             var_search get_internal_variable(string name);
-            scratch_manager * get_scratch_manager();
             void define_global_function(string proto, vector<string> content);
 
             compilation_scope * parent;
             set<string> marked_vars;
             size_t running_id = 0;
             map<string, bool> includes;
-            scratch_manager scratch;
+            heap_manager heap;
             map<string, c_function> local_functions;
             vector<c_function> global_functions;
             bool functional_scope = false;

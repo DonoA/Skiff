@@ -58,12 +58,12 @@ namespace skiff
         class type_statement : public statement
         {
         public:
-            type_statement() : name(""), generic_types(std::vector<type_statement>()), extends(nullptr) { };
+            type_statement() : type_statement("") { };
 
-            type_statement(string name) : name(name), generic_types(std::vector<type_statement>()), extends(nullptr) { };
+            type_statement(string name) : type_statement(name, std::vector<type_statement>(), nullptr) { };
 
             type_statement(std::string name, std::vector<type_statement> generic_types, type_statement *extends) :
-                    name(name), generic_types(generic_types), extends(extends) { };
+                    name(name), generic_types(generic_types), extends(extends), has_custom_len(false) { };
 
             std::string parse_string() override;
 
@@ -71,16 +71,21 @@ namespace skiff
 
             compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
+            bool is_ref_type();
+
             std::string get_name();
 
             std::string get_c_symbol();
 
+            type_statement with_custom_c_len(size_t len);
             size_t get_c_len();
 
         private:
             std::string name;
             std::vector<type_statement> generic_types;
             type_statement *extends;
+            bool has_custom_len;
+            size_t custom_len;
         };
 
         class value : public statement

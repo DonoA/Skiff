@@ -16,7 +16,10 @@ namespace skiff
         {
             if(val.get_type() == tokenizer::literal_type::STRING)
             {
-                return compiled_skiff("\"" + val.get_value() + "\"", type_statement("String"));
+                compiled_skiff cs = compiled_skiff("\"" + val.get_value() + "\"", type_statement("String")
+                        .with_custom_c_len(val.get_value().size() + 1));
+                cs.requires_allocation = true;
+                return cs;
             }
 
             return compiled_skiff(val.get_value(), type_statement("Int"));
@@ -25,19 +28,55 @@ namespace skiff
 
         compiled_skiff variable::compile(compilation_scope *env)
         {
-            return {name, env->get_variable(name)};
+            statements::type_statement ts = env->get_variable(name);
+            if(ts.is_ref_type())
+            {
+                return {"(" + ts.compile(env).get_line() + ") *((size_t *) ref_heap + " + std::to_string(env->get_heap_manager()->get_var(name)) + ")"};
+            }
+            return {name, ts};
         }
 
         compiled_skiff assignment::compile(compilation_scope *env)
         {
             compiled_skiff value = this->val->compile(env);
-            return {this->name->compile(env).get_line() + " = " + value.get_line(), value.type};
+            string name = this->name->compile(env).get_line();
+            if(value.type.is_ref_type())
+            {
+                compilation_types::heap_manager * sm = env->get_heap_manager();
+                string offset = std::to_string(sm->get_var(name));
+                string type_name = value.type.compile(env).get_line();
+                vector<string> compiled_lines = {
+                        "*((size_t *) (ref_heap + " + offset + ")) = new(" +
+                        std::to_string(value.type.get_c_len()) + ")",
+                        // (uint8_t *) *((size_t *) (ref_heap + 0))
+                        "memcpy(((" + type_name + ") *((size_t *) ref_heap + " + offset + "))," + value.get_line() + "," + std::to_string(value.type.get_c_len()) + ")"
+                };
+
+                return compiled_skiff(compiled_lines);
+            }
+            return {name + " = " + value.get_line(), value.type};
         }
 
         compiled_skiff declaration_with_assignment::compile(compilation_scope *env)
         {
             env->define_variable(name, type.get_name());
-            return {type.compile(env).get_line() + " " + name + " = " + value->compile(env).get_line()};
+            string type_name = type.compile(env).get_line();
+            if(type.is_ref_type())
+            {
+                compiled_skiff cs = value->compile(env);
+                compilation_types::heap_manager * sm = env->get_heap_manager();
+                sm->allocate_var(name, type.get_c_len());
+                string offset = std::to_string(sm->get_var(name));
+                vector<string> compiled_lines = {
+                        "*((size_t *) (ref_heap + " + offset + ")) = new(" +
+                        std::to_string(cs.type.get_c_len()) + ")",
+                        // (uint8_t *) *((size_t *) (ref_heap + 0))
+                        "memcpy(((" + type_name + ") *((size_t *) ref_heap + " + offset + "))," + cs.get_line() + "," + std::to_string(cs.type.get_c_len()) + ")"
+                };
+
+                return compiled_skiff(compiled_lines);
+            }
+            return {type_name + " " + name + " = " + value->compile(env).get_line()};
         }
 
         compiled_skiff type_statement::compile(compilation_scope *env)
@@ -75,6 +114,10 @@ namespace skiff
 
         size_t type_statement::get_c_len()
         {
+            if(has_custom_len)
+            {
+                return custom_len;
+            }
             if(name == "Int")
             {
                 return 4;
@@ -88,6 +131,18 @@ namespace skiff
                 return 0;
             }
             return 0;
+        }
+
+        bool type_statement::is_ref_type()
+        {
+            return !(this->name == "Int" || this->name == "Char");
+        }
+
+        type_statement type_statement::with_custom_c_len(size_t len)
+        {
+            this->has_custom_len = true;
+            this->custom_len = len;
+            return *this;
         }
 
         compiled_skiff function_call::compile(compilation_scope *env)

@@ -43,7 +43,23 @@ namespace skiff
         {
             ofstream output;
             output.open(outfile);
-            vector<string> main_body = {"\tscratch = malloc(1024 *4); // Malloc scratch region"};
+
+            env->declare_function(
+                    "new",
+                    "new",
+                    "size_t new(size_t len)",
+                    {
+                            "\tsize_t loc = heap_offset;",
+                            "\theap_offset += len;",
+                            "\tmemset(heap + loc, 0, len);",
+                            "\treturn (size_t) (heap + loc);"
+                    },
+                    statements::type_statement("Int"));
+
+            vector<string> main_body = {
+                    "\theap = malloc(1024 *4); // Malloc heap region",
+                    "\tref_heap = malloc(1024 *4); // Malloc name references region"
+            };
             for (statement *s : statements)
             {
                 for(string ln : s->compile(env).content)
