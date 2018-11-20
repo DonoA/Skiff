@@ -53,7 +53,7 @@ vector<statement *> skiff::new_parser::parse_statement()
             case token_type::WHILE:
                 // parse_while()
             case token_type::CLASS:
-                // parse_class()
+                stmts.push_back(parse_class());
                 break;
             case token_type::DEF:
                 stmts.push_back(parse_def());
@@ -439,11 +439,9 @@ statement *skiff::new_parser::parse_def()
     using skiff::statements::function_definition;
     consume(token_type::DEF);
 
-    std::cout << "def ";
     string name = get_current().get_lit().get_value();
     consume(token_type::NAME);
 
-    std::cout << " parameterized by ";
     vector<token> param_list = consume_parens(token_type::LEFT_PAREN, token_type::RIGHT_PAREN);
     slice_ends(&param_list);
     split_results params = new_parser(param_list).braced_split({token_type::COMMA}, -1);
@@ -458,7 +456,6 @@ statement *skiff::new_parser::parse_def()
                 bits.match.at(0).at(0).get_lit().get_value(),
                 statements::type_statement(bits.match.at(1).at(0).get_lit().get_value())
         ));
-        std::cout << " with ";
     }
 
     statements::type_statement typ_stmt("None");
@@ -479,6 +476,20 @@ statement *skiff::new_parser::parse_def()
     vector<statement *> stmt_body = new_parser(body).parse_statement();
 
     return new statements::function_definition(name, func_params, typ_stmt, stmt_body);
+}
+
+statement *skiff::new_parser::parse_class()
+{
+    consume(token_type::CLASS);
+
+    string name = get_current().get_lit().get_value();
+    consume(token_type::NAME);
+
+    vector<token> body = consume_parens(token_type::LEFT_BRACE, token_type::RIGHT_BRACE);
+    slice_ends(&body);
+
+    vector<statement *> stmt_body = new_parser(body).parse_statement();
+    return new statements::class_heading(statements::class_heading::CLASS, name, stmt_body);
 }
 
 

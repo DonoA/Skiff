@@ -207,23 +207,24 @@ namespace skiff
             return "If(" + condition->parse_string() + ")" + parse_body();
         }
 
-        class_heading::class_heading(class_heading::class_type type, string name) :
-                class_heading(type, name, vector<class_heading::heading_generic>()) { }
+        class_heading::class_heading(class_heading::class_type type, string name, vector<statement *> body) :
+                class_heading(type, name, vector<class_heading::heading_generic>(), body) { }
 
         class_heading::class_heading(class_heading::class_type type, string name,
-                                     vector<class_heading::heading_generic> generic_types) :
-                class_heading(type, name, generic_types, type_statement()) { }
+                                     vector<class_heading::heading_generic> generic_types, vector<statement *> body) :
+                class_heading(type, name, generic_types, type_statement(), body) { }
 
-        class_heading::class_heading(class_heading::class_type type, string name, type_statement extends) :
-                class_heading(type, name, vector<class_heading::heading_generic>(), extends) { }
+        class_heading::class_heading(class_heading::class_type type, string name, type_statement extends, vector<statement *> body) :
+                class_heading(type, name, vector<class_heading::heading_generic>(), extends, body) { }
 
         class_heading::class_heading(class_heading::class_type type, string name,
-                                     vector<heading_generic> generic_types, type_statement extends)
+                                     vector<heading_generic> generic_types, type_statement extends, vector<statement *> body)
         {
             this->type = type;
             this->name = name;
             this->generic_types = generic_types;
             this->extends = extends;
+            this->body = body;
         }
 
         string class_heading::parse_string()
@@ -240,7 +241,7 @@ namespace skiff
             }
             if (generic_types.empty())
             {
-                return heading + "(" + name + "," + extends.parse_string() + ")";
+                return heading + "(" + name + "," + extends.parse_string() + ")" + parse_body();
             }
             string params_rtn = "Generics(";
             bool any = false;
@@ -254,7 +255,7 @@ namespace skiff
                 params_rtn = params_rtn.substr(0, params_rtn.length() - 1);
             }
             params_rtn += ")";
-            return heading + "(" + name + +"," + params_rtn + "," + extends.parse_string() + ")";
+            return heading + "(" + name + +"," + params_rtn + "," + extends.parse_string() + ")" + parse_body();
         }
 
         string class_heading::get_name()
@@ -267,6 +268,8 @@ namespace skiff
         {
             return {t_name, extends};
         }
+
+
 
 
         string function_definition::parse_string()

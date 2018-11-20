@@ -71,14 +71,14 @@ namespace skiff
 
             compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
-            bool is_ref_type();
+            bool is_ref_type() const;
 
             std::string get_name();
 
             std::string get_c_symbol();
 
             type_statement with_custom_c_len(size_t len);
-            size_t get_c_len();
+            size_t get_c_len() const;
 
         private:
             std::string name;
@@ -471,16 +471,16 @@ namespace skiff
                 type_statement extends;
             };
 
-            class_heading(class_heading::class_type type, std::string name);
+            class_heading(class_heading::class_type type, std::string name, vector<statement *> body);
 
             class_heading(class_heading::class_type type, std::string name,
-                          std::vector<heading_generic> generic_types);
+                          std::vector<heading_generic> generic_types, vector<statement *> body);
 
             class_heading(class_heading::class_type type, std::string name,
-                          type_statement extends);
+                          type_statement extends, vector<statement *> body);
 
             class_heading(class_heading::class_type type, std::string name,
-                          std::vector<heading_generic> generic_types, type_statement extends);
+                          std::vector<heading_generic> generic_types, type_statement extends, vector<statement *> body);
 
             std::string parse_string() override;
 
@@ -488,6 +488,8 @@ namespace skiff
 
             static class_heading::heading_generic generate_generic_heading(std::string t_name,
                                                                            type_statement extends);
+
+            compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 
         private:
             std::string name;

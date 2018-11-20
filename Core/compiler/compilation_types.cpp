@@ -94,16 +94,23 @@ namespace skiff
             return statements::type_statement();
         }
 
-        compilation_scope::compilation_scope(compilation_scope *parent, bool functional_scope) : includes(),
-                                                                                                 local_functions(),
-                                                                                                 global_functions(),
-                                                                                                 variable_table(),
-                                                                                                 parent(parent),
-                                                                                                 functional_scope(functional_scope)
+        compilation_scope::compilation_scope(compilation_scope *parent, bool functional_scope, string prefix) :
+                includes(),
+                local_functions(),
+                local_classes(),
+                global_functions(),
+                variable_table(),
+                parent(parent),
+                functional_scope(functional_scope)
         {
             if(parent == nullptr)
             {
                 this->heap = heap_manager();
+                this->prefix = prefix + "_";
+            }
+            else
+            {
+                this->prefix = this->parent->get_prefix() + prefix + "_";
             }
             this->add_include("stdlib.h", false);
             this->add_include("string.h", false);
@@ -184,6 +191,12 @@ namespace skiff
             {
                 this->parent->define_global_function(proto, content);
             }
+        }
+
+        void compilation_scope::declare_class(string real_name, string comp_name, map<string, size_t> fields,
+                                              size_t total_size)
+        {
+            this->local_classes[real_name] = {comp_name, fields, total_size};
         }
 
         void heap_manager::allocate_var(string name, size_t length)

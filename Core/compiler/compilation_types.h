@@ -61,17 +61,29 @@ namespace skiff
                 statements::type_statement return_type;
             };
 
+            struct c_class {
+                string compiled_name;
+                // maps field names to their offsets
+                map<string, size_t> fields;
+                size_t total_size;
+            };
+
             struct marked_var_commit {
                 vector<string> preamble;
                 vector<string> commits;
             };
 
             compilation_scope() : compilation_scope(nullptr, false) {}
-            compilation_scope(compilation_scope * parent, bool functional_scope);
+            compilation_scope(compilation_scope * parent, bool functional_scope) : compilation_scope(parent,
+                                                                                                     functional_scope, "") { }
+            compilation_scope(compilation_scope * parent, bool functional_scope, string name);
 
             void add_include(string name, bool local);
             void declare_function(string real_name, string comp_name, string proto, vector<string> content,
                                   statements::type_statement returns);
+
+            void declare_class(string real_name, string comp_name, map<string, size_t> fields, size_t total_size);
+
             void unroll(std::ofstream * output);
             string get_running_id();
             void define_variable(string name, statements::type_statement class_name);
@@ -81,6 +93,9 @@ namespace skiff
             marked_var_commit commit_marked_vars();
 
             heap_manager * get_heap_manager();
+            map<string, statements::type_statement> get_raw_variable_table() { return variable_table; }
+
+            string get_prefix() { return prefix; }
         private:
             struct var_search {
                 bool found;
@@ -94,9 +109,14 @@ namespace skiff
             size_t running_id = 0;
             map<string, bool> includes;
             heap_manager heap;
+
             map<string, c_function> local_functions;
+            map<string, c_class> local_classes;
+
             vector<c_function> global_functions;
+
             bool functional_scope = false;
+            string prefix;
             map<string, statements::type_statement> variable_table;
         };
     }

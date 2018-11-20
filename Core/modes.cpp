@@ -62,9 +62,15 @@ namespace skiff
             };
             for (statement *s : statements)
             {
-                for(string ln : s->compile(env).content)
+                auto compiled = s->compile(env);
+                for(string ln : compiled.content)
                 {
-                    main_body.push_back("\t" + ln + ";");
+                    ln = "\t" + ln;
+                    if(compiled.content.size() == 1)
+                    {
+                        ln += ";";
+                    }
+                    main_body.push_back(ln);
                 }
             }
             env->declare_function(

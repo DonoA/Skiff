@@ -20,7 +20,7 @@ namespace skiff
             tokenizer::token_type on;
         };
 
-        new_parser(vector<tokenizer::token> tokens);
+        explicit new_parser(vector<tokenizer::token> tokens);
         vector<statements::statement *> parse_statement();
         statements::statement * parse_expression();
 
@@ -38,6 +38,7 @@ namespace skiff
         vector<tokenizer::token> consume_til(tokenizer::token_type typ);
 
         statements::statement * parse_if();
+        statements::statement * parse_class();
         statements::statement * parse_def();
     };
 }

@@ -31,7 +31,7 @@ namespace skiff
             statements::type_statement ts = env->get_variable(name);
             if(ts.is_ref_type())
             {
-                return {"(" + ts.compile(env).get_line() + ") *((size_t *) ref_heap + " + std::to_string(env->get_heap_manager()->get_var(name)) + ")"};
+                return {"(" + ts.compile(env).get_line() + ") *((size_t *) ref_heap + " + std::to_string(env->get_heap_manager()->get_var(name)) + ")", ts};
             }
             return {name, ts};
         }
@@ -69,9 +69,9 @@ namespace skiff
                 string offset = std::to_string(sm->get_var(name));
                 vector<string> compiled_lines = {
                         "*((size_t *) (ref_heap + " + offset + ")) = new(" +
-                        std::to_string(cs.type.get_c_len()) + ")",
+                        std::to_string(cs.type.get_c_len()) + ");",
                         // (uint8_t *) *((size_t *) (ref_heap + 0))
-                        "memcpy(((" + type_name + ") *((size_t *) ref_heap + " + offset + "))," + cs.get_line() + "," + std::to_string(cs.type.get_c_len()) + ")"
+                        "memcpy(((" + type_name + ") *((size_t *) ref_heap + " + offset + "))," + cs.get_line() + "," + std::to_string(cs.type.get_c_len()) + ");"
                 };
 
                 return compiled_skiff(compiled_lines);
@@ -112,7 +112,7 @@ namespace skiff
             }
         }
 
-        size_t type_statement::get_c_len()
+        size_t type_statement::get_c_len() const
         {
             if(has_custom_len)
             {
@@ -130,10 +130,14 @@ namespace skiff
             {
                 return 0;
             }
+            else if(this->is_ref_type())
+            {
+                return 8;
+            }
             return 0;
         }
 
-        bool type_statement::is_ref_type()
+        bool type_statement::is_ref_type() const
         {
             return !(this->name == "Int" || this->name == "Char");
         }
@@ -191,7 +195,7 @@ namespace skiff
                 params_named.push_back("void");
                 params_typed.push_back("void");
             }
-            string comp_name = this->name + "_" + env->get_running_id();
+            string comp_name = env->get_prefix() + this->name + "_" + env->get_running_id();
             string return_comp = this->returns.compile(env).get_line();
             string sig = return_comp + " " +
                     comp_name + " " +
@@ -291,6 +295,31 @@ namespace skiff
             }
 
             return p1.get_line() + " " + comp_sign + " " + p2.get_line();
+        }
+
+        compilation_types::compiled_skiff class_heading::compile(compilation_types::compilation_scope *env)
+        {
+            auto * innerEnv = new compilation_types::compilation_scope(env, false, this->name);
+
+            for(statement * s : body)
+            {
+                s->compile(innerEnv);
+            }
+
+            map<string, size_t> offset_table;
+            size_t running_total = 0;
+            for (auto const& v : innerEnv->get_raw_variable_table())
+            {
+                size_t var_size = v.second.get_c_len();
+                offset_table[v.first] = running_total;
+                running_total += var_size;
+            }
+
+            // For pointer types with values, add init to constructor
+            // Generate table for variable locations and their offsets
+
+
+            return compilation_types::compiled_skiff("");
         }
     }
 }
