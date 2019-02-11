@@ -58,7 +58,7 @@ namespace skiff
 
             vector<string> main_body = {
                     "\theap = malloc(1024 *4); // Malloc heap region",
-                    "\tref_heap = malloc(1024 *4); // Malloc name references region"
+                    "\tstack = malloc(1024 *4); // Malloc name references region"
             };
             for (statement *s : statements)
             {

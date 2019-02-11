@@ -598,9 +598,6 @@ namespace skiff
             return name;
         }
 
-
-
-
         std::string boolean_value::parse_string()
         {
             return "BooleanValue(" + string(val ? "true" : "false") + ")";

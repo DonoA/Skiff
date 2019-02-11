@@ -44,7 +44,7 @@ namespace skiff
 
             (*output) << "uint8_t * heap; // Pre allocated memory space" << std::endl <<
                          "size_t heap_offset;" << std::endl <<
-                         "uint8_t * ref_heap;" << std::endl;
+                         "uint8_t * stack;" << std::endl;
 
             for(auto const& func : this->global_functions)
             {
@@ -70,12 +70,15 @@ namespace skiff
             }
         }
 
-        void compilation_scope::define_variable(string name, statements::type_statement class_name)
+        compilation_scope::c_var compilation_scope::define_variable(string name, statements::type_statement class_name)
         {
-            this->variable_table[name] = class_name;
+            c_var new_var = {stack_pointer, class_name};
+            this->variable_table[name] = new_var;
+            stack_pointer += class_name.get_c_len();
+            return new_var;
         }
 
-        statements::type_statement compilation_scope::get_variable(string name)
+        const compilation_scope::c_var& compilation_scope::get_variable(string name)
         {
             auto it = variable_table.find(name);
             if(it != variable_table.end())
@@ -91,21 +94,21 @@ namespace skiff
                     return search.result;
                 }
             }
-            return statements::type_statement();
+            throw;
         }
 
-        compilation_scope::compilation_scope(compilation_scope *parent, bool functional_scope, string prefix) :
+        compilation_scope::compilation_scope(compilation_scope *parent, bool functional_scope, string prefix, size_t stack_pointer) :
                 includes(),
                 local_functions(),
                 local_classes(),
                 global_functions(),
                 variable_table(),
                 parent(parent),
-                functional_scope(functional_scope)
+                functional_scope(functional_scope),
+                stack_pointer(stack_pointer)
         {
             if(parent == nullptr)
             {
-                this->heap = heap_manager();
                 this->prefix = prefix + "_";
             }
             else
@@ -148,7 +151,7 @@ namespace skiff
                     return search;
                 }
             }
-            return {false, statements::type_statement()};
+            throw;
         }
 
         compilation_scope::marked_var_commit compilation_scope::commit_marked_vars()
@@ -156,29 +159,19 @@ namespace skiff
             marked_var_commit commit = {vector<string>(),vector<string>()};
             for(string s : this->marked_vars)
             {
-                statements::type_statement ts = this->get_variable(s);
-                string type_name = ts.compile(this).get_line();
-                heap_manager * sm = this->get_heap_manager();
-                sm->allocate_var(s, ts.get_c_len());
-                string offset = std::to_string(sm->get_var(s));
-                if(!ts.is_ref_type())
-                {
-                    commit.preamble.push_back(
-                            type_name + " " + s + " = *((" + type_name + " *)(ref_heap + " + offset + "))");
-                    // commits are not parsed as single lines and thus the semicolon needs to be added here
-                    commit.commits.push_back("*((" + type_name + " *)(ref_heap + " + offset + ")) = " + s + ";");
-                }
+//                statements::type_statement ts = this->get_variable(s);
+//                string type_name = ts.compile(this).get_line();
+//                this->allocate_var(s, ts.get_c_len());
+//                string offset = std::to_string(sm->get_var(s));
+//                if(!ts.is_ref_type())
+//                {
+//                    commit.preamble.push_back(
+//                            type_name + " " + s + " = *((" + type_name + " *)(stack + " + offset + "))");
+//                    // commits are not parsed as single lines and thus the semicolon needs to be added here
+//                    commit.commits.push_back("*((" + type_name + " *)(stack + " + offset + ")) = " + s + ";");
+//                }
             }
             return commit;
-        }
-
-        heap_manager *compilation_scope::get_heap_manager()
-        {
-            if(this->parent != nullptr)
-            {
-                return this->parent->get_heap_manager();
-            }
-            return &this->heap;
         }
 
         void compilation_scope::define_global_function(string proto, vector<string> content)
@@ -197,17 +190,6 @@ namespace skiff
                                               size_t total_size)
         {
             this->local_classes[real_name] = {comp_name, fields, total_size};
-        }
-
-        void heap_manager::allocate_var(string name, size_t length)
-        {
-            this->offsets[name] = this->current;
-            this->current += length;
-        }
-
-        size_t heap_manager::get_var(string name)
-        {
-            return this->offsets[name];
         }
     }
 }

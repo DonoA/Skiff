@@ -5,7 +5,6 @@
 #include <map>
 #include <queue>
 #include <stack>
-#include <interpreter/evaluated_types.h>
 #include "interpreter/evaluated_types.h"
 #include "parser/token.h"
 
@@ -67,9 +66,10 @@ namespace skiff
 
             std::string parse_string() override;
 
-            environment::skiff_object eval(environment::scope *env) override;
+            virtual environment::skiff_object eval(environment::scope *env) override;
 
             compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
+            string get_c_type();
 
             bool is_ref_type() const;
 
@@ -93,7 +93,7 @@ namespace skiff
         public:
             explicit value(tokenizer::literal val) : val(val) { };
 
-            environment::skiff_object eval(environment::scope *env) override;
+            virtual environment::skiff_object eval(environment::scope *env) override;
 
             compilation_types::compiled_skiff compile(compilation_types::compilation_scope *env) override;
 

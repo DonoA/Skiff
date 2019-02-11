@@ -28,12 +28,14 @@ namespace skiff
 
         compiled_skiff variable::compile(compilation_scope *env)
         {
-            statements::type_statement ts = env->get_variable(name);
-            if(ts.is_ref_type())
-            {
-                return {"(" + ts.compile(env).get_line() + ") *((size_t *) ref_heap + " + std::to_string(env->get_heap_manager()->get_var(name)) + ")", ts};
-            }
-            return {name, ts};
+            compilation_scope::c_var vr = env->get_variable(name);
+            return {"*((" + vr.typ.get_c_type() + " *)(stack + " + std::to_string(vr.offset) + "))", vr.typ};
+//            if(ts.is_ref_type())
+//            {
+//                return {"(" + ts.get_c_type() + ") *((size_t *) stack + " + std::to_string(
+//                        env->get_variable(name).offset) + ")", ts};
+//            }
+//            return {name, ts};
         }
 
         compiled_skiff assignment::compile(compilation_scope *env)
@@ -42,58 +44,44 @@ namespace skiff
             string name = this->name->compile(env).get_line();
             if(value.type.is_ref_type())
             {
-                compilation_types::heap_manager * sm = env->get_heap_manager();
-                string offset = std::to_string(sm->get_var(name));
-                string type_name = value.type.compile(env).get_line();
-                vector<string> compiled_lines = {
-                        "*((size_t *) (ref_heap + " + offset + ")) = new(" +
-                        std::to_string(value.type.get_c_len()) + ")",
-                        // (uint8_t *) *((size_t *) (ref_heap + 0))
-                        "memcpy(((" + type_name + ") *((size_t *) ref_heap + " + offset + "))," + value.get_line() + "," + std::to_string(value.type.get_c_len()) + ")"
-                };
+//                compilation_types::variable_table * sm = env->get_stack_manager();
+//                string offset = std::to_string(sm->get_var(name));
+//                string type_name = value.type.compile(env).get_line();
+//                vector<string> compiled_lines = {
+//                        "*((size_t *) (stack + " + offset + ")) = new(" +
+//                        std::to_string(value.type.get_c_len()) + ")",
+//                        // (uint8_t *) *((size_t *) (stack + 0))
+//                        "memcpy(((" + type_name + ") *((size_t *) stack + " + offset + "))," + value.get_line() + "," + std::to_string(value.type.get_c_len()) + ")"
+//                };
 
-                return compiled_skiff(compiled_lines);
+//                return compiled_skiff(compiled_lines);
             }
             return {name + " = " + value.get_line(), value.type};
         }
 
         compiled_skiff declaration_with_assignment::compile(compilation_scope *env)
         {
-            env->define_variable(name, type.get_name());
-            string type_name = type.compile(env).get_line();
+            compilation_scope::c_var vr = env->define_variable(name, type.get_name());
+            string var_ref = "*((" + vr.typ.get_c_type() + " *)(stack + " + std::to_string(vr.offset) + "))";
             if(type.is_ref_type())
             {
                 compiled_skiff cs = value->compile(env);
-                compilation_types::heap_manager * sm = env->get_heap_manager();
-                sm->allocate_var(name, type.get_c_len());
-                string offset = std::to_string(sm->get_var(name));
+                string offset = std::to_string(vr.offset);
                 vector<string> compiled_lines = {
-                        "*((size_t *) (ref_heap + " + offset + ")) = new(" +
-                        std::to_string(cs.type.get_c_len()) + ");",
-                        // (uint8_t *) *((size_t *) (ref_heap + 0))
-                        "memcpy(((" + type_name + ") *((size_t *) ref_heap + " + offset + "))," + cs.get_line() + "," + std::to_string(cs.type.get_c_len()) + ");"
+                        var_ref + " = (" + vr.typ.get_c_type() + ") new(" + std::to_string(cs.type.get_c_len()) + ");",
+
+                        "memcpy(" + var_ref + "," + cs.get_line() + "," + std::to_string(cs.type.get_c_len()) + ");"
                 };
 
                 return compiled_skiff(compiled_lines);
             }
-            return {type_name + " " + name + " = " + value->compile(env).get_line()};
+
+            return {var_ref + " = " + value->compile(env).get_line()};
         }
 
         compiled_skiff type_statement::compile(compilation_scope *env)
         {
-            if(name == "Int")
-            {
-                return {"int32_t"};
-            }
-            else if(name == "String")
-            {
-                return {"uint8_t *"};
-            }
-            else if(name == "None")
-            {
-                return {"void"};
-            }
-            return {name};
+            return {this->get_c_type()};
         }
 
         std::string type_statement::get_c_symbol()
@@ -147,6 +135,23 @@ namespace skiff
             this->has_custom_len = true;
             this->custom_len = len;
             return *this;
+        }
+
+        string type_statement::get_c_type()
+        {
+            if(name == "Int")
+            {
+                return "int32_t";
+            }
+            else if(name == "String")
+            {
+                return "uint8_t *";
+            }
+            else if(name == "None")
+            {
+                return "void";
+            }
+            return name;
         }
 
         compiled_skiff function_call::compile(compilation_scope *env)
@@ -299,7 +304,7 @@ namespace skiff
 
         compilation_types::compiled_skiff class_heading::compile(compilation_types::compilation_scope *env)
         {
-            auto * innerEnv = new compilation_types::compilation_scope(env, false, this->name);
+            auto * innerEnv = new compilation_types::compilation_scope(env, false, this->name, env->get_stack_pointer());
 
             for(statement * s : body)
             {
@@ -310,7 +315,7 @@ namespace skiff
             size_t running_total = 0;
             for (auto const& v : innerEnv->get_raw_variable_table())
             {
-                size_t var_size = v.second.get_c_len();
+                size_t var_size = v.second.typ.get_c_len();
                 offset_table[v.first] = running_total;
                 running_total += var_size;
             }
