@@ -1,0 +1,166 @@
+{
+    "Statement": {
+        "fields": {}
+    },
+    "Expression": {
+        "extends": "Statement",
+        "fields": {}
+    },
+    "Type": {
+        "fields": {
+            "name": "String",
+            "arraySize": "Integer"
+        }
+    },
+    "BlockStatement": {
+        "extends": "Statement",
+        "fields": {
+            "body": "List<Statement>"
+        }
+    },
+    "FunctionDef": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "returns": "Type",
+            "name": "String",
+            "args": "List<FunctionParam>",
+            "body": "List<Statement>"
+        }
+    },
+    "FunctionParam": {
+        "fields": {
+            "type": "Type",
+            "name": "String"
+        }
+    },
+    "IfBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "condition": "Statement",
+            "body": "List<Statement>"
+        }
+    },
+    "WhileBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "condition": "Statement",
+            "body": "List<Statement>"
+        }
+    },
+    "ForBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "start": "Statement",
+            "condition": "Statement",
+            "step": "Statement",
+            "body": "List<Statement>"
+        }
+    },
+    "FunctionCall": {
+        "extends": "Expression",
+        "fields": {
+            "name": "String",
+            "args": "List<Statement>"
+        }
+    },
+    "Parened": {
+        "extends": "Expression",
+        "fields": {
+            "sub": "Statement"
+        }
+    },
+    "Dotted": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "right": "Statement"
+        }
+    },
+    "Arrowed": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "right": "Statement"
+        }
+    },
+    "Math": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "op": "MathOp",
+            "right": "Statement"
+        }
+    },
+    "MathAssign": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "op": "MathOp",
+            "right": "Statement"
+        }
+    },
+    "Subscript": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "sub": "Statement"
+        }
+    },
+    "Compare": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "op": "CompareOp",
+            "right": "Statement"
+        }
+    },
+    "BoolCombine": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "op": "BoolOp",
+            "right": "Statement"
+        }
+    },
+    "Assign": {
+        "extends": "Expression",
+        "fields": {
+            "name": "Statement",
+            "value": "Statement"
+        }
+    },
+    "Declare": {
+        "extends": "Statement",
+        "fields": {
+            "type": "Type",
+            "name": "String"
+        }
+    },
+    "DeclareAssign": {
+        "extends": "Statement",
+        "fields": {
+            "type": "Type",
+            "name": "String",
+            "value": "Statement"
+        }
+    },
+    "NumberLiteral": {
+        "extends": "Expression",
+        "fields": {
+            "value": "Double"
+        }
+    },
+    "StringLiteral": {
+        "extends": "Expression",
+        "fields": {
+            "value": "String"
+        },
+        "literal": true
+    },
+    "Variable": {
+        "extends": "Expression",
+        "fields": {
+            "name": "String"
+        }
+    }
+}

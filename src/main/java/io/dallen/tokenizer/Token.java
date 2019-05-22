@@ -1,4 +1,4 @@
-package tokenizer;
+package io.dallen.tokenizer;
 
 public class Token {
 
@@ -101,6 +101,8 @@ public class Token {
 
     public final TokenType type;
     public final String literal;
+
+    public static final Token EOF = new Token(Textless.EOF);
 
     public Token(TokenType type) {
         this(type, "");

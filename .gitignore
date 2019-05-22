@@ -13,3 +13,4 @@ Test/main.cpp
 CMakeLists.txt
 cmake-build-debug/
 test.c
+target/

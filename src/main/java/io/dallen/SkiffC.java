@@ -1,5 +1,8 @@
-import tokenizer.Lexer;
-import tokenizer.Token;
+package io.dallen;
+
+import io.dallen.parser.Parser;
+import io.dallen.tokenizer.Lexer;
+import io.dallen.tokenizer.Token;
 
 import java.util.List;
 
@@ -13,5 +16,7 @@ public class SkiffC {
         Lexer lexer = new Lexer("x: Int; x = 10;");
         List<Token> tokenStream = lexer.lex();
         printTokenStream(tokenStream);
+        Parser parser = new Parser(tokenStream);
+        parser.parseBlock().forEach(System.out::println);
     }
 }
