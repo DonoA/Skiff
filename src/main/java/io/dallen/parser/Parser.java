@@ -1,12 +1,14 @@
 package io.dallen.parser;
 
+import io.dallen.parser.splitter.BraceSplitter;
+import io.dallen.parser.splitter.LayeredSplitter;
+import io.dallen.parser.splitter.SplitLayer;
+import io.dallen.parser.splitter.SplitSettings;
 import io.dallen.tokenizer.Token;
 import io.dallen.parser.AST.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Parser {
@@ -21,42 +23,27 @@ public class Parser {
 
     private int pos;
 
-    // this list defines a multipass split. When a successful split is made, the resulting action will be executed on the result
-    private static final List<Map<Token.TokenType, Splitter.SplitAction>> splitRules =
-            new ArrayList<Map<Token.TokenType, Splitter.SplitAction>>() {{
-                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-                    put(Token.Symbol.EQUAL, (Splitter.RawSplitAction) ExpressionParser::parseAssignment);
-                }});
-//                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-//                    put(Token.Symbol.MINUS_EQUAL, (Splitter.StatementSplitAction) (first, second) -> new AST.MathAssign(first, MathOp.MINUS, second));
-//                    put(Token.Symbol.PLUS_EQUAL, (Splitter.StatementSplitAction) (first, second) -> new AST.MathAssign(first, MathOp.PLUS, second));
-//                    put(Token.Symbol.STAR_EQUAL, (Splitter.StatementSplitAction) (first, second) -> new AST.MathAssign(first, MathOp.MUL, second));
-//                    put(Token.Symbol.SLASH_EQUAL, (Splitter.StatementSplitAction) (first, second) -> new AST.MathAssign(first, MathOp.DIV, second));
-//                }});
-                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-                    put(Token.Symbol.BOOL_AND, (Splitter.StatementSplitAction) (first, second) -> new AST.BoolCombine(first, BoolOp.AND, second));
-                }});
-                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-                    put(Token.Symbol.BOOL_OR, (Splitter.StatementSplitAction) (first, second) -> new AST.BoolCombine(first, BoolOp.OR, second));
-                }});
-                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-                    put(Token.Symbol.DOUBLE_EQUAL, (Splitter.StatementSplitAction) (first, second) -> new AST.Compare(first, CompareOp.EQ, second));
-                    put(Token.Symbol.LEFT_ANGLE, (Splitter.StatementSplitAction) (first, second) -> new AST.Compare(first, CompareOp.LT, second));
-                    put(Token.Symbol.RIGHT_ANGLE, (Splitter.StatementSplitAction) (first, second) -> new AST.Compare(first, CompareOp.GT, second));
-//                    put(Token.Symbol.LESS_EQUAL, (Splitter.StatementSplitAction) (first, second) -> new AST.Compare(first, CompareOp.LE, second));
-//                    put(Token.Symbol.GREATER_EQUAL, (Splitter.StatementSplitAction) (first, second) -> new AST.Compare(first, CompareOp.GE, second));
-                }});
-                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-                    put(Token.Symbol.SLASH, (Splitter.StatementSplitAction) (first, second) -> new AST.Math(first, MathOp.DIV, second));
-                }});
-                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-                    put(Token.Symbol.PLUS, (Splitter.StatementSplitAction) (first, second) -> new AST.Math(first, MathOp.PLUS, second));
-                    put(Token.Symbol.MINUS, (Splitter.StatementSplitAction) (first, second) -> new AST.Math(first, MathOp.MINUS, second));
-                }});
-                add(new HashMap<Token.TokenType, Splitter.SplitAction>() {{
-                    put(Token.Symbol.DOT, (Splitter.StatementSplitAction) Dotted::new);
-                }});
-            }};
+    // defines a multipass split. When a successful split is made, the resulting action will be executed on the result
+    private static final SplitSettings splitSettings = new SplitSettings()
+            .addLayer(new SplitLayer()
+                .addSplitRule(Token.Symbol.EQUAL, ExpressionParser::parseAssignment))
+            .addLayer(new SplitLayer()
+                .addSplitRule(Token.Symbol.BOOL_AND, ExpressionParser.boolCombineAction(BoolOp.AND)))
+            .addLayer(new SplitLayer()
+                .addSplitRule(Token.Symbol.BOOL_OR, ExpressionParser.boolCombineAction(BoolOp.OR)))
+            .addLayer(new SplitLayer()
+                .addSplitRule(Token.Symbol.DOUBLE_EQUAL, ExpressionParser.compareAction(CompareOp.EQ))
+                .addSplitRule(Token.Symbol.LEFT_ANGLE, ExpressionParser.compareAction(CompareOp.LT))
+                .addSplitRule(Token.Symbol.RIGHT_ANGLE, ExpressionParser.compareAction(CompareOp.GT)))
+            .addLayer(new SplitLayer()
+                .addSplitRule(Token.Symbol.SLASH, ExpressionParser.mathAction(MathOp.DIV))
+                .addSplitRule(Token.Symbol.STAR, ExpressionParser.mathAction(MathOp.MUL)))
+            .addLayer(new SplitLayer()
+                .addSplitRule(Token.Symbol.PLUS, ExpressionParser.mathAction(MathOp.PLUS))
+                .addSplitRule(Token.Symbol.MINUS, ExpressionParser.mathAction(MathOp.MINUS)))
+            .addLayer(new SplitLayer()
+                .addSplitRule(Token.Symbol.DOT, ExpressionParser.statementAction(Dotted::new))).leftToRight(false);
+
 
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
@@ -119,7 +106,7 @@ public class Parser {
 
     private List<Token> consumeToBraceAware(Token.TokenType type) {
         List<Token> tokens = new ArrayList<>();
-        BraceManager braceManager = new BraceManager(false);
+        BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
         while (true) {
             if (current().type == Token.Textless.EOF) {
                 if (braceManager.isEmpty()) {
@@ -219,9 +206,9 @@ public class Parser {
         consumeExpected(Token.Symbol.LEFT_PAREN);
         List<Token> paramTokens = consumeToBraceAware(Token.Symbol.RIGHT_PAREN);
 
-        List<FunctionParam> params = Splitter.braceSplit(paramTokens, Token.Symbol.COMMA, -1)
+        List<FunctionParam> params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
                 .stream()
-                .map(e -> Splitter.braceSplit(e, Token.Symbol.COLON, -1))
+                .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
                 .map(e -> new FunctionParam(new Parser(e.get(0)).parseType(), e.get(0).get(0).literal))
                 .collect(Collectors.toList());
 
@@ -243,7 +230,7 @@ public class Parser {
     public Statement parseExpression() {
         List<Token> workingTokens = selectTo(Token.Symbol.SEMICOLON);
 
-        Statement parsed = Splitter.rankedSingleSplit(workingTokens, splitRules);
+        Statement parsed = new LayeredSplitter(splitSettings).execute(workingTokens);
         if (parsed != null) {
             pos += workingTokens.size() + 1;
             return parsed;
@@ -275,7 +262,7 @@ public class Parser {
 
     private List<Statement> consumeFunctionParams() {
         List<Token> params = consumeToBraceAware(Token.Symbol.RIGHT_PAREN);
-        List<List<Token>> paramTokens = Splitter.braceSplit(params, Token.Symbol.COMMA, -1);
+        List<List<Token>> paramTokens = BraceSplitter.splitAll(params, Token.Symbol.COMMA);
         return paramTokens.stream()
                 .filter(arr -> !arr.isEmpty())
                 .map(Parser::new)

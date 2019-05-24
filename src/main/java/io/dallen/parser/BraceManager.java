@@ -8,12 +8,9 @@ import static io.dallen.tokenizer.Token.Symbol.*;
 
 public class BraceManager {
 
-    private final ArrayDeque<Token.TokenType> braceStack = new ArrayDeque<>();
-
-    private final boolean reverse;
-
-    private Token.TokenType openBraceFor(Token.Symbol tt) {
-        if(!reverse) {
+    public static final BraceProfile leftToRight = new BraceProfile() {
+        @Override
+        public Token.TokenType openBraceFor(Token.Symbol tt) {
             switch (tt) {
                 case RIGHT_ANGLE:
                     return LEFT_ANGLE;
@@ -22,22 +19,12 @@ public class BraceManager {
                 case RIGHT_PAREN:
                     return LEFT_PAREN;
             }
-        } else {
-            switch (tt) {
-                case LEFT_ANGLE:
-                    return RIGHT_ANGLE;
-                case LEFT_BRACE:
-                    return RIGHT_BRACE;
-                case LEFT_PAREN:
-                    return RIGHT_PAREN;
-            }
+
+            return null;
         }
 
-        return null;
-    }
-
-    private boolean isOpenBrace(Token.Symbol tt) {
-        if(!reverse) {
+        @Override
+        public boolean isOpenBrace(Token.Symbol tt) {
             switch (tt) {
                 case LEFT_ANGLE:
                 case LEFT_BRACE:
@@ -46,7 +33,26 @@ public class BraceManager {
                 default:
                     return false;
             }
-        } else {
+        }
+    };
+
+    public static final BraceProfile rightToLeft = new BraceProfile() {
+        @Override
+        public Token.TokenType openBraceFor(Token.Symbol tt) {
+            switch (tt) {
+                case LEFT_ANGLE:
+                    return RIGHT_ANGLE;
+                case LEFT_BRACE:
+                    return RIGHT_BRACE;
+                case LEFT_PAREN:
+                    return RIGHT_PAREN;
+            }
+
+            return null;
+        }
+
+        @Override
+        public boolean isOpenBrace(Token.Symbol tt) {
             switch (tt) {
                 case RIGHT_ANGLE:
                 case RIGHT_BRACE:
@@ -56,10 +62,19 @@ public class BraceManager {
                     return false;
             }
         }
+    };
+
+    public interface BraceProfile {
+        Token.TokenType openBraceFor(Token.Symbol tt);
+        boolean isOpenBrace(Token.Symbol tt);
     }
 
-    public BraceManager(boolean reverse) {
-        this.reverse = reverse;
+
+    private final ArrayDeque<Token.TokenType> braceStack = new ArrayDeque<>();
+    private final BraceProfile braceProfile;
+
+    public BraceManager(BraceProfile braceProfile) {
+        this.braceProfile = braceProfile;
     }
 
     public void check(Token t) {
@@ -69,12 +84,12 @@ public class BraceManager {
 
         Token.Symbol tokenType = (Token.Symbol) t.type;
 
-        if (isOpenBrace(tokenType)) { // track open braces
+        if (braceProfile.isOpenBrace(tokenType)) { // track open braces
             braceStack.push(t.type);
             return;
         }
-        if (openBraceFor(tokenType) != null) { // pop braces as close braces are found
-            if (braceStack.peek() == openBraceFor(tokenType)) {
+        if (braceProfile.openBraceFor(tokenType) != null) { // pop braces as close braces are found
+            if (braceStack.peek() == braceProfile.openBraceFor(tokenType)) {
                 braceStack.pop();
             } else {
                 throw new ParserError("Unknown token sequence", t);
