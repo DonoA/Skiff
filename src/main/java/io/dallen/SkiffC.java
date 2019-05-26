@@ -1,6 +1,5 @@
 package io.dallen;
 
-import io.dallen.parser.AST;
 import io.dallen.parser.Parser;
 import io.dallen.tokenizer.Lexer;
 import io.dallen.tokenizer.Token;
@@ -10,6 +9,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class SkiffC {
 

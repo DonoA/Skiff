@@ -5,7 +5,7 @@ import io.dallen.parser.splitter.LayeredSplitter;
 import io.dallen.parser.splitter.SplitLayer;
 import io.dallen.parser.splitter.SplitSettings;
 import io.dallen.tokenizer.Token;
-import io.dallen.parser.AST.*;
+import io.dallen.AST.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,18 +98,7 @@ public class Parser {
         return tokens.get(pos + 1);
     }
 
-    // Advances current location
     private List<Token> consumeTo(Token.TokenType type) {
-        List<Token> tokens = new ArrayList<>();
-        while (current().type != Token.Textless.EOF && !current().type.equals(type)) {
-            tokens.add(current());
-            next();
-        }
-        next();
-        return tokens;
-    }
-
-    private List<Token> consumeToBraceAware(Token.TokenType type) {
         List<Token> tokens = new ArrayList<>();
         BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
         while (true) {
@@ -171,6 +160,10 @@ public class Parser {
                 statements.add(parseFunctionDef());
                 continue;
             }
+            if (Token.Keyword.RETURN.equals(i)) {
+                statements.add(parseReturn());
+                continue;
+            }
             statements.add(parseExpression());
         }
         return statements;
@@ -180,11 +173,11 @@ public class Parser {
         next();
 
         consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = consumeToBraceAware(Token.Symbol.RIGHT_PAREN);
+        List<Token> condTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
         consumeExpected(Token.Symbol.LEFT_BRACE);
         Statement cond = new Parser(condTokens).parseExpression();
 
-        List<Token> bodyTokens = consumeToBraceAware(Token.Symbol.RIGHT_BRACE);
+        List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new IfBlock(cond, body);
@@ -194,7 +187,7 @@ public class Parser {
         next();
 
         consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = consumeToBraceAware(Token.Symbol.RIGHT_PAREN);
+        List<Token> condTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
         consumeExpected(Token.Symbol.LEFT_BRACE);
         Statement cond = new Parser(condTokens).parseExpression();
 
@@ -209,7 +202,7 @@ public class Parser {
 
         String funcName = consume().literal;
         consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> paramTokens = consumeToBraceAware(Token.Symbol.RIGHT_PAREN);
+        List<Token> paramTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
 
         List<FunctionParam> params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
                 .stream()
@@ -218,13 +211,20 @@ public class Parser {
                 .collect(Collectors.toList());
 
         consumeExpected(Token.Symbol.COLON);
-        List<Token> returnTypeTokens = consumeToBraceAware(Token.Symbol.LEFT_BRACE);
+        List<Token> returnTypeTokens = consumeTo(Token.Symbol.LEFT_BRACE);
         Type returnType = new Parser(returnTypeTokens).parseType();
 
         List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new FunctionDef(returnType, funcName, params, body);
+    }
+
+    private Return parseReturn() {
+        consumeExpected(Token.Keyword.RETURN);
+
+        Statement value = new Parser(consumeTo(Token.Symbol.SEMICOLON)).parseExpression();
+        return new Return(value);
     }
 
     private Type parseType() {
@@ -252,7 +252,7 @@ public class Parser {
 
         if (current().type == Token.Symbol.LEFT_PAREN) {
             consumeExpected(Token.Symbol.LEFT_PAREN);
-            Statement sub = new Parser(consumeToBraceAware(Token.Symbol.RIGHT_PAREN)).parseExpression();
+            Statement sub = new Parser(consumeTo(Token.Symbol.RIGHT_PAREN)).parseExpression();
             return new Parened(sub);
         } else if (current().type == Token.Textless.NAME) {
             Token name = consume();
@@ -285,7 +285,7 @@ public class Parser {
     }
 
     private List<Statement> consumeFunctionParams() {
-        List<Token> params = consumeToBraceAware(Token.Symbol.RIGHT_PAREN);
+        List<Token> params = consumeTo(Token.Symbol.RIGHT_PAREN);
         List<List<Token>> paramTokens = BraceSplitter.splitAll(params, Token.Symbol.COMMA);
         return paramTokens.stream()
                 .filter(arr -> !arr.isEmpty())

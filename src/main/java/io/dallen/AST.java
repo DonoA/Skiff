@@ -1,4 +1,4 @@
-package io.dallen.parser;
+package io.dallen;
 
 import java.util.List;
 import java.util.Objects;
@@ -19,6 +19,7 @@ public class AST {
     }
 
     // Begin Generated AST classes
+
 
 
     public static class Statement  {
@@ -211,6 +212,18 @@ public class AST {
     }
 
 
+    public static class Return extends Expression {
+        public final Statement value;
+        public Return(Statement value) {
+            super();
+            this.value = value;
+        }
+        public String toString() {
+            return "Return(value = " + this.value.toString() + ")";
+        }
+    }
+
+
     public static class Math extends Expression {
         public final Statement left;
         public final MathOp op;
@@ -380,7 +393,6 @@ public class AST {
             return "Variable(name = " + this.name.toString() + ")";
         }
     }
-
 
 
 

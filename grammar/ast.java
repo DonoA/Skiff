@@ -189,6 +189,18 @@ public static class Arrowed extends Expression {
 }
     
 
+public static class Return extends Expression {
+    public final Statement value;
+    public Return(Statement value) {
+        super();
+        this.value = value;
+    }
+    public String toString() {
+        return "Return(value = " + this.value.toString() + ")";
+    }
+}
+    
+
 public static class Math extends Expression {
     public final Statement left;
     public final MathOp op;

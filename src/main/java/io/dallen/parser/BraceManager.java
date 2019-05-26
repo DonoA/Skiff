@@ -12,8 +12,8 @@ public class BraceManager {
         @Override
         public Token.TokenType openBraceFor(Token.Symbol tt) {
             switch (tt) {
-                case RIGHT_ANGLE:
-                    return LEFT_ANGLE;
+//                case RIGHT_ANGLE:
+//                    return LEFT_ANGLE;
                 case RIGHT_BRACE:
                     return LEFT_BRACE;
                 case RIGHT_PAREN:
@@ -26,7 +26,7 @@ public class BraceManager {
         @Override
         public boolean isOpenBrace(Token.Symbol tt) {
             switch (tt) {
-                case LEFT_ANGLE:
+//                case LEFT_ANGLE:
                 case LEFT_BRACE:
                 case LEFT_PAREN:
                     return true;
@@ -40,8 +40,8 @@ public class BraceManager {
         @Override
         public Token.TokenType openBraceFor(Token.Symbol tt) {
             switch (tt) {
-                case LEFT_ANGLE:
-                    return RIGHT_ANGLE;
+//                case LEFT_ANGLE:
+//                    return RIGHT_ANGLE;
                 case LEFT_BRACE:
                     return RIGHT_BRACE;
                 case LEFT_PAREN:
@@ -54,7 +54,7 @@ public class BraceManager {
         @Override
         public boolean isOpenBrace(Token.Symbol tt) {
             switch (tt) {
-                case RIGHT_ANGLE:
+//                case RIGHT_ANGLE:
                 case RIGHT_BRACE:
                 case RIGHT_PAREN:
                     return true;
