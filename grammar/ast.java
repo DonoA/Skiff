@@ -8,9 +8,12 @@ public static class Statement  {
     public String toString() {
         return "Statement()";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileStatement(this);
+    }
 }
     
-
 public static class Expression extends Statement {
     
     public Expression() {
@@ -20,9 +23,12 @@ public static class Expression extends Statement {
     public String toString() {
         return "Expression()";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileExpression(this);
+    }
 }
     
-
 public static class Type  {
     public final Statement name;
     public final Integer arraySize;
@@ -38,9 +44,12 @@ public static class Type  {
             "arraySize = " + this.arraySize.toString() + ", " + 
             "genericTypes = " + "[" + this.genericTypes.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileType(this);
+    }
 }
     
-
 public static class BlockStatement extends Statement {
     public final List<Statement> body;
     public BlockStatement(List<Statement> body) {
@@ -50,9 +59,12 @@ public static class BlockStatement extends Statement {
     public String toString() {
         return "BlockStatement(body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileBlockStatement(this);
+    }
 }
     
-
 public static class FunctionDef extends BlockStatement {
     public final Type returns;
     public final String name;
@@ -69,9 +81,12 @@ public static class FunctionDef extends BlockStatement {
             "args = " + "[" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ", " + 
             "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileFunctionDef(this);
+    }
 }
     
-
 public static class FunctionParam  {
     public final Type type;
     public final String name;
@@ -84,9 +99,12 @@ public static class FunctionParam  {
         return "FunctionParam(type = " + this.type.toString() + ", " + 
             "name = " + this.name.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileFunctionParam(this);
+    }
 }
     
-
 public static class IfBlock extends BlockStatement {
     public final Statement condition;
     public IfBlock(Statement condition, List<Statement> body) {
@@ -97,9 +115,12 @@ public static class IfBlock extends BlockStatement {
         return "IfBlock(condition = " + this.condition.toString() + ", " + 
             "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileIfBlock(this);
+    }
 }
     
-
 public static class WhileBlock extends BlockStatement {
     public final Statement condition;
     public WhileBlock(Statement condition, List<Statement> body) {
@@ -110,9 +131,12 @@ public static class WhileBlock extends BlockStatement {
         return "WhileBlock(condition = " + this.condition.toString() + ", " + 
             "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileWhileBlock(this);
+    }
 }
     
-
 public static class ForBlock extends BlockStatement {
     public final Statement start;
     public final Statement condition;
@@ -129,9 +153,12 @@ public static class ForBlock extends BlockStatement {
             "step = " + this.step.toString() + ", " + 
             "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileForBlock(this);
+    }
 }
     
-
 public static class FunctionCall extends Expression {
     public final String name;
     public final List<Statement> args;
@@ -144,9 +171,12 @@ public static class FunctionCall extends Expression {
         return "FunctionCall(name = " + this.name.toString() + ", " + 
             "args = " + "[" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileFunctionCall(this);
+    }
 }
     
-
 public static class Parened extends Expression {
     public final Statement sub;
     public Parened(Statement sub) {
@@ -156,9 +186,12 @@ public static class Parened extends Expression {
     public String toString() {
         return "Parened(sub = " + this.sub.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileParened(this);
+    }
 }
     
-
 public static class Dotted extends Expression {
     public final Statement left;
     public final Statement right;
@@ -171,9 +204,12 @@ public static class Dotted extends Expression {
         return "Dotted(left = " + this.left.toString() + ", " + 
             "right = " + this.right.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileDotted(this);
+    }
 }
     
-
 public static class Arrowed extends Expression {
     public final Statement left;
     public final Statement right;
@@ -186,9 +222,12 @@ public static class Arrowed extends Expression {
         return "Arrowed(left = " + this.left.toString() + ", " + 
             "right = " + this.right.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileArrowed(this);
+    }
 }
     
-
 public static class Return extends Expression {
     public final Statement value;
     public Return(Statement value) {
@@ -198,27 +237,33 @@ public static class Return extends Expression {
     public String toString() {
         return "Return(value = " + this.value.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileReturn(this);
+    }
 }
     
-
-public static class Math extends Expression {
+public static class MathStatement extends Expression {
     public final Statement left;
     public final MathOp op;
     public final Statement right;
-    public Math(Statement left, MathOp op, Statement right) {
+    public MathStatement(Statement left, MathOp op, Statement right) {
         super();
         this.left = left;
         this.op = op;
         this.right = right;
     }
     public String toString() {
-        return "Math(left = " + this.left.toString() + ", " + 
+        return "MathStatement(left = " + this.left.toString() + ", " + 
             "op = " + this.op.toString() + ", " + 
             "right = " + this.right.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileMathStatement(this);
+    }
 }
     
-
 public static class MathAssign extends Expression {
     public final Statement left;
     public final MathOp op;
@@ -234,9 +279,12 @@ public static class MathAssign extends Expression {
             "op = " + this.op.toString() + ", " + 
             "right = " + this.right.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileMathAssign(this);
+    }
 }
     
-
 public static class Subscript extends Expression {
     public final Statement left;
     public final Statement sub;
@@ -249,9 +297,12 @@ public static class Subscript extends Expression {
         return "Subscript(left = " + this.left.toString() + ", " + 
             "sub = " + this.sub.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileSubscript(this);
+    }
 }
     
-
 public static class Compare extends Expression {
     public final Statement left;
     public final CompareOp op;
@@ -267,9 +318,12 @@ public static class Compare extends Expression {
             "op = " + this.op.toString() + ", " + 
             "right = " + this.right.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileCompare(this);
+    }
 }
     
-
 public static class BoolCombine extends Expression {
     public final Statement left;
     public final BoolOp op;
@@ -285,9 +339,12 @@ public static class BoolCombine extends Expression {
             "op = " + this.op.toString() + ", " + 
             "right = " + this.right.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileBoolCombine(this);
+    }
 }
     
-
 public static class Assign extends Expression {
     public final Statement name;
     public final Statement value;
@@ -300,9 +357,12 @@ public static class Assign extends Expression {
         return "Assign(name = " + this.name.toString() + ", " + 
             "value = " + this.value.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileAssign(this);
+    }
 }
     
-
 public static class Declare extends Statement {
     public final Type type;
     public final String name;
@@ -315,9 +375,12 @@ public static class Declare extends Statement {
         return "Declare(type = " + this.type.toString() + ", " + 
             "name = " + this.name.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileDeclare(this);
+    }
 }
     
-
 public static class DeclareAssign extends Statement {
     public final Type type;
     public final String name;
@@ -333,9 +396,12 @@ public static class DeclareAssign extends Statement {
             "name = " + this.name.toString() + ", " + 
             "value = " + this.value.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileDeclareAssign(this);
+    }
 }
     
-
 public static class NumberLiteral extends Expression {
     public final Double value;
     public NumberLiteral(Double value) {
@@ -345,9 +411,12 @@ public static class NumberLiteral extends Expression {
     public String toString() {
         return "NumberLiteral(value = " + this.value.toString() + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileNumberLiteral(this);
+    }
 }
     
-
 public static class StringLiteral extends Expression {
     public final String value;
     public StringLiteral(String value) {
@@ -357,9 +426,12 @@ public static class StringLiteral extends Expression {
     public String toString() {
         return "StringLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
     }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileStringLiteral(this);
+    }
 }
     
-
 public static class Variable extends Expression {
     public final String name;
     public Variable(String name) {
@@ -368,6 +440,10 @@ public static class Variable extends Expression {
     }
     public String toString() {
         return "Variable(name = " + this.name.toString() + ")";
+    }
+
+    public CompiledCode compile(ASTVisitor visitor) {
+        return visitor.compileVariable(this);
     }
 }
     

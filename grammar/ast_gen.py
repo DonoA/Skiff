@@ -56,7 +56,7 @@ def generate_def(class_name, spec):
     java_fields = '\n    '.join(['public final ' + typ + ' ' + name + ';' for name, typ in fields.items()])
     ctr_assign = '\n        '.join([f"this.{name} = {name};" for name, typ in fields.items()])
 
-    return f"""
+    return (f"""
 public static class {class_name} {extends} {cbo}
     {java_fields}
     public {class_name}({ctr_params}) {cbo}
@@ -66,15 +66,28 @@ public static class {class_name} {extends} {cbo}
     public String toString() {cbo}
         return "{class_name}({to_string_values})";
     {cbc}
+
+    public CompiledCode compile(ASTVisitor visitor) {cbo}
+        return visitor.compile{class_name}(this);
+    {cbc}
+{cbc}
+    """, f"""
+public CompiledCode compile{class_name}({class_name} stmt) {cbo} 
+    return null; 
 {cbc}
     """
-
-    sys.exit(0)
+    )
 
 data = {}
 
 with open('grammar.json', 'r') as f:
     data = json.load(f)
 
-for key, value in data.items():
-    print(generate_def(key, value))
+with open('ast.java', 'w+') as ast:
+    with open('visitor.java', 'w+') as visit:
+        for key, value in data.items():
+            (ast_code, visitor_code) = generate_def(key, value) 
+            ast.write(ast_code)
+            visit.write(visitor_code)
+
+

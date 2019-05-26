@@ -105,7 +105,7 @@
             "value": "Statement"
         }
     },
-    "Math": {
+    "MathStatement": {
         "extends": "Expression",
         "fields": {
             "left": "Statement",

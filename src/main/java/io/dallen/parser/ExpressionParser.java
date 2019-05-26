@@ -1,10 +1,8 @@
 package io.dallen.parser;
 
-import io.dallen.AST;
 import io.dallen.AST.*;
 import io.dallen.parser.splitter.SplitAction;
 import io.dallen.tokenizer.Token;
-
 
 import java.util.List;
 
@@ -24,7 +22,7 @@ public class ExpressionParser {
     }
 
     public static SplitAction mathAction(MathOp op) {
-        return statementAction((first, second) -> new AST.Math(first, op, second));
+        return statementAction((first, second) -> new MathStatement(first, op, second));
     }
 
     public static SplitAction statementAction(StatementAction action) {
