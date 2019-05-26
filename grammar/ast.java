@@ -24,16 +24,19 @@ public static class Expression extends Statement {
     
 
 public static class Type  {
-    public final String name;
+    public final Statement name;
     public final Integer arraySize;
-    public Type(String name, Integer arraySize) {
+    public final List<Type> genericTypes;
+    public Type(Statement name, Integer arraySize, List<Type> genericTypes) {
         
         this.name = name;
         this.arraySize = arraySize;
+        this.genericTypes = genericTypes;
     }
     public String toString() {
         return "Type(name = " + this.name.toString() + ", " + 
-            "arraySize = " + this.arraySize.toString() + ")";
+            "arraySize = " + this.arraySize.toString() + ", " + 
+            "genericTypes = " + "[" + this.genericTypes.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 }
     
@@ -45,7 +48,7 @@ public static class BlockStatement extends Statement {
         this.body = body;
     }
     public String toString() {
-        return "BlockStatement(body = " + "[ \n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        return "BlockStatement(body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 }
     
@@ -63,8 +66,8 @@ public static class FunctionDef extends BlockStatement {
     public String toString() {
         return "FunctionDef(returns = " + this.returns.toString() + ", " + 
             "name = " + this.name.toString() + ", " + 
-            "args = " + "[ \n" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ", " + 
-            "body = " + "[ \n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            "args = " + "[" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ", " + 
+            "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 }
     
@@ -92,7 +95,7 @@ public static class IfBlock extends BlockStatement {
     }
     public String toString() {
         return "IfBlock(condition = " + this.condition.toString() + ", " + 
-            "body = " + "[ \n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 }
     
@@ -105,7 +108,7 @@ public static class WhileBlock extends BlockStatement {
     }
     public String toString() {
         return "WhileBlock(condition = " + this.condition.toString() + ", " + 
-            "body = " + "[ \n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 }
     
@@ -124,7 +127,7 @@ public static class ForBlock extends BlockStatement {
         return "ForBlock(start = " + this.start.toString() + ", " + 
             "condition = " + this.condition.toString() + ", " + 
             "step = " + this.step.toString() + ", " + 
-            "body = " + "[ \n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 }
     
@@ -139,7 +142,7 @@ public static class FunctionCall extends Expression {
     }
     public String toString() {
         return "FunctionCall(name = " + this.name.toString() + ", " + 
-            "args = " + "[ \n" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            "args = " + "[" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 }
     

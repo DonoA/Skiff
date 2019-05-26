@@ -7,7 +7,9 @@ import java.util.List;
 
 public class ExpressionParser {
     public static AST.Statement parseAssignment(List<Token> first, List<Token> second) {
-        return null;
+        AST.Statement firstS = new Parser(first).parseExpression();
+        AST.Statement secondS = new Parser(second).parseExpression();
+        return new AST.Assign(firstS, secondS);
     }
 
     public static SplitAction boolCombineAction(AST.BoolOp op) {
@@ -25,7 +27,7 @@ public class ExpressionParser {
     public static SplitAction statementAction(StatementAction action) {
         return (first, second) -> {
             AST.Statement firstS = new Parser(first).parseExpression();
-            AST.Statement secondS = new Parser(first).parseExpression();
+            AST.Statement secondS = new Parser(second).parseExpression();
             return action.handle(firstS, secondS);
         };
     }

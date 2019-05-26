@@ -17,18 +17,20 @@ public class BraceSplitter {
         BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
 
         List<List<Token>> segments = new ArrayList<>();
-        segments.add(new ArrayList<>());
-        ListIterator<Token> itr = tokens.listIterator();
-        while (itr.hasNext()) {
-            Token t = itr.next();
-
+        List<Token> workingSeg = new ArrayList<>();
+        for (Token t : tokens) {
             braceManager.check(t);
 
             if (braceManager.isEmpty() && segments.size() < limit && t.type == on) {
-                segments.add(new ArrayList<>());
+                segments.add(workingSeg);
+                workingSeg = new ArrayList<>();
             } else { // just add to results
-                segments.get(segments.size() - 1).add(t);
+                workingSeg.add(t);
             }
+        }
+
+        if(!workingSeg.isEmpty()) {
+            segments.add(workingSeg);
         }
         return segments;
     }
@@ -37,7 +39,8 @@ public class BraceSplitter {
         BraceManager braceManager = new BraceManager(BraceManager.rightToLeft);
 
         List<List<Token>> segments = new ArrayList<>();
-        segments.add(new ArrayList<>());
+        List<Token> workingSeg = new ArrayList<>();
+        segments.add(0, workingSeg);
         ListIterator<Token> itr = tokens.listIterator();
         while (itr.hasPrevious()) {
             Token t = itr.previous();
@@ -45,10 +48,14 @@ public class BraceSplitter {
             braceManager.check(t);
 
             if (braceManager.isEmpty() && segments.size() < limit && t.type == on) {
-                segments.add(new ArrayList<>());
+                segments.add(0, workingSeg);
+                workingSeg = new ArrayList<>();
             } else { // just add to results
-                segments.get(segments.size() - 1).add(t);
+                workingSeg.add(t);
             }
+        }
+        if(!workingSeg.isEmpty()) {
+            segments.add(0, workingSeg);
         }
         return segments;
     }

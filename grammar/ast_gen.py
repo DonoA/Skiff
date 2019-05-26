@@ -2,8 +2,14 @@
 import json, sys
 
 def generate_toString(typ, name, literal):
-    if 'List' in typ:
-        return f"\"[ \\n\" + this.{name}.stream().map(Objects::toString).collect(Collectors.joining(\", \\n\")) + \" \\n]\""
+    typ_name = typ
+    sep = ''
+    if type(typ) is dict:
+        typ_name = typ['name']
+        sep = '\\n'
+
+    if 'List' in typ_name:
+        return f"\"[{sep}\" + this.{name}.stream().map(Objects::toString).collect(Collectors.joining(\", {sep}\")) + \" {sep}]\""
     if literal:
         return f"\"\\\"\" + this.{name}.toString() + \"\\\"\""
     return f"this.{name}.toString()"
@@ -25,7 +31,15 @@ def generate_def(class_name, spec):
     cbo = "{"
     cbc = "}"
 
-    fields = spec['fields']
+    raw_fields = spec['fields']
+
+    fields = {}
+
+    for name, typ in raw_fields.items():
+        if type(typ) is dict:
+            fields[name] = typ['name']
+        else:
+            fields[name] = typ
 
     (extends, super_init, ignores) = generate_extends(spec)
 
@@ -34,7 +48,7 @@ def generate_def(class_name, spec):
         literal = True
 
     ctr_params = ', '.join([typ + ' ' + name for name, typ in fields.items()])
-    to_string_values = ', " + \n            "'.join([f"{name} = \" + {generate_toString(typ, name, literal)} + \"" for name, typ in fields.items()])
+    to_string_values = ', " + \n            "'.join([f"{name} = \" + {generate_toString(typ, name, literal)} + \"" for name, typ in raw_fields.items()])
 
     for ignore in ignores:
         del fields[ignore]

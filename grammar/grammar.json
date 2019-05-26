@@ -8,14 +8,18 @@
     },
     "Type": {
         "fields": {
-            "name": "String",
-            "arraySize": "Integer"
+            "name": "Statement",
+            "arraySize": "Integer",
+            "genericTypes": "List<Type>"
         }
     },
     "BlockStatement": {
         "extends": "Statement",
         "fields": {
-            "body": "List<Statement>"
+            "body": {
+                "name": "List<Statement>",
+                "bigPrint": true
+            }
         }
     },
     "FunctionDef": {
@@ -24,7 +28,10 @@
             "returns": "Type",
             "name": "String",
             "args": "List<FunctionParam>",
-            "body": "List<Statement>"
+            "body": {
+                "name": "List<Statement>",
+                "bigPrint": true
+            }
         }
     },
     "FunctionParam": {
@@ -37,14 +44,20 @@
         "extends": "BlockStatement(body)",
         "fields": {
             "condition": "Statement",
-            "body": "List<Statement>"
+            "body": {
+                "name": "List<Statement>",
+                "bigPrint": true
+            }
         }
     },
     "WhileBlock": {
         "extends": "BlockStatement(body)",
         "fields": {
             "condition": "Statement",
-            "body": "List<Statement>"
+            "body": {
+                "name": "List<Statement>",
+                "bigPrint": true
+            }
         }
     },
     "ForBlock": {
@@ -53,7 +66,10 @@
             "start": "Statement",
             "condition": "Statement",
             "step": "Statement",
-            "body": "List<Statement>"
+            "body": {
+                "name": "List<Statement>",
+                "bigPrint": true
+            }
         }
     },
     "FunctionCall": {

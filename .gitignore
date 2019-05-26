@@ -14,3 +14,4 @@ CMakeLists.txt
 cmake-build-debug/
 test.c
 target/
+*.skiff

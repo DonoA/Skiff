@@ -14,6 +14,11 @@ import java.util.stream.Collectors;
 public class Parser {
 
     public static class ParserError extends RuntimeException {
+        public ParserError(String msg, List<Token> t) {
+            super(msg + " Tokens: " + String.join(" ",
+                    t.stream().map(Object::toString).collect(Collectors.toList())));
+        }
+
         public ParserError(String msg, Token t) {
             super(msg + " Token: " + t.toString());
         }
@@ -209,7 +214,7 @@ public class Parser {
         List<FunctionParam> params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
                 .stream()
                 .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
-                .map(e -> new FunctionParam(new Parser(e.get(0)).parseType(), e.get(0).get(0).literal))
+                .map(e -> new FunctionParam(new Parser(e.get(1)).parseType(), e.get(0).get(0).literal))
                 .collect(Collectors.toList());
 
         consumeExpected(Token.Symbol.COLON);
@@ -223,8 +228,17 @@ public class Parser {
     }
 
     private Type parseType() {
-        String typeName = consume().literal;
-        return new Type(typeName, 0);
+        Statement typeName = new Parser(consumeTo(Token.Symbol.LEFT_BRACKET)).parseExpression();
+        if(current().isEOF()) {
+            return new Type(typeName, 0, new ArrayList<>());
+        }
+        List<Type> genericParams = BraceSplitter
+                .splitAll(consumeTo(Token.Symbol.RIGHT_BRACKET), Token.Symbol.COMMA)
+                .stream()
+                .map(e -> new Parser(e).parseType())
+                .collect(Collectors.toList());
+
+        return new Type(typeName, 0, genericParams);
     }
 
     public Statement parseExpression() {
@@ -240,23 +254,33 @@ public class Parser {
             consumeExpected(Token.Symbol.LEFT_PAREN);
             Statement sub = new Parser(consumeToBraceAware(Token.Symbol.RIGHT_PAREN)).parseExpression();
             return new Parened(sub);
-        } else if (current().type == Token.Textless.NAME && containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
+        } else if (current().type == Token.Textless.NAME) {
             Token name = consume();
-            consumeExpected(Token.Symbol.LEFT_PAREN);
-            List<Statement> funcParams = consumeFunctionParams();
-            tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new FunctionCall(name.literal, funcParams);
+            return handleNameToken(name, workingTokens);
         } else if (current().type == Token.Textless.NUMBER_LITERAL) {
             tryConsumeExpected(Token.Symbol.SEMICOLON);
             return new NumberLiteral(Double.parseDouble(current().literal));
         } else if (current().type == Token.Textless.STRING_LITERAL) {
             tryConsumeExpected(Token.Symbol.SEMICOLON);
             return new StringLiteral(current().literal);
-        } else if (current().type == Token.Textless.NAME) {
-            tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new Variable(current().literal);
         } else {
             throw new ParserError("Unknown token sequence", current());
+        }
+    }
+
+    private Statement handleNameToken(Token name, List<Token> workingTokens) {
+        if(current().type == Token.Symbol.COLON) {
+            consumeExpected(Token.Symbol.COLON);
+            Type type = new Parser(consumeTo(Token.Symbol.SEMICOLON)).parseType();
+            return new Declare(type, name.literal);
+        } else if(current().type == Token.Symbol.LEFT_PAREN) {
+            consumeExpected(Token.Symbol.LEFT_PAREN);
+            List<Statement> funcParams = consumeFunctionParams();
+            tryConsumeExpected(Token.Symbol.SEMICOLON);
+            return new FunctionCall(name.literal, funcParams);
+        } else {
+            tryConsumeExpected(Token.Symbol.SEMICOLON);
+            return new Variable(name.literal);
         }
     }
 

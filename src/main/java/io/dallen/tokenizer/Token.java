@@ -117,4 +117,8 @@ public class Token {
     public String toString() {
         return type.getName() + "(" + literal + ")";
     }
+
+    public boolean isEOF() {
+        return this.type == Textless.EOF;
+    }
 }
