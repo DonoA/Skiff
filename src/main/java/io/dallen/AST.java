@@ -1,6 +1,7 @@
 package io.dallen;
 
 import io.dallen.compiler.ASTVisitor;
+import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class AST {
     // Begin Generated AST classes
 
 
+
     public static class Statement  {
 
         public Statement() {
@@ -34,8 +36,8 @@ public class AST {
             return "Statement()";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileStatement(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileStatement(this, context);
         }
     }
 
@@ -49,8 +51,8 @@ public class AST {
             return "Expression()";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileExpression(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileExpression(this, context);
         }
     }
 
@@ -70,8 +72,8 @@ public class AST {
                     "genericTypes = " + "[" + this.genericTypes.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileType(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileType(this, context);
         }
     }
 
@@ -85,8 +87,8 @@ public class AST {
             return "BlockStatement(body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileBlockStatement(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileBlockStatement(this, context);
         }
     }
 
@@ -107,8 +109,8 @@ public class AST {
                     "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileFunctionDef(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileFunctionDef(this, context);
         }
     }
 
@@ -125,8 +127,8 @@ public class AST {
                     "name = " + this.name.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileFunctionParam(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileFunctionParam(this, context);
         }
     }
 
@@ -141,8 +143,8 @@ public class AST {
                     "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileIfBlock(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileIfBlock(this, context);
         }
     }
 
@@ -157,8 +159,8 @@ public class AST {
                     "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileWhileBlock(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileWhileBlock(this, context);
         }
     }
 
@@ -179,8 +181,8 @@ public class AST {
                     "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileForBlock(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileForBlock(this, context);
         }
     }
 
@@ -197,8 +199,8 @@ public class AST {
                     "args = " + "[" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileFunctionCall(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileFunctionCall(this, context);
         }
     }
 
@@ -212,8 +214,8 @@ public class AST {
             return "Parened(sub = " + this.sub.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileParened(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileParened(this, context);
         }
     }
 
@@ -230,8 +232,8 @@ public class AST {
                     "right = " + this.right.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileDotted(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileDotted(this, context);
         }
     }
 
@@ -248,8 +250,8 @@ public class AST {
                     "right = " + this.right.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileArrowed(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileArrowed(this, context);
         }
     }
 
@@ -263,8 +265,8 @@ public class AST {
             return "Return(value = " + this.value.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileReturn(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileReturn(this, context);
         }
     }
 
@@ -284,10 +286,11 @@ public class AST {
                     "right = " + this.right.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileMathStatement(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileMathStatement(this, context);
         }
     }
+
     public static class MathAssign extends Expression {
         public final Statement left;
         public final MathOp op;
@@ -304,8 +307,8 @@ public class AST {
                     "right = " + this.right.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileMathAssign(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileMathAssign(this, context);
         }
     }
 
@@ -322,8 +325,8 @@ public class AST {
                     "sub = " + this.sub.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileSubscript(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileSubscript(this, context);
         }
     }
 
@@ -343,8 +346,8 @@ public class AST {
                     "right = " + this.right.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileCompare(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileCompare(this, context);
         }
     }
 
@@ -364,8 +367,8 @@ public class AST {
                     "right = " + this.right.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileBoolCombine(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileBoolCombine(this, context);
         }
     }
 
@@ -382,8 +385,8 @@ public class AST {
                     "value = " + this.value.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileAssign(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileAssign(this, context);
         }
     }
 
@@ -400,8 +403,8 @@ public class AST {
                     "name = " + this.name.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileDeclare(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileDeclare(this, context);
         }
     }
 
@@ -421,8 +424,8 @@ public class AST {
                     "value = " + this.value.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileDeclareAssign(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileDeclareAssign(this, context);
         }
     }
 
@@ -436,8 +439,8 @@ public class AST {
             return "NumberLiteral(value = " + this.value.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileNumberLiteral(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileNumberLiteral(this, context);
         }
     }
 
@@ -451,8 +454,8 @@ public class AST {
             return "StringLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileStringLiteral(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileStringLiteral(this, context);
         }
     }
 
@@ -466,11 +469,10 @@ public class AST {
             return "Variable(name = " + this.name.toString() + ")";
         }
 
-        public CompiledCode compile(ASTVisitor visitor) {
-            return visitor.compileVariable(this);
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileVariable(this, context);
         }
     }
-
 
     // End generated AST
 }

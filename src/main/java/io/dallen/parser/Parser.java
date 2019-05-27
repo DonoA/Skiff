@@ -13,17 +13,6 @@ import java.util.stream.Collectors;
 
 public class Parser {
 
-    public static class ParserError extends RuntimeException {
-        public ParserError(String msg, List<Token> t) {
-            super(msg + " Tokens: " + String.join(" ",
-                    t.stream().map(Object::toString).collect(Collectors.toList())));
-        }
-
-        public ParserError(String msg, Token t) {
-            super(msg + " Token: " + t.toString());
-        }
-    }
-
     private List<Token> tokens;
 
     private int pos;
@@ -228,7 +217,7 @@ public class Parser {
     }
 
     private Type parseType() {
-        Statement typeName = new Parser(consumeTo(Token.Symbol.LEFT_BRACKET)).parseExpression();
+        String typeName = new Parser(consumeTo(Token.Symbol.LEFT_BRACKET)).parseExpression();
         if(current().isEOF()) {
             return new Type(typeName, 0, new ArrayList<>());
         }

@@ -67,12 +67,12 @@ public static class {class_name} {extends} {cbo}
         return "{class_name}({to_string_values})";
     {cbc}
 
-    public CompiledCode compile(ASTVisitor visitor) {cbo}
-        return visitor.compile{class_name}(this);
+    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {cbo}
+        return visitor.compile{class_name}(this, context);
     {cbc}
 {cbc}
     """, f"""
-public CompiledCode compile{class_name}({class_name} stmt) {cbo} 
+public CompiledCode compile{class_name}({class_name} stmt, CompileContext context) {cbo} 
     return null; 
 {cbc}
     """
