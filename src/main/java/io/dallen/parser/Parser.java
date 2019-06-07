@@ -244,8 +244,7 @@ public class Parser {
             Statement sub = new Parser(consumeTo(Token.Symbol.RIGHT_PAREN)).parseExpression();
             return new Parened(sub);
         } else if (current().type == Token.Textless.NAME) {
-            Token name = consume();
-            return handleNameToken(name, workingTokens);
+            return handleNameToken(workingTokens);
         } else if (current().type == Token.Textless.NUMBER_LITERAL) {
             tryConsumeExpected(Token.Symbol.SEMICOLON);
             return new NumberLiteral(Double.parseDouble(current().literal));
@@ -257,17 +256,23 @@ public class Parser {
         }
     }
 
-    private Statement handleNameToken(Token name, List<Token> workingTokens) {
-        if(current().type == Token.Symbol.COLON) {
+    private Statement handleNameToken(List<Token> workingTokens) {
+
+        if(containsBefore(Token.Symbol.COLON, Token.Symbol.SEMICOLON)) {
+            Token name = consume();
             consumeExpected(Token.Symbol.COLON);
             Type type = new Parser(consumeTo(Token.Symbol.SEMICOLON)).parseType();
             return new Declare(type, name.literal);
-        } else if(current().type == Token.Symbol.LEFT_PAREN) {
-            consumeExpected(Token.Symbol.LEFT_PAREN);
+
+        } else if(containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
+            List<Token> funcName = consumeTo(Token.Symbol.LEFT_PAREN);
+            Statement parsedName = new Parser(funcName).parseExpression();
             List<Statement> funcParams = consumeFunctionParams();
             tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new FunctionCall(name.literal, funcParams);
+            return new FunctionCall(parsedName, funcParams);
+
         } else {
+            Token name = consume();
             tryConsumeExpected(Token.Symbol.SEMICOLON);
             return new Variable(name.literal);
         }

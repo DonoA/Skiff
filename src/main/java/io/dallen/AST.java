@@ -11,7 +11,17 @@ import java.util.stream.Collectors;
 public class AST {
 
     public enum MathOp {
-        PLUS, MINUS, MUL, DIV, XOR;
+        PLUS("+"), MINUS("-"), MUL("*"), DIV("/"), XOR("^");
+
+        private final String rawOp;
+
+        MathOp(String rawOp) {
+            this.rawOp = rawOp;
+        }
+
+        public String getRawOp() {
+            return rawOp;
+        }
     }
 
     public enum CompareOp {
@@ -187,9 +197,9 @@ public class AST {
     }
 
     public static class FunctionCall extends Expression {
-        public final String name;
+        public final Statement name;
         public final List<Statement> args;
-        public FunctionCall(String name, List<Statement> args) {
+        public FunctionCall(Statement name, List<Statement> args) {
             super();
             this.name = name;
             this.args = args;

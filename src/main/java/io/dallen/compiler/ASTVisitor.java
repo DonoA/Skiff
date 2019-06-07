@@ -26,6 +26,10 @@ public class ASTVisitor {
         switch(name) {
             case "Int":
                 return "int32_t";
+            case "Void":
+                return "void";
+            case "String":
+                return "skiff_string_t";
             default:
                 return name;
         }
@@ -82,7 +86,7 @@ public class ASTVisitor {
 
         sb.append("}\n");
 
-        return new CompiledCode(sb.toString(), CompiledType.NONE);
+        return new CompiledCode(sb.toString(), CompiledType.VOID);
     }
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
@@ -91,7 +95,7 @@ public class ASTVisitor {
         sb.append(type.getCompiledText());
         sb.append(" ");
         sb.append(stmt.name);
-        return new CompiledCode(sb.toString(), type.getType());
+        return new CompiledCode(sb.toString(), (CompiledType) type.getBinding());
     }
 
     public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
@@ -107,31 +111,44 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileFunctionCall(FunctionCall stmt, CompileContext context) {
-//        CompiledObject nameVar = context.getVar(stmt.name);
-//        if(!(nameVar instanceof CompiledFunction)) {
-//            throw new CompileError("Variable not function " + stmt.name);
-//        }
-//
-//        CompiledFunction func = (CompiledFunction) nameVar;
-//
-//        List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(this, context))
-//                .collect(Collectors.toList());
-//
-//        if(func.getArgs().size() != compArgs.size()) {
-//            throw new CompileError("Differing param count " + stmt.name);
-//        }
-//
-//        ListIterator<CompiledType> expected = func.getArgs().listIterator();
-//        ListIterator<CompiledCode> found = compArgs.listIterator();
-//
-//        while(expected.hasNext()) {
-//            CompiledType typ1 = expected.next();
-//            CompiledType typ2 = found.next().getReturnType();
-//            if(!typ1.equals(typ2)) {
-//                throw new CompileError("Differing param type " + stmt.name);
-//            }
-//        }
-        return null;
+        CompiledObject nameVar = stmt.name.compile(this, context).getBinding();
+        if(!(nameVar instanceof CompiledFunction)) {
+            throw new CompileError("Variable not function " + stmt.name);
+        }
+
+        CompiledFunction func = (CompiledFunction) nameVar;
+
+        List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(this, context))
+                .collect(Collectors.toList());
+
+        if(func.getArgs().size() != compArgs.size()) {
+            throw new CompileError("Differing param count " + func.getName());
+        }
+
+        ListIterator<CompiledType> expected = func.getArgs().listIterator();
+        ListIterator<CompiledCode> found = compArgs.listIterator();
+
+        while(expected.hasNext()) {
+            CompiledType typ1 = expected.next();
+            CompiledType typ2 = found.next().getType();
+            if(!typ1.equals(typ2)) {
+                throw new CompileError("Differing param type " + func.getName());
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(func.getName());
+        sb.append("(");
+
+        List<String> evalArgs = compArgs
+                .stream()
+                .map(CompiledCode::getCompiledText)
+                .collect(Collectors.toList());
+
+        sb.append(String.join(", ", evalArgs));
+
+        sb.append(")");
+        return new CompiledCode(sb.toString(), func.getReturns());
     }
 
     public CompiledCode compileParened(Parened stmt, CompileContext context) {
@@ -152,7 +169,12 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) {
-        return null;
+        CompiledCode lhs = stmt.left.compile(this, context);
+        CompiledCode rhs = stmt.right.compile(this, context);
+
+        String c = lhs.getCompiledText() + " " + stmt.op.getRawOp() + " " + rhs.getCompiledText();
+
+        return new CompiledCode(c, lhs.getType());
     }
 
     public CompiledCode compileMathAssign(MathAssign stmt, CompileContext context) {

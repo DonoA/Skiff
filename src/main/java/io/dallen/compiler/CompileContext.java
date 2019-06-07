@@ -1,5 +1,7 @@
 package io.dallen.compiler;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,8 +17,14 @@ public class CompileContext {
     }
 
     private void loadBuiltins() {
-        delcareObject(new CompiledType("Int", 4));
-        delcareObject(new CompiledType("String", 0));
+        delcareObject(CompiledType.VOID);
+        delcareObject(CompiledType.STRING);
+        delcareObject(CompiledType.INT);
+
+        delcareObject(new CompiledFunction(
+                "println",
+                CompiledType.VOID,
+                Collections.singletonList(CompiledType.STRING)));
     }
 
     public void delcareObject(CompiledObject decVar) {
