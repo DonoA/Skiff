@@ -14,8 +14,8 @@ public class CompileContext {
         this.parent = parent;
         if(parent != null) {
             indent = parent.indent;
+            addIndent("    ");
         }
-        addIndent("    ");
         loadBuiltins();
     }
 

@@ -19,7 +19,10 @@ public class ASTVisitor {
     public CompiledCode compileType(Type stmt, CompileContext context) {
         CompiledCode typeName = stmt.name.compile(this, context);
         String name = nativeTypeFor(typeName.getCompiledText());
-        return new CompiledCode(name, typeName.getBinding(), CompiledType.CLASS);
+        return new CompiledCode()
+                .withText(name)
+                .withBinding(typeName.getBinding())
+                .withReturn(CompiledType.CLASS);
     }
 
     private static String nativeTypeFor(String name) {
@@ -72,7 +75,9 @@ public class ASTVisitor {
 
         context.delcareObject(new CompiledVar(stmt.name, CompiledType.FUNCTION));
 
-        sb.append("\n{\n");
+        sb.append("\n");
+        sb.append(context.getIndent());
+        sb.append("{\n");
 
         stmt.body
                 .stream()
@@ -80,18 +85,24 @@ public class ASTVisitor {
                 .forEach(e -> {
                     sb.append(innerContext.getIndent());
                     sb.append(e.getCompiledText());
-                    sb.append(";\n");
+                    sb.append(e.isRequiresSemicolon() ? ";\n" : "\n");
                 });
 
-        sb.append("}\n");
+        sb.append(context.getIndent());
+        sb.append("}");
 
-        return new CompiledCode(sb.toString(), CompiledType.VOID);
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withReturn(CompiledType.VOID)
+                .withSemicolon(false);
     }
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
         String sb = type.getCompiledText() + " " + stmt.name;
-        return new CompiledCode(sb, (CompiledType) type.getBinding());
+        return new CompiledCode()
+                .withText(sb)
+                .withReturn((CompiledType) type.getBinding());
     }
 
     public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
@@ -102,20 +113,26 @@ public class ASTVisitor {
         sb.append(context.getIndent());
         sb.append("{\n");
         CompileContext innerContext = new CompileContext(context);
-        stmt.body.forEach(s -> {
+        stmt.body.stream()
+        .map(s -> s.compile(this, innerContext))
+        .forEach(s -> {
             sb.append(innerContext.getIndent());
-            sb.append(s.compile(this, innerContext).getCompiledText());
-            sb.append(";\n");
+            sb.append(s.getCompiledText());
+            sb.append(s.isRequiresSemicolon() ? ";\n" : "\n");
         });
         sb.append(context.getIndent());
-        sb.append("}\n");
+        sb.append("}");
 
         if (stmt.elseBlock != null) {
+            sb.append("\n");
             sb.append(context.getIndent());
             sb.append(stmt.elseBlock.compile(this, context).getCompiledText());
         }
 
-        return new CompiledCode(sb.toString(), CompiledType.VOID);
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withReturn(CompiledType.VOID)
+                .withSemicolon(false);
     }
 
     public CompiledCode compileElseBlock(ElseBlock stmt, CompileContext context) {
@@ -124,7 +141,10 @@ public class ASTVisitor {
 
     public CompiledCode compileElseIfBlock(ElseIfBlock stmt, CompileContext context) {
         CompiledCode code = stmt.on.compile(this, context);
-        return new CompiledCode("else " + code.getCompiledText(), code.getType());
+        return new CompiledCode()
+                .withText("else " + code.getCompiledText())
+                .withReturn(code.getType())
+                .withSemicolon(false);
     }
 
     public CompiledCode compileElseAlwaysBlock(ElseAlwaysBlock stmt, CompileContext context) {
@@ -135,17 +155,19 @@ public class ASTVisitor {
         sb.append("{\n");
         stmt.body.stream()
                 .map(s -> s.compile(this, elseInnerContext))
-                .map(CompiledCode::getCompiledText)
                 .forEach(text -> {
                     sb.append(elseInnerContext.getIndent());
-                    sb.append(text);
-                    sb.append(";\n");
+                    sb.append(text.getCompiledText());
+                    sb.append(text.isRequiresSemicolon() ? ";\n" : "\n");
                 });
 
         sb.append(context.getIndent());
-        sb.append("}\n");
+        sb.append("}");
 
-        return new CompiledCode(sb.toString(), CompiledType.VOID);
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withReturn(CompiledType.VOID)
+                .withSemicolon(false);
     }
 
     public CompiledCode compileWhileBlock(WhileBlock stmt, CompileContext context) {
@@ -194,7 +216,9 @@ public class ASTVisitor {
         sb.append(String.join(", ", evalArgs));
 
         sb.append(")");
-        return new CompiledCode(sb.toString(), func.getReturns());
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withReturn(func.getReturns());
     }
 
     public CompiledCode compileParened(Parened stmt, CompileContext context) {
@@ -211,7 +235,9 @@ public class ASTVisitor {
 
     public CompiledCode compileReturn(Return stmt, CompileContext context) {
         String rtnVar = stmt.value.compile(this, context).getCompiledText();
-        return new CompiledCode("return " + rtnVar, CompiledType.VOID);
+        return new CompiledCode()
+                .withText("return " + rtnVar)
+                .withReturn(CompiledType.VOID);
     }
 
     public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) {
@@ -220,7 +246,9 @@ public class ASTVisitor {
 
         String c = lhs.getCompiledText() + " " + stmt.op.getRawOp() + " " + rhs.getCompiledText();
 
-        return new CompiledCode(c, lhs.getType());
+        return new CompiledCode()
+                .withText(c)
+                .withReturn(lhs.getType());
     }
 
     public CompiledCode compileMathAssign(MathAssign stmt, CompileContext context) {
@@ -235,7 +263,9 @@ public class ASTVisitor {
         CompiledCode lhs = stmt.left.compile(this, context);
         CompiledCode rhs = stmt.right.compile(this, context);
         String text = lhs.getCompiledText() + " " + stmt.op.getRawOp() + " " + rhs.getCompiledText();
-        return new CompiledCode(text, CompiledType.BOOL);
+        return new CompiledCode()
+                .withText(text)
+                .withReturn(CompiledType.BOOL);
     }
 
     public CompiledCode compileBoolCombine(BoolCombine stmt, CompileContext context) {
@@ -251,7 +281,9 @@ public class ASTVisitor {
         context.delcareObject(new CompiledVar(stmt.name, type.getType()));
 
         String sb = type.getCompiledText() + stmt.name;
-        return new CompiledCode(sb, CompiledType.VOID);
+        return new CompiledCode()
+                .withText(sb)
+                .withReturn(CompiledType.VOID);
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
@@ -259,11 +291,15 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
-        return new CompiledCode(stmt.value.toString(), context.getType("Int"));
+        return new CompiledCode()
+                .withText(stmt.value.toString())
+                .withReturn(context.getType("Int"));
     }
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
-        return new CompiledCode("\"" + stmt.value + "\"", context.getType("String"));
+        return new CompiledCode()
+                .withText("\"" + stmt.value + "\"")
+                .withReturn(context.getType("String"));
     }
 
     public CompiledCode compileVariable(Variable stmt, CompileContext context) {
@@ -272,7 +308,10 @@ public class ASTVisitor {
         if (compiledObject instanceof CompiledVar) {
             objType = ((CompiledVar) compiledObject).getType();
         }
-        return new CompiledCode(stmt.name, compiledObject, objType);
+        return new CompiledCode()
+                .withText(stmt.name)
+                .withBinding(compiledObject)
+                .withReturn(objType);
     }
 
 }

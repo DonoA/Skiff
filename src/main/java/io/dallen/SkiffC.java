@@ -8,6 +8,7 @@ import io.dallen.tokenizer.Lexer;
 import io.dallen.tokenizer.Token;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,9 +27,11 @@ public class SkiffC {
         return new String(encoded, Charset.forName("UTF-8"));
     }
 
+    private static String preamble = "#include \"lib/skiff.h\"\n\n";
 
-    public static void main(String[] argz) {
+    public static void main(String[] argz) throws IOException {
         String inFile = "test.skiff";
+        String outfile = "test.c";
         String programText;
         try {
             programText = readFile(inFile);
@@ -56,8 +59,12 @@ public class SkiffC {
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.toList());
 
-        String code = String.join("\n", compiledText);
+        String code = preamble + String.join("\n", compiledText);
 
         System.out.println(code);
+
+        try (PrintWriter out = new PrintWriter(outfile)) {
+            out.println(code);
+        }
     }
 }

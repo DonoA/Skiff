@@ -15,3 +15,4 @@ cmake-build-debug/
 test.c
 target/
 *.skiff
+test.c
