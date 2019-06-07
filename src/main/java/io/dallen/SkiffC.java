@@ -1,5 +1,8 @@
 package io.dallen;
 
+import io.dallen.compiler.ASTVisitor;
+import io.dallen.compiler.CompileContext;
+import io.dallen.compiler.CompiledCode;
 import io.dallen.parser.Parser;
 import io.dallen.tokenizer.Lexer;
 import io.dallen.tokenizer.Token;
@@ -9,7 +12,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SkiffC {
@@ -37,9 +39,25 @@ public class SkiffC {
         Lexer lexer = new Lexer(programText);
         List<Token> tokenStream = lexer.lex();
         printTokenStream(tokenStream);
+
+        System.out.println(" ======== PARSE =========== ");
+
         Parser parser = new Parser(tokenStream);
         List<AST.Statement> statements = parser.parseBlock();
         statements.forEach(System.out::println);
 
+        System.out.println(" ======== COMPILE =========== ");
+
+        ASTVisitor compileVisitor = new ASTVisitor();
+        CompileContext context = new CompileContext(null);
+        List<String> compiledText = statements
+                .stream()
+                .map(e -> e.compile(compileVisitor, context))
+                .map(CompiledCode::getCompiledText)
+                .collect(Collectors.toList());
+
+        String code = String.join("\n", compiledText);
+
+        System.out.println(code);
     }
 }

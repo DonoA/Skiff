@@ -217,7 +217,7 @@ public class Parser {
     }
 
     private Type parseType() {
-        String typeName = new Parser(consumeTo(Token.Symbol.LEFT_BRACKET)).parseExpression();
+        Statement typeName = new Parser(consumeTo(Token.Symbol.LEFT_BRACKET)).parseExpression();
         if(current().isEOF()) {
             return new Type(typeName, 0, new ArrayList<>());
         }

@@ -2,26 +2,28 @@ package io.dallen.compiler;
 
 public class CompiledCode {
     private String compiledText;
-    private CompiledType returnType;
+    private CompiledObject binding;
+    private CompiledType type;
 
-    public CompiledCode(String compiledText, CompiledType returnType) {
+    public CompiledCode(String compiledText, CompiledObject binding, CompiledType type) {
         this.compiledText = compiledText;
-        this.returnType = returnType;
+        this.binding = binding;
+        this.type = type;
+    }
+
+    public CompiledCode(String compiledText, CompiledType type) {
+        this(compiledText, null, type);
     }
 
     public String getCompiledText() {
         return compiledText;
     }
 
-    public void setCompiledText(String compiledText) {
-        this.compiledText = compiledText;
+    public CompiledObject getBinding() {
+        return binding;
     }
 
-    public CompiledType getReturnType() {
-        return returnType;
-    }
-
-    public void setReturnType(CompiledType returnType) {
-        this.returnType = returnType;
+    public CompiledType getType() {
+        return type;
     }
 }

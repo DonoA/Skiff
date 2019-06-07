@@ -4,22 +4,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CompileContext {
-    private Map<String, CompiledVar> variableTable = new HashMap<>();
-    private Map<String, CompiledType> knownTypes = new HashMap<>();
+    private Map<String, CompiledObject> variableTable = new HashMap<>();
 
     private CompileContext parent;
     private String indent = "";
 
     public CompileContext(CompileContext parent) {
         this.parent = parent;
+        loadBuiltins();
     }
 
-    public void delcareVar(CompiledVar decVar) {
+    private void loadBuiltins() {
+        delcareObject(new CompiledType("Int", 4));
+        delcareObject(new CompiledType("String", 0));
+    }
+
+    public void delcareObject(CompiledObject decVar) {
         variableTable.put(decVar.getName(), decVar);
     }
 
-    public CompiledVar getVar(String name) {
-        CompiledVar varFor = variableTable.get(name);
+    public CompiledObject getObject(String name) {
+        CompiledObject varFor = variableTable.get(name);
         if(varFor != null) {
             return varFor;
         }
@@ -28,7 +33,16 @@ public class CompileContext {
             throw new CompileError("Variable " + name + " not bound");
         }
 
-        return parent.getVar(name);
+        return parent.getObject(name);
+    }
+
+    public CompiledType getType(String name) {
+        CompiledObject varFor = getObject(name);
+        if(!(varFor instanceof CompiledType)) {
+            throw new CompileError("Variable " + name + " is not a class");
+        }
+
+        return (CompiledType) varFor;
     }
 
     public String getIndent() {
@@ -43,20 +57,4 @@ public class CompileContext {
         indent = indent + newIndent;
     }
 
-    public void defineType(CompiledType typ) {
-        knownTypes.put(typ.getCompiledText(), typ);
-    }
-
-    public CompiledType getType(String name) {
-        CompiledType typeFor = knownTypes.get(name);
-        if(typeFor != null) {
-            return typeFor;
-        }
-
-        if(parent == null) {
-            throw new CompileError("Type " + name + " not bound");
-        }
-
-        return parent.getType(name);
-    }
 }

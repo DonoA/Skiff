@@ -2,7 +2,7 @@ package io.dallen.compiler;
 
 import java.util.List;
 
-public class CompiledFunction extends CompiledVar{
+public class CompiledFunction extends CompiledVar {
     private final CompiledType returns;
     private final List<CompiledType> args;
 

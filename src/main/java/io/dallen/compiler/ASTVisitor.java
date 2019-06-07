@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
-// CarCompany.Model carModel
-
-
 public class ASTVisitor {
 
     public CompiledCode compileStatement(Statement stmt, CompileContext context) {
@@ -20,9 +17,18 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileType(Type stmt, CompileContext context) {
+        CompiledCode typeName = stmt.name.compile(this, context);
+        String name = nativeTypeFor(typeName.getCompiledText());
+        return new CompiledCode(name, typeName.getBinding(), CompiledType.CLASS);
+    }
 
-        CompiledType typ = context.getType();
-        return new CompiledCode(typ.getCompiledText(), typ);
+    private static String nativeTypeFor(String name) {
+        switch(name) {
+            case "Int":
+                return "int32_t";
+            default:
+                return name;
+        }
     }
 
     public CompiledCode compileBlockStatement(BlockStatement stmt, CompileContext context) {
@@ -37,6 +43,7 @@ public class ASTVisitor {
         innerContext.addIndent("    ");
 
         sb.append(returns.getCompiledText());
+        sb.append(" ");
         sb.append(stmt.name);
         sb.append("(");
 
@@ -48,7 +55,7 @@ public class ASTVisitor {
         ListIterator<FunctionParam> paramItr = stmt.args.listIterator();
 
         for (CompiledCode arg : compiledArgs) {
-            innerContext.delcareVar(new CompiledVar(paramItr.next().name, arg.getReturnType()));
+            innerContext.delcareObject(new CompiledVar(paramItr.next().name, arg.getType()));
         }
 
         List<String> stringArgs = compiledArgs
@@ -60,7 +67,7 @@ public class ASTVisitor {
 
         sb.append(")");
 
-        context.delcareVar(new CompiledVar(stmt.name, CompiledType.FUNCTION));
+        context.delcareObject(new CompiledVar(stmt.name, CompiledType.FUNCTION));
 
         sb.append("\n{\n");
 
@@ -84,7 +91,7 @@ public class ASTVisitor {
         sb.append(type.getCompiledText());
         sb.append(" ");
         sb.append(stmt.name);
-        return new CompiledCode(sb.toString(), type.getReturnType());
+        return new CompiledCode(sb.toString(), type.getType());
     }
 
     public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
@@ -100,7 +107,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileFunctionCall(FunctionCall stmt, CompileContext context) {
-//        CompiledVar nameVar = context.getVar(stmt.name);
+//        CompiledObject nameVar = context.getVar(stmt.name);
 //        if(!(nameVar instanceof CompiledFunction)) {
 //            throw new CompileError("Variable not function " + stmt.name);
 //        }
@@ -140,7 +147,8 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileReturn(Return stmt, CompileContext context) {
-        return new CompiledCode(stmt.value.compile(this, context).getCompiledText(), CompiledType.VOID);
+        String rtnVar = stmt.value.compile(this, context).getCompiledText();
+        return new CompiledCode("return " + rtnVar, CompiledType.VOID);
     }
 
     public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) {
@@ -169,7 +177,7 @@ public class ASTVisitor {
 
     public CompiledCode compileDeclare(Declare stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
-        context.delcareVar(new CompiledVar(stmt.name, type.getReturnType()));
+        context.delcareObject(new CompiledVar(stmt.name, type.getType()));
 
         StringBuilder sb = new StringBuilder();
         sb.append(type.getCompiledText());
@@ -182,15 +190,20 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
-        return new CompiledCode(stmt.value.toString(), CompiledType.NUMBER);
+        return new CompiledCode(stmt.value.toString(), context.getType("Int"));
     }
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
-        return new CompiledCode("\"" + stmt.value + "\"", CompiledType.STRING);
+        return new CompiledCode("\"" + stmt.value + "\"", context.getType("String"));
     }
 
     public CompiledCode compileVariable(Variable stmt, CompileContext context) {
-        return new CompiledCode(stmt.name, context.getVar(stmt.name).getType());
+        CompiledObject compiledObject = context.getObject(stmt.name);
+        CompiledType objType = CompiledType.CLASS;
+        if(compiledObject instanceof CompiledVar) {
+            objType = ((CompiledVar) compiledObject).getType();
+        }
+        return new CompiledCode(stmt.name, compiledObject, objType);
     }
 
 }
