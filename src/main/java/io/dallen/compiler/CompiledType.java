@@ -7,6 +7,7 @@ public class CompiledType extends CompiledObject {
 
     public static final CompiledType STRING = new CompiledType("String", 0);
     public static final CompiledType INT = new CompiledType("Int", 4);
+    public static final CompiledType BOOL = new CompiledType("Bool" ,1);
 
     private final int size;
 

@@ -1,6 +1,5 @@
 package io.dallen.compiler;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +12,10 @@ public class CompileContext {
 
     public CompileContext(CompileContext parent) {
         this.parent = parent;
+        if(parent != null) {
+            indent = parent.indent;
+        }
+        addIndent("    ");
         loadBuiltins();
     }
 
@@ -20,6 +23,7 @@ public class CompileContext {
         delcareObject(CompiledType.VOID);
         delcareObject(CompiledType.STRING);
         delcareObject(CompiledType.INT);
+        delcareObject(CompiledType.BOOL);
 
         delcareObject(new CompiledFunction(
                 "println",

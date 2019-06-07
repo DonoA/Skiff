@@ -25,7 +25,17 @@ public class AST {
     }
 
     public enum CompareOp {
-        LT, GT, LE, GE, EQ, NE
+        LT("<"), GT(">"), LE("<="), GE(">="), EQ("=="), NE("!=");
+
+        private final String rawOp;
+
+        CompareOp(String rawOp) {
+            this.rawOp = rawOp;
+        }
+
+        public String getRawOp() {
+            return rawOp;
+        }
     }
 
     public enum BoolOp {

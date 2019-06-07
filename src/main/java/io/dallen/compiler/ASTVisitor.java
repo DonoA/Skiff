@@ -23,7 +23,7 @@ public class ASTVisitor {
     }
 
     private static String nativeTypeFor(String name) {
-        switch(name) {
+        switch (name) {
             case "Int":
                 return "int32_t";
             case "Void":
@@ -44,7 +44,6 @@ public class ASTVisitor {
         CompiledCode returns = stmt.returns.compile(this, context);
 
         CompileContext innerContext = new CompileContext(context);
-        innerContext.addIndent("    ");
 
         sb.append(returns.getCompiledText());
         sb.append(" ");
@@ -53,7 +52,7 @@ public class ASTVisitor {
 
         List<CompiledCode> compiledArgs = stmt.args
                 .stream()
-                .map(e->e.compile(this, context))
+                .map(e -> e.compile(this, context))
                 .collect(Collectors.toList());
 
         ListIterator<FunctionParam> paramItr = stmt.args.listIterator();
@@ -77,12 +76,12 @@ public class ASTVisitor {
 
         stmt.body
                 .stream()
-                .map(e-> e.compile(this, innerContext))
-                .forEach(e-> {
-            sb.append(innerContext.getIndent());
-            sb.append(e.getCompiledText());
-            sb.append(";\n");
-        });
+                .map(e -> e.compile(this, innerContext))
+                .forEach(e -> {
+                    sb.append(innerContext.getIndent());
+                    sb.append(e.getCompiledText());
+                    sb.append(";\n");
+                });
 
         sb.append("}\n");
 
@@ -91,29 +90,63 @@ public class ASTVisitor {
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
-        StringBuilder sb = new StringBuilder();
-        sb.append(type.getCompiledText());
-        sb.append(" ");
-        sb.append(stmt.name);
-        return new CompiledCode(sb.toString(), (CompiledType) type.getBinding());
+        String sb = type.getCompiledText() + " " + stmt.name;
+        return new CompiledCode(sb, (CompiledType) type.getBinding());
     }
 
     public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        sb.append("if(");
+        sb.append(stmt.condition.compile(this, context).getCompiledText());
+        sb.append(")\n");
+        sb.append(context.getIndent());
+        sb.append("{\n");
+        CompileContext innerContext = new CompileContext(context);
+        stmt.body.forEach(s -> {
+            sb.append(innerContext.getIndent());
+            sb.append(s.compile(this, innerContext).getCompiledText());
+            sb.append(";\n");
+        });
+        sb.append(context.getIndent());
+        sb.append("}\n");
+
+        if (stmt.elseBlock != null) {
+            sb.append(context.getIndent());
+            sb.append(stmt.elseBlock.compile(this, context).getCompiledText());
+        }
+
+        return new CompiledCode(sb.toString(), CompiledType.VOID);
     }
 
     public CompiledCode compileElseBlock(ElseBlock stmt, CompileContext context) {
-        return null;
+        throw new UnsupportedOperationException("Cannot compile statement type ElseBlock");
     }
 
     public CompiledCode compileElseIfBlock(ElseIfBlock stmt, CompileContext context) {
-        return null;
+        CompiledCode code = stmt.on.compile(this, context);
+        return new CompiledCode("else " + code.getCompiledText(), code.getType());
     }
 
     public CompiledCode compileElseAlwaysBlock(ElseAlwaysBlock stmt, CompileContext context) {
-        return null;
-    }
+        CompileContext elseInnerContext = new CompileContext(context);
+        StringBuilder sb = new StringBuilder();
+        sb.append("else\n"); // first line does not need indent
+        sb.append(context.getIndent());
+        sb.append("{\n");
+        stmt.body.stream()
+                .map(s -> s.compile(this, elseInnerContext))
+                .map(CompiledCode::getCompiledText)
+                .forEach(text -> {
+                    sb.append(elseInnerContext.getIndent());
+                    sb.append(text);
+                    sb.append(";\n");
+                });
 
+        sb.append(context.getIndent());
+        sb.append("}\n");
+
+        return new CompiledCode(sb.toString(), CompiledType.VOID);
+    }
 
     public CompiledCode compileWhileBlock(WhileBlock stmt, CompileContext context) {
         return null;
@@ -125,7 +158,7 @@ public class ASTVisitor {
 
     public CompiledCode compileFunctionCall(FunctionCall stmt, CompileContext context) {
         CompiledObject nameVar = stmt.name.compile(this, context).getBinding();
-        if(!(nameVar instanceof CompiledFunction)) {
+        if (!(nameVar instanceof CompiledFunction)) {
             throw new CompileError("Variable not function " + stmt.name);
         }
 
@@ -134,17 +167,17 @@ public class ASTVisitor {
         List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(this, context))
                 .collect(Collectors.toList());
 
-        if(func.getArgs().size() != compArgs.size()) {
+        if (func.getArgs().size() != compArgs.size()) {
             throw new CompileError("Differing param count " + func.getName());
         }
 
         ListIterator<CompiledType> expected = func.getArgs().listIterator();
         ListIterator<CompiledCode> found = compArgs.listIterator();
 
-        while(expected.hasNext()) {
+        while (expected.hasNext()) {
             CompiledType typ1 = expected.next();
             CompiledType typ2 = found.next().getType();
-            if(!typ1.equals(typ2)) {
+            if (!typ1.equals(typ2)) {
                 throw new CompileError("Differing param type " + func.getName());
             }
         }
@@ -199,7 +232,10 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileCompare(Compare stmt, CompileContext context) {
-        return null;
+        CompiledCode lhs = stmt.left.compile(this, context);
+        CompiledCode rhs = stmt.right.compile(this, context);
+        String text = lhs.getCompiledText() + " " + stmt.op.getRawOp() + " " + rhs.getCompiledText();
+        return new CompiledCode(text, CompiledType.BOOL);
     }
 
     public CompiledCode compileBoolCombine(BoolCombine stmt, CompileContext context) {
@@ -214,10 +250,8 @@ public class ASTVisitor {
         CompiledCode type = stmt.type.compile(this, context);
         context.delcareObject(new CompiledVar(stmt.name, type.getType()));
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(type.getCompiledText());
-        sb.append(stmt.name);
-        return new CompiledCode(sb.toString(), CompiledType.VOID);
+        String sb = type.getCompiledText() + stmt.name;
+        return new CompiledCode(sb, CompiledType.VOID);
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
@@ -235,7 +269,7 @@ public class ASTVisitor {
     public CompiledCode compileVariable(Variable stmt, CompileContext context) {
         CompiledObject compiledObject = context.getObject(stmt.name);
         CompiledType objType = CompiledType.CLASS;
-        if(compiledObject instanceof CompiledVar) {
+        if (compiledObject instanceof CompiledVar) {
             objType = ((CompiledVar) compiledObject).getType();
         }
         return new CompiledCode(stmt.name, compiledObject, objType);
