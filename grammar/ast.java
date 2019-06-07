@@ -107,17 +107,68 @@ public static class FunctionParam  {
     
 public static class IfBlock extends BlockStatement {
     public final Statement condition;
-    public IfBlock(Statement condition, List<Statement> body) {
+    public final ElseBlock elseBlock;
+    public IfBlock(Statement condition, List<Statement> body, ElseBlock elseBlock) {
         super(body);
         this.condition = condition;
+        this.elseBlock = elseBlock;
     }
     public String toString() {
         return "IfBlock(condition = " + this.condition.toString() + ", " + 
-            "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ", " + 
+            "elseBlock = " + this.elseBlock.toString() + ")";
     }
 
     public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
         return visitor.compileIfBlock(this, context);
+    }
+}
+    
+public static class ElseBlock extends Statement {
+    
+    public ElseBlock() {
+        super();
+        
+    }
+    public String toString() {
+        return "ElseBlock()";
+    }
+
+    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+        return visitor.compileElseBlock(this, context);
+    }
+}
+    
+public static class ElseIfBlock extends ElseBlock {
+    public final IfBlock on;
+    public final ElseBlock elseBlock;
+    public ElseIfBlock(IfBlock on, ElseBlock elseBlock) {
+        super();
+        this.on = on;
+        this.elseBlock = elseBlock;
+    }
+    public String toString() {
+        return "ElseIfBlock(on = " + this.on.toString() + ", " + 
+            "elseBlock = " + this.elseBlock.toString() + ")";
+    }
+
+    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+        return visitor.compileElseIfBlock(this, context);
+    }
+}
+    
+public static class ElseAlwaysBlock extends ElseBlock {
+    public final List<Statement> body;
+    public ElseAlwaysBlock(List<Statement> body) {
+        super();
+        this.body = body;
+    }
+    public String toString() {
+        return "ElseAlwaysBlock(body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+    }
+
+    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+        return visitor.compileElseAlwaysBlock(this, context);
     }
 }
     
@@ -160,9 +211,9 @@ public static class ForBlock extends BlockStatement {
 }
     
 public static class FunctionCall extends Expression {
-    public final String name;
+    public final Statement name;
     public final List<Statement> args;
-    public FunctionCall(String name, List<Statement> args) {
+    public FunctionCall(Statement name, List<Statement> args) {
         super();
         this.name = name;
         this.args = args;

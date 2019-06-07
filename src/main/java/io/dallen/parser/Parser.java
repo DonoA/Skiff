@@ -1,5 +1,6 @@
 package io.dallen.parser;
 
+import io.dallen.compiler.CompileError;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.parser.splitter.LayeredSplitter;
 import io.dallen.parser.splitter.SplitLayer;
@@ -145,6 +146,10 @@ public class Parser {
                 statements.add(parseIfBlock());
                 continue;
             }
+            if (Token.Keyword.ELSE.equals(i)) {
+                attachElseBlock(statements);
+                continue;
+            }
             if (Token.Keyword.DEF.equals(i)) {
                 statements.add(parseFunctionDef());
                 continue;
@@ -158,8 +163,35 @@ public class Parser {
         return statements;
     }
 
+    private void attachElseBlock(ArrayList<Statement> statements) {
+        if(statements.size() < 1) {
+            throw new CompileError("Else statement requires If, none found");
+        }
+        Statement parentStmt = statements.get(statements.size() - 1);
+
+        consumeExpected(Token.Keyword.ELSE);
+        ElseBlock toAttach;
+        if(current().type == Token.Keyword.IF) {
+            IfBlock on = parseIfBlock();
+            toAttach = new ElseIfBlock(on);
+        } else {
+            consumeExpected(Token.Symbol.LEFT_BRACE);
+            List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
+            List<Statement> body = new Parser(bodyTokens).parseBlock();
+            toAttach = new ElseAlwaysBlock(body);
+        }
+
+        if(parentStmt instanceof IfBlock) {
+            ((IfBlock) parentStmt).elseBlock = toAttach;
+        } else if(parentStmt instanceof ElseIfBlock) {
+            ((ElseIfBlock) parentStmt).elseBlock = toAttach;
+        } else {
+            throw new CompileError("Else statement requires If, " + parentStmt.getClass().getName() + " found");
+        }
+    }
+
     private IfBlock parseIfBlock() {
-        next();
+        consumeExpected(Token.Keyword.IF);
 
         consumeExpected(Token.Symbol.LEFT_PAREN);
         List<Token> condTokens = consumeTo(Token.Symbol.RIGHT_PAREN);

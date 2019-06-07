@@ -47,6 +47,27 @@
             "body": {
                 "name": "List<Statement>",
                 "bigPrint": true
+            },
+            "elseBlock": "ElseBlock"
+        }
+    },
+    "ElseBlock": {
+        "extends": "Statement()",
+        "fields": { }
+    },
+    "ElseIfBlock": {
+        "extends": "ElseBlock()",
+        "fields": {
+            "on": "IfBlock",
+            "elseBlock": "ElseBlock"
+        }
+    },
+    "ElseAlwaysBlock": {
+        "extends": "ElseBlock()",
+        "fields": {
+            "body": {
+                "name": "List<Statement>",
+                "bigPrint": true
             }
         }
     },

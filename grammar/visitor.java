@@ -27,6 +27,18 @@ public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
     return null; 
 }
     
+public CompiledCode compileElseBlock(ElseBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileElseIfBlock(ElseIfBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileElseAlwaysBlock(ElseAlwaysBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
 public CompiledCode compileWhileBlock(WhileBlock stmt, CompileContext context) { 
     return null; 
 }
