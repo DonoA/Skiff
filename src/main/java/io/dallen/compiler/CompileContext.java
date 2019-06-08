@@ -10,13 +10,24 @@ public class CompileContext {
     private CompileContext parent;
     private String indent = "";
 
+    private boolean needDeref = false;
+
+    public CompileContext(CompileContext parent, boolean needDeref) {
+        this.parent = parent;
+        this.needDeref = needDeref;
+    }
+
     public CompileContext(CompileContext parent) {
         this.parent = parent;
         if(parent != null) {
             indent = parent.indent;
             addIndent("    ");
+            if(parent.needDeref) {
+                this.needDeref = true;
+            }
+        } else {
+            loadBuiltins();
         }
-        loadBuiltins();
     }
 
     private void loadBuiltins() {
@@ -70,4 +81,10 @@ public class CompileContext {
         indent = indent + newIndent;
     }
 
+    public boolean isNeedDeref() {
+        if(parent == null || needDeref) {
+            return needDeref;
+        }
+        return parent.isNeedDeref();
+    }
 }

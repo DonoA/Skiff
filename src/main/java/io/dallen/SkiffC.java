@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 
 public class SkiffC {
 
+    public final static boolean DEBUG = true;
+
     private static void printTokenStream(List<Token> tokens) {
         tokens.forEach(e -> System.out.print(" " + e.toString()));
         System.out.println();

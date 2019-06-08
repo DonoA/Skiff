@@ -1,18 +1,28 @@
 #! /bin/python3
 import json, sys
 
-def generate_toString(typ, name, literal):
+def generate_toString(typ, name, literal, flat):
     typ_name = typ
     sep = ''
     if type(typ) is dict:
-        typ_name = typ['name']
-        sep = '\\n'
+        typ_name = typ['type']
+        if 'bigPrint' in typ and typ['bigPrint'] == True:
+            sep = '\\n'
+
+    to_string = 'toString()'
+
+    if flat == True:
+        sep = ''
+        to_string = 'toFlatString()'
+
 
     if 'List' in typ_name:
-        return f"\"[{sep}\" + this.{name}.stream().map(Objects::toString).collect(Collectors.joining(\", {sep}\")) + \" {sep}]\""
+        return f"\"[{sep}\" + this.{name}.stream().map(e -> e.{to_string}).collect(Collectors.joining(\", {sep}\")) + \" {sep}]\""
     if literal:
         return f"\"\\\"\" + this.{name}.toString() + \"\\\"\""
-    return f"this.{name}.toString()"
+    if 'String' in typ_name or 'Double' in typ_name or 'Op' in typ_name or 'Integer' in typ_name:
+        return f"this.{name}.toString()"
+    return f"this.{name}.{to_string}"
 
 def generate_extends(spec):
     if 'extends' not in spec:
@@ -34,27 +44,42 @@ def generate_def(class_name, spec):
     raw_fields = spec['fields']
 
     fields = {}
+    ctr_params = []
+    java_fields = []
+    ctr_assign = []
+
+    (extends, super_init, ignores) = generate_extends(spec)
 
     for name, typ in raw_fields.items():
         if type(typ) is dict:
-            fields[name] = typ['name']
+            fields[name] = typ['type']
+            if 'lazy' in typ and typ['lazy'] == True:
+                if name not in ignores:
+                    java_fields.append('public ' + typ['type'] + ' ' + name + ';')
+                    ctr_assign.append(f"this.{name} = null;")
+            else:
+                ctr_params.append(typ['type'] + ' ' + name)
+                if name not in ignores:
+                    java_fields.append('public final ' + typ['type'] + ' ' + name + ';')
+                    ctr_assign.append(f"this.{name} = {name};")
         else:
             fields[name] = typ
+            ctr_params.append(typ + ' ' + name)
+            if name not in ignores:
+                java_fields.append('public final ' + typ + ' ' + name + ';')
+                ctr_assign.append(f"this.{name} = {name};")
 
-    (extends, super_init, ignores) = generate_extends(spec)
 
     literal = False
     if 'literal' in spec and spec['literal'] == True:
         literal = True
 
-    ctr_params = ', '.join([typ + ' ' + name for name, typ in fields.items()])
-    to_string_values = ', " + \n            "'.join([f"{name} = \" + {generate_toString(typ, name, literal)} + \"" for name, typ in raw_fields.items()])
+    ctr_params = ', '.join(ctr_params)
+    to_string_values = ', " + \n            "'.join([f"{name} = \" + {generate_toString(typ, name, literal, False)} + \"" for name, typ in raw_fields.items()])
+    to_string_flat_values = ', " + \n            "'.join([f"{name} = \" + {generate_toString(typ, name, literal, True)} + \"" for name, typ in raw_fields.items()])
 
-    for ignore in ignores:
-        del fields[ignore]
-
-    java_fields = '\n    '.join(['public final ' + typ + ' ' + name + ';' for name, typ in fields.items()])
-    ctr_assign = '\n        '.join([f"this.{name} = {name};" for name, typ in fields.items()])
+    java_fields = '\n    '.join(java_fields)
+    ctr_assign = '\n        '.join(ctr_assign)
 
     return (f"""
 public static class {class_name} {extends} {cbo}
@@ -63,8 +88,13 @@ public static class {class_name} {extends} {cbo}
         {super_init}
         {ctr_assign}
     {cbc}
+
     public String toString() {cbo}
         return "{class_name}({to_string_values})";
+    {cbc}
+
+    public String toFlatString() {cbo}
+        return "{class_name}({to_string_flat_values})";
     {cbc}
 
     public CompiledCode compile(ASTVisitor visitor, CompileContext context) {cbo}

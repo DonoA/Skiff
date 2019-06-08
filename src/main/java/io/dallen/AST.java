@@ -10,7 +10,11 @@ import java.util.stream.Collectors;
 
 public class AST {
 
-    public enum MathOp {
+    public interface HasRaw {
+        String getRawOp();
+    }
+
+    public enum MathOp implements HasRaw {
         PLUS("+"), MINUS("-"), MUL("*"), DIV("/"), XOR("^");
 
         private final String rawOp;
@@ -24,7 +28,7 @@ public class AST {
         }
     }
 
-    public enum CompareOp {
+    public enum CompareOp implements HasRaw {
         LT("<"), GT(">"), LE("<="), GE(">="), EQ("=="), NE("!=");
 
         private final String rawOp;
@@ -38,13 +42,21 @@ public class AST {
         }
     }
 
-    public enum BoolOp {
-        AND, OR
+    public enum BoolOp implements HasRaw {
+        AND("&&"), OR("||");
+
+        private final String rawOp;
+
+        BoolOp(String rawOp) {
+            this.rawOp = rawOp;
+        }
+
+        public String getRawOp() {
+            return rawOp;
+        }
     }
 
     // Begin Generated AST classes
-
-
 
     public static class Statement  {
 
@@ -52,7 +64,12 @@ public class AST {
 
 
         }
+
         public String toString() {
+            return "Statement()";
+        }
+
+        public String toFlatString() {
             return "Statement()";
         }
 
@@ -67,7 +84,12 @@ public class AST {
             super();
 
         }
+
         public String toString() {
+            return "Expression()";
+        }
+
+        public String toFlatString() {
             return "Expression()";
         }
 
@@ -86,10 +108,17 @@ public class AST {
             this.arraySize = arraySize;
             this.genericTypes = genericTypes;
         }
+
         public String toString() {
             return "Type(name = " + this.name.toString() + ", " +
                     "arraySize = " + this.arraySize.toString() + ", " +
-                    "genericTypes = " + "[" + this.genericTypes.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
+                    "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public String toFlatString() {
+            return "Type(name = " + this.name.toFlatString() + ", " +
+                    "arraySize = " + this.arraySize.toString() + ", " +
+                    "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -103,8 +132,13 @@ public class AST {
             super();
             this.body = body;
         }
+
         public String toString() {
-            return "BlockStatement(body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            return "BlockStatement(body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "BlockStatement(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -122,11 +156,19 @@ public class AST {
             this.name = name;
             this.args = args;
         }
+
         public String toString() {
             return "FunctionDef(returns = " + this.returns.toString() + ", " +
                     "name = " + this.name.toString() + ", " +
-                    "args = " + "[" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ", " +
-                    "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+                    "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "FunctionDef(returns = " + this.returns.toFlatString() + ", " +
+                    "name = " + this.name.toString() + ", " +
+                    "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -142,8 +184,14 @@ public class AST {
             this.type = type;
             this.name = name;
         }
+
         public String toString() {
             return "FunctionParam(type = " + this.type.toString() + ", " +
+                    "name = " + this.name.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "FunctionParam(type = " + this.type.toFlatString() + ", " +
                     "name = " + this.name.toString() + ")";
         }
 
@@ -163,8 +211,14 @@ public class AST {
 
         public String toString() {
             return "IfBlock(condition = " + this.condition.toString() + ", " +
-                    "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ", " +
                     "elseBlock = " + this.elseBlock.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "IfBlock(condition = " + this.condition.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                    "elseBlock = " + this.elseBlock.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -178,7 +232,12 @@ public class AST {
             super();
 
         }
+
         public String toString() {
+            return "ElseBlock()";
+        }
+
+        public String toFlatString() {
             return "ElseBlock()";
         }
 
@@ -195,9 +254,15 @@ public class AST {
             this.on = on;
             this.elseBlock = null;
         }
+
         public String toString() {
             return "ElseIfBlock(on = " + this.on.toString() + ", " +
                     "elseBlock = " + this.elseBlock.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "ElseIfBlock(on = " + this.on.toFlatString() + ", " +
+                    "elseBlock = " + this.elseBlock.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -211,8 +276,13 @@ public class AST {
             super();
             this.body = body;
         }
+
         public String toString() {
-            return "ElseAlwaysBlock(body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            return "ElseAlwaysBlock(body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "ElseAlwaysBlock(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -226,9 +296,15 @@ public class AST {
             super(body);
             this.condition = condition;
         }
+
         public String toString() {
             return "WhileBlock(condition = " + this.condition.toString() + ", " +
-                    "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "WhileBlock(condition = " + this.condition.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -246,11 +322,19 @@ public class AST {
             this.condition = condition;
             this.step = step;
         }
+
         public String toString() {
             return "ForBlock(start = " + this.start.toString() + ", " +
                     "condition = " + this.condition.toString() + ", " +
                     "step = " + this.step.toString() + ", " +
-                    "body = " + "[\n" + this.body.stream().map(Objects::toString).collect(Collectors.joining(", \n")) + " \n]" + ")";
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "ForBlock(start = " + this.start.toFlatString() + ", " +
+                    "condition = " + this.condition.toFlatString() + ", " +
+                    "step = " + this.step.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -266,9 +350,15 @@ public class AST {
             this.name = name;
             this.args = args;
         }
+
         public String toString() {
             return "FunctionCall(name = " + this.name.toString() + ", " +
-                    "args = " + "[" + this.args.stream().map(Objects::toString).collect(Collectors.joining(", ")) + " ]" + ")";
+                    "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public String toFlatString() {
+            return "FunctionCall(name = " + this.name.toFlatString() + ", " +
+                    "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -282,8 +372,13 @@ public class AST {
             super();
             this.sub = sub;
         }
+
         public String toString() {
             return "Parened(sub = " + this.sub.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Parened(sub = " + this.sub.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -299,9 +394,15 @@ public class AST {
             this.left = left;
             this.right = right;
         }
+
         public String toString() {
             return "Dotted(left = " + this.left.toString() + ", " +
                     "right = " + this.right.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Dotted(left = " + this.left.toFlatString() + ", " +
+                    "right = " + this.right.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -317,9 +418,15 @@ public class AST {
             this.left = left;
             this.right = right;
         }
+
         public String toString() {
             return "Arrowed(left = " + this.left.toString() + ", " +
                     "right = " + this.right.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Arrowed(left = " + this.left.toFlatString() + ", " +
+                    "right = " + this.right.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -333,8 +440,13 @@ public class AST {
             super();
             this.value = value;
         }
+
         public String toString() {
             return "Return(value = " + this.value.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Return(value = " + this.value.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -352,10 +464,17 @@ public class AST {
             this.op = op;
             this.right = right;
         }
+
         public String toString() {
             return "MathStatement(left = " + this.left.toString() + ", " +
                     "op = " + this.op.toString() + ", " +
                     "right = " + this.right.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "MathStatement(left = " + this.left.toFlatString() + ", " +
+                    "op = " + this.op.toString() + ", " +
+                    "right = " + this.right.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -373,10 +492,17 @@ public class AST {
             this.op = op;
             this.right = right;
         }
+
         public String toString() {
             return "MathAssign(left = " + this.left.toString() + ", " +
                     "op = " + this.op.toString() + ", " +
                     "right = " + this.right.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "MathAssign(left = " + this.left.toFlatString() + ", " +
+                    "op = " + this.op.toString() + ", " +
+                    "right = " + this.right.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -392,9 +518,15 @@ public class AST {
             this.left = left;
             this.sub = sub;
         }
+
         public String toString() {
             return "Subscript(left = " + this.left.toString() + ", " +
                     "sub = " + this.sub.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Subscript(left = " + this.left.toFlatString() + ", " +
+                    "sub = " + this.sub.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -412,10 +544,17 @@ public class AST {
             this.op = op;
             this.right = right;
         }
+
         public String toString() {
             return "Compare(left = " + this.left.toString() + ", " +
                     "op = " + this.op.toString() + ", " +
                     "right = " + this.right.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Compare(left = " + this.left.toFlatString() + ", " +
+                    "op = " + this.op.toString() + ", " +
+                    "right = " + this.right.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -433,10 +572,17 @@ public class AST {
             this.op = op;
             this.right = right;
         }
+
         public String toString() {
             return "BoolCombine(left = " + this.left.toString() + ", " +
                     "op = " + this.op.toString() + ", " +
                     "right = " + this.right.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "BoolCombine(left = " + this.left.toFlatString() + ", " +
+                    "op = " + this.op.toString() + ", " +
+                    "right = " + this.right.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -452,9 +598,15 @@ public class AST {
             this.name = name;
             this.value = value;
         }
+
         public String toString() {
             return "Assign(name = " + this.name.toString() + ", " +
                     "value = " + this.value.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Assign(name = " + this.name.toFlatString() + ", " +
+                    "value = " + this.value.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -470,8 +622,14 @@ public class AST {
             this.type = type;
             this.name = name;
         }
+
         public String toString() {
             return "Declare(type = " + this.type.toString() + ", " +
+                    "name = " + this.name.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "Declare(type = " + this.type.toFlatString() + ", " +
                     "name = " + this.name.toString() + ")";
         }
 
@@ -490,10 +648,17 @@ public class AST {
             this.name = name;
             this.value = value;
         }
+
         public String toString() {
             return "DeclareAssign(type = " + this.type.toString() + ", " +
                     "name = " + this.name.toString() + ", " +
                     "value = " + this.value.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "DeclareAssign(type = " + this.type.toFlatString() + ", " +
+                    "name = " + this.name.toString() + ", " +
+                    "value = " + this.value.toFlatString() + ")";
         }
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
@@ -507,7 +672,12 @@ public class AST {
             super();
             this.value = value;
         }
+
         public String toString() {
+            return "NumberLiteral(value = " + this.value.toString() + ")";
+        }
+
+        public String toFlatString() {
             return "NumberLiteral(value = " + this.value.toString() + ")";
         }
 
@@ -522,7 +692,12 @@ public class AST {
             super();
             this.value = value;
         }
+
         public String toString() {
+            return "StringLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+        }
+
+        public String toFlatString() {
             return "StringLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
         }
 
@@ -537,7 +712,12 @@ public class AST {
             super();
             this.name = name;
         }
+
         public String toString() {
+            return "Variable(name = " + this.name.toString() + ")";
+        }
+
+        public String toFlatString() {
             return "Variable(name = " + this.name.toString() + ")";
         }
 
@@ -545,6 +725,7 @@ public class AST {
             return visitor.compileVariable(this, context);
         }
     }
+
 
     // End generated AST
 }

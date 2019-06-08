@@ -17,7 +17,7 @@
         "extends": "Statement",
         "fields": {
             "body": {
-                "name": "List<Statement>",
+                "type": "List<Statement>",
                 "bigPrint": true
             }
         }
@@ -29,7 +29,7 @@
             "name": "String",
             "args": "List<FunctionParam>",
             "body": {
-                "name": "List<Statement>",
+                "type": "List<Statement>",
                 "bigPrint": true
             }
         }
@@ -45,10 +45,13 @@
         "fields": {
             "condition": "Statement",
             "body": {
-                "name": "List<Statement>",
+                "type": "List<Statement>",
                 "bigPrint": true
             },
-            "elseBlock": "ElseBlock"
+            "elseBlock": {
+                "type": "ElseBlock",
+                "lazy": true
+            }
         }
     },
     "ElseBlock": {
@@ -59,14 +62,17 @@
         "extends": "ElseBlock()",
         "fields": {
             "on": "IfBlock",
-            "elseBlock": "ElseBlock"
+            "elseBlock": {
+                "type": "ElseBlock",
+                "lazy": true
+            }
         }
     },
     "ElseAlwaysBlock": {
         "extends": "ElseBlock()",
         "fields": {
             "body": {
-                "name": "List<Statement>",
+                "type": "List<Statement>",
                 "bigPrint": true
             }
         }
@@ -76,7 +82,7 @@
         "fields": {
             "condition": "Statement",
             "body": {
-                "name": "List<Statement>",
+                "type": "List<Statement>",
                 "bigPrint": true
             }
         }
@@ -88,7 +94,7 @@
             "condition": "Statement",
             "step": "Statement",
             "body": {
-                "name": "List<Statement>",
+                "type": "List<Statement>",
                 "bigPrint": true
             }
         }
