@@ -31,10 +31,17 @@ public class ASTVisitor {
                 return "int32_t";
             case "Void":
                 return "void";
-            case "String":
-                return "skiff_string_t";
             default:
-                return name;
+                StringBuilder newName = new StringBuilder();
+                newName.append("skiff");
+                for(char c : name.toCharArray()) {
+                    if(Character.isUpperCase(c)) {
+                        newName.append("_");
+                    }
+                    newName.append(Character.toLowerCase(c));
+                }
+                newName.append("_t");
+                return newName.toString();
         }
     }
 
@@ -99,7 +106,7 @@ public class ASTVisitor {
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
-        String sb = type.getCompiledText() + " " + stmt.name;
+        String sb = type.getCompiledText() + " * " + stmt.name;
         return new CompiledCode()
                 .withText(sb)
                 .withReturn((CompiledType) type.getBinding());
@@ -298,7 +305,7 @@ public class ASTVisitor {
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
         return new CompiledCode()
-                .withText("\"" + stmt.value + "\"")
+                .withText("skiff_string_new(\"" + stmt.value + "\")")
                 .withReturn(context.getType("String"));
     }
 

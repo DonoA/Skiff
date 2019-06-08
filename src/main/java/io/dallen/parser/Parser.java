@@ -249,12 +249,12 @@ public class Parser {
     }
 
     private Type parseType() {
-        Statement typeName = new Parser(consumeTo(Token.Symbol.LEFT_BRACKET)).parseExpression();
+        Statement typeName = new Parser(consumeTo(Token.Symbol.LEFT_ANGLE)).parseExpression();
         if(current().isEOF()) {
             return new Type(typeName, 0, new ArrayList<>());
         }
         List<Type> genericParams = BraceSplitter
-                .splitAll(consumeTo(Token.Symbol.RIGHT_BRACKET), Token.Symbol.COMMA)
+                .customSplitAll(BraceManager.leftToRightAngle, consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA)
                 .stream()
                 .map(e -> new Parser(e).parseType())
                 .collect(Collectors.toList());

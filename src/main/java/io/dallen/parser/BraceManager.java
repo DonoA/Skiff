@@ -36,6 +36,34 @@ public class BraceManager {
         }
     };
 
+    public static final BraceProfile leftToRightAngle = new BraceProfile() {
+        @Override
+        public Token.TokenType openBraceFor(Token.Symbol tt) {
+            switch (tt) {
+                case RIGHT_ANGLE:
+                    return LEFT_ANGLE;
+                case RIGHT_BRACE:
+                    return LEFT_BRACE;
+                case RIGHT_PAREN:
+                    return LEFT_PAREN;
+            }
+
+            return null;
+        }
+
+        @Override
+        public boolean isOpenBrace(Token.Symbol tt) {
+            switch (tt) {
+                case LEFT_ANGLE:
+                case LEFT_BRACE:
+                case LEFT_PAREN:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    };
+
     public static final BraceProfile rightToLeft = new BraceProfile() {
         @Override
         public Token.TokenType openBraceFor(Token.Symbol tt) {

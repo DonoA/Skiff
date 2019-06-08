@@ -24,6 +24,7 @@ public class CompileContext {
         delcareObject(CompiledType.STRING);
         delcareObject(CompiledType.INT);
         delcareObject(CompiledType.BOOL);
+        delcareObject(CompiledType.LIST);
 
         delcareObject(new CompiledFunction(
                 "println",

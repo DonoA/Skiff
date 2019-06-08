@@ -13,8 +13,16 @@ public class BraceSplitter {
         return braceSplitLeftToRight(tokens, on, Integer.MAX_VALUE);
     }
 
+    public static List<List<Token>> customSplitAll(BraceManager.BraceProfile braces, List<Token> tokens, Token.TokenType on) {
+        return customBraceSplitLeftToRight(braces, tokens, on, Integer.MAX_VALUE);
+    }
+
     public static List<List<Token>> braceSplitLeftToRight(List<Token> tokens, Token.TokenType on, int limit) {
-        BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
+        return customBraceSplitLeftToRight(BraceManager.leftToRight, tokens, on, limit);
+    }
+
+    public static List<List<Token>> customBraceSplitLeftToRight(BraceManager.BraceProfile braces, List<Token> tokens, Token.TokenType on, int limit) {
+        BraceManager braceManager = new BraceManager(braces);
 
         List<List<Token>> segments = new ArrayList<>();
         List<Token> workingSeg = new ArrayList<>();
