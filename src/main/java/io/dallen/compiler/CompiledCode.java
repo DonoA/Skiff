@@ -23,7 +23,7 @@ public class CompiledCode {
         return this;
     }
 
-    public CompiledCode withReturn(CompiledType type) {
+    public CompiledCode withType(CompiledType type) {
         this.type = type;
         return this;
     }

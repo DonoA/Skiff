@@ -24,13 +24,13 @@ public class ASTVisitor {
         return new CompiledCode()
                 .withText(name)
                 .withBinding(typeName.getBinding())
-                .withReturn(CompiledType.CLASS);
+                .withType(CompiledType.CLASS);
     }
 
     private static String nativeTypeFor(String name) {
         switch (name) {
             case "Int":
-                return "int32_t";
+                return "int32_t *";
             case "Void":
                 return "void";
             default:
@@ -42,7 +42,7 @@ public class ASTVisitor {
                     }
                     newName.append(Character.toLowerCase(c));
                 }
-                newName.append("_t");
+                newName.append("_t **");
                 return newName.toString();
         }
     }
@@ -58,7 +58,7 @@ public class ASTVisitor {
         CompileContext innerContext = new CompileContext(context);
 
         sb.append(returns.getCompiledText());
-        sb.append(" * ");
+        sb.append(" ");
         sb.append(stmt.name);
         sb.append("(");
 
@@ -70,7 +70,7 @@ public class ASTVisitor {
         ListIterator<FunctionParam> paramItr = stmt.args.listIterator();
 
         for (CompiledCode arg : compiledArgs) {
-            innerContext.delcareObject(new CompiledVar(paramItr.next().name, arg.getType()));
+            innerContext.declareObject(new CompiledVar(paramItr.next().name, arg.getType()));
         }
 
         List<String> stringArgs = compiledArgs
@@ -82,7 +82,8 @@ public class ASTVisitor {
 
         sb.append(")");
 
-        context.delcareObject(new CompiledVar(stmt.name, CompiledType.FUNCTION));
+        context.declareObject(new CompiledFunction(stmt.name, (CompiledType) returns.getBinding(),
+                compiledArgs.stream().map(CompiledCode::getType).collect(Collectors.toList())));
 
         sb.append("\n");
         sb.append(context.getIndent());
@@ -90,15 +91,29 @@ public class ASTVisitor {
 
         sb.append(innerContext.getIndent())
                 .append("// Copy formals\n");
+        if(!returns.getType().equals(CompiledType.VOID)){
+            sb.append(innerContext.getIndent()).append(returns.getCompiledText()).append(" rtn = ");
+            if(returns.getType().getSize() == -1) {
+                sb.append("skalloc_ref_stack();\n");
+            } else {
+                int size = ((CompiledType) returns.getBinding()).getSize();
+                sb.append("skalloc_data_stack(").append(size).append(");\n");
+            }
+        }
         stmt.args.forEach(arg -> {
-            sb.append(innerContext.getIndent());
-            sb.append(arg.type.compile(this, innerContext).getCompiledText());
-            sb.append(" * ");
-            sb.append(arg.name);
+            CompiledCode code = arg.type.compile(this, innerContext);
+            sb.append(innerContext.getIndent()).append(code.getCompiledText()).append(" ").append(arg.name);
             sb.append(" = ");
-            sb.append("skiff_int_new(*formal_");
-            sb.append(arg.name);
-            sb.append(");\n");
+            CompiledType type = ((CompiledType) code.getBinding());
+            if(type.getSize() == -1) {
+                sb.append("skalloc_ref_stack();\n");
+                innerContext.addRefStackSize(1);
+            } else {
+                sb.append("skalloc_data_stack(").append(type.getSize()).append(");\n");
+                innerContext.addDataStackSize(type.getSize());
+            }
+            sb.append(innerContext.getIndent()).append("*").append(arg.name).append(" = ");
+            sb.append("*formal_").append(arg.name).append(";\n");
         });
         sb.append("\n");
 
@@ -113,16 +128,16 @@ public class ASTVisitor {
 
         return new CompiledCode()
                 .withText(sb.toString())
-                .withReturn(CompiledType.VOID)
+                .withType(CompiledType.VOID)
                 .withSemicolon(false);
     }
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
-        String sb = type.getCompiledText() + " * formal_" + stmt.name;
+        String sb = type.getCompiledText() + " formal_" + stmt.name;
         return new CompiledCode()
                 .withText(sb)
-                .withReturn((CompiledType) type.getBinding());
+                .withType((CompiledType) type.getBinding());
     }
 
     public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
@@ -145,7 +160,7 @@ public class ASTVisitor {
 
         return new CompiledCode()
                 .withText(sb.toString())
-                .withReturn(CompiledType.VOID)
+                .withType(CompiledType.VOID)
                 .withSemicolon(false);
     }
 
@@ -157,7 +172,7 @@ public class ASTVisitor {
         CompiledCode code = stmt.on.compile(this, context);
         return new CompiledCode()
                 .withText("else " + code.getCompiledText())
-                .withReturn(code.getType())
+                .withType(code.getType())
                 .withSemicolon(false);
     }
 
@@ -174,20 +189,21 @@ public class ASTVisitor {
 
         return new CompiledCode()
                 .withText(sb.toString())
-                .withReturn(CompiledType.VOID)
+                .withType(CompiledType.VOID)
                 .withSemicolon(false);
     }
 
     private Consumer<Statement> compileToStringBuilder(StringBuilder sb, CompileContext context) {
         return stmt -> {
             CompiledCode s = stmt.compile(this, context);
+            if(SkiffC.DEBUG && !(stmt instanceof BlockStatement)) {
+                sb.append(context.getIndent()).append("/* ").append(stmt.toFlatString()).append(" */\n");
+            }
             sb.append(context.getIndent());
             sb.append(s.getCompiledText());
             sb.append(s.isRequiresSemicolon() ? ";" : "");
             if(SkiffC.DEBUG && !(stmt instanceof BlockStatement)) {
-                sb.append("/* ");
-                sb.append(stmt.toFlatString());
-                sb.append(" */");
+                sb.append(" /* End ").append(stmt.getClass().getSimpleName()).append(" */");
             }
             sb.append("\n");
         };
@@ -223,7 +239,7 @@ public class ASTVisitor {
             CompiledType typ1 = expected.next();
             CompiledType typ2 = found.next().getType();
             if (!typ1.equals(typ2)) {
-                throw new CompileError("Differing param type " + func.getName());
+                throw new CompileError("Differing param types " + func.getName());
             }
         }
 
@@ -239,9 +255,16 @@ public class ASTVisitor {
         sb.append(String.join(", ", evalArgs));
 
         sb.append(")");
+
+        if(func.getReturns().getSize() == -1) {
+            context.addRefStackSize(1);
+        } else {
+            context.addDataStackSize(func.getReturns().getSize());
+        }
+
         return new CompiledCode()
                 .withText(sb.toString())
-                .withReturn(func.getReturns());
+                .withType(func.getReturns());
     }
 
     public CompiledCode compileParened(Parened stmt, CompileContext context) {
@@ -258,41 +281,43 @@ public class ASTVisitor {
 
     public CompiledCode compileReturn(Return stmt, CompileContext context) {
         CompiledCode code = stmt.value.compile(this, context);
-        if(stmt.value instanceof Variable) { // Should cover more cases
-            String rtnVar ="return " + code.getCompiledText();
-            return new CompiledCode()
-                    .withText(rtnVar)
-                    .withReturn(CompiledType.VOID);
-        }
         StringBuilder sb = new StringBuilder();
-        sb.append(nativeTypeFor(code.getType().getName()));
-        sb.append(" * rtn = skiff_int_new(0);\n");
-        sb.append(context.getIndent());
-        sb.append("*rtn = ");
-        sb.append(code.getCompiledText());
-        sb.append(";\n");
+        // rtn already created at start of function
+        if(stmt.value instanceof NumberLiteral) {
+            sb.append("rtn = ");
+            sb.append(code.getCompiledText());
+        } else {
+            sb.append("*rtn = ");
+            sb.append("*").append(code.getCompiledText());
+        }
+        sb.append(";\n\n");
         cleanupScope(sb, context);
-        sb.append(context.getIndent());
-        sb.append("return rtn");
+        sb.append(context.getIndent()).append("return rtn;");
         return new CompiledCode()
                 .withText(sb.toString())
-                .withReturn(CompiledType.VOID);
+                .withSemicolon(false)
+                .withType(CompiledType.VOID);
     }
 
     private void cleanupScope(StringBuilder sb, CompileContext context) {
+        sb.append(context.getIndent());
+        sb.append("// Cleanup scope\n");
 
+        sb.append(context.getIndent()).append("skiff_gc_clean(").append(context.getDataStackSize()).append(", ")
+                .append(context.getRefStackSize()).append(");\n");
     }
 
     public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) {
-        CompileContext ctx = new CompileContext(context, true);
-        CompiledCode lhs = stmt.left.compile(this, ctx);
-        CompiledCode rhs = stmt.right.compile(this, ctx);
+        CompiledCode lhs = stmt.left.compile(this, context);
+        CompiledCode rhs = stmt.right.compile(this, context);
 
-        String c = "(" + lhs.getCompiledText() + ") " + stmt.op.getRawOp() + " (" + rhs.getCompiledText() + ")";
+        String c = "skiff_int_" +  stmt.op.getRawOp() + "(" + lhs.getCompiledText() + ", " + rhs.getCompiledText() + ")";
+
+        context.addDataStackSize(CompiledType.INT.getSize());
 
         return new CompiledCode()
                 .withText(c)
-                .withReturn(lhs.getType());
+                .withType(lhs.getType());
     }
 
     public CompiledCode compileMathAssign(MathAssign stmt, CompileContext context) {
@@ -305,23 +330,28 @@ public class ASTVisitor {
 
     public CompiledCode compileCompare(Compare stmt, CompileContext context) {
         CompiledCode cc = compileBinary(stmt.left, stmt.right, stmt.op, context);
-        return cc.withReturn(CompiledType.BOOL);
+        return cc.withType(CompiledType.BOOL);
     }
 
     public CompiledCode compileBoolCombine(BoolCombine stmt, CompileContext context) {
         CompiledCode cc = compileBinary(stmt.left, stmt.right, stmt.op, context);
-        return cc.withReturn(CompiledType.BOOL);
+        return cc.withType(CompiledType.BOOL);
     }
 
     public CompiledCode compileAssign(Assign stmt, CompileContext context) {
         CompiledCode name = stmt.name.compile(this, context);
-        CompiledCode value = stmt.value.compile(this, new CompileContext(context, true));
+        CompiledCode value = stmt.value.compile(this, context);
 
-        String sb = "*(" + name.getCompiledText() + ") = " + value.getCompiledText();
+        String sb;
+        if(stmt.value instanceof NumberLiteral) {
+            sb = "(" + name.getCompiledText() + ") = (" + value.getCompiledText() + ")";
+        } else {
+            sb = "*(" + name.getCompiledText() + ") = *(" + value.getCompiledText() + ")";
+        }
         return new CompiledCode()
-                .withText(sb)
-                .withBinding(name.getBinding())
-                .withReturn(name.getType());
+            .withText(sb)
+            .withBinding(name.getBinding())
+            .withType(name.getType());
     }
 
     private CompiledCode compileBinary(Statement l, Statement r, HasRaw op, CompileContext context) {
@@ -334,12 +364,12 @@ public class ASTVisitor {
 
     public CompiledCode compileDeclare(Declare stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
-        context.delcareObject(new CompiledVar(stmt.name, type.getType()));
+        context.declareObject(new CompiledVar(stmt.name, (CompiledType) type.getBinding()));
 
-        String sb = type.getCompiledText() + " * " + stmt.name;
+        String sb = type.getCompiledText() + " " + stmt.name;// + " = skalloc_stack(" + ((CompiledType) type.getBinding()).getSize() + ")";
         return new CompiledCode()
                 .withText(sb)
-                .withReturn(CompiledType.VOID);
+                .withType(CompiledType.VOID);
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
@@ -347,15 +377,17 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
+        context.addDataStackSize(CompiledType.INT.getSize());
+
         return new CompiledCode()
                 .withText("skiff_int_new(" + stmt.value.toString() + ")")
-                .withReturn(context.getType("Int"));
+                .withType(CompiledType.INT);
     }
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
         return new CompiledCode()
                 .withText("skiff_string_new(\"" + stmt.value + "\")")
-                .withReturn(context.getType("String"));
+                .withType(context.getType("String"));
     }
 
     public CompiledCode compileVariable(Variable stmt, CompileContext context) {
@@ -365,13 +397,10 @@ public class ASTVisitor {
         if (compiledObject instanceof CompiledVar) {
             objType = ((CompiledVar) compiledObject).getType();
         }
-        if(context.isNeedDeref()) {
-            text = "*" + text;
-        }
         return new CompiledCode()
                 .withText(text)
                 .withBinding(compiledObject)
-                .withReturn(objType);
+                .withType(objType);
     }
 
 }

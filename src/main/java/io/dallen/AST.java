@@ -15,7 +15,7 @@ public class AST {
     }
 
     public enum MathOp implements HasRaw {
-        PLUS("+"), MINUS("-"), MUL("*"), DIV("/"), XOR("^");
+        PLUS("add"), MINUS("sub"), MUL("mul"), DIV("div"), XOR("^");
 
         private final String rawOp;
 

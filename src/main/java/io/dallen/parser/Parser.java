@@ -228,11 +228,16 @@ public class Parser {
         consumeExpected(Token.Symbol.LEFT_PAREN);
         List<Token> paramTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
 
-        List<FunctionParam> params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
-                .stream()
-                .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
-                .map(e -> new FunctionParam(new Parser(e.get(1)).parseType(), e.get(0).get(0).literal))
-                .collect(Collectors.toList());
+        List<FunctionParam> params;
+        try {
+             params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
+                    .stream()
+                    .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
+                    .map(e -> new FunctionParam(new Parser(e.get(1)).parseType(), e.get(0).get(0).literal))
+                    .collect(Collectors.toList());
+        } catch (IndexOutOfBoundsException ex) {
+            throw new CompileError("Failed to parse function args for " + funcName);
+        }
 
         consumeExpected(Token.Symbol.COLON);
         List<Token> returnTypeTokens = consumeTo(Token.Symbol.LEFT_BRACE);

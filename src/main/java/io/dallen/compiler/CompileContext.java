@@ -1,8 +1,6 @@
 package io.dallen.compiler;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CompileContext {
     private Map<String, CompiledObject> variableTable = new HashMap<>();
@@ -10,40 +8,33 @@ public class CompileContext {
     private CompileContext parent;
     private String indent = "";
 
-    private boolean needDeref = false;
-
-    public CompileContext(CompileContext parent, boolean needDeref) {
-        this.parent = parent;
-        this.needDeref = needDeref;
-    }
+    private int dataStackSize = 0;
+    private int refStackSize = 0;
 
     public CompileContext(CompileContext parent) {
         this.parent = parent;
         if(parent != null) {
             indent = parent.indent;
             addIndent("    ");
-            if(parent.needDeref) {
-                this.needDeref = true;
-            }
         } else {
             loadBuiltins();
         }
     }
 
     private void loadBuiltins() {
-        delcareObject(CompiledType.VOID);
-        delcareObject(CompiledType.STRING);
-        delcareObject(CompiledType.INT);
-        delcareObject(CompiledType.BOOL);
-        delcareObject(CompiledType.LIST);
+        declareObject(CompiledType.VOID);
+        declareObject(CompiledType.STRING);
+        declareObject(CompiledType.INT);
+        declareObject(CompiledType.BOOL);
+        declareObject(CompiledType.LIST);
 
-        delcareObject(new CompiledFunction(
+        declareObject(new CompiledFunction(
                 "println",
                 CompiledType.VOID,
                 Collections.singletonList(CompiledType.STRING)));
     }
 
-    public void delcareObject(CompiledObject decVar) {
+    public void declareObject(CompiledObject decVar) {
         variableTable.put(decVar.getName(), decVar);
     }
 
@@ -69,6 +60,10 @@ public class CompileContext {
         return (CompiledType) varFor;
     }
 
+    public List<CompiledObject> getLocals() {
+        return new ArrayList<>(variableTable.values());
+    }
+
     public String getIndent() {
         return indent;
     }
@@ -81,10 +76,19 @@ public class CompileContext {
         indent = indent + newIndent;
     }
 
-    public boolean isNeedDeref() {
-        if(parent == null || needDeref) {
-            return needDeref;
-        }
-        return parent.isNeedDeref();
+    public int getDataStackSize() {
+        return dataStackSize;
+    }
+
+    public void addDataStackSize(int dataStackSize) {
+        this.dataStackSize += dataStackSize;
+    }
+
+    public int getRefStackSize() {
+        return refStackSize;
+    }
+
+    public void addRefStackSize(int refStackSize) {
+        this.refStackSize += refStackSize;
     }
 }
