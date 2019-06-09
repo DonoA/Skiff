@@ -5,12 +5,14 @@ public class CompiledCode {
     private CompiledObject binding;
     private CompiledType type;
     private boolean requiresSemicolon;
+    private boolean ref;
 
     public CompiledCode() {
         this.compiledText = null;
         this.binding = null;
         this.type = null;
         this.requiresSemicolon = true;
+        this.ref = true;
     }
 
     public CompiledCode withText(String compiledText) {
@@ -33,6 +35,11 @@ public class CompiledCode {
         return this;
     }
 
+    public CompiledCode isRef(boolean ref) {
+        this.ref = ref;
+        return this;
+    }
+
     public String getCompiledText() {
         return compiledText;
     }
@@ -47,5 +54,9 @@ public class CompiledCode {
 
     public boolean isRequiresSemicolon() {
         return requiresSemicolon;
+    }
+
+    public boolean isRef() {
+        return ref;
     }
 }

@@ -102,7 +102,7 @@
     "FunctionCall": {
         "extends": "Expression",
         "fields": {
-            "name": "Statement",
+            "name": "String",
             "args": "List<Statement>"
         }
     },

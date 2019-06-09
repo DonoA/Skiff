@@ -1,12 +1,10 @@
 package io.dallen.compiler;
 
-import java.util.*;
-
 public class CompileContext {
-    private Map<String, CompiledObject> variableTable = new HashMap<>();
 
-    private CompileContext parent;
+    private CompileScope scope;
     private String indent = "";
+    private CompileContext parent;
 
     private int dataStackSize = 0;
     private int refStackSize = 0;
@@ -14,54 +12,24 @@ public class CompileContext {
     public CompileContext(CompileContext parent) {
         this.parent = parent;
         if(parent != null) {
-            indent = parent.indent;
+            this.scope = new CompileScope(parent.scope);
             addIndent("    ");
         } else {
-            loadBuiltins();
+            this.scope = new CompileScope(null);
+            this.scope.loadBuiltins();
         }
-    }
-
-    private void loadBuiltins() {
-        declareObject(CompiledType.VOID);
-        declareObject(CompiledType.STRING);
-        declareObject(CompiledType.INT);
-        declareObject(CompiledType.BOOL);
-        declareObject(CompiledType.LIST);
-
-        declareObject(new CompiledFunction(
-                "println",
-                CompiledType.VOID,
-                Collections.singletonList(CompiledType.STRING)));
     }
 
     public void declareObject(CompiledObject decVar) {
-        variableTable.put(decVar.getName(), decVar);
+        scope.declareObject(decVar);
     }
 
     public CompiledObject getObject(String name) {
-        CompiledObject varFor = variableTable.get(name);
-        if(varFor != null) {
-            return varFor;
-        }
-
-        if(parent == null) {
-            throw new CompileError("Variable " + name + " not bound");
-        }
-
-        return parent.getObject(name);
+        return scope.getObject(name);
     }
 
     public CompiledType getType(String name) {
-        CompiledObject varFor = getObject(name);
-        if(!(varFor instanceof CompiledType)) {
-            throw new CompileError("Variable " + name + " is not a class");
-        }
-
-        return (CompiledType) varFor;
-    }
-
-    public List<CompiledObject> getLocals() {
-        return new ArrayList<>(variableTable.values());
+        return scope.getType(name);
     }
 
     public String getIndent() {

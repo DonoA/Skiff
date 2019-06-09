@@ -343,9 +343,9 @@ public class AST {
     }
 
     public static class FunctionCall extends Expression {
-        public final Statement name;
+        public final String name;
         public final List<Statement> args;
-        public FunctionCall(Statement name, List<Statement> args) {
+        public FunctionCall(String name, List<Statement> args) {
             super();
             this.name = name;
             this.args = args;
@@ -357,7 +357,7 @@ public class AST {
         }
 
         public String toFlatString() {
-            return "FunctionCall(name = " + this.name.toFlatString() + ", " +
+            return "FunctionCall(name = " + this.name.toString() + ", " +
                     "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 

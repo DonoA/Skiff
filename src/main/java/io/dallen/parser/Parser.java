@@ -306,10 +306,13 @@ public class Parser {
 
         } else if(containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
             List<Token> funcName = consumeTo(Token.Symbol.LEFT_PAREN);
-            Statement parsedName = new Parser(funcName).parseExpression();
+            if(funcName.size() > 1) {
+                throw new ParserError("Function call name was multi token", funcName.get(0));
+            }
+//            Statement parsedName = new Parser(funcName).parseExpression();
             List<Statement> funcParams = consumeFunctionParams();
             tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new FunctionCall(parsedName, funcParams);
+            return new FunctionCall(funcName.get(0).literal, funcParams);
 
         } else {
             Token name = consume();

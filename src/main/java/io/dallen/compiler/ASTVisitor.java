@@ -34,17 +34,25 @@ public class ASTVisitor {
             case "Void":
                 return "void";
             default:
-                StringBuilder newName = new StringBuilder();
-                newName.append("skiff");
-                for(char c : name.toCharArray()) {
-                    if(Character.isUpperCase(c)) {
-                        newName.append("_");
-                    }
-                    newName.append(Character.toLowerCase(c));
-                }
-                newName.append("_t **");
-                return newName.toString();
+                return underscoreJoin("skiff", name, "t **");
         }
+    }
+
+    private static String underscoreJoin(String... name) {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < name.length; i++) {
+            char[] n = name[i].toCharArray();
+            for(int j = 0; j < n.length; j++) {
+                if(Character.isUpperCase(n[j]) && j != 0) {
+                    sb.append("_");
+                }
+                sb.append(Character.toLowerCase(n[j]));
+            }
+            if(i < name.length - 1) {
+                sb.append("_");
+            }
+        }
+        return sb.toString();
     }
 
     public CompiledCode compileBlockStatement(BlockStatement stmt, CompileContext context) {
@@ -93,7 +101,7 @@ public class ASTVisitor {
                 .append("// Copy formals\n");
         if(!returns.getType().equals(CompiledType.VOID)){
             sb.append(innerContext.getIndent()).append(returns.getCompiledText()).append(" rtn = ");
-            if(returns.getType().getSize() == -1) {
+            if(returns.getType().isRef()) {
                 sb.append("skalloc_ref_stack();\n");
             } else {
                 int size = ((CompiledType) returns.getBinding()).getSize();
@@ -105,7 +113,7 @@ public class ASTVisitor {
             sb.append(innerContext.getIndent()).append(code.getCompiledText()).append(" ").append(arg.name);
             sb.append(" = ");
             CompiledType type = ((CompiledType) code.getBinding());
-            if(type.getSize() == -1) {
+            if(type.isRef()) {
                 sb.append("skalloc_ref_stack();\n");
                 innerContext.addRefStackSize(1);
             } else {
@@ -218,7 +226,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileFunctionCall(FunctionCall stmt, CompileContext context) {
-        CompiledObject nameVar = stmt.name.compile(this, context).getBinding();
+        CompiledObject nameVar = context.getObject(stmt.name);
         if (!(nameVar instanceof CompiledFunction)) {
             throw new CompileError("Variable not function " + stmt.name);
         }
@@ -256,7 +264,7 @@ public class ASTVisitor {
 
         sb.append(")");
 
-        if(func.getReturns().getSize() == -1) {
+        if(func.getReturns().isRef()) {
             context.addRefStackSize(1);
         } else {
             context.addDataStackSize(func.getReturns().getSize());
@@ -272,7 +280,42 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDotted(Dotted stmt, CompileContext context) {
-        return null;
+        CompiledCode lhs = stmt.left.compile(this, context);
+        if(stmt.right instanceof FunctionCall) {
+            FunctionCall call = (FunctionCall) stmt.right;
+            CompiledObject nameVar = lhs.getType().getObject(call.name);
+            if (!(nameVar instanceof CompiledFunction)) {
+                throw new CompileError("Variable not function " + call.name);
+            }
+            CompiledFunction func = (CompiledFunction) nameVar;
+            StringBuilder sb = new StringBuilder();
+            sb.append(underscoreJoin("skiff", lhs.getType().getName(), func.getName()))
+                    .append("(").append(lhs.getCompiledText());
+            call.args.stream().map(e -> e.compile(this, context))
+                    .forEach(e -> sb.append(", ").append(e.getCompiledText()));
+            sb.append(")");
+
+            if(func.getReturns().isRef()) {
+                context.addRefStackSize(1);
+            } else {
+                context.addDataStackSize(func.getReturns().getSize());
+            }
+
+            return new CompiledCode()
+                    .withText(sb.toString())
+                    .withType(func.getReturns());
+        }
+        if(stmt.right instanceof Variable) {
+            StringBuilder sb = new StringBuilder();
+            Variable v = (Variable) stmt.right;
+            CompiledObject obj = lhs.getType().getObject(v.name);
+            CompiledVar objVar = (CompiledVar) obj;
+            sb.append(objVar.getType().isRef() ? "" : "&").append("(*").append(lhs.getCompiledText()).append(")->").append(v.name);
+            return new CompiledCode()
+                    .withText(sb.toString())
+                    .withType(objVar.getType());
+        }
+        throw new CompileError("Dotted on invalid type " + stmt.right.toFlatString());
     }
 
     public CompiledCode compileArrowed(Arrowed stmt, CompileContext context) {
@@ -288,7 +331,7 @@ public class ASTVisitor {
             sb.append(code.getCompiledText());
         } else {
             sb.append("*rtn = ");
-            sb.append("*").append(code.getCompiledText());
+            sb.append(code.isRef() ? "*(" : "(").append(code.getCompiledText()).append(")");
         }
         sb.append(";\n\n");
         cleanupScope(sb, context);
