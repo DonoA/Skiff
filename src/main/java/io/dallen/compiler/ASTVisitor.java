@@ -113,12 +113,11 @@ public class ASTVisitor {
             sb.append(innerContext.getIndent()).append(code.getCompiledText()).append(" ").append(arg.name);
             sb.append(" = ");
             CompiledType type = ((CompiledType) code.getBinding());
+            context.trackObjCreation(type);
             if(type.isRef()) {
                 sb.append("skalloc_ref_stack();\n");
-                innerContext.addRefStackSize(1);
             } else {
                 sb.append("skalloc_data_stack(").append(type.getSize()).append(");\n");
-                innerContext.addDataStackSize(type.getSize());
             }
             sb.append(innerContext.getIndent()).append("*").append(arg.name).append(" = ");
             sb.append("*formal_").append(arg.name).append(";\n");
@@ -264,11 +263,7 @@ public class ASTVisitor {
 
         sb.append(")");
 
-        if(func.getReturns().isRef()) {
-            context.addRefStackSize(1);
-        } else {
-            context.addDataStackSize(func.getReturns().getSize());
-        }
+        context.trackObjCreation(func.getReturns());
 
         return new CompiledCode()
                 .withText(sb.toString())
@@ -295,11 +290,7 @@ public class ASTVisitor {
                     .forEach(e -> sb.append(", ").append(e.getCompiledText()));
             sb.append(")");
 
-            if(func.getReturns().isRef()) {
-                context.addRefStackSize(1);
-            } else {
-                context.addDataStackSize(func.getReturns().getSize());
-            }
+            context.trackObjCreation(func.getReturns());
 
             return new CompiledCode()
                     .withText(sb.toString())

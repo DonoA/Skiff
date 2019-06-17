@@ -5,8 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.dallen</groupId>
-    <artifactId>SkiffC</artifactId>
+    <artifactId>Skiff</artifactId>
     <version>INDEV-0.1</version>
 
+    <properties>
+        <java.version>11</java.version>
+    </properties>
 
 </project>

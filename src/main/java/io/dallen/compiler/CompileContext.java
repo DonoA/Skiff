@@ -59,4 +59,12 @@ public class CompileContext {
     public void addRefStackSize(int refStackSize) {
         this.refStackSize += refStackSize;
     }
+
+    public void trackObjCreation(CompiledType type) {
+        if(type.isRef()) {
+            addRefStackSize(1);
+        } else {
+            addDataStackSize(type.getSize());
+        }
+    }
 }
