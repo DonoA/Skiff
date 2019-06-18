@@ -5,6 +5,8 @@ public class CompileContext {
     private CompileScope scope;
     private String indent = "";
     private CompileContext parent;
+    private String scopePrefix = "";
+    private CompiledType parentClass = null;
 
     private int dataStackSize = 0;
     private int refStackSize = 0;
@@ -13,11 +15,15 @@ public class CompileContext {
         this.parent = parent;
         if(parent != null) {
             this.scope = new CompileScope(parent.scope);
-            addIndent("    ");
         } else {
             this.scope = new CompileScope(null);
             this.scope.loadBuiltins();
         }
+    }
+
+    public CompileContext addIndent() {
+        addIndent("    ");
+        return this;
     }
 
     public void declareObject(CompiledObject decVar) {
@@ -66,5 +72,23 @@ public class CompileContext {
         } else {
             addDataStackSize(type.getSize());
         }
+    }
+
+    public String getScopePrefix() {
+        return scopePrefix;
+    }
+
+    public CompileContext setScopePrefix(String scopePrefix) {
+        this.scopePrefix = scopePrefix;
+        return this;
+    }
+
+    public CompiledType getParentClass() {
+        return parentClass;
+    }
+
+    public CompileContext setParentClass(CompiledType parentClass) {
+        this.parentClass = parentClass;
+        return this;
     }
 }

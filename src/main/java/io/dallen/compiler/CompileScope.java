@@ -20,6 +20,7 @@ public class CompileScope {
 
         declareObject(new CompiledFunction(
                 "println",
+        "skiff_println",
                       CompiledType.VOID,
                       Collections.singletonList(CompiledType.STRING)));
     }

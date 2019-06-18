@@ -19,6 +19,10 @@ public CompiledCode compileFunctionDef(FunctionDef stmt, CompileContext context)
     return null; 
 }
     
+public CompiledCode compileClassDef(ClassDef stmt, CompileContext context) { 
+    return null; 
+}
+    
 public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) { 
     return null; 
 }
@@ -64,6 +68,10 @@ public CompiledCode compileArrowed(Arrowed stmt, CompileContext context) {
 }
     
 public CompiledCode compileReturn(Return stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileNew(New stmt, CompileContext context) { 
     return null; 
 }
     

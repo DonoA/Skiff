@@ -34,6 +34,17 @@
             }
         }
     },
+    "ClassDef": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "name": "String",
+            "extendClasses": "List<Statement>",
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
     "FunctionParam": {
         "fields": {
             "type": "Type",
@@ -130,6 +141,13 @@
         "extends": "Expression",
         "fields": {
             "value": "Statement"
+        }
+    },
+    "New": {
+        "extends": "Expression",
+        "fields": {
+            "type": "Statement",
+            "argz": "List<Statement>"
         }
     },
     "MathStatement": {

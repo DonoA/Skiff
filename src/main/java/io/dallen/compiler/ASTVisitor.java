@@ -3,6 +3,7 @@ package io.dallen.compiler;
 import io.dallen.AST.*;
 import io.dallen.SkiffC;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Consumer;
@@ -20,25 +21,15 @@ public class ASTVisitor {
 
     public CompiledCode compileType(Type stmt, CompileContext context) {
         CompiledCode typeName = stmt.name.compile(this, context);
-        String name = nativeTypeFor(typeName.getCompiledText());
+        CompiledType typ = ((CompiledType) typeName.getBinding());
+        String name = typ.getCompiledName() + (typ.isRef() ? " **" : "");
         return new CompiledCode()
                 .withText(name)
                 .withBinding(typeName.getBinding())
                 .withType(CompiledType.CLASS);
     }
 
-    private static String nativeTypeFor(String name) {
-        switch (name) {
-            case "Int":
-                return "int32_t *";
-            case "Void":
-                return "void";
-            default:
-                return underscoreJoin("skiff", name, "t **");
-        }
-    }
-
-    private static String underscoreJoin(String... name) {
+    public static String underscoreJoin(String... name) {
         StringBuilder sb = new StringBuilder();
         for(int i = 0; i < name.length; i++) {
             char[] n = name[i].toCharArray();
@@ -63,11 +54,14 @@ public class ASTVisitor {
         StringBuilder sb = new StringBuilder();
         CompiledCode returns = stmt.returns.compile(this, context);
 
-        CompileContext innerContext = new CompileContext(context);
+        CompileContext innerContext = new CompileContext(context)
+            .addIndent();
+
+        String compiledName = underscoreJoin("skiff", context.getScopePrefix(), stmt.name);
 
         sb.append(returns.getCompiledText());
         sb.append(" ");
-        sb.append(stmt.name);
+        sb.append(compiledName);
         sb.append("(");
 
         List<CompiledCode> compiledArgs = stmt.args
@@ -81,17 +75,24 @@ public class ASTVisitor {
             innerContext.declareObject(new CompiledVar(paramItr.next().name, arg.getType()));
         }
 
-        List<String> stringArgs = compiledArgs
+        List<String> stringArgs = new ArrayList<>();
+
+        if(context.getParentClass() != null) {
+            stringArgs.add(context.getParentClass().getCompiledName() + " ** this");
+        }
+
+        stringArgs.addAll(compiledArgs
                 .stream()
                 .map(CompiledCode::getCompiledText)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
 
         sb.append(String.join(", ", stringArgs));
 
         sb.append(")");
 
-        context.declareObject(new CompiledFunction(stmt.name, (CompiledType) returns.getBinding(),
-                compiledArgs.stream().map(CompiledCode::getType).collect(Collectors.toList())));
+        CompiledFunction func = new CompiledFunction(stmt.name, compiledName, (CompiledType) returns.getBinding(),
+            compiledArgs.stream().map(CompiledCode::getType).collect(Collectors.toList()));
+        context.declareObject(func);
 
         sb.append("\n");
         sb.append(context.getIndent());
@@ -99,7 +100,7 @@ public class ASTVisitor {
 
         sb.append(innerContext.getIndent())
                 .append("// Copy formals\n");
-        if(!returns.getType().equals(CompiledType.VOID)){
+        if(!returns.getBinding().equals(CompiledType.VOID)){
             sb.append(innerContext.getIndent()).append(returns.getCompiledText()).append(" rtn = ");
             if(returns.getType().isRef()) {
                 sb.append("skalloc_ref_stack();\n");
@@ -136,6 +137,7 @@ public class ASTVisitor {
         return new CompiledCode()
                 .withText(sb.toString())
                 .withType(CompiledType.VOID)
+                .withBinding(func)
                 .withSemicolon(false);
     }
 
@@ -147,6 +149,72 @@ public class ASTVisitor {
                 .withType((CompiledType) type.getBinding());
     }
 
+    public CompiledCode compileClassDef(ClassDef stmt, CompileContext context) {
+
+        CompiledType cls = new CompiledType(stmt.name, -1)
+            .setParent(CompiledType.ANYREF);
+
+        context.declareObject(cls);
+
+        CompileContext innerContext = new CompileContext(context)
+            .setScopePrefix(stmt.name)
+            .setParentClass(cls);
+
+        innerContext.declareObject(new CompiledVar("this", cls));
+
+        StringBuilder methods = new StringBuilder();
+
+        List<CompiledCode> fields = new ArrayList<>();
+
+        stmt.body.forEach(line -> {
+            if(line instanceof Declare){
+                CompiledCode code = line.compile(this, innerContext);
+                fields.add(code);
+                cls.addClassObject(code.getBinding());
+            } else if(line instanceof DeclareAssign) {
+                throw new CompileError("Declare assign not supported yet");
+            }
+        });
+
+        stmt.body.forEach(line -> {
+            if(line instanceof FunctionDef) {
+                CompiledCode code = line.compile(this, innerContext);
+                methods.append(code.getCompiledText())
+                    .append("\n\n");
+                cls.addClassObject(code.getBinding());
+            }
+        });
+
+        StringBuilder text = new StringBuilder();
+        text.append("typedef struct ")
+            .append(underscoreJoin("skiff", stmt.name, "struct"))
+            .append(" ")
+            .append(cls.getCompiledName())
+            .append(";\n");
+
+        text.append("struct ")
+            .append(underscoreJoin("skiff", stmt.name, "struct"))
+            .append("\n{\n");
+
+        fields.forEach(code -> {
+            text.append("    ");
+            text.append(code.getCompiledText());
+            text.append(";\n");
+        });
+
+        text.append("}")
+//            .append(cls.getCompiledName())
+            .append(";\n");
+
+        text.append(methods);
+
+        return new CompiledCode()
+            .withType(CompiledType.VOID)
+            .withText(text.toString())
+            .withBinding(cls)
+            .withSemicolon(false);
+    }
+
     public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
         StringBuilder sb = new StringBuilder();
         sb.append("if(");
@@ -154,7 +222,7 @@ public class ASTVisitor {
         sb.append(")\n");
         sb.append(context.getIndent());
         sb.append("{\n");
-        CompileContext innerContext = new CompileContext(context);
+        CompileContext innerContext = new CompileContext(context).addIndent();
         stmt.body.forEach(compileToStringBuilder(sb, innerContext));
         sb.append(context.getIndent());
         sb.append("}");
@@ -184,7 +252,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileElseAlwaysBlock(ElseAlwaysBlock stmt, CompileContext context) {
-        CompileContext elseInnerContext = new CompileContext(context);
+        CompileContext elseInnerContext = new CompileContext(context).addIndent();
         StringBuilder sb = new StringBuilder();
         sb.append("else\n"); // first line does not need indent
         sb.append(context.getIndent());
@@ -251,7 +319,7 @@ public class ASTVisitor {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(func.getName());
+        sb.append(func.getCompiledName());
         sb.append("(");
 
         List<String> evalArgs = compArgs
@@ -333,6 +401,11 @@ public class ASTVisitor {
                 .withType(CompiledType.VOID);
     }
 
+    public CompiledCode compileNew(New stmt, CompileContext context) {
+        return new CompiledCode()
+            .withText("new object;");
+    }
+
     private void cleanupScope(StringBuilder sb, CompileContext context) {
         sb.append(context.getIndent());
         sb.append("// Cleanup scope\n");
@@ -409,10 +482,12 @@ public class ASTVisitor {
 
     public CompiledCode compileDeclare(Declare stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
-        context.declareObject(new CompiledVar(stmt.name, (CompiledType) type.getBinding()));
+        CompiledVar binding = new CompiledVar(stmt.name, (CompiledType) type.getBinding());
+        context.declareObject(binding);
 
         String sb = type.getCompiledText() + " " + stmt.name;// + " = skalloc_stack(" + ((CompiledType) type.getBinding()).getSize() + ")";
         return new CompiledCode()
+                .withBinding(binding)
                 .withText(sb)
                 .withType(CompiledType.VOID);
     }

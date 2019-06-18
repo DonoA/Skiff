@@ -8,7 +8,9 @@ import io.dallen.parser.splitter.SplitSettings;
 import io.dallen.tokenizer.Token;
 import io.dallen.AST.*;
 
+import io.dallen.tokenizer.Token.Keyword;
 import io.dallen.tokenizer.Token.Symbol;
+import io.dallen.tokenizer.Token.Textless;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -155,6 +157,10 @@ public class Parser {
                 statements.add(parseFunctionDef());
                 continue;
             }
+            if (Token.Keyword.CLASS.equals(i)) {
+                statements.add(parseClassDef());
+                continue;
+            }
             if (Token.Keyword.RETURN.equals(i)) {
                 statements.add(parseReturn());
                 continue;
@@ -162,6 +168,18 @@ public class Parser {
             statements.add(parseExpression());
         }
         return statements;
+    }
+
+    private ClassDef parseClassDef() {
+        consumeExpected(Keyword.CLASS);
+        Token name = consumeExpected(Textless.NAME);
+        // extends
+
+        consumeExpected(Symbol.LEFT_BRACE);
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+        List<Statement> body = new Parser(bodyTokens).parseBlock();
+
+        return new ClassDef(name.literal, new ArrayList<>(), body);
     }
 
     private void attachElseBlock(ArrayList<Statement> statements) {
@@ -240,9 +258,15 @@ public class Parser {
             throw new CompileError("Failed to parse function args for " + funcName);
         }
 
-        consumeExpected(Token.Symbol.COLON);
-        List<Token> returnTypeTokens = consumeTo(Token.Symbol.LEFT_BRACE);
-        Type returnType = new Parser(returnTypeTokens).parseType();
+        Type returnType = Type.VOID;
+
+        if(current().type == Symbol.COLON) {
+            consumeExpected(Token.Symbol.COLON);
+            List<Token> returnTypeTokens = consumeTo(Token.Symbol.LEFT_BRACE);
+            returnType = new Parser(returnTypeTokens).parseType();
+        } else {
+            consumeExpected(Symbol.LEFT_BRACE);
+        }
 
         List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
@@ -279,8 +303,17 @@ public class Parser {
             pos += workingTokens.size() + 1;
             return parsed;
         }
-
-        if (current().type == Token.Symbol.LEFT_PAREN) {
+        if (current().type == Keyword.NEW) {
+            consumeExpected(Keyword.NEW);
+            List<Token> name = consumeTo(Symbol.LEFT_PAREN);
+            List<List<Token>> paramz = BraceSplitter.splitAll(consumeTo(Symbol.RIGHT_PAREN), Symbol.COMMA);
+            Statement typeStmt = new Parser(name).parseExpression();
+            List<Statement> params = paramz
+                .stream()
+                .map(e -> new Parser(e).parseExpression())
+                .collect(Collectors.toList());
+            return new New(typeStmt, params);
+        } else if (current().type == Token.Symbol.LEFT_PAREN) {
             consumeExpected(Token.Symbol.LEFT_PAREN);
             Statement sub = new Parser(consumeTo(Token.Symbol.RIGHT_PAREN)).parseExpression();
             return new Parened(sub);

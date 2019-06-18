@@ -4,6 +4,7 @@ import io.dallen.compiler.ASTVisitor;
 import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -99,6 +100,8 @@ public class AST {
     }
 
     public static class Type  {
+        public final static Type VOID = new Type(new Variable("Void"), 0, new ArrayList<>());
+
         public final Statement name;
         public final Integer arraySize;
         public final List<Type> genericTypes;
@@ -199,6 +202,33 @@ public class AST {
             return visitor.compileFunctionParam(this, context);
         }
     }
+
+    public static class ClassDef extends BlockStatement {
+        public final String name;
+        public final List<Statement> extendClasses;
+        public ClassDef(String name, List<Statement> extendClasses, List<Statement> body) {
+            super(body);
+            this.name = name;
+            this.extendClasses = extendClasses;
+        }
+
+        public String toString() {
+            return "ClassDef(name = " + this.name.toString() + ", " +
+                "extendClasses = " + "[" + this.extendClasses.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "ClassDef(name = " + this.name.toString() + ", " +
+                "extendClasses = " + "[" + this.extendClasses.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileClassDef(this, context);
+        }
+    }
+
 
     public static class IfBlock extends BlockStatement {
         public final Statement condition;
@@ -451,6 +481,30 @@ public class AST {
 
         public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
             return visitor.compileReturn(this, context);
+        }
+    }
+
+    public static class New extends Expression {
+        public final Statement type;
+        public final List<Statement> argz;
+        public New(Statement type, List<Statement> argz) {
+            super();
+            this.type = type;
+            this.argz = argz;
+        }
+
+        public String toString() {
+            return "New(type = " + this.type.toString() + ", " +
+                "argz = " + "[" + this.argz.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public String toFlatString() {
+            return "New(type = " + this.type.toFlatString() + ", " +
+                "argz = " + "[" + this.argz.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
+            return visitor.compileNew(this, context);
         }
     }
 
