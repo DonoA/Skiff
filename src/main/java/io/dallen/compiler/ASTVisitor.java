@@ -359,7 +359,18 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileSubscript(Subscript stmt, CompileContext context) {
-        return null;
+        CompiledCode left = stmt.left.compile(this, context);
+        CompiledObject subscrCall = left.getType().getObject("getSub");
+        if(!(subscrCall instanceof CompiledFunction)) {
+            throw new CompileError("getSub is not a function");
+        }
+        CompiledCode sub = stmt.sub.compile(this, context);
+
+        String cFunc = underscoreJoin("skiff", left.getType().getName(), "get", "sub", sub.getType().getName());
+        String text = cFunc + "(" + left.getCompiledText() + ", " + sub.getCompiledText() + ")";
+        return new CompiledCode()
+            .withText(text)
+            .withType(((CompiledFunction) subscrCall).getReturns());
     }
 
     public CompiledCode compileCompare(Compare stmt, CompileContext context) {

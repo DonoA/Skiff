@@ -7,12 +7,15 @@ public class CompiledType extends CompiledObject {
     public static final CompiledType VOID = new CompiledType("Void", 0);
     public static final CompiledType FUNCTION = new CompiledType("Function", -1);
 
+    public static final CompiledType ANYREF = new CompiledType("AnyRef", -1);
     public static final CompiledType STRING = new CompiledType("String", -1);
     public static final CompiledType INT = new CompiledType("Int", 4);
     public static final CompiledType BOOL = new CompiledType("Bool" ,1);
     public static final CompiledType LIST = new CompiledType("List" ,-1)
             .addClassObject(new CompiledVar("size", CompiledType.INT))
-            .addClassObject(new CompiledFunction("getSize", CompiledType.INT, new ArrayList<>()));
+            .addClassObject(new CompiledFunction("getSize", CompiledType.INT, new ArrayList<>()))
+            .addClassObject(new CompiledFunction("getSub", CompiledType.ANYREF, new ArrayList<>()));
+
 
     private final int size;
     private final boolean isRef;

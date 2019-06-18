@@ -20,6 +20,11 @@ skiff_list_t ** skiff_list_new()
     return new_list;
 }
 
+void ** skiff_list_get_sub_int(skiff_list_t ** this, int32_t * sub)
+{
+    return (*this)->data[*sub];
+}
+
 void skiff_list_append(skiff_list_t ** this, void * dat)
 {
     if((*this)->size >= (*this)->_cap) 

@@ -35,7 +35,7 @@ public class CompileScope {
         }
 
         if(parent == null) {
-            throw new CompileError("Variable " + name + " not bound");
+            throw new CompileError("Variable '" + name + "' not bound");
         }
 
         return parent.getObject(name);
@@ -44,7 +44,7 @@ public class CompileScope {
     public CompiledType getType(String name) {
         CompiledObject varFor = getObject(name);
         if(!(varFor instanceof CompiledType)) {
-            throw new CompileError("Variable " + name + " is not a class");
+            throw new CompileError("Variable '" + name + "' is not a class");
         }
 
         return (CompiledType) varFor;

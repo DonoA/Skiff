@@ -8,6 +8,7 @@ import io.dallen.parser.splitter.SplitSettings;
 import io.dallen.tokenizer.Token;
 import io.dallen.AST.*;
 
+import io.dallen.tokenizer.Token.Symbol;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -314,6 +315,12 @@ public class Parser {
             tryConsumeExpected(Token.Symbol.SEMICOLON);
             return new FunctionCall(funcName.get(0).literal, funcParams);
 
+        } else if(containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
+            List<Token> name = consumeTo(Symbol.LEFT_BRACKET);
+            Statement left = new Parser(name).parseExpression();
+            List<Token> sub = consumeTo(Token.Symbol.RIGHT_BRACKET);
+            Statement inner = new Parser(sub).parseExpression();
+            return new Subscript(left, inner);
         } else {
             Token name = consume();
             tryConsumeExpected(Token.Symbol.SEMICOLON);
