@@ -22,7 +22,7 @@ public class ASTVisitor {
     public CompiledCode compileType(Type stmt, CompileContext context) {
         CompiledCode typeName = stmt.name.compile(this, context);
         CompiledType typ = ((CompiledType) typeName.getBinding());
-        String name = typ.getCompiledName() + (typ.isRef() ? " **" : "");
+        String name = typ.getCompiledName() + (typ.isRef() ? " *" : "");
         return new CompiledCode()
                 .withText(name)
                 .withBinding(typeName.getBinding())
@@ -57,6 +57,10 @@ public class ASTVisitor {
         StringBuilder sb = new StringBuilder();
         CompiledCode returns = stmt.returns.compile(this, context);
         String returnText = returns.getCompiledText();
+
+        if(!returns.getBinding().equals(CompiledType.VOID)) {
+            returnText += " *";
+        }
 
         CompileContext innerContext = new CompileContext(context)
             .addIndent();
@@ -117,7 +121,9 @@ public class ASTVisitor {
         if(isConstructor) {
             sb.append(innerContext.getIndent())
                 .append(context.getParentClass().getCompiledName())
-                .append(" ** this = skalloc_heap(1, sizeof(")
+                .append(" ** this = (")
+                .append(context.getParentClass().getCompiledName())
+                .append(" **) skalloc_heap(1, sizeof(")
                 .append(context.getParentClass().getCompiledName())
                 .append("));\n");
         }
@@ -125,7 +131,7 @@ public class ASTVisitor {
         sb.append(innerContext.getIndent())
                 .append("// Copy formals\n");
         if(!returns.getBinding().equals(CompiledType.VOID)){
-            sb.append(innerContext.getIndent()).append(returns.getCompiledText()).append(" rtn = ");
+            sb.append(innerContext.getIndent()).append(returns.getCompiledText()).append("* rtn = ");
             if(returns.getType().isRef()) {
                 sb.append("skalloc_ref_stack();\n");
             } else {
@@ -135,7 +141,7 @@ public class ASTVisitor {
         }
         stmt.args.forEach(arg -> {
             CompiledCode code = arg.type.compile(this, innerContext);
-            sb.append(innerContext.getIndent()).append(code.getCompiledText()).append(" ").append(arg.name);
+            sb.append(innerContext.getIndent()).append(code.getCompiledText()).append("* ").append(arg.name);
             sb.append(" = ");
             CompiledType type = ((CompiledType) code.getBinding());
             innerContext.trackObjCreation(type);
@@ -178,7 +184,7 @@ public class ASTVisitor {
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(this, context);
-        String sb = type.getCompiledText() + " formal_" + stmt.name;
+        String sb = type.getCompiledText() + "* formal_" + stmt.name;
         return new CompiledCode()
                 .withText(sb)
                 .withType((CompiledType) type.getBinding());
@@ -203,7 +209,8 @@ public class ASTVisitor {
 
         stmt.body.forEach(line -> {
             if(line instanceof Declare){
-                CompileContext anonContext = new CompileContext(innerContext);
+                CompileContext anonContext = new CompileContext(innerContext)
+                    .setOnStack(false);
                 CompiledCode code = line.compile(this, anonContext);
                 fields.add(code);
                 cls.addClassObject(code.getBinding());
@@ -358,7 +365,13 @@ public class ASTVisitor {
 
         List<String> evalArgs = compArgs
                 .stream()
-                .map(CompiledCode::getCompiledText)
+                .map(code -> {
+                    if(code.isOnStack()) {
+                        return code.getCompiledText();
+                    } else {
+                        return "&(" + code.getCompiledText() + ")";
+                    }
+                })
                 .collect(Collectors.toList());
 
         sb.append(String.join(", ", evalArgs));
@@ -403,9 +416,9 @@ public class ASTVisitor {
             Variable v = (Variable) stmt.right;
             CompiledObject obj = lhs.getType().getObject(v.name);
             CompiledVar objVar = (CompiledVar) obj;
-            // TODO why was this isRef needed?
-            sb.append(objVar.getType().isRef() ? "" : "").append("(*").append(lhs.getCompiledText()).append(")->").append(v.name);
+            sb.append("(*").append(lhs.getCompiledText()).append(")->").append(v.name);
             return new CompiledCode()
+                    .setOnStack(false)
                     .withText(sb.toString())
                     .withType(objVar.getType());
         }
@@ -425,7 +438,7 @@ public class ASTVisitor {
             sb.append(code.getCompiledText());
         } else {
             sb.append("*rtn = ");
-            sb.append(code.isRef() ? "*(" : "(").append(code.getCompiledText()).append(")");
+            sb.append(code.isOnStack() ? "*(" : "(").append(code.getCompiledText()).append(")");
         }
         sb.append(";\n\n");
         cleanupScope(sb, context);
@@ -466,7 +479,19 @@ public class ASTVisitor {
         CompiledCode lhs = stmt.left.compile(this, context);
         CompiledCode rhs = stmt.right.compile(this, context);
 
-        String c = "skiff_int_" +  stmt.op.getRawOp() + "(" + lhs.getCompiledText() + ", " + rhs.getCompiledText() + ")";
+        String lhsText = lhs.getCompiledText();
+
+        if(!lhs.isOnStack()) {
+            lhsText = "&(" + lhsText + ")";
+        }
+
+        String rhsText = rhs.getCompiledText();
+
+        if(!rhs.isOnStack()) {
+            rhsText = "&(" + rhsText + ")";
+        }
+
+        String c = "skiff_int_" +  stmt.op.getRawOp() + "(" + lhsText + ", " + rhsText + ")";
 
         context.addDataStackSize(CompiledType.INT.getSize());
 
@@ -509,12 +534,10 @@ public class ASTVisitor {
         CompiledCode name = stmt.name.compile(this, context);
         CompiledCode value = stmt.value.compile(this, context);
 
-        String sb;
-        if(!value.isRef()) {
-            sb = "(" + name.getCompiledText() + ") = (" + value.getCompiledText() + ")";
-        } else {
-            sb = "*(" + name.getCompiledText() + ") = *(" + value.getCompiledText() + ")";
-        }
+        boolean lhsDeRef = name.isOnStack();
+        boolean rhsDeRef = value.isOnStack();
+
+        String sb = (lhsDeRef ? "*" : "") + "(" + name.getCompiledText() + ") = " + (rhsDeRef ? "*" : "") + "(" + value.getCompiledText() + ")";
         return new CompiledCode()
             .withText(sb)
             .withBinding(name.getBinding())
@@ -534,7 +557,7 @@ public class ASTVisitor {
         CompiledVar binding = new CompiledVar(stmt.name, (CompiledType) type.getBinding());
         context.declareObject(binding);
 
-        String sb = type.getCompiledText() + " " + stmt.name;// + " = skalloc_stack(" + ((CompiledType) type.getBinding()).getSize() + ")";
+        String sb = type.getCompiledText() + (context.isOnStack() ? "* " : " ") + stmt.name;
         return new CompiledCode()
                 .withBinding(binding)
                 .withText(sb)
@@ -562,6 +585,7 @@ public class ASTVisitor {
     public CompiledCode compileVariable(Variable stmt, CompileContext context) {
         CompiledObject compiledObject;
         String text = stmt.name;
+        boolean onStack = true;
         try {
             compiledObject = context.getObject(stmt.name);
         } catch (NoSuchObjectException ex) {
@@ -570,6 +594,7 @@ public class ASTVisitor {
             }
             compiledObject = context.getParentClass().getObject(stmt.name);
             text = "(*this)->" + stmt.name;
+            onStack = false;
         }
         CompiledType objType = CompiledType.CLASS;
         if (compiledObject instanceof CompiledVar) {
@@ -577,6 +602,7 @@ public class ASTVisitor {
         }
         return new CompiledCode()
                 .withText(text)
+                .setOnStack(onStack)
                 .withBinding(compiledObject)
                 .withType(objType);
     }

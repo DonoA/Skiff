@@ -11,11 +11,14 @@ public class CompileContext {
     private int dataStackSize = 0;
     private int refStackSize = 0;
 
+    private boolean onStack = true;
+
     public CompileContext(CompileContext parent) {
         this.parent = parent;
         if(parent != null) {
             this.scope = new CompileScope(parent.scope);
             this.parentClass = parent.parentClass;
+            this.onStack = parent.onStack;
         } else {
             this.scope = new CompileScope(null);
             this.scope.loadBuiltins();
@@ -92,4 +95,13 @@ public class CompileContext {
         this.parentClass = parentClass;
         return this;
     }
+
+  public boolean isOnStack() {
+    return onStack;
+  }
+
+  public CompileContext setOnStack(boolean onStack) {
+    this.onStack = onStack;
+    return this;
+  }
 }

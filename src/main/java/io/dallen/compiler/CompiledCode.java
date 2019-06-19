@@ -6,6 +6,7 @@ public class CompiledCode {
     private CompiledType type;
     private boolean requiresSemicolon;
     private boolean ref;
+    private boolean onStack;
 
     public CompiledCode() {
         this.compiledText = null;
@@ -13,6 +14,7 @@ public class CompiledCode {
         this.type = null;
         this.requiresSemicolon = true;
         this.ref = true;
+        this.onStack = true;
     }
 
     public CompiledCode withText(String compiledText) {
@@ -40,6 +42,12 @@ public class CompiledCode {
         return this;
     }
 
+    public CompiledCode setOnStack(boolean onStack) {
+        this.onStack = onStack;
+        return this;
+    }
+
+
     public String getCompiledText() {
         return compiledText;
     }
@@ -58,5 +66,9 @@ public class CompiledCode {
 
     public boolean isRef() {
         return ref;
+    }
+
+    public boolean isOnStack() {
+        return onStack;
     }
 }
