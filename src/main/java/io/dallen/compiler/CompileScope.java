@@ -29,14 +29,15 @@ public class CompileScope {
         variableTable.put(decVar.getName(), decVar);
     }
 
-    public CompiledObject getObject(String name) {
+    public CompiledObject getObject(String name) throws NoSuchObjectException {
         CompiledObject varFor = variableTable.get(name);
         if(varFor != null) {
             return varFor;
         }
 
         if(parent == null) {
-            throw new CompileError("Variable '" + name + "' not bound");
+
+            throw new NoSuchObjectException(name);
         }
 
         return parent.getObject(name);

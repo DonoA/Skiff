@@ -6,8 +6,8 @@
 #include "skiff_list.h"
 #include "skiff_int.h"
 
-void print(skiff_string_t **);
-void println(skiff_string_t **);
+void skiff_print(skiff_string_t **);
+void skiff_println(skiff_string_t **);
 
 int main(int, char **);
 int32_t * skiff_main(skiff_list_t **);
@@ -23,13 +23,13 @@ int main(int argc, char * argv[])
     return *rtn;
 }
 
-void println(skiff_string_t ** string)
+void skiff_println(skiff_string_t ** string)
 {
-    print(string);
+    skiff_print(string);
     putchar('\n');
 }
 
-void print(skiff_string_t ** string)
+void skiff_print(skiff_string_t ** string)
 {
     for(size_t i = 0; i < (*string)->len; i++) 
     {

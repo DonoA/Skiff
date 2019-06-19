@@ -15,6 +15,7 @@ public class CompileContext {
         this.parent = parent;
         if(parent != null) {
             this.scope = new CompileScope(parent.scope);
+            this.parentClass = parent.parentClass;
         } else {
             this.scope = new CompileScope(null);
             this.scope.loadBuiltins();
@@ -30,7 +31,7 @@ public class CompileContext {
         scope.declareObject(decVar);
     }
 
-    public CompiledObject getObject(String name) {
+    public CompiledObject getObject(String name) throws NoSuchObjectException {
         return scope.getObject(name);
     }
 

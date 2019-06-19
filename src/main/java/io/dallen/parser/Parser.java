@@ -241,9 +241,6 @@ public class Parser {
         consumeExpected(Token.Keyword.DEF);
 
         String funcName = consume().literal;
-        if(funcName.equalsIgnoreCase("main")) {
-            funcName = "skiff_main";
-        }
         consumeExpected(Token.Symbol.LEFT_PAREN);
         List<Token> paramTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
 
