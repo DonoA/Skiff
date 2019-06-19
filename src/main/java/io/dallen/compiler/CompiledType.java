@@ -2,6 +2,7 @@ package io.dallen.compiler;
 
 import io.dallen.compiler.visitor.ASTVisitor;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CompiledType extends CompiledObject {
     public static final CompiledType VOID = new CompiledType("Void", 0)
@@ -35,10 +36,11 @@ public class CompiledType extends CompiledObject {
     private final CompileScope clazz;
     private CompiledType parent = null;
     private String compiledName;
+    private List<CompiledFunction> constructors = new ArrayList<>();
 
     public CompiledType(String className, int size) {
         super(className);
-        this.compiledName = ASTVisitor.underscoreJoin("skiff", className, "t");
+        this.compiledName = CompileUtilities.underscoreJoin("skiff", className, "t");
         this.size = size;
         this.isRef = (size == -1);
         clazz = new CompileScope(null);
@@ -46,6 +48,11 @@ public class CompiledType extends CompiledObject {
 
     public CompiledType addClassObject(CompiledObject obj) {
         clazz.declareObject(obj);
+        return this;
+    }
+
+    public CompiledType addConstructor(CompiledFunction func) {
+        constructors.add(func);
         return this;
     }
 

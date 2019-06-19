@@ -97,8 +97,8 @@ public static class {class_name} {extends} {cbo}
         return "{class_name}({to_string_flat_values})";
     {cbc}
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {cbo}
-        return visitor.compile{class_name}(this, context);
+    public CompiledCode compile(CompileContext context) {cbo}
+        return ASTVisitor.instance.compile{class_name}(this, context);
     {cbc}
 {cbc}
     """, f"""

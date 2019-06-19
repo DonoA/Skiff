@@ -53,11 +53,10 @@ public class SkiffC {
 
         System.out.println(" ======== COMPILE =========== ");
 
-        ASTVisitor compileVisitor = new ASTVisitor();
         CompileContext context = new CompileContext(null);
         List<String> compiledText = statements
                 .stream()
-                .map(e -> e.compile(compileVisitor, context))
+                .map(e -> e.compile(context))
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.toList());
 
