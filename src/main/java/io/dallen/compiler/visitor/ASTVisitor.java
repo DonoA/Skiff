@@ -1,7 +1,9 @@
-package io.dallen.compiler;
+package io.dallen.compiler.visitor;
 
 import io.dallen.AST.*;
 import io.dallen.SkiffC;
+
+import io.dallen.compiler.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,26 +31,6 @@ public class ASTVisitor {
                 .withType(CompiledType.CLASS);
     }
 
-    public static String underscoreJoin(String... name) {
-        StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < name.length; i++) {
-            if(name[i].isEmpty()) {
-                continue;
-            }
-            char[] n = name[i].toCharArray();
-            for(int j = 0; j < n.length; j++) {
-                if(Character.isUpperCase(n[j]) && j != 0) {
-                    sb.append("_");
-                }
-                sb.append(Character.toLowerCase(n[j]));
-            }
-            if(i < name.length - 1) {
-                sb.append("_");
-            }
-        }
-        return sb.toString();
-    }
-
     public CompiledCode compileBlockStatement(BlockStatement stmt, CompileContext context) {
         throw new UnsupportedOperationException("Cannot compile statement type Block");
     }
@@ -65,13 +47,13 @@ public class ASTVisitor {
         CompileContext innerContext = new CompileContext(context)
             .addIndent();
 
-        String compiledName = underscoreJoin("skiff", context.getScopePrefix(), stmt.name);
+        String compiledName = CompileUtilities.underscoreJoin("skiff", context.getScopePrefix(), stmt.name);
 
         boolean isConstructor = context.getParentClass() != null &&
             stmt.name.equals(context.getParentClass().getName());
 
         if(isConstructor) {
-            compiledName = underscoreJoin("skiff", stmt.name, "new");
+            compiledName = CompileUtilities.underscoreJoin("skiff", stmt.name, "new");
             returnText = context.getParentClass().getCompiledName() + " **";
         }
 
@@ -230,13 +212,13 @@ public class ASTVisitor {
 
         StringBuilder text = new StringBuilder();
         text.append("typedef struct ")
-            .append(underscoreJoin("skiff", stmt.name, "struct"))
+            .append(CompileUtilities.underscoreJoin("skiff", stmt.name, "struct"))
             .append(" ")
             .append(cls.getCompiledName())
             .append(";\n");
 
         text.append("struct ")
-            .append(underscoreJoin("skiff", stmt.name, "struct"))
+            .append(CompileUtilities.underscoreJoin("skiff", stmt.name, "struct"))
             .append("\n{\n");
 
         fields.forEach(code -> {
@@ -399,7 +381,7 @@ public class ASTVisitor {
             }
             CompiledFunction func = (CompiledFunction) nameVar;
             StringBuilder sb = new StringBuilder();
-            sb.append(underscoreJoin("skiff", lhs.getType().getName(), func.getName()))
+            sb.append(CompileUtilities.underscoreJoin("skiff", lhs.getType().getName(), func.getName()))
                     .append("(").append(lhs.getCompiledText());
             call.args.stream().map(e -> e.compile(this, context))
                     .forEach(e -> sb.append(", ").append(e.getCompiledText()));
@@ -451,7 +433,7 @@ public class ASTVisitor {
 
     public CompiledCode compileNew(New stmt, CompileContext context) {
         CompiledType typeCode = (CompiledType) stmt.type.compile(this, context).getBinding();
-        String functionName = underscoreJoin("skiff", typeCode.getName(), "new");
+        String functionName = CompileUtilities.underscoreJoin("skiff", typeCode.getName(), "new");
         StringBuilder sb = new StringBuilder();
         sb.append(functionName).append("(");
         List<String> argz = stmt.argz
@@ -512,7 +494,7 @@ public class ASTVisitor {
         }
         CompiledCode sub = stmt.sub.compile(this, context);
 
-        String cFunc = underscoreJoin("skiff", left.getType().getName(), "get", "sub", sub.getType().getName());
+        String cFunc = CompileUtilities.underscoreJoin("skiff", left.getType().getName(), "get", "sub", sub.getType().getName());
         String text = cFunc + "(" + left.getCompiledText() + ", " + sub.getCompiledText() + ")";
         return new CompiledCode()
             .withText(text)

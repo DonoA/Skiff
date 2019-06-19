@@ -1,12 +1,11 @@
 package io.dallen;
 
-import io.dallen.compiler.ASTVisitor;
+import io.dallen.compiler.visitor.ASTVisitor;
 import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AST {

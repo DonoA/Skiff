@@ -1,6 +1,6 @@
 package io.dallen;
 
-import io.dallen.compiler.ASTVisitor;
+import io.dallen.compiler.visitor.ASTVisitor;
 import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
 import io.dallen.parser.Parser;

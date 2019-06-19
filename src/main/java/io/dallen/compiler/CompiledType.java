@@ -1,5 +1,6 @@
 package io.dallen.compiler;
 
+import io.dallen.compiler.visitor.ASTVisitor;
 import java.util.ArrayList;
 
 public class CompiledType extends CompiledObject {
