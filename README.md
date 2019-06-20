@@ -5,118 +5,50 @@ Skiff is a simple programming language designed to run in an interpreter. The pr
 ## Core:
 The language is designed with the hope that it will allow full compilation into C as well as native interpretation. The former means that any built in functions that perform special operations have to be written in C and imported if needed. The latter means that the translator must actually understand what the code is meant to do as well as maintain an environment for the code to be executed in.
 
-## Syntax:
-The language supports a wide range of syntactical styles:
-- [x] Define a variable: `name: Type`
-- [x] Assign a variable: `name = value`
-- [x] Define and assign a variable: `name: Type = value`
-- [x] Call a function: `functionName(parameter 1, parameter 2)`
-- [x] Define a function: `def functionName(parameter: Type, parameter: Type): ReturnType {}`
-- [x] Define a class: `class ClassName {}`
-- [x] Define a data class: `struct ClassName {}`
-- [x] Create an instance: `new ClassName()`
-- [x] Return a value from a function: `return value`
-- [x] Create a string: `"String"`
-- [x] Create a char sequence: `'Sequence'`
-- [ ] Regex literals: `r/regex/flags`
-- [x] Boolean values:
-    - True: `true`
-    - False: `false`
-- [x] Bitwise operations:
-    - AND: `&`
-    - OR: `|`
-    - XOR: `^`
-    - Shift left `<<`
-    - Shift right `>>`
-    - Not `~`
-- [x] Boolean Operations:
-    - AND `&&`
-    - OR `||`
-- [x] Comparison:
-    - Equals `==`
-    - Less Than `<`
-    - Greater Than `>`
-    - Less Than EQUAL to `<=`
-    - Greater Than EQUAL to `>=`
-    - Not `!`
-- Math operations:
-    - [x] Add: `+`
-    - [x] Subtract: `-`
-    - [x] Multiply: `*`
-    - [x] Exponent: `**`
-    - [x] Divide: `/`
-    - [x] Mod: `%`
-    - [ ] Assignment with math: `+=`, `-=`, `*=`, `/=`, `%=`
-    - [x] Pre/Post increment `++`
-    - [x] Pre/Post decrement `--`
-- Generic types:
-    - Class:
-        - [x] Declare: `class ClassName<T> {}` or `class ClassName<T, U> {}`
-        - [x] Instantiate: `new ClassName<T>()`
-        - [x] Required extension: `class ClassName<T : OtherClass> {}`
-    - Struct
-        - [x] Declare: `struct ClassName<T> {}` or `struct ClassName<T, U> {}`
-        - [x] Instantiate: `new ClassName<T>()`
-        - [x] Required extension: `struct ClassName<T : MyClass> {}`
-    - Function:
-        - [x] Declare: `def functionName<T>(parameter: Type): ReturnType {}`
-        - [x] Call: `functionName<T>(param1, param2)`
-        - [x] Required extension: `def functionName<T : OtherClass> {}`
-- [x] Inheritance: `class Child : Parent`
-- [x] List access: `list[index]`
-- [x] Include other source `import <system file>` or `import "local file"`
-- Function modifiers:
-    - [ ] Static: `static def functionName() {}`
-    - [ ] Private: `private def functionName() {}`
-- Instance variable modifiers:
-    - [ ] Static: `static var: Type`
-    - [ ] Private: `private var: Type`
-- [ ] Anonymous functions:
-    - Creation: `(parameter: Type): ReturnType => {}`
-    - As a type: `myFunction: (Type) => ReturnType`
-- [ ] Anonymous Class: `new MyClass() {}`
-- [ ] Quick initialization: `new MyClass() {{}}`
-- [x] If: `if(condition) {}`
-- Else:
-    - [x] Catch all: `{} else {}`
-    - [x] Conditional `{} else if() {}`
-- Looping:
-    - [x] While: `while(condition) {}`
-    - [x] Basic for: `for(myVal: Int = value; myVal < myMax; myVal++) {}`
-    - [x] Iterator: `for(myVal: Int : intList) {}`
-- [x] Loop control:
-    - Next iteration: `next;`
-    - Break iteration: `break;`
-- Switch statement:
-    - [x] heading: `switch(var) {}`
-    - [x] case: `case val => {}`
-    - [x] default: `case _ => {}`
-- Match statement:
-    - [x] heading: `match(var) {}`
-    - [x] standard class case: `case val: MyClass => {}`
-    - [x] structure case: `case val: MyStruct(val1, val2) => {}` or `case val: MyStruct(_, val2) => {}`
-    - [x] default: `case _ => {}`
-- Exceptions:
-    - [x] throw: `throw new MyException()`
-    - [x] try/catch: `try {} catch(e: MyException) {}`
-    - [x] try/finally: `try {} finally {}`
-    - [x] Define a function to throw an exception: `def myFunction(arg1: Type): ReturnType throws Exception {}`
-- [x] Annotations:
-    - On a function:
-    ```
-    @MyAnnotation(param1, param2)
-    def myFunction(arg: Type): ReturnType {}
-    ```
-    - On a class variable:
-    ```
-    @MyAnnotation(param1, param2)
-    var: Type;
-    ```
-    - definition: `annotation MyAnnotation {}`
-- Enum:
-    - [x] Basic: `enum MyEnum {}`
-    - [x] Class: `enum class MyClass {}`
-    - [x] Struct: `enum struct MyDataClass {}`
+## Statements:
+| Name | Example | Parse | Compile | Test |
+| ---- | ------- | ----- | ------- | ---- |
+| Declare Variable | `name: Type` | ✓ | ✓ | ⅹ | 
+| Assignment | `name = value` | ✓ | ✓ | ⅹ |
+| Declare and assign | `name: Type = value` | ⅹ | ⅹ | ⅹ |
+| Function Call | `functionName(p1, [2)` | ✓ | ✓ | ⅹ |
+| Function Def | `def functionName(p1: T1, p2: T2): Returns {...}` | ✓ | ✓ | ⅹ |
+| Class Def | `class ClassName {}` | ✓ | ✓ | ⅹ |
+| Data Class | `struct ClassName {}` | ⅹ | ⅹ | ⅹ |
+| Create instance | `new ClassName()` | ✓ | ✓ | ⅹ |
+| Return from function | `return value` | ✓ | ✓ | ⅹ |
+| String Literal | `"String"` | ✓ | ✓ | ⅹ |
+| Char Sequence | `'Sequence'` | ⅹ | ⅹ | ⅹ | 
+| Regex Literal | `r/regex/flags` | ⅹ | ⅹ | ⅹ |
+| Bool Literal | `true false` | ⅹ | ⅹ | ⅹ |
+| Bitwise | <code>& &#124; ^ >> << ~</code> | ⅹ | ⅹ | ⅹ |
+| Bool Combos | <code>&& &#124;&#124;</code> | ⅹ | ⅹ | ⅹ |
+| Compare | `== < <= > >= !=` | ✓ | ⅹ | ⅹ |
+| Math | `+ - * / % **` | ✓ | ✓ | ⅹ |
+| Math Assign| `+= -=` | ⅹ | ⅹ | ⅹ |
+| Quick Inc/Dec | `++ --` | ⅹ | ⅹ | ⅹ |
+| Generic Class Def | `class Cls<T, U> {}` | ⅹ | ⅹ | ⅹ |
+| Generic Class Use | `new Cls<T>()` | ⅹ | ⅹ | ⅹ |
+| Generic Extension | `class Cls<T : U> {}` | ⅹ | ⅹ | ⅹ |
+| Generic Func Def | `def func<T>(p: T): Returns {}` | ⅹ | ⅹ | ⅹ |
+| Inheritance | `class Child : Parent` | ⅹ | ⅹ | ⅹ |
+| List Index | `list[index]` | ✓ | ✓ | ⅹ |
+| Import Source | `import <file>` | ⅹ | ⅹ | ⅹ |
+| Dec Mods | `static private` | ⅹ | ⅹ | ⅹ |
+| Anon Func Def | `(p: T): Returns => {}` | ⅹ | ⅹ | ⅹ |
+| Anon Func Type | `funcVar: (T) => Returns` | ⅹ | ⅹ | ⅹ |
+| If | `if(cond) {}` | ⅹ | ⅹ | ⅹ |
+| Else | `{} else if() {}` | ⅹ | ⅹ | ⅹ |
+| While | `while(cond) {}` | ⅹ | ⅹ | ⅹ |
+| Loop | `loop {}` | ⅹ | ⅹ | ⅹ |
+| For | `for(i: Int = v; i < max; i++) {}` | ⅹ | ⅹ | ⅹ |
+| For Iter | `for(v: Int : intList) {}` | ⅹ | ⅹ | ⅹ |
+| Loop flow | `next break` | ⅹ | ⅹ | ⅹ |
+| Switch | `switch(v){case val=>{}...}` | ⅹ | ⅹ | ⅹ |
+| Match | `match(v) {case v:T=>{}}` | ⅹ | ⅹ | ⅹ |
+| Deconstruction | `Struct(v1, v2) = myStruct` | ⅹ | ⅹ | ⅹ |
+| Try/Catch | `try {} catch(e: MyException) {}` | ⅹ | ⅹ | ⅹ |
+| Throw | `throw new MyException()` | ⅹ | ⅹ | ⅹ |
 
 ## Specifications:
 ### Namespaces/Packages
