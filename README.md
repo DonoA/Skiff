@@ -1,11 +1,14 @@
 Skiff
 ==
-Skiff is a simple programming language designed to run in an interpreter. The project is mainly designed as an experiment into building a programming language and the many problems that form along the way.
+Skiff is a refrence based Java like programming language designed for compilation into C. The project is mainly designed as an experiment into the inner working of a programming lanugage and compiler. The language is designed with the hope that it will allow full compilation into C as well as interpretation on a simple, jvm like virtual machine.
 
-## Core:
-The language is designed with the hope that it will allow full compilation into C as well as native interpretation. The former means that any built in functions that perform special operations have to be written in C and imported if needed. The latter means that the translator must actually understand what the code is meant to do as well as maintain an environment for the code to be executed in.
+## Skiff to C transpiler:
+Skiff is designed to be translated into C but support many features that C does not. Ideally Skiff will support classes, garbage collection, and closures all while transpiling into C. This will also allow the language implicit compatibility with C functions.
 
-## Statements:
+## Skiff on a VM
+Compiling Skiff into a simple VM targetting assembly language will require a deeper understanding of how a machine operates and force Skiff to understand the meaning of the code more than a simple compiler will.
+
+## Statements And Implementation:
 | Name | Example | Parse | Compile | Test |
 | ---- | ------- | ----- | ------- | ---- |
 | Declare Variable | `name: Type` | ✓ | ✓ | ⅹ | 
