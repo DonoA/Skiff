@@ -118,4 +118,12 @@ class VisitorUtils {
 
         return returnType.getCompiledText() + " *";
     }
+
+    static CompiledCode compileBinary(AST.Statement l, AST.Statement r, AST.HasRaw op, CompileContext context) {
+        CompiledCode lhs = l.compile(context);
+        CompiledCode rhs = r.compile(context);
+        String text = lhs.getCompiledText() + " " + op.getRawOp() + " " + rhs.getCompiledText();
+        return new CompiledCode()
+                .withText(text);
+    }
 }

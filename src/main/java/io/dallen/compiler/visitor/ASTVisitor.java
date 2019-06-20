@@ -114,55 +114,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileFunctionCall(FunctionCall stmt, CompileContext context) {
-        CompiledObject nameVar = context.getObject(stmt.name);
-        if (!(nameVar instanceof CompiledFunction)) {
-            throw new CompileError("Variable not function " + stmt.name);
-        }
-
-        CompiledFunction func = (CompiledFunction) nameVar;
-
-        List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(context))
-                .collect(Collectors.toList());
-
-        if (func.getArgs().size() != compArgs.size()) {
-            throw new CompileError("Differing param count " + func.getName());
-        }
-
-        ListIterator<CompiledType> expected = func.getArgs().listIterator();
-        ListIterator<CompiledCode> found = compArgs.listIterator();
-
-        while (expected.hasNext()) {
-            CompiledType typ1 = expected.next();
-            CompiledType typ2 = found.next().getType();
-            if (!typ1.equals(typ2)) {
-                throw new CompileError("Differing param types " + func.getName());
-            }
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(func.getCompiledName());
-        sb.append("(");
-
-        List<String> evalArgs = compArgs
-                .stream()
-                .map(code -> {
-                    if(code.isOnStack()) {
-                        return code.getCompiledText();
-                    } else {
-                        return "&(" + code.getCompiledText() + ")";
-                    }
-                })
-                .collect(Collectors.toList());
-
-        sb.append(String.join(", ", evalArgs));
-
-        sb.append(")");
-
-        context.trackObjCreation(func.getReturns());
-
-        return new CompiledCode()
-                .withText(sb.toString())
-                .withType(func.getReturns());
+        return FunctionCallCompiler.compileFunctionCall(stmt, context);
     }
 
     public CompiledCode compileParened(Parened stmt, CompileContext context) {
@@ -170,39 +122,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDotted(Dotted stmt, CompileContext context) {
-        CompiledCode lhs = stmt.left.compile(context);
-        if(stmt.right instanceof FunctionCall) {
-            FunctionCall call = (FunctionCall) stmt.right;
-            CompiledObject nameVar = lhs.getType().getObject(call.name);
-            if (!(nameVar instanceof CompiledFunction)) {
-                throw new CompileError("Variable not function " + call.name);
-            }
-            CompiledFunction func = (CompiledFunction) nameVar;
-            StringBuilder sb = new StringBuilder();
-            sb.append(CompileUtilities.underscoreJoin("skiff", lhs.getType().getName(), func.getName()))
-                    .append("(").append(lhs.getCompiledText());
-            call.args.stream().map(e -> e.compile(context))
-                    .forEach(e -> sb.append(", ").append(e.getCompiledText()));
-            sb.append(")");
-
-            context.trackObjCreation(func.getReturns());
-
-            return new CompiledCode()
-                    .withText(sb.toString())
-                    .withType(func.getReturns());
-        }
-        if(stmt.right instanceof Variable) {
-            StringBuilder sb = new StringBuilder();
-            Variable v = (Variable) stmt.right;
-            CompiledObject obj = lhs.getType().getObject(v.name);
-            CompiledVar objVar = (CompiledVar) obj;
-            sb.append("(*").append(lhs.getCompiledText()).append(")->").append(v.name);
-            return new CompiledCode()
-                    .setOnStack(false)
-                    .withText(sb.toString())
-                    .withType(objVar.getType());
-        }
-        throw new CompileError("Dotted on invalid type " + stmt.right.toFlatString());
+        return DottedCompiler.compileDotted(stmt, context);
     }
 
     public CompiledCode compileArrowed(Arrowed stmt, CompileContext context) {
@@ -292,12 +212,12 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileCompare(Compare stmt, CompileContext context) {
-        CompiledCode cc = compileBinary(stmt.left, stmt.right, stmt.op, context);
+        CompiledCode cc = VisitorUtils.compileBinary(stmt.left, stmt.right, stmt.op, context);
         return cc.withType(CompiledType.BOOL);
     }
 
     public CompiledCode compileBoolCombine(BoolCombine stmt, CompileContext context) {
-        CompiledCode cc = compileBinary(stmt.left, stmt.right, stmt.op, context);
+        CompiledCode cc = VisitorUtils.compileBinary(stmt.left, stmt.right, stmt.op, context);
         return cc.withType(CompiledType.BOOL);
     }
 
@@ -309,19 +229,12 @@ public class ASTVisitor {
         boolean lhsDeRef = name.isOnStack();
         boolean rhsDeRef = value.isOnStack();
 
-        String sb = (lhsDeRef ? "*" : "") + "(" + name.getCompiledText() + ") = " + (rhsDeRef ? "*" : "") + "(" + value.getCompiledText() + ")";
+        String text = (lhsDeRef ? "*" : "") + "(" + name.getCompiledText() + ") = " +
+                (rhsDeRef ? "*" : "") + "(" + value.getCompiledText() + ")";
         return new CompiledCode()
-            .withText(sb)
+            .withText(text)
             .withBinding(name.getBinding())
             .withType(name.getType());
-    }
-
-    private CompiledCode compileBinary(Statement l, Statement r, HasRaw op, CompileContext context) {
-        CompiledCode lhs = l.compile(context);
-        CompiledCode rhs = r.compile(context);
-        String text = lhs.getCompiledText() + " " + op.getRawOp() + " " + rhs.getCompiledText();
-        return new CompiledCode()
-                .withText(text);
     }
 
     public CompiledCode compileDeclare(Declare stmt, CompileContext context) {
