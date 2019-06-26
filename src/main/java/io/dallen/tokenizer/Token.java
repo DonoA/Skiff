@@ -1,5 +1,7 @@
 package io.dallen.tokenizer;
 
+import java.util.Objects;
+
 public class Token {
 
     public interface TokenType {
@@ -10,7 +12,7 @@ public class Token {
     public enum Symbol implements TokenType {
 
         DOT("."),
-        ARROW("->"),
+        ARROW("=>"),
         COLON(":"),
 
         LEFT_PAREN("("),
@@ -20,7 +22,9 @@ public class Token {
         EQUAL("="),
         DOUBLE_EQUAL("=="),
         LEFT_ANGLE("<"),
+        LEFT_ANGLE_EQUAL("<="),
         RIGHT_ANGLE(">"),
+        RIGHT_ANGLE_EQUAL(">="),
 
         SEMICOLON(";"),
         LEFT_BRACE("{"),
@@ -29,10 +33,18 @@ public class Token {
         RIGHT_BRACKET("]"),
         STAR("*"),
         PLUS("+"),
+        PLUS_EQUAL("+="),
         MINUS("-"),
+        MINUS_EQUAL("-="),
         SLASH("/"),
-        BOOL_AND("&&"),
-        BOOL_OR("||");
+        PERCENT("%"),
+        DOUBLE_STAR("**"),
+        DOUBLE_PLUS("++"),
+        DOUBLE_MINUS("--"),
+        DOUBLE_AND("&&"),
+        DOUBLE_OR("||"),
+
+        UNDERSCORE("_");
 
         private final String text;
 
@@ -56,11 +68,25 @@ public class Token {
         IF("if"),
         ELSE("else"),
         WHILE("while"),
+        LOOP("loop"),
         FOR("for"),
+        SWITCH("switch"),
+        MATCH("match"),
+        CASE("case"),
         RETURN("return"),
         DEF("def"),
+        IMPORT("import"),
         CLASS("class"),
+        STRUCT("struct"),
         STATIC("static"),
+        PRIVATE("private"),
+        TRUE("true"),
+        FALSE("false"),
+        NEXT("next"),
+        BREAK("break"),
+        TRY("try"),
+        CATCH("catch"),
+        THROW("throw"),
         NEW("new");
 
         private final String text;
@@ -84,6 +110,7 @@ public class Token {
     public enum Textless implements TokenType {
         NAME,
         STRING_LITERAL,
+        SEQUENCE_LITERAL,
         NUMBER_LITERAL,
         EOF;
 
@@ -121,4 +148,19 @@ public class Token {
     public boolean isEOF() {
         return this.type == Textless.EOF;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Token)) return false;
+        Token token = (Token) o;
+        return Objects.equals(type, token.type) &&
+                Objects.equals(literal, token.literal);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, literal);
+    }
+
 }

@@ -14,7 +14,7 @@ Compiling Skiff into a simple VM targetting assembly language will require a dee
 | Declare Variable | `name: Type` | ✓ | ✓ | ⅹ | 
 | Assignment | `name = value` | ✓ | ✓ | ⅹ |
 | Declare and assign | `name: Type = value` | ⅹ | ⅹ | ⅹ |
-| Function Call | `functionName(p1, [2)` | ✓ | ✓ | ⅹ |
+| Function Call | `functionName(p1, p2)` | ✓ | ✓ | ⅹ |
 | Function Def | `def functionName(p1: T1, p2: T2): Returns {...}` | ✓ | ✓ | ⅹ |
 | Class Def | `class ClassName {}` | ✓ | ✓ | ⅹ |
 | Data Class | `struct ClassName {}` | ⅹ | ⅹ | ⅹ |
@@ -24,7 +24,6 @@ Compiling Skiff into a simple VM targetting assembly language will require a dee
 | Char Sequence | `'Sequence'` | ⅹ | ⅹ | ⅹ | 
 | Regex Literal | `r/regex/flags` | ⅹ | ⅹ | ⅹ |
 | Bool Literal | `true false` | ⅹ | ⅹ | ⅹ |
-| Bitwise | <code>& &#124; ^ >> << ~</code> | ⅹ | ⅹ | ⅹ |
 | Bool Combos | <code>&& &#124;&#124;</code> | ⅹ | ⅹ | ⅹ |
 | Compare | `== < <= > >= !=` | ✓ | ⅹ | ⅹ |
 | Math | `+ - * / % **` | ✓ | ✓ | ⅹ |

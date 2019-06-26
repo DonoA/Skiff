@@ -64,7 +64,7 @@ public class Lexer {
             }
 
             int nextPos = searchPos + testType.getText().length();
-            if (nextPos < data.length() && isValidNameChar(data.charAt(nextPos))) {
+            if (nextPos < data.length() && isValidKeywordChar(data.charAt(nextPos))) {
                 continue;
             }
 
@@ -80,14 +80,11 @@ public class Lexer {
         char c = data.charAt(pos);
         // Select string
         if (c == '"') {
-            StringBuilder sb = new StringBuilder();
-            pos++;
-            while (pos < data.length() && data.charAt(pos) != '"') {
-                sb.append(data.charAt(pos));
-                pos++;
-            }
-            pos++;
-            return new Token(Token.Textless.STRING_LITERAL, sb.toString());
+            return new Token(Token.Textless.STRING_LITERAL, selectTo('"'));
+        }
+
+        if (c == '\'') {
+            return new Token(Token.Textless.SEQUENCE_LITERAL, selectTo('\''));
         }
 
         // Select number
@@ -120,6 +117,26 @@ public class Lexer {
         return name;
     }
 
+    private String selectTo(char c) {
+        StringBuilder sb = new StringBuilder();
+        pos++;
+        while (true) {
+            if(pos >= data.length()) {
+                throw new RuntimeException("Failed to find " + c + " in lexing");
+            }
+
+            // check for escaped chars
+            if(pos > 0 && data.charAt(pos - 1) != '\\' && data.charAt(pos) == c) {
+                break;
+            }
+
+            sb.append(data.charAt(pos));
+            pos++;
+        }
+        pos++;
+        return sb.toString();
+    }
+
     private boolean tokenNotValid(Token.TokenType testType, int searchPos) {
         if (searchPos + testType.getText().length() > data.length()) {
             return true;
@@ -128,8 +145,12 @@ public class Lexer {
         return !testType.getText().equals(streamSeg);
     }
 
+    private boolean isValidKeywordChar(char c) {
+        return Character.isAlphabetic(c);
+    }
+
     private boolean isValidNameChar(char c) {
-        return Character.isAlphabetic(c) || c == '_';
+        return Character.isAlphabetic(c) || c == '_' || Character.isDigit(c);
     }
 
     private boolean isIgnored(char c) {
