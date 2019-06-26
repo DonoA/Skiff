@@ -87,6 +87,17 @@ public class Lexer {
             return new Token(Token.Textless.SEQUENCE_LITERAL, selectTo('\''));
         }
 
+        if (c == 'r') {
+            pos++;
+            StringBuilder regex = new StringBuilder();
+            regex.append(selectTo('/')).append('\0');
+            while(pos < data.length() && isRegexFlag(data.charAt(pos))) {
+                regex.append(data.charAt(pos));
+                pos++;
+            }
+            return new Token(Token.Textless.SEQUENCE_LITERAL, regex.toString());
+        }
+
         // Select number
         if (Character.isDigit(c)) {
             StringBuilder sb = new StringBuilder();
@@ -143,6 +154,10 @@ public class Lexer {
         }
         String streamSeg = data.substring(searchPos, searchPos + testType.getText().length());
         return !testType.getText().equals(streamSeg);
+    }
+
+    private boolean isRegexFlag(char c) {
+        return Character.isAlphabetic(c);
     }
 
     private boolean isValidKeywordChar(char c) {

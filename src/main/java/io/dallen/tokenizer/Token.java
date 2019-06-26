@@ -19,7 +19,9 @@ public class Token {
         RIGHT_PAREN(")"),
         COMMA(","),
 
+        BANG("!"),
         EQUAL("="),
+        BANG_EQUAL("!="),
         DOUBLE_EQUAL("=="),
         LEFT_ANGLE("<"),
         LEFT_ANGLE_EQUAL("<="),
