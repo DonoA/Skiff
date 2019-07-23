@@ -14,8 +14,8 @@ public static class Statement  {
         return "Statement()";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileStatement(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileStatement(this, context);
     }
 }
     
@@ -34,8 +34,8 @@ public static class Expression extends Statement {
         return "Expression()";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileExpression(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileExpression(this, context);
     }
 }
     
@@ -62,8 +62,8 @@ public static class Type  {
             "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileType(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileType(this, context);
     }
 }
     
@@ -82,8 +82,8 @@ public static class BlockStatement extends Statement {
         return "BlockStatement(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileBlockStatement(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileBlockStatement(this, context);
     }
 }
     
@@ -112,8 +112,8 @@ public static class FunctionDef extends BlockStatement {
             "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileFunctionDef(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileFunctionDef(this, context);
     }
 }
     
@@ -138,8 +138,8 @@ public static class ClassDef extends BlockStatement {
             "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileClassDef(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileClassDef(this, context);
     }
 }
     
@@ -162,8 +162,8 @@ public static class FunctionParam  {
             "name = " + this.name.toString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileFunctionParam(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileFunctionParam(this, context);
     }
 }
     
@@ -188,8 +188,8 @@ public static class IfBlock extends BlockStatement {
             "elseBlock = " + this.elseBlock.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileIfBlock(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileIfBlock(this, context);
     }
 }
     
@@ -208,8 +208,8 @@ public static class ElseBlock extends Statement {
         return "ElseBlock()";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileElseBlock(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileElseBlock(this, context);
     }
 }
     
@@ -232,8 +232,8 @@ public static class ElseIfBlock extends ElseBlock {
             "elseBlock = " + this.elseBlock.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileElseIfBlock(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileElseIfBlock(this, context);
     }
 }
     
@@ -252,8 +252,8 @@ public static class ElseAlwaysBlock extends ElseBlock {
         return "ElseAlwaysBlock(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileElseAlwaysBlock(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileElseAlwaysBlock(this, context);
     }
 }
     
@@ -274,8 +274,8 @@ public static class WhileBlock extends BlockStatement {
             "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileWhileBlock(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileWhileBlock(this, context);
     }
 }
     
@@ -304,8 +304,8 @@ public static class ForBlock extends BlockStatement {
             "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileForBlock(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileForBlock(this, context);
     }
 }
     
@@ -328,8 +328,8 @@ public static class FunctionCall extends Expression {
             "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileFunctionCall(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileFunctionCall(this, context);
     }
 }
     
@@ -348,8 +348,8 @@ public static class Parened extends Expression {
         return "Parened(sub = " + this.sub.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileParened(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileParened(this, context);
     }
 }
     
@@ -372,8 +372,8 @@ public static class Dotted extends Expression {
             "right = " + this.right.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileDotted(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileDotted(this, context);
     }
 }
     
@@ -396,8 +396,8 @@ public static class Arrowed extends Expression {
             "right = " + this.right.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileArrowed(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileArrowed(this, context);
     }
 }
     
@@ -416,8 +416,8 @@ public static class Return extends Expression {
         return "Return(value = " + this.value.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileReturn(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileReturn(this, context);
     }
 }
     
@@ -440,8 +440,52 @@ public static class New extends Expression {
             "argz = " + "[" + this.argz.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileNew(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileNew(this, context);
+    }
+}
+    
+public static class ThrowStatement extends Expression {
+    public final Statement value;
+    public ThrowStatement(Statement value) {
+        super();
+        this.value = value;
+    }
+
+    public String toString() {
+        return "ThrowStatement(value = " + this.value.toString() + ")";
+    }
+
+    public String toFlatString() {
+        return "ThrowStatement(value = " + this.value.toFlatString() + ")";
+    }
+
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileThrowStatement(this, context);
+    }
+}
+    
+public static class ImportStatement extends Expression {
+    public final ImportType type;
+    public final String value;
+    public ImportStatement(ImportType type, String value) {
+        super();
+        this.type = type;
+        this.value = value;
+    }
+
+    public String toString() {
+        return "ImportStatement(type = " + this.type.toString() + ", " + 
+            "value = " + this.value.toString() + ")";
+    }
+
+    public String toFlatString() {
+        return "ImportStatement(type = " + this.type.toFlatString() + ", " + 
+            "value = " + this.value.toString() + ")";
+    }
+
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileImportStatement(this, context);
     }
 }
     
@@ -468,8 +512,8 @@ public static class MathStatement extends Expression {
             "right = " + this.right.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileMathStatement(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileMathStatement(this, context);
     }
 }
     
@@ -496,8 +540,32 @@ public static class MathAssign extends Expression {
             "right = " + this.right.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileMathAssign(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileMathAssign(this, context);
+    }
+}
+    
+public static class MathSelfMod extends Expression {
+    public final Statement left;
+    public final MathOp op;
+    public MathSelfMod(Statement left, MathOp op) {
+        super();
+        this.left = left;
+        this.op = op;
+    }
+
+    public String toString() {
+        return "MathSelfMod(left = " + this.left.toString() + ", " + 
+            "op = " + this.op.toString() + ")";
+    }
+
+    public String toFlatString() {
+        return "MathSelfMod(left = " + this.left.toFlatString() + ", " + 
+            "op = " + this.op.toString() + ")";
+    }
+
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileMathSelfMod(this, context);
     }
 }
     
@@ -520,8 +588,8 @@ public static class Subscript extends Expression {
             "sub = " + this.sub.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileSubscript(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileSubscript(this, context);
     }
 }
     
@@ -548,8 +616,8 @@ public static class Compare extends Expression {
             "right = " + this.right.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileCompare(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileCompare(this, context);
     }
 }
     
@@ -576,8 +644,8 @@ public static class BoolCombine extends Expression {
             "right = " + this.right.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileBoolCombine(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileBoolCombine(this, context);
     }
 }
     
@@ -600,8 +668,8 @@ public static class Assign extends Expression {
             "value = " + this.value.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileAssign(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileAssign(this, context);
     }
 }
     
@@ -624,8 +692,8 @@ public static class Declare extends Statement {
             "name = " + this.name.toString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileDeclare(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileDeclare(this, context);
     }
 }
     
@@ -652,8 +720,8 @@ public static class DeclareAssign extends Statement {
             "value = " + this.value.toFlatString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileDeclareAssign(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileDeclareAssign(this, context);
     }
 }
     
@@ -672,8 +740,8 @@ public static class NumberLiteral extends Expression {
         return "NumberLiteral(value = " + this.value.toString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileNumberLiteral(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileNumberLiteral(this, context);
     }
 }
     
@@ -692,8 +760,72 @@ public static class StringLiteral extends Expression {
         return "StringLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileStringLiteral(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileStringLiteral(this, context);
+    }
+}
+    
+public static class SequenceLiteral extends Expression {
+    public final String value;
+    public SequenceLiteral(String value) {
+        super();
+        this.value = value;
+    }
+
+    public String toString() {
+        return "SequenceLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+    }
+
+    public String toFlatString() {
+        return "SequenceLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+    }
+
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileSequenceLiteral(this, context);
+    }
+}
+    
+public static class BooleanLiteral extends Expression {
+    public final Boolean value;
+    public BooleanLiteral(Boolean value) {
+        super();
+        this.value = value;
+    }
+
+    public String toString() {
+        return "BooleanLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+    }
+
+    public String toFlatString() {
+        return "BooleanLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+    }
+
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileBooleanLiteral(this, context);
+    }
+}
+    
+public static class RegexLiteral extends Expression {
+    public final String pattern;
+    public final String flags;
+    public RegexLiteral(String pattern, String flags) {
+        super();
+        this.pattern = pattern;
+        this.flags = flags;
+    }
+
+    public String toString() {
+        return "RegexLiteral(pattern = " + "\"" + this.pattern.toString() + "\"" + ", " + 
+            "flags = " + "\"" + this.flags.toString() + "\"" + ")";
+    }
+
+    public String toFlatString() {
+        return "RegexLiteral(pattern = " + "\"" + this.pattern.toString() + "\"" + ", " + 
+            "flags = " + "\"" + this.flags.toString() + "\"" + ")";
+    }
+
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileRegexLiteral(this, context);
     }
 }
     
@@ -712,8 +844,8 @@ public static class Variable extends Expression {
         return "Variable(name = " + this.name.toString() + ")";
     }
 
-    public CompiledCode compile(ASTVisitor visitor, CompileContext context) {
-        return visitor.compileVariable(this, context);
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileVariable(this, context);
     }
 }
     

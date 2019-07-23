@@ -150,6 +150,19 @@
             "argz": "List<Statement>"
         }
     },
+    "ThrowStatement": {
+        "extends": "Expression",
+        "fields": {
+            "value": "Statement"
+        }
+    },
+    "ImportStatement": {
+        "extends": "Expression",
+        "fields": {
+            "type": "ImportType",
+            "value": "String"
+        }
+    },
     "MathStatement": {
         "extends": "Expression",
         "fields": {
@@ -164,6 +177,13 @@
             "left": "Statement",
             "op": "MathOp",
             "right": "Statement"
+        }
+    },
+    "MathSelfMod": {
+        "extends": "Expression",
+        "fields": {
+            "left": "Statement",
+            "op": "MathOp"
         }
     },
     "Subscript": {
@@ -221,6 +241,28 @@
         "extends": "Expression",
         "fields": {
             "value": "String"
+        },
+        "literal": true
+    },
+    "SequenceLiteral": {
+        "extends": "Expression",
+        "fields": {
+            "value": "String"
+        },
+        "literal": true
+    },
+    "BooleanLiteral": {
+        "extends": "Expression",
+        "fields": {
+            "value": "Boolean"
+        },
+        "literal": true
+    },
+    "RegexLiteral": {
+        "extends": "Expression",
+        "fields": {
+            "pattern": "String",
+            "flags": "String"
         },
         "literal": true
     },

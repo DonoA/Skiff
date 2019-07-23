@@ -95,7 +95,7 @@ public class Lexer {
                 regex.append(data.charAt(pos));
                 pos++;
             }
-            return new Token(Token.Textless.SEQUENCE_LITERAL, regex.toString());
+            return new Token(Token.Textless.REGEX_LITERAL, regex.toString());
         }
 
         // Select number

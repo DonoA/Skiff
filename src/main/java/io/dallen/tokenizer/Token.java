@@ -114,6 +114,7 @@ public class Token {
         STRING_LITERAL,
         SEQUENCE_LITERAL,
         NUMBER_LITERAL,
+        REGEX_LITERAL,
         EOF;
 
         @Override

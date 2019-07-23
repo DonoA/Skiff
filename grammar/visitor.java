@@ -75,11 +75,23 @@ public CompiledCode compileNew(New stmt, CompileContext context) {
     return null; 
 }
     
+public CompiledCode compileThrowStatement(ThrowStatement stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) { 
+    return null; 
+}
+    
 public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) { 
     return null; 
 }
     
 public CompiledCode compileMathAssign(MathAssign stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileMathSelfMod(MathSelfMod stmt, CompileContext context) { 
     return null; 
 }
     
@@ -112,6 +124,18 @@ public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext cont
 }
     
 public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileSequenceLiteral(SequenceLiteral stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileBooleanLiteral(BooleanLiteral stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileRegexLiteral(RegexLiteral stmt, CompileContext context) { 
     return null; 
 }
     

@@ -56,6 +56,20 @@ public class AST {
         }
     }
 
+    public enum ImportType implements HasRaw {
+        LOCAL("local"), SYSTEM("system");
+
+        private final String rawOp;
+
+        ImportType(String rawOp) {
+            this.rawOp = rawOp;
+        }
+
+        public String getRawOp() {
+            return rawOp;
+        }
+    }
+
     // Begin Generated AST classes
 
     public static class Statement  {
@@ -507,6 +521,50 @@ public class AST {
         }
     }
 
+    public static class ThrowStatement extends Expression {
+        public final Statement value;
+        public ThrowStatement(Statement value) {
+            super();
+            this.value = value;
+        }
+
+        public String toString() {
+            return "ThrowStatement(value = " + this.value.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "ThrowStatement(value = " + this.value.toFlatString() + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileThrowStatement(this, context);
+        }
+    }
+
+    public static class ImportStatement extends Expression {
+        public final ImportType type;
+        public final String value;
+        public ImportStatement(ImportType type, String value) {
+            super();
+            this.type = type;
+            this.value = value;
+        }
+
+        public String toString() {
+            return "ImportStatement(type = " + this.type.toString() + ", " +
+                    "value = " + this.value.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "ImportStatement(type = " + this.type.toString() + ", " +
+                    "value = " + this.value.toString() + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileImportStatement(this, context);
+        }
+    }
+
     public static class MathStatement extends Expression {
         public final Statement left;
         public final MathOp op;
@@ -560,6 +618,30 @@ public class AST {
 
         public CompiledCode compile(CompileContext context) {
             return ASTVisitor.instance.compileMathAssign(this, context);
+        }
+    }
+
+    public static class MathSelfMod extends Expression {
+        public final Statement left;
+        public final MathOp op;
+        public MathSelfMod(Statement left, MathOp op) {
+            super();
+            this.left = left;
+            this.op = op;
+        }
+
+        public String toString() {
+            return "MathSelfMod(left = " + this.left.toString() + ", " +
+                    "op = " + this.op.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "MathSelfMod(left = " + this.left.toFlatString() + ", " +
+                    "op = " + this.op.toString() + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileMathSelfMod(this, context);
         }
     }
 
@@ -759,6 +841,70 @@ public class AST {
         }
     }
 
+    public static class SequenceLiteral extends Expression {
+        public final String value;
+        public SequenceLiteral(String value) {
+            super();
+            this.value = value;
+        }
+
+        public String toString() {
+            return "SequenceLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+        }
+
+        public String toFlatString() {
+            return "SequenceLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileSequenceLiteral(this, context);
+        }
+    }
+
+    public static class BooleanLiteral extends Expression {
+        public final Boolean value;
+        public BooleanLiteral(Boolean value) {
+            super();
+            this.value = value;
+        }
+
+        public String toString() {
+            return "BooleanLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+        }
+
+        public String toFlatString() {
+            return "BooleanLiteral(value = " + "\"" + this.value.toString() + "\"" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileBooleanLiteral(this, context);
+        }
+    }
+
+    public static class RegexLiteral extends Expression {
+        public final String pattern;
+        public final String flags;
+        public RegexLiteral(String pattern, String flags) {
+            super();
+            this.pattern = pattern;
+            this.flags = flags;
+        }
+
+        public String toString() {
+            return "RegexLiteral(pattern = " + "\"" + this.pattern.toString() + "\"" + ", " +
+                    "flags = " + "\"" + this.flags.toString() + "\"" + ")";
+        }
+
+        public String toFlatString() {
+            return "RegexLiteral(pattern = " + "\"" + this.pattern.toString() + "\"" + ", " +
+                    "flags = " + "\"" + this.flags.toString() + "\"" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileRegexLiteral(this, context);
+        }
+    }
+
     public static class Variable extends Expression {
         public final String name;
         public Variable(String name) {
@@ -778,7 +924,6 @@ public class AST {
             return ASTVisitor.instance.compileVariable(this, context);
         }
     }
-
 
     // End generated AST
 }

@@ -167,6 +167,14 @@ public class ASTVisitor {
             .withText(sb.toString());
     }
 
+    public CompiledCode compileThrowStatement(ThrowStatement stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
+        return null;
+    }
+
     public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) {
         CompiledCode lhs = stmt.left.compile(context);
         CompiledCode rhs = stmt.right.compile(context);
@@ -193,6 +201,10 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMathAssign(MathAssign stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileMathSelfMod(MathSelfMod stmt, CompileContext context) {
         return null;
     }
 
@@ -265,6 +277,18 @@ public class ASTVisitor {
         return new CompiledCode()
                 .withText("skiff_string_new(\"" + stmt.value + "\")")
                 .withType(context.getType("String"));
+    }
+
+    public CompiledCode compileSequenceLiteral(SequenceLiteral stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileBooleanLiteral(BooleanLiteral stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileRegexLiteral(RegexLiteral stmt, CompileContext context) {
+        return null;
     }
 
     public CompiledCode compileVariable(Variable stmt, CompileContext context) {

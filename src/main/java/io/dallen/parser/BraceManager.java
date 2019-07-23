@@ -6,6 +6,7 @@ import java.util.ArrayDeque;
 
 import static io.dallen.tokenizer.Token.Symbol.*;
 
+@SuppressWarnings("Duplicates")
 public class BraceManager {
 
     public static final BraceProfile leftToRight = new BraceProfile() {
@@ -16,6 +17,8 @@ public class BraceManager {
                     return LEFT_BRACE;
                 case RIGHT_PAREN:
                     return LEFT_PAREN;
+                case RIGHT_BRACKET:
+                    return LEFT_BRACKET;
                 default:
                     return null;
             }
@@ -26,6 +29,7 @@ public class BraceManager {
             switch (tt) {
                 case LEFT_BRACE:
                 case LEFT_PAREN:
+                case LEFT_BRACKET:
                     return true;
                 default:
                     return false;
@@ -69,6 +73,8 @@ public class BraceManager {
                     return RIGHT_BRACE;
                 case LEFT_PAREN:
                     return RIGHT_PAREN;
+                case LEFT_BRACKET:
+                    return RIGHT_BRACKET;
                 default:
                     return null;
             }
@@ -79,6 +85,7 @@ public class BraceManager {
             switch (tt) {
                 case RIGHT_BRACE:
                 case RIGHT_PAREN:
+                case RIGHT_BRACKET:
                     return true;
                 default:
                     return false;

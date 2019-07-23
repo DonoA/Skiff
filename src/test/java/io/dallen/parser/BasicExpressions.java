@@ -11,8 +11,8 @@ import java.util.List;
 
 public class BasicExpressions {
 
-    @Rule
-    public Timeout globalTimeout = Timeout.seconds(1);
+//    @Rule
+//    public Timeout globalTimeout = Timeout.seconds(1);
 
     /*
 
@@ -78,7 +78,10 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "DeclareAssign(" +
+                "type = Type(name = Variable(name = String), arraySize = 0, genericTypes = [ ]), " +
+                "name = x, " +
+                "value = StringLiteral(value = \"Hello World\"))";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -158,7 +161,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "StringLiteral(value = \"Hello\")";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -173,7 +176,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "SequenceLiteral(value = \"Simple Sequence\")";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -182,13 +185,13 @@ public class BasicExpressions {
     public void parseRegexLiteral() {
         // r/$Regex[Pat-trn]^/gi
         List<Token> tokens = List.of(
-                new Token(Token.Textless.SEQUENCE_LITERAL, "$Regex[Pat-trn]^\0gi"),
+                new Token(Token.Textless.REGEX_LITERAL, "$Regex[Pat-trn]^\0gi"),
                 new Token(Token.Textless.EOF));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "RegexLiteral(pattern = \"$Regex[Pat-trn]^\", flags = \"gi\")";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -203,7 +206,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "NumberLiteral(value = 3.141592)";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -223,7 +226,9 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "BoolCombine(left = BooleanLiteral(value = \"true\"), op = AND, " +
+                "right = BoolCombine(left = BooleanLiteral(value = \"false\"), op = OR, " +
+                "right = BooleanLiteral(value = \"false\")))";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -261,7 +266,15 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "BoolCombine(left = Variable(name = x), op = AND, " +
+                "right = BoolCombine(left = Compare(left = Variable(name = x), op = EQ, " +
+                "right = NumberLiteral(value = 1.0)), op = AND, " +
+                "right = BoolCombine(left = Variable(name = x), op = AND, " +
+                "right = BoolCombine(left = Compare(left = Variable(name = x), op = LT, " +
+                "right = NumberLiteral(value = 1.0)), op = AND, " +
+                "right = BoolCombine(left = Compare(left = Variable(name = x), op = GT, " +
+                "right = NumberLiteral(value = 1.0)), op = AND, " +
+                "right = Variable(name = x))))))";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -317,7 +330,8 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "MathAssign(left = Variable(name = x), op = PLUS, " +
+                "right = MathAssign(left = Variable(name = y), op = MINUS, right = NumberLiteral(value = 5.0)))";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -333,17 +347,17 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "MathSelfMod(left = Variable(name = x), op = PLUS)";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
 
     @org.junit.Test
     public void parseDec() {
-        // y--
+        // --y
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "y"),
                 new Token(Token.Symbol.DOUBLE_MINUS),
+                new Token(Token.Textless.NAME, "y"),
                 new Token(Token.Textless.EOF));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
@@ -419,7 +433,8 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "Subscript(left = Variable(name = x), " +
+                "sub = Subscript(left = Variable(name = y), sub = Variable(name = z)))";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -437,7 +452,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "ImportStatement(type = SYSTEM, value = myPackage)";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -466,7 +481,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "ThrowStatement(value = Variable(name = myExistingError))";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }

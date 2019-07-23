@@ -24,23 +24,26 @@ public class Parser {
     // defines a multipass split. When a successful split is made, the resulting action will be executed on the result
     private static final SplitSettings splitSettings = new SplitSettings()
             .addLayer(new SplitLayer()
-                .addSplitRule(Token.Symbol.EQUAL, ExpressionParser::parseAssignment))
+                .addSplitRule(Symbol.EQUAL, ExpressionParser::parseAssignment))
             .addLayer(new SplitLayer()
-                .addSplitRule(Token.Symbol.DOUBLE_AND, ExpressionParser.boolCombineAction(BoolOp.AND)))
+                    .addSplitRule(Symbol.PLUS_EQUAL, ExpressionParser.mathAssignAction(MathOp.PLUS))
+                    .addSplitRule(Symbol.MINUS_EQUAL, ExpressionParser.mathAssignAction(MathOp.MINUS)))
             .addLayer(new SplitLayer()
-                .addSplitRule(Token.Symbol.DOUBLE_OR, ExpressionParser.boolCombineAction(BoolOp.OR)))
+                .addSplitRule(Symbol.DOUBLE_AND, ExpressionParser.boolCombineAction(BoolOp.AND)))
             .addLayer(new SplitLayer()
-                .addSplitRule(Token.Symbol.DOUBLE_EQUAL, ExpressionParser.compareAction(CompareOp.EQ))
-                .addSplitRule(Token.Symbol.LEFT_ANGLE, ExpressionParser.compareAction(CompareOp.LT))
-                .addSplitRule(Token.Symbol.RIGHT_ANGLE, ExpressionParser.compareAction(CompareOp.GT)))
+                .addSplitRule(Symbol.DOUBLE_OR, ExpressionParser.boolCombineAction(BoolOp.OR)))
             .addLayer(new SplitLayer()
-                .addSplitRule(Token.Symbol.SLASH, ExpressionParser.mathAction(MathOp.DIV))
-                .addSplitRule(Token.Symbol.STAR, ExpressionParser.mathAction(MathOp.MUL)))
+                .addSplitRule(Symbol.DOUBLE_EQUAL, ExpressionParser.compareAction(CompareOp.EQ))
+                .addSplitRule(Symbol.LEFT_ANGLE, ExpressionParser.compareAction(CompareOp.LT))
+                .addSplitRule(Symbol.RIGHT_ANGLE, ExpressionParser.compareAction(CompareOp.GT)))
             .addLayer(new SplitLayer()
-                .addSplitRule(Token.Symbol.PLUS, ExpressionParser.mathAction(MathOp.PLUS))
-                .addSplitRule(Token.Symbol.MINUS, ExpressionParser.mathAction(MathOp.MINUS)))
+                .addSplitRule(Symbol.SLASH, ExpressionParser.mathAction(MathOp.DIV))
+                .addSplitRule(Symbol.STAR, ExpressionParser.mathAction(MathOp.MUL)))
             .addLayer(new SplitLayer()
-                .addSplitRule(Token.Symbol.DOT, ExpressionParser.statementAction(Dotted::new))).leftToRight(false);
+                .addSplitRule(Symbol.PLUS, ExpressionParser.mathAction(MathOp.PLUS))
+                .addSplitRule(Symbol.MINUS, ExpressionParser.mathAction(MathOp.MINUS)))
+            .addLayer(new SplitLayer()
+                .addSplitRule(Symbol.DOT, ExpressionParser.statementAction(Dotted::new))).leftToRight(false);
 
 
     public Parser(List<Token> tokens) {
@@ -95,7 +98,7 @@ public class Parser {
         List<Token> tokens = new ArrayList<>();
         BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
         while (true) {
-            if (current().type == Token.Textless.EOF) {
+            if (current().type == Textless.EOF) {
                 if (braceManager.isEmpty()) {
                     break;
                 }
@@ -133,36 +136,44 @@ public class Parser {
                 return false;
             }
         }
-        return before == Token.Textless.EOF;
+        return before == Textless.EOF;
     }
 
     public List<Statement> parseBlock() {
         ArrayList<Statement> statements = new ArrayList<>();
 
-        while (!current().type.equals(Token.Textless.EOF)) {
+        while (!current().type.equals(Textless.EOF)) {
             Token.TokenType i = current().type;
-            if (Token.Keyword.WHILE.equals(i)) {
+            if (Keyword.WHILE.equals(i)) {
                 statements.add(parseWhileBlock());
                 continue;
             }
-            if (Token.Keyword.IF.equals(i)) {
+            if (Keyword.IF.equals(i)) {
                 statements.add(parseIfBlock());
                 continue;
             }
-            if (Token.Keyword.ELSE.equals(i)) {
+            if (Keyword.ELSE.equals(i)) {
                 attachElseBlock(statements);
                 continue;
             }
-            if (Token.Keyword.DEF.equals(i)) {
+            if (Keyword.DEF.equals(i)) {
                 statements.add(parseFunctionDef());
                 continue;
             }
-            if (Token.Keyword.CLASS.equals(i)) {
+            if (Keyword.CLASS.equals(i)) {
                 statements.add(parseClassDef());
                 continue;
             }
-            if (Token.Keyword.RETURN.equals(i)) {
+            if (Keyword.RETURN.equals(i)) {
                 statements.add(parseReturn());
+                continue;
+            }
+            if (Keyword.IMPORT.equals(i)) {
+                statements.add(parseImport());
+                continue;
+            }
+            if (Keyword.THROW.equals(i)) {
+                statements.add(parseThrow());
                 continue;
             }
             statements.add(parseExpression());
@@ -188,14 +199,14 @@ public class Parser {
         }
         Statement parentStmt = statements.get(statements.size() - 1);
 
-        consumeExpected(Token.Keyword.ELSE);
+        consumeExpected(Keyword.ELSE);
         ElseBlock toAttach;
-        if(current().type == Token.Keyword.IF) {
+        if(current().type == Keyword.IF) {
             IfBlock on = parseIfBlock();
             toAttach = new ElseIfBlock(on);
         } else {
-            consumeExpected(Token.Symbol.LEFT_BRACE);
-            List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
+            consumeExpected(Symbol.LEFT_BRACE);
+            List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
             List<Statement> body = new Parser(bodyTokens).parseBlock();
             toAttach = new ElseAlwaysBlock(body);
         }
@@ -210,14 +221,14 @@ public class Parser {
     }
 
     private IfBlock parseIfBlock() {
-        consumeExpected(Token.Keyword.IF);
+        consumeExpected(Keyword.IF);
 
-        consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
-        consumeExpected(Token.Symbol.LEFT_BRACE);
+        consumeExpected(Symbol.LEFT_PAREN);
+        List<Token> condTokens = consumeTo(Symbol.RIGHT_PAREN);
+        consumeExpected(Symbol.LEFT_BRACE);
         Statement cond = new Parser(condTokens).parseExpression();
 
-        List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new IfBlock(cond, body);
@@ -226,29 +237,29 @@ public class Parser {
     private WhileBlock parseWhileBlock() {
         next();
 
-        consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
-        consumeExpected(Token.Symbol.LEFT_BRACE);
+        consumeExpected(Symbol.LEFT_PAREN);
+        List<Token> condTokens = consumeTo(Symbol.RIGHT_PAREN);
+        consumeExpected(Symbol.LEFT_BRACE);
         Statement cond = new Parser(condTokens).parseExpression();
 
-        List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new WhileBlock(cond, body);
     }
 
     private FunctionDef parseFunctionDef() {
-        consumeExpected(Token.Keyword.DEF);
+        consumeExpected(Keyword.DEF);
 
         String funcName = consume().literal;
-        consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> paramTokens = consumeTo(Token.Symbol.RIGHT_PAREN);
+        consumeExpected(Symbol.LEFT_PAREN);
+        List<Token> paramTokens = consumeTo(Symbol.RIGHT_PAREN);
 
         List<FunctionParam> params;
         try {
-             params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
+             params = BraceSplitter.splitAll(paramTokens, Symbol.COMMA)
                     .stream()
-                    .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
+                    .map(e -> BraceSplitter.splitAll(e, Symbol.COLON))
                     .map(e -> new FunctionParam(new Parser(e.get(1)).parseType(), e.get(0).get(0).literal))
                     .collect(Collectors.toList());
         } catch (IndexOutOfBoundsException ex) {
@@ -258,33 +269,57 @@ public class Parser {
         Type returnType = Type.VOID;
 
         if(current().type == Symbol.COLON) {
-            consumeExpected(Token.Symbol.COLON);
-            List<Token> returnTypeTokens = consumeTo(Token.Symbol.LEFT_BRACE);
+            consumeExpected(Symbol.COLON);
+            List<Token> returnTypeTokens = consumeTo(Symbol.LEFT_BRACE);
             returnType = new Parser(returnTypeTokens).parseType();
         } else {
             consumeExpected(Symbol.LEFT_BRACE);
         }
 
-        List<Token> bodyTokens = consumeTo(Token.Symbol.RIGHT_BRACE);
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new FunctionDef(returnType, funcName, params, body);
     }
 
     private Return parseReturn() {
-        consumeExpected(Token.Keyword.RETURN);
+        consumeExpected(Keyword.RETURN);
 
-        Statement value = new Parser(consumeTo(Token.Symbol.SEMICOLON)).parseExpression();
+        Statement value = new Parser(consumeTo(Symbol.SEMICOLON)).parseExpression();
         return new Return(value);
     }
 
-    private Type parseType() {
-        Statement typeName = new Parser(consumeTo(Token.Symbol.LEFT_ANGLE)).parseExpression();
+    private ImportStatement parseImport() {
+        consumeExpected(Keyword.IMPORT);
+
+        ImportType typ;
+        String location;
+        if(current().type == Textless.STRING_LITERAL) {
+            location = consume().literal;
+            typ = ImportType.LOCAL;
+        } else {
+            consumeExpected(Symbol.LEFT_ANGLE);
+            location = consumeExpected(Textless.NAME).literal;
+            consumeExpected(Symbol.RIGHT_ANGLE);
+            typ = ImportType.SYSTEM;
+        }
+        return new ImportStatement(typ, location);
+    }
+
+    private ThrowStatement parseThrow() {
+        consumeExpected(Keyword.THROW);
+
+        Statement value = new Parser(consumeTo(Symbol.SEMICOLON)).parseExpression();
+        return new ThrowStatement(value);
+    }
+
+    public Type parseType() {
+        Statement typeName = new Parser(consumeTo(Symbol.LEFT_ANGLE)).parseExpression();
         if(current().isEOF()) {
             return new Type(typeName, 0, new ArrayList<>());
         }
         List<Type> genericParams = BraceSplitter
-                .customSplitAll(BraceManager.leftToRightAngle, consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA)
+                .customSplitAll(BraceManager.leftToRightAngle, consumeTo(Symbol.RIGHT_ANGLE), Symbol.COMMA)
                 .stream()
                 .map(e -> new Parser(e).parseType())
                 .collect(Collectors.toList());
@@ -293,7 +328,7 @@ public class Parser {
     }
 
     public Statement parseExpression() {
-        List<Token> workingTokens = selectTo(Token.Symbol.SEMICOLON);
+        List<Token> workingTokens = selectTo(Symbol.SEMICOLON);
 
         Statement parsed = new LayeredSplitter(splitSettings).execute(workingTokens);
         if (parsed != null) {
@@ -310,57 +345,87 @@ public class Parser {
                 .map(e -> new Parser(e).parseExpression())
                 .collect(Collectors.toList());
             return new New(typeStmt, params);
-        } else if (current().type == Token.Symbol.LEFT_PAREN) {
-            consumeExpected(Token.Symbol.LEFT_PAREN);
-            Statement sub = new Parser(consumeTo(Token.Symbol.RIGHT_PAREN)).parseExpression();
+        } else if (current().type == Symbol.LEFT_PAREN) {
+            consumeExpected(Symbol.LEFT_PAREN);
+            Statement sub = new Parser(consumeTo(Symbol.RIGHT_PAREN)).parseExpression();
             return new Parened(sub);
-        } else if (current().type == Token.Textless.NAME) {
+        } else if (current().type == Textless.NAME) {
             return handleNameToken(workingTokens);
-        } else if (current().type == Token.Textless.NUMBER_LITERAL) {
-            tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new NumberLiteral(Double.parseDouble(current().literal));
-        } else if (current().type == Token.Textless.STRING_LITERAL) {
-            tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new StringLiteral(current().literal);
+        } else if (current().type == Keyword.TRUE) {
+            BooleanLiteral lit = new BooleanLiteral(Boolean.TRUE);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return lit;
+        } else if (current().type == Keyword.FALSE) {
+            BooleanLiteral lit = new BooleanLiteral(Boolean.FALSE);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return lit;
+        } else if (current().type == Textless.NUMBER_LITERAL) {
+            NumberLiteral lit = new NumberLiteral(Double.parseDouble(consume().literal));
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return lit;
+        } else if (current().type == Textless.REGEX_LITERAL) {
+            String[] seg = consume().literal.split("\0");
+            RegexLiteral lit = new RegexLiteral(seg[0], seg[1]);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return lit;
+        } else if (current().type == Textless.SEQUENCE_LITERAL) {
+            SequenceLiteral lit = new SequenceLiteral(consume().literal);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return lit;
+        } else if (current().type == Textless.STRING_LITERAL) {
+            StringLiteral lit = new StringLiteral(consume().literal);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return lit;
         } else {
             throw new ParserError("Unknown token sequence", current());
         }
+
     }
 
     private Statement handleNameToken(List<Token> workingTokens) {
 
-        if(containsBefore(Token.Symbol.COLON, Token.Symbol.SEMICOLON)) {
+        if(containsBefore(Symbol.COLON, Symbol.SEMICOLON)) {
             Token name = consume();
-            consumeExpected(Token.Symbol.COLON);
-            Type type = new Parser(consumeTo(Token.Symbol.SEMICOLON)).parseType();
+            consumeExpected(Symbol.COLON);
+            Type type = new Parser(consumeTo(Symbol.SEMICOLON)).parseType();
             return new Declare(type, name.literal);
 
-        } else if(containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
-            List<Token> funcName = consumeTo(Token.Symbol.LEFT_PAREN);
+        } else if(containsBefore(Symbol.LEFT_PAREN, Symbol.SEMICOLON)) {
+            List<Token> funcName = consumeTo(Symbol.LEFT_PAREN);
             if(funcName.size() > 1) {
                 throw new ParserError("Function call name was multi token", funcName.get(0));
             }
 //            Statement parsedName = new Parser(funcName).parseExpression();
             List<Statement> funcParams = consumeFunctionParams();
-            tryConsumeExpected(Token.Symbol.SEMICOLON);
+            tryConsumeExpected(Symbol.SEMICOLON);
             return new FunctionCall(funcName.get(0).literal, funcParams);
 
-        } else if(containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
+        } else if(containsBefore(Symbol.DOUBLE_MINUS, Symbol.SEMICOLON)) {
+            List<Token> name = consumeTo(Symbol.DOUBLE_MINUS);
+            Statement left = new Parser(name).parseExpression();
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return new MathSelfMod(left, MathOp.MINUS);
+        } else if(containsBefore(Symbol.DOUBLE_PLUS, Symbol.SEMICOLON)) {
+            List<Token> name = consumeTo(Symbol.DOUBLE_PLUS);
+            Statement left = new Parser(name).parseExpression();
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return new MathSelfMod(left, MathOp.PLUS);
+        } else if(containsBefore(Symbol.LEFT_BRACKET, Symbol.SEMICOLON)) {
             List<Token> name = consumeTo(Symbol.LEFT_BRACKET);
             Statement left = new Parser(name).parseExpression();
-            List<Token> sub = consumeTo(Token.Symbol.RIGHT_BRACKET);
+            List<Token> sub = consumeTo(Symbol.RIGHT_BRACKET);
             Statement inner = new Parser(sub).parseExpression();
             return new Subscript(left, inner);
         } else {
             Token name = consume();
-            tryConsumeExpected(Token.Symbol.SEMICOLON);
+            tryConsumeExpected(Symbol.SEMICOLON);
             return new Variable(name.literal);
         }
     }
 
     private List<Statement> consumeFunctionParams() {
-        List<Token> params = consumeTo(Token.Symbol.RIGHT_PAREN);
-        List<List<Token>> paramTokens = BraceSplitter.splitAll(params, Token.Symbol.COMMA);
+        List<Token> params = consumeTo(Symbol.RIGHT_PAREN);
+        List<List<Token>> paramTokens = BraceSplitter.splitAll(params, Symbol.COMMA);
         return paramTokens.stream()
                 .filter(arr -> !arr.isEmpty())
                 .map(Parser::new)
