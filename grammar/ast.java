@@ -67,6 +67,30 @@ public static class Type  {
     }
 }
     
+public static class GenericType  {
+    public final String name;
+    public final List<Type> reqExtend;
+    public GenericType(String name, List<Type> reqExtend) {
+        
+        this.name = name;
+        this.reqExtend = reqExtend;
+    }
+
+    public String toString() {
+        return "GenericType(name = " + this.name.toString() + ", " + 
+            "reqExtend = " + "[" + this.reqExtend.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
+    }
+
+    public String toFlatString() {
+        return "GenericType(name = " + this.name.toString() + ", " + 
+            "reqExtend = " + "[" + this.reqExtend.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+    }
+
+    public CompiledCode compile(CompileContext context) {
+        return ASTVisitor.instance.compileGenericType(this, context);
+    }
+}
+    
 public static class BlockStatement extends Statement {
     public final List<Statement> body;
     public BlockStatement(List<Statement> body) {
@@ -88,25 +112,29 @@ public static class BlockStatement extends Statement {
 }
     
 public static class FunctionDef extends BlockStatement {
+    public final List<GenericType> genericTypes;
     public final Type returns;
     public final String name;
     public final List<FunctionParam> args;
-    public FunctionDef(Type returns, String name, List<FunctionParam> args, List<Statement> body) {
+    public FunctionDef(List<GenericType> genericTypes, Type returns, String name, List<FunctionParam> args, List<Statement> body) {
         super(body);
+        this.genericTypes = genericTypes;
         this.returns = returns;
         this.name = name;
         this.args = args;
     }
 
     public String toString() {
-        return "FunctionDef(returns = " + this.returns.toString() + ", " + 
+        return "FunctionDef(genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
+            "returns = " + this.returns.toString() + ", " + 
             "name = " + this.name.toString() + ", " + 
             "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
             "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 
     public String toFlatString() {
-        return "FunctionDef(returns = " + this.returns.toFlatString() + ", " + 
+        return "FunctionDef(genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
+            "returns = " + this.returns.toFlatString() + ", " + 
             "name = " + this.name.toString() + ", " + 
             "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
             "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
@@ -149,21 +177,25 @@ public static class AnonFunctionDef extends BlockStatement {
     
 public static class ClassDef extends BlockStatement {
     public final String name;
-    public final List<Statement> extendClasses;
-    public ClassDef(String name, List<Statement> extendClasses, List<Statement> body) {
+    public final List<GenericType> genericTypes;
+    public final List<Type> extendClasses;
+    public ClassDef(String name, List<GenericType> genericTypes, List<Type> extendClasses, List<Statement> body) {
         super(body);
         this.name = name;
+        this.genericTypes = genericTypes;
         this.extendClasses = extendClasses;
     }
 
     public String toString() {
         return "ClassDef(name = " + this.name.toString() + ", " + 
+            "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
             "extendClasses = " + "[" + this.extendClasses.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
             "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 
     public String toFlatString() {
         return "ClassDef(name = " + this.name.toString() + ", " + 
+            "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
             "extendClasses = " + "[" + this.extendClasses.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
             "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }

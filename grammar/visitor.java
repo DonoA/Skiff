@@ -11,6 +11,10 @@ public CompiledCode compileType(Type stmt, CompileContext context) {
     return null; 
 }
     
+public CompiledCode compileGenericType(GenericType stmt, CompileContext context) { 
+    return null; 
+}
+    
 public CompiledCode compileBlockStatement(BlockStatement stmt, CompileContext context) { 
     return null; 
 }

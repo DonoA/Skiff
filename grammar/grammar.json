@@ -13,6 +13,12 @@
             "genericTypes": "List<Type>"
         }
     },
+    "GenericType": {
+        "fields": {
+            "name": "String",
+            "reqExtend": "List<Type>"
+        }
+    },
     "BlockStatement": {
         "extends": "Statement",
         "fields": {
@@ -25,6 +31,7 @@
     "FunctionDef": {
         "extends": "BlockStatement(body)",
         "fields": {
+            "genericTypes": "List<GenericType>",
             "returns": "Type",
             "name": "String",
             "args": "List<FunctionParam>",
@@ -50,7 +57,8 @@
         "extends": "BlockStatement(body)",
         "fields": {
             "name": "String",
-            "extendClasses": "List<Statement>",
+            "genericTypes": "List<GenericType>",
+            "extendClasses": "List<Type>",
             "body": {
                 "type": "List<Statement>",
                 "bigPrint": true

@@ -32,6 +32,10 @@ public class ASTVisitor {
                 .withType(CompiledType.CLASS);
     }
 
+    public CompiledCode compileGenericType(GenericType stmt, CompileContext context) {
+        return null;
+    }
+
     public CompiledCode compileBlockStatement(BlockStatement stmt, CompileContext context) {
         throw new UnsupportedOperationException("Cannot compile statement type Block");
     }

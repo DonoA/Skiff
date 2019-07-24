@@ -58,6 +58,7 @@ public class BasicBlocks {
         assertEquals(1, statements.size());
 
         String expected = "FunctionDef(" +
+                "genericTypes = [ ], " +
                 "returns = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), " +
                 "name = func, " +
                 "args = [" +
@@ -108,17 +109,22 @@ public class BasicBlocks {
 
         String expected = "ClassDef(" +
                 "name = Cls, " +
+                "genericTypes = [ ], " +
                 "extendClasses = [ ], " +
                 "body = [" +
                 "Declare(type = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), name = age), " +
-                "FunctionDef(returns = Type(name = Variable(name = Void), arraySize = 0, genericTypes = [ ]), " +
+                "FunctionDef(" +
+                "genericTypes = [ ], " +
+                "returns = Type(name = Variable(name = Void), arraySize = 0, genericTypes = [ ]), " +
                 "name = Cls, " +
                 "args = [" +
                 "FunctionParam(type = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), name = age) " +
                 "], " +
                 "body = [" +
-                "Assign(name = Dotted(left = Variable(name = this), right = Variable(name = age)), " +
-                "value = NumberLiteral(value = 10.0)) ]) ])";
+                "Assign(name = " +
+                "Dotted(left = Variable(name = this), right = Variable(name = age)), value = NumberLiteral(value = 10.0)) " +
+                "]) " +
+                "])";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -166,7 +172,16 @@ public class BasicBlocks {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "ClassDef(" +
+                "name = GClass, " +
+                "genericTypes = [" +
+                "GenericType(name = U, reqExtend = [ ]), " +
+                "GenericType(name = V, reqExtend = [" +
+                "Type(name = Variable(name = String), arraySize = 0, genericTypes = [ ]) ]) ], " +
+                "extendClasses = [ ], " +
+                "body = [" +
+                "Declare(type = Type(name = Variable(name = U), arraySize = 0, genericTypes = [ ]), name = a) " +
+                "])";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -206,7 +221,16 @@ public class BasicBlocks {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "FunctionDef(" +
+                "genericTypes = [GenericType(name = U, reqExtend = [ ]), " +
+                "GenericType(name = V, reqExtend = [ ]) ], " +
+                "returns = Type(name = Variable(name = V), arraySize = 0, genericTypes = [ ]), " +
+                "name = genFunc, " +
+                "args = [" +
+                "FunctionParam(type = Type(name = Variable(name = U), arraySize = 0, genericTypes = [ ]), name = a) " +
+                "], " +
+                "body = [" +
+                "Return(value = Dotted(left = Variable(name = a), right = FunctionCall(name = getV, args = [ ]))) ])";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -229,7 +253,11 @@ public class BasicBlocks {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "ClassDef(" +
+                "name = CLS, " +
+                "genericTypes = [ ], " +
+                "extendClasses = [Type(name = Variable(name = Object), arraySize = 0, genericTypes = [ ]) ], " +
+                "body = [ ])";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }

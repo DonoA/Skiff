@@ -193,16 +193,40 @@ public class Parser {
         return statements;
     }
 
+    private List<GenericType> consumeGenericList() {
+        consumeExpected(Symbol.LEFT_ANGLE);
+        List<Token> genericTokens = consumeTo(Symbol.RIGHT_ANGLE, BraceManager.leftToRightAngle);
+        List<List<Token>> genericTokenSeg = BraceSplitter.splitAll(genericTokens, Symbol.COMMA);
+        return genericTokenSeg
+                .stream()
+                .map(seg -> new Parser(seg).parseGenericType())
+                .collect(Collectors.toList());
+    }
+
     private ClassDef parseClassDef() {
         consumeExpected(Keyword.CLASS);
         Token name = consumeExpected(Textless.NAME);
-        // extends
+        List<GenericType> genericTypes = new ArrayList<>();
+        List<Type> extendList = new ArrayList<>();
+        if(current().type == Symbol.LEFT_ANGLE) {
+            genericTypes = consumeGenericList();
+        }
 
-        consumeExpected(Symbol.LEFT_BRACE);
+        if(current().type == Symbol.COLON) {
+            consumeExpected(Symbol.COLON);
+            List<Token> extendsTokens = consumeTo(Symbol.LEFT_BRACE);
+            List<List<Token>> extendsTokenSeg = BraceSplitter.splitAll(extendsTokens, Symbol.COMMA);
+            extendList = extendsTokenSeg
+                    .stream()
+                    .map(seg -> new Parser(seg).parseType())
+                    .collect(Collectors.toList());
+        }
+
+        tryConsumeExpected(Symbol.LEFT_BRACE);
         List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
-        return new ClassDef(name.literal, new ArrayList<>(), body);
+        return new ClassDef(name.literal, genericTypes, extendList, body);
     }
 
     private void attachElseBlock(ArrayList<Statement> statements) {
@@ -291,15 +315,10 @@ public class Parser {
     private FunctionDef parseFunctionDef() {
         consumeExpected(Keyword.DEF);
 
-        List<Type> genericTypes = new ArrayList<>();
+        List<GenericType> genericTypes = new ArrayList<>();
         String funcName = consume().literal;
-        if(peek().type == Symbol.LEFT_ANGLE) {
-            List<Token> genericTokens = consumeTo(Symbol.RIGHT_ANGLE, BraceManager.leftToRightAngle);
-            List<List<Token>> genericTokenSeg = BraceSplitter.splitAll(genericTokens, Symbol.COMMA);
-            genericTypes = genericTokenSeg
-                    .stream()
-                    .map(seg -> new Parser(seg).parseType())
-                    .collect(Collectors.toList());
+        if(current().type == Symbol.LEFT_ANGLE) {
+            genericTypes = consumeGenericList();
         }
 
         consumeExpected(Symbol.LEFT_PAREN);
@@ -329,7 +348,19 @@ public class Parser {
         List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
-        return new FunctionDef(returnType, funcName, params, body);
+        return new FunctionDef(genericTypes, returnType, funcName, params, body);
+    }
+
+    private GenericType parseGenericType() {
+        Token name = consumeExpected(Textless.NAME);
+
+        List<Type> subTypes = new ArrayList<>();
+        if(current().type == Symbol.COLON) {
+            consumeExpected(Symbol.COLON);
+            subTypes.add(parseType());
+        }
+
+        return new GenericType(name.literal, subTypes);
     }
 
     private Return parseReturn() {
