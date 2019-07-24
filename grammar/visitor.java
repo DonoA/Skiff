@@ -19,6 +19,10 @@ public CompiledCode compileFunctionDef(FunctionDef stmt, CompileContext context)
     return null; 
 }
     
+public CompiledCode compileAnonFunctionDef(AnonFunctionDef stmt, CompileContext context) { 
+    return null; 
+}
+    
 public CompiledCode compileClassDef(ClassDef stmt, CompileContext context) { 
     return null; 
 }
@@ -47,7 +51,39 @@ public CompiledCode compileWhileBlock(WhileBlock stmt, CompileContext context) {
     return null; 
 }
     
+public CompiledCode compileLoopBlock(LoopBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
 public CompiledCode compileForBlock(ForBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileForIterBlock(ForIterBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileMatchBlock(MatchBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileSwitchBlock(SwitchBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileCaseStatement(CaseStatement stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileTryBlock(TryBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileCatchBlock(CatchBlock stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileFinallyBlock(FinallyBlock stmt, CompileContext context) { 
     return null; 
 }
     

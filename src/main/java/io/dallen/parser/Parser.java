@@ -95,8 +95,12 @@ public class Parser {
     }
 
     private List<Token> consumeTo(Token.TokenType type) {
+        return consumeTo(type, BraceManager.leftToRight);
+    }
+
+    private List<Token> consumeTo(Token.TokenType type, BraceManager.BraceProfile braces) {
         List<Token> tokens = new ArrayList<>();
-        BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
+        BraceManager braceManager = new BraceManager(braces);
         while (true) {
             if (current().type == Textless.EOF) {
                 if (braceManager.isEmpty()) {
@@ -146,6 +150,14 @@ public class Parser {
             Token.TokenType i = current().type;
             if (Keyword.WHILE.equals(i)) {
                 statements.add(parseWhileBlock());
+                continue;
+            }
+            if (Keyword.LOOP.equals(i)) {
+                statements.add(parseLoopBlock());
+                continue;
+            }
+            if (Keyword.FOR.equals(i)) {
+                statements.add(parseForBlock());
                 continue;
             }
             if (Keyword.IF.equals(i)) {
@@ -220,6 +232,24 @@ public class Parser {
         }
     }
 
+    private ForBlock parseForBlock() {
+        consumeExpected(Keyword.FOR);
+
+        consumeExpected(Symbol.LEFT_PAREN);
+        List<Token> init = consumeTo(Symbol.SEMICOLON);
+        List<Token> cond = consumeTo(Symbol.SEMICOLON);
+        List<Token> step = consumeTo(Symbol.RIGHT_PAREN);
+        consumeExpected(Symbol.LEFT_BRACE);
+        Statement initStmt = new Parser(init).parseExpression();
+        Statement condStmt = new Parser(cond).parseExpression();
+        Statement stepStmt = new Parser(step).parseExpression();
+
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+        List<Statement> body = new Parser(bodyTokens).parseBlock();
+
+        return new ForBlock(initStmt, condStmt, stepStmt, body);
+    }
+
     private IfBlock parseIfBlock() {
         consumeExpected(Keyword.IF);
 
@@ -235,7 +265,7 @@ public class Parser {
     }
 
     private WhileBlock parseWhileBlock() {
-        next();
+        consumeExpected(Keyword.WHILE);
 
         consumeExpected(Symbol.LEFT_PAREN);
         List<Token> condTokens = consumeTo(Symbol.RIGHT_PAREN);
@@ -248,10 +278,30 @@ public class Parser {
         return new WhileBlock(cond, body);
     }
 
+    private LoopBlock parseLoopBlock() {
+        next();
+        consumeExpected(Symbol.LEFT_BRACE);
+
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+        List<Statement> body = new Parser(bodyTokens).parseBlock();
+
+        return new LoopBlock(body);
+    }
+
     private FunctionDef parseFunctionDef() {
         consumeExpected(Keyword.DEF);
 
+        List<Type> genericTypes = new ArrayList<>();
         String funcName = consume().literal;
+        if(peek().type == Symbol.LEFT_ANGLE) {
+            List<Token> genericTokens = consumeTo(Symbol.RIGHT_ANGLE, BraceManager.leftToRightAngle);
+            List<List<Token>> genericTokenSeg = BraceSplitter.splitAll(genericTokens, Symbol.COMMA);
+            genericTypes = genericTokenSeg
+                    .stream()
+                    .map(seg -> new Parser(seg).parseType())
+                    .collect(Collectors.toList());
+        }
+
         consumeExpected(Symbol.LEFT_PAREN);
         List<Token> paramTokens = consumeTo(Symbol.RIGHT_PAREN);
 

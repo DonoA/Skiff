@@ -216,6 +216,36 @@ public class AST {
         }
     }
 
+    public static class AnonFunctionDef extends BlockStatement {
+        public final Type returns;
+        public final String name;
+        public final List<FunctionParam> args;
+        public AnonFunctionDef(Type returns, String name, List<FunctionParam> args, List<Statement> body) {
+            super(body);
+            this.returns = returns;
+            this.name = name;
+            this.args = args;
+        }
+
+        public String toString() {
+            return "AnonFunctionDef(returns = " + this.returns.toString() + ", " +
+                    "name = " + this.name.toString() + ", " +
+                    "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "AnonFunctionDef(returns = " + this.returns.toFlatString() + ", " +
+                    "name = " + this.name.toString() + ", " +
+                    "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileAnonFunctionDef(this, context);
+        }
+    }
+
     public static class ClassDef extends BlockStatement {
         public final String name;
         public final List<Statement> extendClasses;
@@ -245,11 +275,11 @@ public class AST {
 
     public static class IfBlock extends BlockStatement {
         public final Statement condition;
-        public ElseBlock elseBlock;
+        public Statement elseBlock;
         public IfBlock(Statement condition, List<Statement> body) {
             super(body);
             this.condition = condition;
-            this.elseBlock = null;
+            this.elseBlock = new ElseBlock();
         }
 
         public String toString() {
@@ -295,7 +325,7 @@ public class AST {
         public ElseIfBlock(IfBlock on) {
             super();
             this.on = on;
-            this.elseBlock = null;
+            this.elseBlock = new ElseBlock();
         }
 
         public String toString() {
@@ -355,6 +385,26 @@ public class AST {
         }
     }
 
+    public static class LoopBlock extends BlockStatement {
+
+        public LoopBlock(List<Statement> body) {
+            super(body);
+
+        }
+
+        public String toString() {
+            return "LoopBlock(body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "LoopBlock(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileLoopBlock(this, context);
+        }
+    }
+
     public static class ForBlock extends BlockStatement {
         public final Statement start;
         public final Statement condition;
@@ -382,6 +432,158 @@ public class AST {
 
         public CompiledCode compile(CompileContext context) {
             return ASTVisitor.instance.compileForBlock(this, context);
+        }
+    }
+
+    public static class ForIterBlock extends BlockStatement {
+        public final Statement item;
+        public final Statement list;
+        public ForIterBlock(Statement item, Statement list, List<Statement> body) {
+            super(body);
+            this.item = item;
+            this.list = list;
+        }
+
+        public String toString() {
+            return "ForIterBlock(item = " + this.item.toString() + ", " +
+                    "list = " + this.list.toString() + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "ForIterBlock(item = " + this.item.toFlatString() + ", " +
+                    "list = " + this.list.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileForIterBlock(this, context);
+        }
+    }
+
+    public static class MatchBlock extends BlockStatement {
+        public final Statement on;
+        public MatchBlock(Statement on, List<Statement> body) {
+            super(body);
+            this.on = on;
+        }
+
+        public String toString() {
+            return "MatchBlock(on = " + this.on.toString() + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "MatchBlock(on = " + this.on.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileMatchBlock(this, context);
+        }
+    }
+
+    public static class SwitchBlock extends BlockStatement {
+        public final Statement on;
+        public SwitchBlock(Statement on, List<Statement> body) {
+            super(body);
+            this.on = on;
+        }
+
+        public String toString() {
+            return "SwitchBlock(on = " + this.on.toString() + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "SwitchBlock(on = " + this.on.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileSwitchBlock(this, context);
+        }
+    }
+
+    public static class CaseStatement extends Expression {
+        public final Statement on;
+        public CaseStatement(Statement on) {
+            super();
+            this.on = on;
+        }
+
+        public String toString() {
+            return "CaseStatement(on = " + this.on.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "CaseStatement(on = " + this.on.toFlatString() + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileCaseStatement(this, context);
+        }
+    }
+
+    public static class TryBlock extends BlockStatement {
+
+        public TryBlock(List<Statement> body) {
+            super(body);
+
+        }
+
+        public String toString() {
+            return "TryBlock(body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "TryBlock(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileTryBlock(this, context);
+        }
+    }
+
+    public static class CatchBlock extends BlockStatement {
+        public final Statement ex;
+        public CatchBlock(Statement ex, List<Statement> body) {
+            super(body);
+            this.ex = ex;
+        }
+
+        public String toString() {
+            return "CatchBlock(ex = " + this.ex.toString() + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "CatchBlock(ex = " + this.ex.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileCatchBlock(this, context);
+        }
+    }
+
+    public static class FinallyBlock extends BlockStatement {
+
+        public FinallyBlock(List<Statement> body) {
+            super(body);
+
+        }
+
+        public String toString() {
+            return "FinallyBlock(body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+        }
+
+        public String toFlatString() {
+            return "FinallyBlock(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileFinallyBlock(this, context);
         }
     }
 

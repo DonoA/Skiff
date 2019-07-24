@@ -40,6 +40,10 @@ public class ASTVisitor {
         return FunctionDefCompiler.compileFunctionDef(stmt, context);
     }
 
+    public CompiledCode compileAnonFunctionDef(AnonFunctionDef stmt, CompileContext context) {
+        return null;
+    }
+
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(context);
         String sb = type.getCompiledText() + "* formal_" + stmt.name;
@@ -109,7 +113,39 @@ public class ASTVisitor {
         return null;
     }
 
+    public CompiledCode compileLoopBlock(LoopBlock stmt, CompileContext context) {
+        return null;
+    }
+
     public CompiledCode compileForBlock(ForBlock stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileForIterBlock(ForIterBlock stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileMatchBlock(MatchBlock stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileSwitchBlock(SwitchBlock stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileCaseStatement(CaseStatement stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileTryBlock(TryBlock stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileCatchBlock(CatchBlock stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileFinallyBlock(FinallyBlock stmt, CompileContext context) {
         return null;
     }
 

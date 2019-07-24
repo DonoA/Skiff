@@ -87,7 +87,7 @@ public class Lexer {
             return new Token(Token.Textless.SEQUENCE_LITERAL, selectTo('\''));
         }
 
-        if (c == 'r') {
+        if (c == 'r' && data.length() > pos + 1 && data.charAt(pos + 1) == '/') {
             pos++;
             StringBuilder regex = new StringBuilder();
             regex.append(selectTo('/')).append('\0');

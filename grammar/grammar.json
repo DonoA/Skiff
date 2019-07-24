@@ -34,6 +34,18 @@
             }
         }
     },
+    "AnonFunctionDef": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "returns": "Type",
+            "name": "String",
+            "args": "List<FunctionParam>",
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
     "ClassDef": {
         "extends": "BlockStatement(body)",
         "fields": {
@@ -98,12 +110,86 @@
             }
         }
     },
+    "LoopBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
     "ForBlock": {
         "extends": "BlockStatement(body)",
         "fields": {
             "start": "Statement",
             "condition": "Statement",
             "step": "Statement",
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
+    "ForIterBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "item": "Statement",
+            "list": "Statement",
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
+    "MatchBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "on": "Statement",
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
+    "SwitchBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "on": "Statement",
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
+    "CaseStatement": {
+        "extends": "Expression",
+        "fields": {
+            "on": "Statement"
+        }
+    },
+    "TryBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
+    "CatchBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
+            "ex": "Statement",
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            }
+        }
+    },
+    "FinallyBlock": {
+        "extends": "BlockStatement(body)",
+        "fields": {
             "body": {
                 "type": "List<Statement>",
                 "bigPrint": true
