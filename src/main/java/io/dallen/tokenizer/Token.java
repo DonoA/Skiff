@@ -128,9 +128,14 @@ public class Token {
         }
     }
 
+    public enum IdentifierType {
+        TYPE, VARIABLE
+    }
+
 
     public final TokenType type;
     public final String literal;
+    public final IdentifierType ident;
 
     public static final Token EOF = new Token(Textless.EOF);
 
@@ -139,17 +144,13 @@ public class Token {
     }
 
     public Token(TokenType type, String lit) {
+        this(type, lit, null);
+    }
+
+    public Token(TokenType type, String lit, IdentifierType ident) {
         this.type = type;
         this.literal = lit;
-    }
-
-    @Override
-    public String toString() {
-        return type.getName() + "(" + literal + ")";
-    }
-
-    public boolean isEOF() {
-        return this.type == Textless.EOF;
+        this.ident = ident;
     }
 
     @Override
@@ -157,13 +158,27 @@ public class Token {
         if (this == o) return true;
         if (!(o instanceof Token)) return false;
         Token token = (Token) o;
-        return Objects.equals(type, token.type) &&
-                Objects.equals(literal, token.literal);
+        return type.equals(token.type) &&
+                literal.equals(token.literal) &&
+                ident == token.ident;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, literal);
+        return Objects.hash(type, literal, ident);
+    }
+
+    @Override
+    public String toString() {
+        String str = type.getName() + "(" + literal + ")";
+        if(ident != null) {
+            str += "(" + ident + ")";
+        }
+        return str;
+    }
+
+    public boolean isEOF() {
+        return this.type == Textless.EOF;
     }
 
 }

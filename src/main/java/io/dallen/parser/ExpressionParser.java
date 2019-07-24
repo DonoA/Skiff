@@ -32,7 +32,24 @@ public class ExpressionParser {
     }
 
     public static SplitAction compareAction(CompareOp op) {
-        return statementAction((first, second) -> new Compare(first, op, second));
+        return (first, second) -> {
+            if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE) {
+                return null;
+            }
+
+            Parser rhsParser = new Parser(second);
+
+            if(rhsParser.containsBefore(Token.Symbol.RIGHT_ANGLE, Token.Symbol.SEMICOLON)) {
+                List<Token> rhs = rhsParser.selectTo(Token.Symbol.RIGHT_ANGLE);
+                if(rhs.get(rhs.size() - 1).ident == Token.IdentifierType.TYPE) {
+                    return null;
+                }
+            }
+
+            Statement firstS = new Parser(first).parseExpression();
+            Statement secondS = new Parser(second).parseExpression();
+            return new Compare(firstS, op, secondS);
+        };
     }
 
     public static SplitAction mathAction(MathOp op) {

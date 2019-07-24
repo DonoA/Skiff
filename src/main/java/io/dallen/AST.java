@@ -623,20 +623,24 @@ public class AST {
     public static class FunctionCall extends Expression {
         public final String name;
         public final List<Statement> args;
-        public FunctionCall(String name, List<Statement> args) {
+        public final List<Type> genericTypes;
+        public FunctionCall(String name, List<Statement> args, List<Type> genericTypes) {
             super();
             this.name = name;
             this.args = args;
+            this.genericTypes = genericTypes;
         }
 
         public String toString() {
             return "FunctionCall(name = " + this.name.toString() + ", " +
-                    "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
+                    "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                    "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public String toFlatString() {
             return "FunctionCall(name = " + this.name.toString() + ", " +
-                    "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+                    "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " +
+                    "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(CompileContext context) {

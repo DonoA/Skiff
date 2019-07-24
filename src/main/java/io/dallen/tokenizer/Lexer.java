@@ -2,6 +2,7 @@ package io.dallen.tokenizer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class Lexer {
     private String data;
@@ -24,6 +25,7 @@ public class Lexer {
             Token.TokenType bestTokenType = selectBestToken();
             if (bestTokenType != Token.Textless.EOF) {
                 pos += bestTokenType.getText().length();
+
                 tokens.add(new Token(bestTokenType));
                 continue;
             }
@@ -39,7 +41,8 @@ public class Lexer {
             tokens.add(selected);
         }
         tokens.add(new Token(Token.Textless.EOF));
-        return tokens;
+
+        return new EnrichLexer(tokens).enrich();
     }
 
     private Token.TokenType selectBestToken() {

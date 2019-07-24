@@ -399,9 +399,9 @@ public class BasicExpressions {
         List<Token> tokens = List.of(
                 new Token(Token.Textless.NAME, "println"),
                 new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "String"),
+                new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE),
                 new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NAME, "Int"),
+                new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE),
                 new Token(Token.Symbol.RIGHT_ANGLE),
                 new Token(Token.Symbol.LEFT_PAREN),
                 new Token(Token.Textless.NUMBER_LITERAL, "15"),
@@ -412,7 +412,15 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = "FunctionCall(" +
+                "name = println, " +
+                "args = [" +
+                "NumberLiteral(value = 15.0) " +
+                "], " +
+                "genericTypes = [" +
+                "Type(name = Variable(name = String), arraySize = 0, genericTypes = [ ]), " +
+                "Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]) " +
+                "])";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }

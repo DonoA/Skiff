@@ -50,7 +50,7 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    private Token current() {
+    Token current() {
         if (pos >= tokens.size()) {
             return Token.EOF;
         }
@@ -58,13 +58,13 @@ public class Parser {
         return tokens.get(pos);
     }
 
-    private Token consume() {
+    Token consume() {
         Token tok = current();
         next();
         return tok;
     }
 
-    private Token consumeExpected(Token.TokenType type) {
+    Token consumeExpected(Token.TokenType type) {
         Token t;
         if ((t = consume()).type != type) {
             throw new ParserError("Parse error Expected: " + type.toString(), t);
@@ -72,7 +72,7 @@ public class Parser {
         return t;
     }
 
-    private Token tryConsumeExpected(Token.TokenType type) {
+    Token tryConsumeExpected(Token.TokenType type) {
         Token t = current();
         if (current().type == type) {
             consume();
@@ -82,11 +82,11 @@ public class Parser {
         return t;
     }
 
-    private void next() {
+    void next() {
         pos++;
     }
 
-    private Token peek() {
+    Token peek() {
         if (pos + 1 >= tokens.size()) {
             return Token.EOF;
         }
@@ -94,11 +94,11 @@ public class Parser {
         return tokens.get(pos + 1);
     }
 
-    private List<Token> consumeTo(Token.TokenType type) {
+    List<Token> consumeTo(Token.TokenType type) {
         return consumeTo(type, BraceManager.leftToRight);
     }
 
-    private List<Token> consumeTo(Token.TokenType type, BraceManager.BraceProfile braces) {
+    List<Token> consumeTo(Token.TokenType type, BraceManager.BraceProfile braces) {
         List<Token> tokens = new ArrayList<>();
         BraceManager braceManager = new BraceManager(braces);
         while (true) {
@@ -120,7 +120,7 @@ public class Parser {
     }
 
     // Just selects the tokens, does not advance the current location
-    private List<Token> selectTo(Token.TokenType type) {
+    List<Token> selectTo(Token.TokenType type) {
         List<Token> selected = new ArrayList<>();
         int loc = pos;
         while (loc < tokens.size() && tokens.get(loc).type != type) {
@@ -131,7 +131,7 @@ public class Parser {
     }
 
     // Check if one token comes before another
-    private boolean containsBefore(Token.TokenType what, Token.TokenType before) {
+    boolean containsBefore(Token.TokenType what, Token.TokenType before) {
         for (int lpos = pos; lpos < tokens.size(); lpos++) {
             if (tokens.get(lpos).type == what) {
                 return true;
@@ -472,14 +472,27 @@ public class Parser {
             return new Declare(type, name.literal);
 
         } else if(containsBefore(Symbol.LEFT_PAREN, Symbol.SEMICOLON)) {
-            List<Token> funcName = consumeTo(Symbol.LEFT_PAREN);
+            List<Token> funcName;
+            List<Type> generics = new ArrayList<>();
+            if(containsBefore(Symbol.LEFT_ANGLE, Symbol.LEFT_PAREN)) {
+                funcName = consumeTo(Symbol.LEFT_ANGLE);
+                List<List<Token>> genericTokens = BraceSplitter.customSplitAll(
+                        BraceManager.leftToRightAngle, consumeTo(Symbol.RIGHT_ANGLE), Symbol.COMMA);
+                generics = genericTokens.stream().map(tokenList -> new Parser(tokenList).parseType())
+                        .collect(Collectors.toList());
+
+                consumeExpected(Symbol.LEFT_PAREN);
+            } else {
+                funcName = consumeTo(Symbol.LEFT_PAREN);
+            }
+
             if(funcName.size() > 1) {
                 throw new ParserError("Function call name was multi token", funcName.get(0));
             }
 //            Statement parsedName = new Parser(funcName).parseExpression();
             List<Statement> funcParams = consumeFunctionParams();
             tryConsumeExpected(Symbol.SEMICOLON);
-            return new FunctionCall(funcName.get(0).literal, funcParams);
+            return new FunctionCall(funcName.get(0).literal, funcParams, generics);
 
         } else if(containsBefore(Symbol.DOUBLE_MINUS, Symbol.SEMICOLON)) {
             List<Token> name = consumeTo(Symbol.DOUBLE_MINUS);

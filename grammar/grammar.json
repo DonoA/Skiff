@@ -208,7 +208,8 @@
         "extends": "Expression",
         "fields": {
             "name": "String",
-            "args": "List<Statement>"
+            "args": "List<Statement>",
+            "genericTypes": "List<Type>"
         }
     },
     "Parened": {
