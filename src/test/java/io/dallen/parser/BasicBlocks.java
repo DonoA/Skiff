@@ -1,6 +1,7 @@
 package io.dallen.parser;
 
-import io.dallen.AST;
+import io.dallen.AST.*;
+import io.dallen.ASTUtil;
 import io.dallen.tokenizer.Token;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
@@ -19,7 +20,7 @@ public class BasicBlocks {
     @org.junit.Test
     public void parse() {
         List<Token> tokens = ;
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
@@ -53,20 +54,17 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "FunctionDef(" +
-                "genericTypes = [ ], " +
-                "returns = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), " +
-                "name = func, " +
-                "args = [" +
-                "FunctionParam(type = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), name = x) " +
-                "], " +
-                "body = [" +
-                "Return(value = MathStatement(left = Variable(name = x), op = PLUS, right = NumberLiteral(value = 1.0))) " +
-                "])";
+        String expected = new FunctionDef(
+                List.of(),
+                ASTUtil.simpleType("Int"),
+                "func",
+                List.of(new FunctionParam(ASTUtil.simpleType("Int"), "x")),
+                List.of(new Return(new MathStatement(new Variable("x"), MathOp.PLUS, new NumberLiteral(1.0))))
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -74,7 +72,6 @@ public class BasicBlocks {
     /*
     class Cls { age: Int; def Cls(age: Int) { this.age = 10; } }
      */
-
 
     @org.junit.Test
     public void parseClassDef() {
@@ -103,7 +100,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
@@ -136,7 +133,7 @@ public class BasicBlocks {
 //    @org.junit.Test
 //    public void parseDataClassDef() {
 //        List<Token> tokens = ;
-//        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+//        List<Statement> statements = new Parser(tokens).parseBlock();
 //
 //        assertEquals(1, statements.size());
 //
@@ -168,7 +165,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
@@ -217,20 +214,25 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "FunctionDef(" +
-                "genericTypes = [GenericType(name = U, reqExtend = [ ]), " +
-                "GenericType(name = V, reqExtend = [ ]) ], " +
-                "returns = Type(name = Variable(name = V), arraySize = 0, genericTypes = [ ]), " +
-                "name = genFunc, " +
-                "args = [" +
-                "FunctionParam(type = Type(name = Variable(name = U), arraySize = 0, genericTypes = [ ]), name = a) " +
-                "], " +
-                "body = [" +
-                "Return(value = Dotted(left = Variable(name = a), right = FunctionCall(name = getV, args = [ ]))) ])";
+        String expected = new FunctionDef(
+                List.of(
+                        new GenericType("U", List.of()),
+                        new GenericType("V", List.of())
+                        ),
+                ASTUtil.simpleType("V"),
+                "genFunc",
+                List.of(new FunctionParam(ASTUtil.simpleType("U"), "a")),
+                List.of(
+                        new Return(
+                                new Dotted(
+                                        new Variable("a"),
+                                        ASTUtil.simpleFuncCall("getV")))
+                )
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -249,15 +251,16 @@ public class BasicBlocks {
                 new Token(Token.Symbol.LEFT_BRACE),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "ClassDef(" +
-                "name = CLS, " +
-                "genericTypes = [ ], " +
-                "extendClasses = [Type(name = Variable(name = Object), arraySize = 0, genericTypes = [ ]) ], " +
-                "body = [ ])";
+        String expected = new ClassDef(
+                "CLS",
+                List.of(),
+                List.of(ASTUtil.simpleType("Object")),
+                List.of()
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -280,7 +283,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.LEFT_BRACE),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
@@ -309,14 +312,14 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "IfBlock(" +
-                "condition = FunctionCall(name = isWorking, args = [ ]), " +
-                "body = [FunctionCall(name = run, args = [ ]) ], " +
-                "elseBlock = ElseBlock())";
+        String expected = new IfBlock(
+                ASTUtil.simpleFuncCall("isWorking"),
+                List.of(ASTUtil.simpleFuncCall("run"))
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -340,15 +343,36 @@ public class BasicBlocks {
                 new Token(Token.Symbol.RIGHT_PAREN),
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
+                new Token(Token.Keyword.ELSE),
+                new Token(Token.Symbol.LEFT_BRACE),
+                new Token(Token.Textless.NAME, "stop"),
+                new Token(Token.Symbol.LEFT_PAREN),
+                new Token(Token.Symbol.RIGHT_PAREN),
+                new Token(Token.Symbol.SEMICOLON),
+                new Token(Token.Textless.NAME, "setIsWorking"),
+                new Token(Token.Symbol.LEFT_PAREN),
+                new Token(Token.Keyword.TRUE),
+                new Token(Token.Symbol.RIGHT_PAREN),
+                new Token(Token.Symbol.SEMICOLON),
+                new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "IfBlock(" +
-                "condition = FunctionCall(name = isWorking, args = [ ]), " +
-                "body = [FunctionCall(name = run, args = [ ]) ], " +
-                "elseBlock = ElseBlock())";
+        IfBlock start = new IfBlock(
+                ASTUtil.simpleFuncCall("isWorking"),
+                List.of(ASTUtil.simpleFuncCall("run"))
+        );
+
+        start.elseBlock = new ElseAlwaysBlock(
+          List.of(
+                  ASTUtil.simpleFuncCall("stop"),
+                  new FunctionCall("setIsWorking", List.of(new BooleanLiteral(true)), List.of())
+          )
+        );
+
+        String expected = start.toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -391,19 +415,24 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "IfBlock(" +
-                "condition = FunctionCall(name = isWorking, args = [ ]), " +
-                "body = [FunctionCall(name = run, args = [ ]) ], " +
-                "elseBlock = ElseIfBlock(" +
-                "on = IfBlock(condition = FunctionCall(name = readyToWork, args = [ ]), " +
-                "body = [FunctionCall(name = stop, args = [ ]), " +
-                "FunctionCall(name = setIsWorking, args = [BooleanLiteral(value = \"true\") ]) ], " +
-                "elseBlock = ElseBlock()), " +
-                "elseBlock = ElseBlock()))";
+        IfBlock ifBlock = new IfBlock(
+                ASTUtil.simpleFuncCall("isWorking"),
+                List.of(ASTUtil.simpleFuncCall("run"))
+        );
+
+        ifBlock.elseBlock = new ElseIfBlock(
+                new IfBlock(
+                        ASTUtil.simpleFuncCall("readyToWork"), List.of(
+                        ASTUtil.simpleFuncCall("stop"),
+                        new FunctionCall("setIsWorking", List.of(new BooleanLiteral(true)), List.of())
+                ))
+        );
+
+        String expected = ifBlock.toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -428,13 +457,13 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
         String expected = "WhileBlock(" +
-                "condition = FunctionCall(name = notReady, args = [ ]), " +
-                "body = [FunctionCall(name = wait, args = [ ]) ])";
+                "condition = FunctionCall(name = notReady, args = [ ], genericTypes = [ ]), " +
+                "body = [FunctionCall(name = wait, args = [ ], genericTypes = [ ]) ])";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -454,11 +483,14 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "LoopBlock(body = [FunctionCall(name = think, args = [ ]) ])";
+//        String expected = "LoopBlock(body = [FunctionCall(name = think, args = [ ]) ])";
+        String expected = new LoopBlock(List.of(
+                ASTUtil.simpleFuncCall("think")
+        )).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -493,20 +525,21 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "ForBlock(" +
-                "start = DeclareAssign(" +
-                "type = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), " +
-                "name = i, " +
-                "value = NumberLiteral(value = 0.0)), " +
-                "condition = Compare(left = Variable(name = i), " +
-                "op = LT, " +
-                "right = Variable(name = mySize)), " +
-                "step = MathSelfMod(left = Variable(name = i), op = PLUS), " +
-                "body = [FunctionCall(name = exec, args = [Variable(name = i) ]) ])";
+        String expected = new ForBlock(
+                new DeclareAssign(
+                        ASTUtil.simpleType("Int"),
+                        "i",
+                        new NumberLiteral(0.0)
+                ),
+                new Compare(new Variable("i"), CompareOp.LT, new Variable("mySize")),
+                new MathSelfMod(new Variable("i"), MathOp.PLUS, SelfModTime.POST),
+                List.of(new FunctionCall("exec", List.of(new Variable("i")), List.of()))
+        ).toFlatString();
+
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -518,7 +551,7 @@ public class BasicBlocks {
 //    @org.junit.Test
 //    public void parseForIter() {
 //        List<Token> tokens = ;
-//        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+//        List<Statement> statements = new Parser(tokens).parseBlock();
 //
 //        assertEquals(1, statements.size());
 //
@@ -556,7 +589,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
@@ -594,7 +627,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
@@ -631,7 +664,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Symbol.RIGHT_BRACE),
                 new Token(Token.Textless.EOF));
-        List<AST.Statement> statements = new Parser(tokens).parseBlock();
+        List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 

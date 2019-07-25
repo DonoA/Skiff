@@ -71,6 +71,20 @@ public class AST {
         }
     }
 
+    public enum SelfModTime implements HasRaw {
+        PRE("pre"), POST("post");
+
+        private final String rawOp;
+
+        SelfModTime(String rawOp) {
+            this.rawOp = rawOp;
+        }
+
+        public String getRawOp() {
+            return rawOp;
+        }
+    }
+
     // Begin Generated AST classes
 
     public static class Statement  {
@@ -737,9 +751,9 @@ public class AST {
     }
 
     public static class New extends Expression {
-        public final Statement type;
+        public final Type type;
         public final List<Statement> argz;
-        public New(Statement type, List<Statement> argz) {
+        public New(Type type, List<Statement> argz) {
             super();
             this.type = type;
             this.argz = argz;
@@ -747,12 +761,12 @@ public class AST {
 
         public String toString() {
             return "New(type = " + this.type.toString() + ", " +
-                "argz = " + "[" + this.argz.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
+                    "argz = " + "[" + this.argz.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public String toFlatString() {
             return "New(type = " + this.type.toFlatString() + ", " +
-                "argz = " + "[" + this.argz.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+                    "argz = " + "[" + this.argz.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(CompileContext context) {
@@ -863,20 +877,24 @@ public class AST {
     public static class MathSelfMod extends Expression {
         public final Statement left;
         public final MathOp op;
-        public MathSelfMod(Statement left, MathOp op) {
+        public final SelfModTime time;
+        public MathSelfMod(Statement left, MathOp op, SelfModTime time) {
             super();
             this.left = left;
             this.op = op;
+            this.time = time;
         }
 
         public String toString() {
             return "MathSelfMod(left = " + this.left.toString() + ", " +
-                    "op = " + this.op.toString() + ")";
+                    "op = " + this.op.toString() + ", " +
+                    "time = " + this.time.toString() + ")";
         }
 
         public String toFlatString() {
             return "MathSelfMod(left = " + this.left.toFlatString() + ", " +
-                    "op = " + this.op.toString() + ")";
+                    "op = " + this.op.toString() + ", " +
+                    "time = " + this.time.toString() + ")";
         }
 
         public CompiledCode compile(CompileContext context) {

@@ -420,11 +420,12 @@ public class Parser {
             consumeExpected(Keyword.NEW);
             List<Token> name = consumeTo(Symbol.LEFT_PAREN);
             List<List<Token>> paramz = BraceSplitter.splitAll(consumeTo(Symbol.RIGHT_PAREN), Symbol.COMMA);
-            Statement typeStmt = new Parser(name).parseExpression();
+            Type typeStmt = new Parser(name).parseType();
             List<Statement> params = paramz
                 .stream()
                 .map(e -> new Parser(e).parseExpression())
                 .collect(Collectors.toList());
+            tryConsumeExpected(Symbol.SEMICOLON);
             return new New(typeStmt, params);
         } else if (current().type == Symbol.LEFT_PAREN) {
             consumeExpected(Symbol.LEFT_PAREN);
@@ -432,6 +433,18 @@ public class Parser {
             return new Parened(sub);
         } else if (current().type == Textless.NAME) {
             return handleNameToken(workingTokens);
+
+        } else if (current().type == Symbol.DOUBLE_MINUS) {
+            consumeExpected(Symbol.DOUBLE_MINUS);
+            Statement sub = new Parser(consumeTo(Symbol.SEMICOLON)).parseExpression();
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return new MathSelfMod(sub, MathOp.MINUS, SelfModTime.PRE);
+        } else if (current().type == Symbol.DOUBLE_PLUS) {
+            consumeExpected(Symbol.DOUBLE_PLUS);
+            Statement sub = new Parser(consumeTo(Symbol.SEMICOLON)).parseExpression();
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return new MathSelfMod(sub, MathOp.PLUS, SelfModTime.PRE);
+
         } else if (current().type == Keyword.TRUE) {
             BooleanLiteral lit = new BooleanLiteral(Boolean.TRUE);
             tryConsumeExpected(Symbol.SEMICOLON);
@@ -440,6 +453,7 @@ public class Parser {
             BooleanLiteral lit = new BooleanLiteral(Boolean.FALSE);
             tryConsumeExpected(Symbol.SEMICOLON);
             return lit;
+
         } else if (current().type == Textless.NUMBER_LITERAL) {
             NumberLiteral lit = new NumberLiteral(Double.parseDouble(consume().literal));
             tryConsumeExpected(Symbol.SEMICOLON);
@@ -498,12 +512,12 @@ public class Parser {
             List<Token> name = consumeTo(Symbol.DOUBLE_MINUS);
             Statement left = new Parser(name).parseExpression();
             tryConsumeExpected(Symbol.SEMICOLON);
-            return new MathSelfMod(left, MathOp.MINUS);
+            return new MathSelfMod(left, MathOp.MINUS, SelfModTime.POST);
         } else if(containsBefore(Symbol.DOUBLE_PLUS, Symbol.SEMICOLON)) {
             List<Token> name = consumeTo(Symbol.DOUBLE_PLUS);
             Statement left = new Parser(name).parseExpression();
             tryConsumeExpected(Symbol.SEMICOLON);
-            return new MathSelfMod(left, MathOp.PLUS);
+            return new MathSelfMod(left, MathOp.PLUS, SelfModTime.POST);
         } else if(containsBefore(Symbol.LEFT_BRACKET, Symbol.SEMICOLON)) {
             List<Token> name = consumeTo(Symbol.LEFT_BRACKET);
             Statement left = new Parser(name).parseExpression();

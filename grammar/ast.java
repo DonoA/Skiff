@@ -660,9 +660,9 @@ public static class Return extends Expression {
 }
     
 public static class New extends Expression {
-    public final Statement type;
+    public final Type type;
     public final List<Statement> argz;
-    public New(Statement type, List<Statement> argz) {
+    public New(Type type, List<Statement> argz) {
         super();
         this.type = type;
         this.argz = argz;
@@ -786,20 +786,24 @@ public static class MathAssign extends Expression {
 public static class MathSelfMod extends Expression {
     public final Statement left;
     public final MathOp op;
-    public MathSelfMod(Statement left, MathOp op) {
+    public final SelfModTime time;
+    public MathSelfMod(Statement left, MathOp op, SelfModTime time) {
         super();
         this.left = left;
         this.op = op;
+        this.time = time;
     }
 
     public String toString() {
         return "MathSelfMod(left = " + this.left.toString() + ", " + 
-            "op = " + this.op.toString() + ")";
+            "op = " + this.op.toString() + ", " + 
+            "time = " + this.time.toString() + ")";
     }
 
     public String toFlatString() {
         return "MathSelfMod(left = " + this.left.toFlatString() + ", " + 
-            "op = " + this.op.toString() + ")";
+            "op = " + this.op.toString() + ", " + 
+            "time = " + this.time.toFlatString() + ")";
     }
 
     public CompiledCode compile(CompileContext context) {

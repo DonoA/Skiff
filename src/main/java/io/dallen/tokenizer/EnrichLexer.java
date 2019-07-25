@@ -9,43 +9,44 @@ public class EnrichLexer {
 
     private final List<Token> tokens;
 
-    private final Stack<LexerTable> symbolTables = new Stack<>();
-
-    private final static LexerTable baseTable = new LexerTable(null);
-
-    static {
-        baseTable.defineIdent("String", Token.IdentifierType.TYPE);
-        baseTable.defineIdent("Int", Token.IdentifierType.TYPE);
-        baseTable.defineIdent("List", Token.IdentifierType.TYPE);
-    }
+    private LexerTable table = new LexerTable(
+            "String", "Int", "List"
+    );
 
     public EnrichLexer(List<Token> tokens) {
         this.tokens = tokens;
-        symbolTables.push(baseTable);
     }
 
     public List<Token> enrich() {
         for (int i = 0; i < tokens.size(); i++) {
             Token token = tokens.get(i);
             if(token.type == Token.Symbol.LEFT_BRACE) {
-                symbolTables.push(new LexerTable(symbolTables.peek()));
+                table.newChild();
             }
 
             if(token.type == Token.Symbol.RIGHT_BRACE) {
-                symbolTables.pop();
+                table.toParent();
             }
 
             if(token.type == Token.Keyword.CLASS) {
                 Token next = tokens.get(i + 1);
-                symbolTables.peek().defineIdent(next.literal, Token.IdentifierType.TYPE);
+                table.defineIdent(next.literal, Token.IdentifierType.TYPE);
             }
         }
 
         return tokens
                 .stream()
                 .map(token -> {
+                    if(token.type == Token.Symbol.LEFT_BRACE) {
+                        table.nextChild();
+                    }
+
+                    if(token.type == Token.Symbol.RIGHT_BRACE) {
+                        table.toParent();
+                    }
+
                     if(token.type == Token.Textless.NAME) {
-                        Token.IdentifierType ident = symbolTables.peek().getIdent(token.literal);
+                        Token.IdentifierType ident = table.getIdent(token.literal);
                         if(ident == null) {
                             ident = Token.IdentifierType.VARIABLE;
                         }

@@ -3,6 +3,7 @@ package io.dallen.parser;
 import static io.dallen.AST.*;
 import static org.junit.Assert.*;
 
+import io.dallen.ASTUtil;
 import io.dallen.tokenizer.Token;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
@@ -40,7 +41,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "Declare(type = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), name = x)";
+        String expected = new Declare(ASTUtil.simpleType("Int"), "x").toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -58,7 +59,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "Assign(name = Variable(name = x), value = NumberLiteral(value = 5.0))";
+        String expected =  new Assign(new Variable("x"), new NumberLiteral(5.0)).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -78,10 +79,11 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "DeclareAssign(" +
-                "type = Type(name = Variable(name = String), arraySize = 0, genericTypes = [ ]), " +
-                "name = x, " +
-                "value = StringLiteral(value = \"Hello World\"))";
+        String expected = new DeclareAssign(
+                ASTUtil.simpleType("String"),
+                "x",
+                new StringLiteral("Hello World")
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -104,8 +106,15 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "FunctionCall(name = println, args = " +
-                "[Variable(name = x), StringLiteral(value = \"Hello\"), NumberLiteral(value = 5.0) ])";
+        String expected = new FunctionCall(
+                "println",
+                List.of(new Variable("x"), new StringLiteral("Hello"), new NumberLiteral(5.0)),
+                List.of()
+        ).toFlatString();
+//                "FunctionCall(" +
+//                "name = println, " +
+//                "args = [Variable(name = x), StringLiteral(value = \"Hello\"), NumberLiteral(value = 5.0) ], " +
+//                "genericTypes = [ ])";
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -128,8 +137,10 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "New(type = Variable(name = MyClass), " +
-                "argz = [Variable(name = x), StringLiteral(value = \"Hello\"), NumberLiteral(value = 5.0) ])";
+        String expected = new New(
+                ASTUtil.simpleType("MyClass"),
+                List.of(new Variable("x"), new StringLiteral("Hello"), new NumberLiteral(5.0))
+            ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -146,7 +157,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "Return(value = Variable(name = x))";
+        String expected = new Return(new Variable("x")).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -161,7 +172,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "StringLiteral(value = \"Hello\")";
+        String expected = new StringLiteral("Hello").toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -176,7 +187,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "SequenceLiteral(value = \"Simple Sequence\")";
+        String expected = new SequenceLiteral("Simple Sequence").toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -191,7 +202,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "RegexLiteral(pattern = \"$Regex[Pat-trn]^\", flags = \"gi\")";
+        String expected = new RegexLiteral("$Regex[Pat-trn]^", "gi").toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -206,7 +217,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "NumberLiteral(value = 3.141592)";
+        String expected = new NumberLiteral(3.141592).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -226,9 +237,11 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "BoolCombine(left = BooleanLiteral(value = \"true\"), op = AND, " +
-                "right = BoolCombine(left = BooleanLiteral(value = \"false\"), op = OR, " +
-                "right = BooleanLiteral(value = \"false\")))";
+        String expected = new BoolCombine(
+                new BooleanLiteral(true), BoolOp.AND, new BoolCombine(
+                        new BooleanLiteral(false), BoolOp.OR, new BooleanLiteral(false)
+            )
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -347,7 +360,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "MathSelfMod(left = Variable(name = x), op = PLUS)";
+        String expected = new MathSelfMod(new Variable("x"), MathOp.PLUS, SelfModTime.POST).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -363,7 +376,9 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = new MathSelfMod(
+                new Variable("y"), MathOp.MINUS, SelfModTime.PRE
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -373,11 +388,11 @@ public class BasicExpressions {
         // new MyClass<String, Int>(15);
         List<Token> tokens = List.of(
                 new Token(Token.Keyword.NEW),
-                new Token(Token.Textless.NAME, "MyClass"),
+                new Token(Token.Textless.NAME, "MyClass", Token.IdentifierType.TYPE),
                 new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "String"),
+                new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE),
                 new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NAME, "Int"),
+                new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE),
                 new Token(Token.Symbol.RIGHT_ANGLE),
                 new Token(Token.Symbol.LEFT_PAREN),
                 new Token(Token.Textless.NUMBER_LITERAL, "15"),
@@ -388,7 +403,15 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = new New(
+                new Type(new Variable("MyClass"), 0, List.of(
+                        ASTUtil.simpleType("String"),
+                        ASTUtil.simpleType("Int")
+                )),
+                List.of(
+                        new NumberLiteral(15.0)
+                )
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -412,15 +435,11 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "FunctionCall(" +
-                "name = println, " +
-                "args = [" +
-                "NumberLiteral(value = 15.0) " +
-                "], " +
-                "genericTypes = [" +
-                "Type(name = Variable(name = String), arraySize = 0, genericTypes = [ ]), " +
-                "Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]) " +
-                "])";
+        String expected = new FunctionCall(
+                "println",
+                List.of(new NumberLiteral(15.0)),
+                List.of(ASTUtil.simpleType("String"), ASTUtil.simpleType("Int"))
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -441,8 +460,9 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "Subscript(left = Variable(name = x), " +
-                "sub = Subscript(left = Variable(name = y), sub = Variable(name = z)))";
+        String expected = new Subscript(
+                new Variable("x"), new Subscript(new Variable("y"), new Variable("z"))
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -460,7 +480,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "ImportStatement(type = SYSTEM, value = myPackage)";
+        String expected = new ImportStatement(ImportType.SYSTEM, "myPackage").toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -489,7 +509,7 @@ public class BasicExpressions {
 
         assertEquals(1, statements.size());
 
-        String expected = "ThrowStatement(value = Variable(name = myExistingError))";
+        String expected = new ThrowStatement(new Variable("myExistingError")).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }

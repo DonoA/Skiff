@@ -241,7 +241,7 @@
     "New": {
         "extends": "Expression",
         "fields": {
-            "type": "Statement",
+            "type": "Type",
             "argz": "List<Statement>"
         }
     },
@@ -278,7 +278,8 @@
         "extends": "Expression",
         "fields": {
             "left": "Statement",
-            "op": "MathOp"
+            "op": "MathOp",
+            "time": "SelfModTime"
         }
     },
     "Subscript": {
