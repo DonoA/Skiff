@@ -261,25 +261,21 @@ public class AST {
 
     public static class AnonFunctionDef extends BlockStatement {
         public final Type returns;
-        public final String name;
         public final List<FunctionParam> args;
-        public AnonFunctionDef(Type returns, String name, List<FunctionParam> args, List<Statement> body) {
+        public AnonFunctionDef(Type returns, List<FunctionParam> args, List<Statement> body) {
             super(body);
             this.returns = returns;
-            this.name = name;
             this.args = args;
         }
 
         public String toString() {
             return "AnonFunctionDef(returns = " + this.returns.toString() + ", " +
-                    "name = " + this.name.toString() + ", " +
                     "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " +
                     "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
         }
 
         public String toFlatString() {
             return "AnonFunctionDef(returns = " + this.returns.toFlatString() + ", " +
-                    "name = " + this.name.toString() + ", " +
                     "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " +
                     "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
@@ -633,18 +629,20 @@ public class AST {
     }
 
     public static class TryBlock extends BlockStatement {
-
+        public CatchBlock catchBlock;
         public TryBlock(List<Statement> body) {
             super(body);
-
+            this.catchBlock = new CatchBlock(new Statement(), List.of());
         }
 
         public String toString() {
-            return "TryBlock(body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
+            return "TryBlock(catchBlock = " + this.catchBlock.toString() + ", " +
+                    "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
         }
 
         public String toFlatString() {
-            return "TryBlock(body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+            return "TryBlock(catchBlock = " + this.catchBlock.toFlatString() + ", " +
+                    "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(CompileContext context) {

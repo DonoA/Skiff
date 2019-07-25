@@ -1,5 +1,6 @@
 package io.dallen.parser;
 
+import io.dallen.AST;
 import io.dallen.AST.*;
 import io.dallen.ASTUtil;
 import io.dallen.tokenizer.Token;
@@ -287,7 +288,11 @@ public class BasicBlocks {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = new AST.AnonFunctionDef(
+                ASTUtil.simpleType("Returns"),
+                List.of(new FunctionParam(ASTUtil.simpleType("T"), "p")),
+                List.of()
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -688,7 +693,15 @@ public class BasicBlocks {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        TryBlock tryBlock = new TryBlock(
+                List.of(ASTUtil.simpleFuncCall("errorFunc"))
+        );
+
+        tryBlock.catchBlock = new CatchBlock(new Declare(ASTUtil.simpleType("Error"), "ex"), List.of(
+                new FunctionCall("print", List.of(new Variable("ex")), List.of())
+        ));
+
+        String expected = tryBlock.toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }

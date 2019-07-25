@@ -45,7 +45,6 @@
         "extends": "BlockStatement(body)",
         "fields": {
             "returns": "Type",
-            "name": "String",
             "args": "List<FunctionParam>",
             "body": {
                 "type": "List<Statement>",
@@ -193,6 +192,7 @@
     "TryBlock": {
         "extends": "BlockStatement(body)",
         "fields": {
+            "catchBlock": "CatchBlock",
             "body": {
                 "type": "List<Statement>",
                 "bigPrint": true

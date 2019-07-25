@@ -210,6 +210,14 @@ public class Parser {
                 statements.add(parseThrow());
                 continue;
             }
+            if (Keyword.TRY.equals(i)) {
+                statements.add(parseTryBlock());
+                continue;
+            }
+            if (Keyword.CATCH.equals(i)) {
+                attachCatchBlock(statements);
+                continue;
+            }
             statements.add(parseExpression());
         }
         return statements;
@@ -249,6 +257,29 @@ public class Parser {
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new ClassDef(name.literal, genericTypes, extendList, body);
+    }
+
+    private void attachCatchBlock(ArrayList<Statement> statements) {
+        if(statements.size() < 1) {
+            throw new CompileError("Else statement requires If, none found");
+        }
+        Statement parentStmt = statements.get(statements.size() - 1);
+
+        consumeExpected(Keyword.CATCH);
+
+        consumeExpected(Symbol.LEFT_PAREN);
+        List<Token> condTokens = consumeTo(Symbol.RIGHT_PAREN);
+        consumeExpected(Symbol.LEFT_BRACE);
+        Statement cond = new Parser(condTokens).parseExpression();
+
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+        List<Statement> body = new Parser(bodyTokens).parseBlock();
+
+        if(parentStmt instanceof TryBlock) {
+            ((TryBlock) parentStmt).catchBlock = new CatchBlock(cond, body);
+        } else {
+            throw new CompileError("Catch statement requires Try, " + parentStmt.getClass().getName() + " found");
+        }
     }
 
     private void attachElseBlock(ArrayList<Statement> statements) {
@@ -368,6 +399,16 @@ public class Parser {
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new WhileBlock(cond, body);
+    }
+
+    private TryBlock parseTryBlock() {
+        next();
+        consumeExpected(Symbol.LEFT_BRACE);
+
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+        List<Statement> body = new Parser(bodyTokens).parseBlock();
+
+        return new TryBlock(body);
     }
 
     private LoopBlock parseLoopBlock() {
@@ -497,8 +538,35 @@ public class Parser {
             return new New(typeStmt, params);
         } else if (current().type == Symbol.LEFT_PAREN) {
             consumeExpected(Symbol.LEFT_PAREN);
-            Statement sub = new Parser(consumeTo(Symbol.RIGHT_PAREN)).parseExpression();
-            return new Parened(sub);
+            if(!containsBefore(Symbol.ARROW, Symbol.SEMICOLON)){
+                Statement sub = new Parser(consumeTo(Symbol.RIGHT_PAREN)).parseExpression();
+                return new Parened(sub);
+            }
+            List<Token> paramTokens = consumeTo(Symbol.RIGHT_PAREN);
+
+            List<FunctionParam> params;
+            try {
+                params = BraceSplitter.splitAll(paramTokens, Symbol.COMMA)
+                        .stream()
+                        .map(e -> BraceSplitter.splitAll(e, Symbol.COLON))
+                        .map(e -> new FunctionParam(new Parser(e.get(1)).parseType(), e.get(0).get(0).literal))
+                        .collect(Collectors.toList());
+            } catch (IndexOutOfBoundsException ex) {
+                throw new CompileError("Failed to parse function args for anon func");
+            }
+
+            Type returns = Type.VOID;
+            if(current().type == Symbol.COLON) {
+                consumeExpected(Symbol.COLON);
+                returns = new Parser(consumeTo(Symbol.ARROW)).parseType();
+            }
+
+            consumeExpected(Symbol.LEFT_BRACE);
+
+            List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+            List<Statement> body = new Parser(bodyTokens).parseBlock();
+
+            return new AnonFunctionDef(returns, params, body);
         } else if (current().type == Textless.NAME) {
             return handleNameToken(workingTokens);
 
