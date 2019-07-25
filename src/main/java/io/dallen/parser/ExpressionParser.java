@@ -1,74 +1,192 @@
 package io.dallen.parser;
 
-import io.dallen.AST.*;
+import io.dallen.AST;
+import io.dallen.compiler.CompileError;
 import io.dallen.parser.splitter.BraceSplitter;
-import io.dallen.parser.splitter.SplitAction;
 import io.dallen.tokenizer.Token;
+import io.dallen.tokenizer.Token.Keyword;
+import io.dallen.tokenizer.Token.Symbol;
+import io.dallen.tokenizer.Token.Textless;
 
-import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class ExpressionParser {
-    public static Statement parseAssignment(List<Token> first, List<Token> second) {
-        List<List<Token>> res = BraceSplitter.splitAll(first, Token.Symbol.COLON);
-        if(res.size() == 1) {
-            Statement firstS = new Parser(first).parseExpression();
-            Statement secondS = new Parser(second).parseExpression();
-            return new Assign(firstS, secondS);
-        } else if(res.size() == 2) {
-            Type typ = new Parser(res.get(1)).parseType();
-            if(res.get(0).size() != 1) {
-                throw new ParserError("Declare assign name had multiple parts", res.get(0).get(0));
-            }
-            String name = res.get(0).get(0).literal;
-            Statement secondS = new Parser(second).parseExpression();
-            return new DeclareAssign(typ, name, secondS);
-        }
-        throw new ParserError("Assign name had many colons", res.get(0).get(0));
-    }
+class ExpressionParser {
 
-    public static SplitAction boolCombineAction(BoolOp op) {
-        return statementAction((first, second) -> new BoolCombine(first, op, second));
-    }
+    private Parser parser;
 
-    public static SplitAction compareAction(CompareOp op) {
-        return (first, second) -> {
-            if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE) {
-                return null;
-            }
+    private List<Token> workingTokens;
 
-            Parser rhsParser = new Parser(second);
 
-            if(rhsParser.containsBefore(Token.Symbol.RIGHT_ANGLE, Token.Symbol.SEMICOLON)) {
-                List<Token> rhs = rhsParser.selectTo(Token.Symbol.RIGHT_ANGLE);
-                if(rhs.get(rhs.size() - 1).ident == Token.IdentifierType.TYPE) {
-                    return null;
+    private static final AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser> expressionSwitch =
+        new AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser>()
+            .addCase(Keyword.NEW::equals, ExpressionParser::parseNew)
+            .addCase(Symbol.LEFT_PAREN::equals, context -> {
+                context.parser.consumeExpected(Token.Symbol.LEFT_PAREN);
+                if(!context.parser.containsBefore(Token.Symbol.ARROW, Token.Symbol.SEMICOLON)){
+                    AST.Statement sub = new Parser(context.parser.consumeTo(Token.Symbol.RIGHT_PAREN)).parseExpression();
+                    return new AST.Parened(sub);
                 }
+                return context.parseAnonFunc();
+            })
+            .addCase(Textless.NAME::equals, context -> context.handleNameToken(context.workingTokens))
+            .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, AST.MathOp.MINUS))
+            .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, AST.MathOp.MINUS))
+            .addCase(Keyword.TRUE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.TRUE)))
+            .addCase(Keyword.FALSE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.FALSE)))
+            .addCase(Textless.NUMBER_LITERAL::equals, context ->
+                    context.parseLiteral(lit -> new AST.NumberLiteral(Double.parseDouble(lit))))
+            .addCase(Textless.REGEX_LITERAL::equals, context -> {
+                String[] seg = context.parser.consume().literal.split("\0");
+                AST.RegexLiteral lit = new AST.RegexLiteral(seg[0], seg[1]);
+                context.parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+                return lit;
+            })
+            .addCase(Textless.SEQUENCE_LITERAL::equals, context -> context.parseLiteral(AST.SequenceLiteral::new))
+            .addCase(Textless.STRING_LITERAL::equals, context -> context.parseLiteral(AST.StringLiteral::new))
+            .addCase(Keyword.BREAK::equals, context -> context.parseLiteral(j -> new AST.BreakStatement()))
+            .addCase(Keyword.NEXT::equals, context -> context.parseLiteral(j -> new AST.ContinueStatement()))
+            .addCase(Symbol.UNDERSCORE::equals, context -> context.parseLiteral(j -> new AST.Variable("_")))
+            .setDefault(context -> {
+                throw new ParserError("Unknown token sequence", context.parser.current());
+            });
+
+    ExpressionParser(Parser parser) {
+        this.parser = parser;
+    }
+
+    AST.Statement parseExpression() {
+        workingTokens = parser.selectTo(Token.Symbol.SEMICOLON);
+
+        AST.Statement parsed = ExpressionSplitParser.split(workingTokens);
+        if (parsed != null) {
+            parser.pos += workingTokens.size() + 1;
+            return parsed;
+        }
+
+        return expressionSwitch.execute(parser.current().type, this);
+    }
+
+    private AST.Statement parseNew() {
+        parser.consumeExpected(Token.Keyword.NEW);
+        List<Token> name = parser.consumeTo(Token.Symbol.LEFT_PAREN);
+        List<List<Token>> paramz = BraceSplitter.splitAll(parser.consumeTo(Token.Symbol.RIGHT_PAREN), Token.Symbol.COMMA);
+        AST.Type typeStmt = new Parser(name).getCommon().parseType();
+        List<AST.Statement> params = paramz
+                .stream()
+                .map(e -> new Parser(e).parseExpression())
+                .collect(Collectors.toList());
+        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        return new AST.New(typeStmt, params);
+    }
+
+    private AST.Statement parseAnonFunc() {
+        List<Token> paramTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
+
+        List<AST.FunctionParam> params;
+        try {
+            params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
+                    .stream()
+                    .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
+                    .map(e -> new AST.FunctionParam(new Parser(e.get(1)).getCommon().parseType(), e.get(0).get(0).literal))
+                    .collect(Collectors.toList());
+        } catch (IndexOutOfBoundsException ex) {
+            throw new CompileError("Failed to parse function args for anon func");
+        }
+
+        AST.Type returns = AST.Type.VOID;
+        if(parser.current().type == Token.Symbol.COLON) {
+            parser.consumeExpected(Token.Symbol.COLON);
+            returns = new Parser(parser.consumeTo(Token.Symbol.ARROW)).getCommon().parseType();
+        }
+
+        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
+
+        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
+        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
+
+        return new AST.AnonFunctionDef(returns, params, body);
+    }
+
+    private AST.Statement parseIncDec(Token.TokenType consume, AST.MathOp type) {
+        parser.consumeExpected(consume);
+        AST.Statement sub = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON)).parseExpression();
+        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        return new AST.MathSelfMod(sub, type, AST.SelfModTime.PRE);
+    }
+
+    private AST.Statement parseLiteral(LiteralConstructor constructor) {
+        AST.Statement lit = constructor.construct(parser.consume().literal);
+        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        return lit;
+    }
+
+    private interface LiteralConstructor {
+        AST.Statement construct(String lit);
+    }
+
+    private AST.Statement handleNameToken(List<Token> workingTokens) {
+
+        if(parser.containsBefore(Token.Symbol.COLON, Token.Symbol.SEMICOLON)) {
+            Token name = parser.consume();
+            parser.consumeExpected(Token.Symbol.COLON);
+            AST.Type type = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON)).getCommon().parseType();
+            return new AST.Declare(type, name.literal);
+
+        } else if(parser.containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
+            List<Token> funcName;
+            List<AST.Type> generics = new ArrayList<>();
+            if(parser.containsBefore(Token.Symbol.LEFT_ANGLE, Token.Symbol.LEFT_PAREN)) {
+                funcName = parser.consumeTo(Token.Symbol.LEFT_ANGLE);
+                List<List<Token>> genericTokens = BraceSplitter.customSplitAll(
+                        BraceManager.leftToRightAngle, parser.consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA);
+                generics = genericTokens.stream().map(tokenList -> new Parser(tokenList).getCommon().parseType())
+                        .collect(Collectors.toList());
+
+                parser.consumeExpected(Token.Symbol.LEFT_PAREN);
+            } else {
+                funcName = parser.consumeTo(Token.Symbol.LEFT_PAREN);
             }
 
-            Statement firstS = new Parser(first).parseExpression();
-            Statement secondS = new Parser(second).parseExpression();
-            return new Compare(firstS, op, secondS);
-        };
+            if(funcName.size() > 1) {
+                throw new ParserError("Function call name was multi token", funcName.get(0));
+            }
+//            Statement parsedName = new Parser(funcName).parseExpression();
+            List<AST.Statement> funcParams = consumeFunctionParams();
+            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+            return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics);
+
+        } else if(parser.containsBefore(Token.Symbol.DOUBLE_MINUS, Token.Symbol.SEMICOLON)) {
+            List<Token> name = parser.consumeTo(Token.Symbol.DOUBLE_MINUS);
+            AST.Statement left = new Parser(name).parseExpression();
+            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+            return new AST.MathSelfMod(left, AST.MathOp.MINUS, AST.SelfModTime.POST);
+        } else if(parser.containsBefore(Token.Symbol.DOUBLE_PLUS, Token.Symbol.SEMICOLON)) {
+            List<Token> name = parser.consumeTo(Token.Symbol.DOUBLE_PLUS);
+            AST.Statement left = new Parser(name).parseExpression();
+            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+            return new AST.MathSelfMod(left, AST.MathOp.PLUS, AST.SelfModTime.POST);
+        } else if(parser.containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
+            List<Token> name = parser.consumeTo(Token.Symbol.LEFT_BRACKET);
+            AST.Statement left = new Parser(name).parseExpression();
+            List<Token> sub = parser.consumeTo(Token.Symbol.RIGHT_BRACKET);
+            AST.Statement inner = new Parser(sub).parseExpression();
+            return new AST.Subscript(left, inner);
+        } else {
+            Token name = parser.consume();
+            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+            return new AST.Variable(name.literal);
+        }
     }
 
-    public static SplitAction mathAction(MathOp op) {
-        return statementAction((first, second) -> new MathStatement(first, op, second));
-    }
-
-    public static SplitAction mathAssignAction(MathOp op) {
-        return statementAction((first, second) -> new MathAssign(first, op, second));
-    }
-
-    public static SplitAction statementAction(StatementAction action) {
-        return (first, second) -> {
-            Statement firstS = new Parser(first).parseExpression();
-            Statement secondS = new Parser(second).parseExpression();
-            return action.handle(firstS, secondS);
-        };
-    }
-
-    public interface StatementAction {
-        Statement handle(Statement first, Statement second);
+    private List<AST.Statement> consumeFunctionParams() {
+        List<Token> params = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
+        List<List<Token>> paramTokens = BraceSplitter.splitAll(params, Token.Symbol.COMMA);
+        return paramTokens.stream()
+                .filter(arr -> !arr.isEmpty())
+                .map(Parser::new)
+                .map(Parser::parseExpression)
+                .collect(Collectors.toList());
     }
 }
