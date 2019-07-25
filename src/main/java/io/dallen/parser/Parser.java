@@ -21,6 +21,8 @@ public class Parser {
 
     private int pos;
 
+    private final boolean inMatch;
+
     // defines a multipass split. When a successful split is made, the resulting action will be executed on the result
     private static final SplitSettings splitSettings = new SplitSettings()
             .addLayer(new SplitLayer()
@@ -45,9 +47,13 @@ public class Parser {
             .addLayer(new SplitLayer()
                 .addSplitRule(Symbol.DOT, ExpressionParser.statementAction(Dotted::new))).leftToRight(false);
 
-
     public Parser(List<Token> tokens) {
+        this(tokens, false);
+    }
+
+    public Parser(List<Token> tokens, boolean inMatch) {
         this.tokens = tokens;
+        this.inMatch = inMatch;
     }
 
     Token current() {
@@ -150,6 +156,22 @@ public class Parser {
             Token.TokenType i = current().type;
             if (Keyword.WHILE.equals(i)) {
                 statements.add(parseWhileBlock());
+                continue;
+            }
+            if (Keyword.SWITCH.equals(i)) {
+                statements.add(parseSwitchBlock());
+                continue;
+            }
+            if (Keyword.MATCH.equals(i)) {
+                statements.add(parseMatchBlock());
+                continue;
+            }
+            if (Keyword.CASE.equals(i)) {
+                if(inMatch) {
+                    statements.add(parseMatchCase());
+                } else {
+                    statements.add(parseCase());
+                }
                 continue;
             }
             if (Keyword.LOOP.equals(i)) {
@@ -272,6 +294,52 @@ public class Parser {
         List<Statement> body = new Parser(bodyTokens).parseBlock();
 
         return new ForBlock(initStmt, condStmt, stepStmt, body);
+    }
+
+    private SwitchBlock parseSwitchBlock() {
+        consumeExpected(Keyword.SWITCH);
+
+        consumeExpected(Symbol.LEFT_PAREN);
+        List<Token> condTokens = consumeTo(Symbol.RIGHT_PAREN);
+        consumeExpected(Symbol.LEFT_BRACE);
+        Statement cond = new Parser(condTokens).parseExpression();
+
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+        List<Statement> body = new Parser(bodyTokens).parseBlock();
+
+        return new SwitchBlock(cond, body);
+    }
+
+    private MatchBlock parseMatchBlock() {
+        consumeExpected(Keyword.MATCH);
+
+        consumeExpected(Symbol.LEFT_PAREN);
+        List<Token> condTokens = consumeTo(Symbol.RIGHT_PAREN);
+        consumeExpected(Symbol.LEFT_BRACE);
+        Statement cond = new Parser(condTokens).parseExpression();
+
+        List<Token> bodyTokens = consumeTo(Symbol.RIGHT_BRACE);
+        List<Statement> body = new Parser(bodyTokens, true).parseBlock();
+
+        return new MatchBlock(cond, body);
+    }
+
+    private CaseStatement parseCase() {
+        consumeExpected(Keyword.CASE);
+
+        List<Token> onTokens = consumeTo(Symbol.COLON);
+        Statement on = new Parser(onTokens).parseExpression();
+
+        return new CaseStatement(on);
+    }
+
+    private CaseMatchStatement parseMatchCase() {
+        consumeExpected(Keyword.CASE);
+
+        List<Token> onTokens = consumeTo(Symbol.COLON);
+        Type on = new Parser(onTokens).parseType();
+
+        return new CaseMatchStatement(on);
     }
 
     private IfBlock parseIfBlock() {
@@ -467,6 +535,22 @@ public class Parser {
             SequenceLiteral lit = new SequenceLiteral(consume().literal);
             tryConsumeExpected(Symbol.SEMICOLON);
             return lit;
+        } else if (current().type == Textless.STRING_LITERAL) {
+            StringLiteral lit = new StringLiteral(consume().literal);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return lit;
+        } else if (current().type == Keyword.BREAK) {
+            consumeExpected(Keyword.BREAK);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return new BreakStatement();
+        } else if (current().type == Keyword.NEXT) {
+            consumeExpected(Keyword.NEXT);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return new ContinueStatement();
+        } else if (current().type == Symbol.UNDERSCORE) {
+            consumeExpected(Symbol.UNDERSCORE);
+            tryConsumeExpected(Symbol.SEMICOLON);
+            return new Variable("_");
         } else if (current().type == Textless.STRING_LITERAL) {
             StringLiteral lit = new StringLiteral(consume().literal);
             tryConsumeExpected(Symbol.SEMICOLON);

@@ -176,6 +176,20 @@
             "on": "Statement"
         }
     },
+    "CaseMatchStatement": {
+        "extends": "Expression",
+        "fields": {
+            "on": "Type"
+        }
+    },
+    "BreakStatement": {
+        "extends": "Expression",
+        "fields": { }
+    },
+    "ContinueStatement": {
+        "extends": "Expression",
+        "fields": { }
+    },
     "TryBlock": {
         "extends": "BlockStatement(body)",
         "fields": {

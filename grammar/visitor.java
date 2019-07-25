@@ -79,6 +79,18 @@ public CompiledCode compileCaseStatement(CaseStatement stmt, CompileContext cont
     return null; 
 }
     
+public CompiledCode compileCaseMatchStatement(CaseMatchStatement stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileBreakStatement(BreakStatement stmt, CompileContext context) { 
+    return null; 
+}
+    
+public CompiledCode compileContinueStatement(ContinueStatement stmt, CompileContext context) { 
+    return null; 
+}
+    
 public CompiledCode compileTryBlock(TryBlock stmt, CompileContext context) { 
     return null; 
 }

@@ -561,7 +561,7 @@ public class BasicBlocks {
 //    }
 
         /*
-        switch(i) { case 5: runFive(); break; default: runOther(); }
+        switch(i) { case 5: runFive(); break; case _: runOther(); }
          */
 
     @org.junit.Test
@@ -581,7 +581,8 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Keyword.BREAK),
                 new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.NAME, "default"),
+                new Token(Token.Keyword.CASE),
+                new Token(Token.Symbol.UNDERSCORE),
                 new Token(Token.Symbol.COLON),
                 new Token(Token.Textless.NAME, "runOther"),
                 new Token(Token.Symbol.LEFT_PAREN),
@@ -593,13 +594,22 @@ public class BasicBlocks {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = new SwitchBlock(
+                new Variable("i"),
+                List.of(
+                        new CaseStatement(new NumberLiteral(5.0)),
+                        ASTUtil.simpleFuncCall("runFive"),
+                        new BreakStatement(),
+                        new CaseStatement(new Variable("_")),
+                        ASTUtil.simpleFuncCall("runOther")
+                )
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
 
         /*
-        match(i) { case Int: checkInt(); break; default: checkOther(); }
+        match(i) { case Int: checkInt(); break; case _: checkOther(); }
          */
 
     @org.junit.Test
@@ -619,7 +629,8 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Keyword.BREAK),
                 new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.NAME, "default"),
+                new Token(Token.Keyword.CASE),
+                new Token(Token.Symbol.UNDERSCORE),
                 new Token(Token.Symbol.COLON),
                 new Token(Token.Textless.NAME, "checkOther"),
                 new Token(Token.Symbol.LEFT_PAREN),
@@ -631,7 +642,16 @@ public class BasicBlocks {
 
         assertEquals(1, statements.size());
 
-        String expected = "";
+        String expected = new MatchBlock(
+                new Variable("i"),
+                List.of(
+                        new CaseMatchStatement(ASTUtil.simpleType("Int")),
+                        ASTUtil.simpleFuncCall("checkInt"),
+                        new BreakStatement(),
+                        new CaseMatchStatement(ASTUtil.simpleType("_")),
+                        ASTUtil.simpleFuncCall("checkOther")
+                )
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }

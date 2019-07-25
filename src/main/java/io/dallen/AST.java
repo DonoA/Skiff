@@ -572,6 +572,66 @@ public class AST {
         }
     }
 
+    public static class CaseMatchStatement extends Expression {
+        public final Type on;
+        public CaseMatchStatement(Type on) {
+            super();
+            this.on = on;
+        }
+
+        public String toString() {
+            return "CaseMatchStatement(on = " + this.on.toString() + ")";
+        }
+
+        public String toFlatString() {
+            return "CaseMatchStatement(on = " + this.on.toFlatString() + ")";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileCaseMatchStatement(this, context);
+        }
+    }
+
+    public static class BreakStatement extends Expression {
+
+        public BreakStatement() {
+            super();
+
+        }
+
+        public String toString() {
+            return "BreakStatement()";
+        }
+
+        public String toFlatString() {
+            return "BreakStatement()";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileBreakStatement(this, context);
+        }
+    }
+
+    public static class ContinueStatement extends Expression {
+
+        public ContinueStatement() {
+            super();
+
+        }
+
+        public String toString() {
+            return "ContinueStatement()";
+        }
+
+        public String toFlatString() {
+            return "ContinueStatement()";
+        }
+
+        public CompiledCode compile(CompileContext context) {
+            return ASTVisitor.instance.compileContinueStatement(this, context);
+        }
+    }
+
     public static class TryBlock extends BlockStatement {
 
         public TryBlock(List<Statement> body) {
