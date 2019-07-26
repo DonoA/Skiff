@@ -195,7 +195,7 @@ class BlockParser {
     private AST.CaseStatement parseCase() {
         parser.consumeExpected(Token.Keyword.CASE);
 
-        List<Token> onTokens = parser.consumeTo(Token.Symbol.COLON);
+        List<Token> onTokens = parser.consumeTo(Token.Symbol.ARROW);
         AST.Statement on = new Parser(onTokens).parseExpression();
 
         return new AST.CaseStatement(on);
@@ -204,8 +204,8 @@ class BlockParser {
     private AST.CaseMatchStatement parseMatchCase() {
         parser.consumeExpected(Token.Keyword.CASE);
 
-        List<Token> onTokens = parser.consumeTo(Token.Symbol.COLON);
-        AST.Type on = new Parser(onTokens).getCommon().parseType();
+        List<Token> onTokens = parser.consumeTo(Token.Symbol.ARROW);
+        AST.Statement on = new Parser(onTokens).parseExpression();
 
         return new AST.CaseMatchStatement(on);
     }

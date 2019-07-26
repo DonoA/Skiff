@@ -566,7 +566,7 @@ public class BasicBlocks {
 //    }
 
         /*
-        switch(i) { case 5: runFive(); break; case _: runOther(); }
+        switch(i) { case 5 => runFive(); break; case _ => runOther(); }
          */
 
     @org.junit.Test
@@ -579,7 +579,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.LEFT_BRACE),
                 new Token(Token.Keyword.CASE),
                 new Token(Token.Textless.NUMBER_LITERAL, "5"),
-                new Token(Token.Symbol.COLON),
+                new Token(Token.Symbol.ARROW),
                 new Token(Token.Textless.NAME, "runFive"),
                 new Token(Token.Symbol.LEFT_PAREN),
                 new Token(Token.Symbol.RIGHT_PAREN),
@@ -588,7 +588,7 @@ public class BasicBlocks {
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Keyword.CASE),
                 new Token(Token.Symbol.UNDERSCORE),
-                new Token(Token.Symbol.COLON),
+                new Token(Token.Symbol.ARROW),
                 new Token(Token.Textless.NAME, "runOther"),
                 new Token(Token.Symbol.LEFT_PAREN),
                 new Token(Token.Symbol.RIGHT_PAREN),
@@ -614,7 +614,7 @@ public class BasicBlocks {
     }
 
         /*
-        match(i) { case Int: checkInt(); break; case _: checkOther(); }
+        match(i) { case v: Int => checkInt(); break; case v: _ => checkOther(); }
          */
 
     @org.junit.Test
@@ -626,8 +626,10 @@ public class BasicBlocks {
                 new Token(Token.Symbol.RIGHT_PAREN),
                 new Token(Token.Symbol.LEFT_BRACE),
                 new Token(Token.Keyword.CASE),
-                new Token(Token.Textless.NAME, "Int"),
+                new Token(Token.Textless.NAME, "v"),
                 new Token(Token.Symbol.COLON),
+                new Token(Token.Textless.NAME, "Int"),
+                new Token(Token.Symbol.ARROW),
                 new Token(Token.Textless.NAME, "checkInt"),
                 new Token(Token.Symbol.LEFT_PAREN),
                 new Token(Token.Symbol.RIGHT_PAREN),
@@ -635,8 +637,10 @@ public class BasicBlocks {
                 new Token(Token.Keyword.BREAK),
                 new Token(Token.Symbol.SEMICOLON),
                 new Token(Token.Keyword.CASE),
-                new Token(Token.Symbol.UNDERSCORE),
+                new Token(Token.Textless.NAME, "v"),
                 new Token(Token.Symbol.COLON),
+                new Token(Token.Symbol.UNDERSCORE),
+                new Token(Token.Symbol.ARROW),
                 new Token(Token.Textless.NAME, "checkOther"),
                 new Token(Token.Symbol.LEFT_PAREN),
                 new Token(Token.Symbol.RIGHT_PAREN),
@@ -650,10 +654,10 @@ public class BasicBlocks {
         String expected = new MatchBlock(
                 new Variable("i"),
                 List.of(
-                        new CaseMatchStatement(ASTUtil.simpleType("Int")),
+                        new CaseMatchStatement(new Declare(ASTUtil.simpleType("Int"), "v")),
                         ASTUtil.simpleFuncCall("checkInt"),
                         new BreakStatement(),
-                        new CaseMatchStatement(ASTUtil.simpleType("_")),
+                        new CaseMatchStatement(new Declare(ASTUtil.simpleType("_"), "v")),
                         ASTUtil.simpleFuncCall("checkOther")
                 )
         ).toFlatString();

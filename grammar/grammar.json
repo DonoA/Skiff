@@ -178,7 +178,7 @@
     "CaseMatchStatement": {
         "extends": "Expression",
         "fields": {
-            "on": "Type"
+            "on": "Statement"
         }
     },
     "BreakStatement": {

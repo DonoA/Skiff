@@ -478,8 +478,8 @@ public static class CaseStatement extends Expression {
 }
     
 public static class CaseMatchStatement extends Expression {
-    public final Type on;
-    public CaseMatchStatement(Type on) {
+    public final Statement on;
+    public CaseMatchStatement(Statement on) {
         super();
         this.on = on;
     }

@@ -46,8 +46,8 @@ Compiling Skiff into a simple VM targetting assembly language will require a dee
 | For | `for(i: Int = v; i < max; i++) {}` | ✓ | ⅹ | ⅹ |
 | For Iter | `for(v: Int in intList) {}` | ⅹ | ⅹ | ⅹ |
 | Loop flow | `next break` | ✓ | ⅹ | ⅹ |
-| Switch | `switch(v){case val=>{}...}` | ⅹ | ⅹ | ⅹ |
-| Match | `match(v) {case v:T=>{}}` | ⅹ | ⅹ | ⅹ |
+| Switch | `switch(v){case val => ...}` | ✓ | ⅹ | ⅹ |
+| Match | `match(v) {case v:T => ` | ✓ | ⅹ | ⅹ |
 | Deconstruction | `Struct(v1, v2) = myStruct` | ⅹ | ⅹ | ⅹ |
 | Try/Catch | `try {} catch(e: MyException) {}` | ✓ | ⅹ | ⅹ |
 | Throw | `throw new MyException()` | ✓ | ⅹ | ⅹ |
