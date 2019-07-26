@@ -68,4 +68,16 @@ public class SkiffC {
             out.println(code);
         }
     }
+
+    public static String compile(String code, CompileContext context) {
+        Lexer lexer = new Lexer(code);
+        List<Token> tokenStream = lexer.lex();
+        Parser parser = new Parser(tokenStream);
+        List<AST.Statement> statements = parser.parseBlock();
+        return statements
+                .stream()
+                .map(e -> e.compile(context))
+                .map(CompiledCode::getCompiledText)
+                .collect(Collectors.joining("\n"));
+    }
 }
