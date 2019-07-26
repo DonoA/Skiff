@@ -52,4 +52,12 @@ class CommonParsing {
         return new AST.Type(typeName, 0, genericParams);
     }
 
+    List<AST.FunctionParam> parseFunctionDecArgs(List<Token> paramTokens) {
+        return BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
+                .stream()
+                .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
+                .map(e -> new AST.FunctionParam(new Parser(e.get(1)).getCommon().parseType(), e.get(0).get(0).literal))
+                .collect(Collectors.toList());
+    }
+
 }

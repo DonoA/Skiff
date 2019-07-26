@@ -21,36 +21,36 @@ Compiling Skiff into a simple VM targetting assembly language will require a dee
 | Create instance | `new ClassName()` | ✓ | ✓ | ⅹ |
 | Return from function | `return value` | ✓ | ✓ | ⅹ |
 | String Literal | `"String"` | ✓ | ✓ | ⅹ |
-| Char Sequence | `'Sequence'` | ⅹ | ⅹ | ⅹ | 
-| Regex Literal | `r/regex/flags` | ⅹ | ⅹ | ⅹ |
-| Bool Literal | `true false` | ⅹ | ⅹ | ⅹ |
-| Bool Combos | <code>&& &#124;&#124;</code> | ⅹ | ⅹ | ⅹ |
+| Char Sequence | `'Sequence'` | ✓ | ⅹ | ⅹ | 
+| Regex Literal | `r/regex/flags` | ✓ | ⅹ | ⅹ |
+| Bool Literal | `true false` | ✓ | ⅹ | ⅹ |
+| Bool Combos | <code>&& &#124;&#124;</code> | ✓ | ⅹ | ⅹ |
 | Compare | `== < <= > >= !=` | ✓ | ⅹ | ⅹ |
 | Math | `+ - * / % **` | ✓ | ✓ | ⅹ |
-| Math Assign| `+= -=` | ⅹ | ⅹ | ⅹ |
-| Quick Inc/Dec | `++ --` | ⅹ | ⅹ | ⅹ |
-| Generic Class Def | `class Cls<T, U> {}` | ⅹ | ⅹ | ⅹ |
-| Generic Class Use | `new Cls<T>()` | ⅹ | ⅹ | ⅹ |
-| Generic Extension | `class Cls<T : U> {}` | ⅹ | ⅹ | ⅹ |
-| Generic Func Def | `def func<T>(p: T): Returns {}` | ⅹ | ⅹ | ⅹ |
-| Inheritance | `class Child : Parent` | ⅹ | ⅹ | ⅹ |
+| Math Assign| `+= -=` | ✓ | ⅹ | ⅹ |
+| Quick Inc/Dec | `++ --` | ✓ | ⅹ | ⅹ |
+| Generic Class Def | `class Cls<T, U> {}` | ✓ | ⅹ | ⅹ |
+| Generic Class Use | `new Cls<T>()` | ✓ | ⅹ | ⅹ |
+| Generic Extension | `class Cls<T : U> {}` | ✓ | ⅹ | ⅹ |
+| Generic Func Def | `def func<T>(p: T): Returns {}` | ✓ | ⅹ | ⅹ |
+| Inheritance | `class Child : Parent` | ✓ | ⅹ | ⅹ |
 | List Index | `list[index]` | ✓ | ✓ | ⅹ |
-| Import Source | `import <file>` | ⅹ | ⅹ | ⅹ |
+| Import Source | `import <file>` | ✓ | ⅹ | ⅹ |
 | Dec Mods | `static private` | ⅹ | ⅹ | ⅹ |
-| Anon Func Def | `(p: T): Returns => {}` | ⅹ | ⅹ | ⅹ |
-| Anon Func Type | `funcVar: (T) => Returns` | ⅹ | ⅹ | ⅹ |
-| If | `if(cond) {}` | ⅹ | ⅹ | ⅹ |
-| Else | `{} else if() {}` | ⅹ | ⅹ | ⅹ |
-| While | `while(cond) {}` | ⅹ | ⅹ | ⅹ |
-| Loop | `loop {}` | ⅹ | ⅹ | ⅹ |
-| For | `for(i: Int = v; i < max; i++) {}` | ⅹ | ⅹ | ⅹ |
+| Anon Func Def | `(p: T): Returns => {}` | ✓ | ⅹ | ⅹ |
+| Anon Func Type | `funcVar: (T) => Returns` | ✓ | ⅹ | ⅹ |
+| If | `if(cond) {}` | ✓ | ⅹ | ⅹ |
+| Else | `{} else if() {}` | ✓ | ⅹ | ⅹ |
+| While | `while(cond) {}` | ✓ | ⅹ | ⅹ |
+| Loop | `loop {}` | ✓ | ⅹ | ⅹ |
+| For | `for(i: Int = v; i < max; i++) {}` | ✓ | ⅹ | ⅹ |
 | For Iter | `for(v: Int in intList) {}` | ⅹ | ⅹ | ⅹ |
-| Loop flow | `next break` | ⅹ | ⅹ | ⅹ |
+| Loop flow | `next break` | ✓ | ⅹ | ⅹ |
 | Switch | `switch(v){case val=>{}...}` | ⅹ | ⅹ | ⅹ |
 | Match | `match(v) {case v:T=>{}}` | ⅹ | ⅹ | ⅹ |
 | Deconstruction | `Struct(v1, v2) = myStruct` | ⅹ | ⅹ | ⅹ |
-| Try/Catch | `try {} catch(e: MyException) {}` | ⅹ | ⅹ | ⅹ |
-| Throw | `throw new MyException()` | ⅹ | ⅹ | ⅹ |
+| Try/Catch | `try {} catch(e: MyException) {}` | ✓ | ⅹ | ⅹ |
+| Throw | `throw new MyException()` | ✓ | ⅹ | ⅹ |
 
 ## Specifications:
 ### Namespaces/Packages

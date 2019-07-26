@@ -90,6 +90,8 @@ class BlockParser {
         return new AST.ClassDef(name.literal, genericTypes, extendList, body);
     }
 
+
+
     private void attachCatchBlock(ArrayList<AST.Statement> statements) {
         if(statements.size() < 1) {
             throw new CompileError("Else statement requires If, none found");
@@ -140,20 +142,32 @@ class BlockParser {
         }
     }
 
+    private AST.Statement consumeAndParseParens() {
+        return new Parser(consumeParens()).parseExpression();
+    }
+
+    private List<Token> consumeParens() {
+        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
+        List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
+        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
+        return condTokens;
+    }
+
+    private List<AST.Statement> consumeAndParseBody() {
+        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
+        return new Parser(bodyTokens).parseBlock();
+    }
+
     private AST.ForBlock parseForBlock() {
         parser.consumeExpected(Token.Keyword.FOR);
 
-        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> init = parser.consumeTo(Token.Symbol.SEMICOLON);
-        List<Token> cond = parser.consumeTo(Token.Symbol.SEMICOLON);
-        List<Token> step = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
-        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-        AST.Statement initStmt = new Parser(init).parseExpression();
-        AST.Statement condStmt = new Parser(cond).parseExpression();
-        AST.Statement stepStmt = new Parser(step).parseExpression();
+        List<List<Token>> seg = BraceSplitter.splitAll(consumeParens(), Token.Symbol.SEMICOLON);
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
+        AST.Statement initStmt = new Parser(seg.get(0)).parseExpression();
+        AST.Statement condStmt = new Parser(seg.get(1)).parseExpression();
+        AST.Statement stepStmt = new Parser(seg.get(2)).parseExpression();
+
+        List<AST.Statement> body = consumeAndParseBody();
 
         return new AST.ForBlock(initStmt, condStmt, stepStmt, body);
     }
@@ -161,13 +175,8 @@ class BlockParser {
     private AST.SwitchBlock parseSwitchBlock() {
         parser.consumeExpected(Token.Keyword.SWITCH);
 
-        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
-        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-        AST.Statement cond = new Parser(condTokens).parseExpression();
-
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
+        AST.Statement cond = consumeAndParseParens();
+        List<AST.Statement> body = consumeAndParseBody();
 
         return new AST.SwitchBlock(cond, body);
     }
@@ -175,10 +184,7 @@ class BlockParser {
     private AST.MatchBlock parseMatchBlock() {
         parser.consumeExpected(Token.Keyword.MATCH);
 
-        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
-        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-        AST.Statement cond = new Parser(condTokens).parseExpression();
+        AST.Statement cond = consumeAndParseParens();
 
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, true).parseBlock();
@@ -207,13 +213,8 @@ class BlockParser {
     private AST.IfBlock parseIfBlock() {
         parser.consumeExpected(Token.Keyword.IF);
 
-        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
-        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-        AST.Statement cond = new Parser(condTokens).parseExpression();
-
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
+        AST.Statement cond = consumeAndParseParens();
+        List<AST.Statement> body = consumeAndParseBody();
 
         return new AST.IfBlock(cond, body);
     }
@@ -221,35 +222,26 @@ class BlockParser {
     private AST.WhileBlock parseWhileBlock() {
         parser.consumeExpected(Keyword.WHILE);
 
-        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
-        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-        AST.Statement cond = new Parser(condTokens).parseExpression();
-
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
+        AST.Statement cond = consumeAndParseParens();
+        List<AST.Statement> body = consumeAndParseBody();
 
         return new AST.WhileBlock(cond, body);
     }
 
-    private AST.TryBlock parseTryBlock() {
+    private List<AST.Statement> parseSimpleBlock() {
         parser.next();
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
+        return new Parser(bodyTokens).parseBlock();
+    }
 
-        return new AST.TryBlock(body);
+    private AST.TryBlock parseTryBlock() {
+        return new AST.TryBlock(parseSimpleBlock());
     }
 
     private AST.LoopBlock parseLoopBlock() {
-        parser.next();
-        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
-
-        return new AST.LoopBlock(body);
+        return new AST.LoopBlock(parseSimpleBlock());
     }
 
     private AST.FunctionDef parseFunctionDef() {
@@ -266,11 +258,7 @@ class BlockParser {
 
         List<AST.FunctionParam> params;
         try {
-            params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
-                    .stream()
-                    .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
-                    .map(e -> new AST.FunctionParam(new Parser(e.get(1)).getCommon().parseType(), e.get(0).get(0).literal))
-                    .collect(Collectors.toList());
+            params = parser.getCommon().parseFunctionDecArgs(paramTokens);
         } catch (IndexOutOfBoundsException ex) {
             throw new CompileError("Failed to parse function args for " + funcName);
         }

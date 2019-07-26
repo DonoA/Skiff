@@ -86,11 +86,7 @@ class ExpressionParser {
 
         List<AST.FunctionParam> params;
         try {
-            params = BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
-                    .stream()
-                    .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
-                    .map(e -> new AST.FunctionParam(new Parser(e.get(1)).getCommon().parseType(), e.get(0).get(0).literal))
-                    .collect(Collectors.toList());
+            params = parser.getCommon().parseFunctionDecArgs(paramTokens);
         } catch (IndexOutOfBoundsException ex) {
             throw new CompileError("Failed to parse function args for anon func");
         }
@@ -126,6 +122,12 @@ class ExpressionParser {
         AST.Statement construct(String lit);
     }
 
+    private static final AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser> nameTokenSwitch =
+            new AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser>()
+                    .addCase(Textless.NAME::equals, context -> context.handleNameToken(context.workingTokens))
+                    .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, AST.MathOp.MINUS))
+                    .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, AST.MathOp.MINUS));
+
     private AST.Statement handleNameToken(List<Token> workingTokens) {
 
         if(parser.containsBefore(Token.Symbol.COLON, Token.Symbol.SEMICOLON)) {
@@ -133,40 +135,12 @@ class ExpressionParser {
             parser.consumeExpected(Token.Symbol.COLON);
             AST.Type type = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON)).getCommon().parseType();
             return new AST.Declare(type, name.literal);
-
         } else if(parser.containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
-            List<Token> funcName;
-            List<AST.Type> generics = new ArrayList<>();
-            if(parser.containsBefore(Token.Symbol.LEFT_ANGLE, Token.Symbol.LEFT_PAREN)) {
-                funcName = parser.consumeTo(Token.Symbol.LEFT_ANGLE);
-                List<List<Token>> genericTokens = BraceSplitter.customSplitAll(
-                        BraceManager.leftToRightAngle, parser.consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA);
-                generics = genericTokens.stream().map(tokenList -> new Parser(tokenList).getCommon().parseType())
-                        .collect(Collectors.toList());
-
-                parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-            } else {
-                funcName = parser.consumeTo(Token.Symbol.LEFT_PAREN);
-            }
-
-            if(funcName.size() > 1) {
-                throw new ParserError("Function call name was multi token", funcName.get(0));
-            }
-//            Statement parsedName = new Parser(funcName).parseExpression();
-            List<AST.Statement> funcParams = consumeFunctionParams();
-            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics);
-
+            return parseFunctionCall();
         } else if(parser.containsBefore(Token.Symbol.DOUBLE_MINUS, Token.Symbol.SEMICOLON)) {
-            List<Token> name = parser.consumeTo(Token.Symbol.DOUBLE_MINUS);
-            AST.Statement left = new Parser(name).parseExpression();
-            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new AST.MathSelfMod(left, AST.MathOp.MINUS, AST.SelfModTime.POST);
+            return parsePreIncDec(Token.Symbol.DOUBLE_MINUS, AST.MathOp.MINUS);
         } else if(parser.containsBefore(Token.Symbol.DOUBLE_PLUS, Token.Symbol.SEMICOLON)) {
-            List<Token> name = parser.consumeTo(Token.Symbol.DOUBLE_PLUS);
-            AST.Statement left = new Parser(name).parseExpression();
-            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new AST.MathSelfMod(left, AST.MathOp.PLUS, AST.SelfModTime.POST);
+            return parsePreIncDec(Token.Symbol.DOUBLE_PLUS, AST.MathOp.PLUS);
         } else if(parser.containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
             List<Token> name = parser.consumeTo(Token.Symbol.LEFT_BRACKET);
             AST.Statement left = new Parser(name).parseExpression();
@@ -178,6 +152,36 @@ class ExpressionParser {
             parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
             return new AST.Variable(name.literal);
         }
+    }
+
+    private AST.Statement parseFunctionCall() {
+        List<Token> funcName;
+        List<AST.Type> generics = new ArrayList<>();
+        if(parser.containsBefore(Token.Symbol.LEFT_ANGLE, Token.Symbol.LEFT_PAREN)) {
+            funcName = parser.consumeTo(Token.Symbol.LEFT_ANGLE);
+            List<List<Token>> genericTokens = BraceSplitter.customSplitAll(
+                    BraceManager.leftToRightAngle, parser.consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA);
+            generics = genericTokens.stream().map(tokenList -> new Parser(tokenList).getCommon().parseType())
+                    .collect(Collectors.toList());
+
+            parser.consumeExpected(Token.Symbol.LEFT_PAREN);
+        } else {
+            funcName = parser.consumeTo(Token.Symbol.LEFT_PAREN);
+        }
+
+        if(funcName.size() > 1) {
+            throw new ParserError("Function call name was multi token", funcName.get(0));
+        }
+        List<AST.Statement> funcParams = consumeFunctionParams();
+        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics);
+    }
+
+    private AST.Statement parsePreIncDec(Token.TokenType consume, AST.MathOp type) {
+        List<Token> name = parser.consumeTo(consume);
+        AST.Statement left = new Parser(name).parseExpression();
+        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        return new AST.MathSelfMod(left, type, AST.SelfModTime.POST);
     }
 
     private List<AST.Statement> consumeFunctionParams() {
