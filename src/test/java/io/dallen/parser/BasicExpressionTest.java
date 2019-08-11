@@ -10,7 +10,7 @@ import org.junit.rules.Timeout;
 
 import java.util.List;
 
-public class BasicExpressions {
+public class BasicExpressionTest {
 
 //    @Rule
 //    public Timeout globalTimeout = Timeout.seconds(1);

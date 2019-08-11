@@ -10,15 +10,15 @@ import static org.junit.Assert.assertEquals;
 public class BasicExpression {
 
     @org.junit.Test
-    public void parseAssign() {
-        CompileContext context = new CompileContext(null);
-        context.declareObject(new CompiledVar("x", CompiledType.INT));
-
-        String code = "x = 5";
-
-        String compiledText = SkiffC.compile(code, context);
-        String expected = "";
-
-        assertEquals(expected, compiledText);
+    public void variable() {
+//        CompileContext context = new CompileContext(null);
+//        context.declareObject(new CompiledVar("x", CompiledType.INT));
+//
+//        String code = "x = 5";
+//
+//        String compiledText = SkiffC.compile(code, context);
+//        String expected = "";
+//
+//        assertEquals(expected, compiledText);
     }
 }

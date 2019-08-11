@@ -11,7 +11,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class BasicBlocks {
+public class BasicBlockTest {
 
 //    @Rule
 //    public Timeout globalTimeout = Timeout.seconds(1);
