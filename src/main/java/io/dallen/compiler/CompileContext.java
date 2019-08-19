@@ -17,6 +17,7 @@ public class CompileContext {
         this.parent = parent;
         if(parent != null) {
             this.scope = new CompileScope(parent.scope);
+            this.indent = parent.indent;
             this.parentClass = parent.parentClass;
             this.onStack = parent.onStack;
         } else {

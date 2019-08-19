@@ -37,11 +37,6 @@ public class CompiledCode {
         return this;
     }
 
-    public CompiledCode isRef(boolean ref) {
-        this.ref = ref;
-        return this;
-    }
-
     public CompiledCode setOnStack(boolean onStack) {
         this.onStack = onStack;
         return this;
@@ -62,10 +57,6 @@ public class CompiledCode {
 
     public boolean isRequiresSemicolon() {
         return requiresSemicolon;
-    }
-
-    public boolean isRef() {
-        return ref;
     }
 
     public boolean isOnStack() {

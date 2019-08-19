@@ -1,11 +1,9 @@
 package io.dallen.compiler.visitor;
 
 import io.dallen.AST.*;
-
 import io.dallen.compiler.*;
 
 import java.util.List;
-import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 public class ASTVisitor {
@@ -61,31 +59,11 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileIfBlock(IfBlock stmt, CompileContext context) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("if(");
-        sb.append(stmt.condition.compile(context).getCompiledText());
-        sb.append(")\n");
-        sb.append(context.getIndent());
-        sb.append("{\n");
-        CompileContext innerContext = new CompileContext(context).addIndent();
-        stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
-        sb.append(context.getIndent());
-        sb.append("}");
-
-        if (stmt.elseBlock != null) {
-            sb.append("\n");
-            sb.append(context.getIndent());
-            sb.append(stmt.elseBlock.compile(context).getCompiledText());
-        }
-
-        return new CompiledCode()
-                .withText(sb.toString())
-                .withType(CompiledType.VOID)
-                .withSemicolon(false);
+        return ConditionBlockCompiler.compileIfBlock(stmt, context);
     }
 
     public CompiledCode compileElseBlock(ElseBlock stmt, CompileContext context) {
-        throw new UnsupportedOperationException("Cannot compile statement type ElseBlock");
+        return new CompiledCode().withText("");
     }
 
     public CompiledCode compileElseIfBlock(ElseIfBlock stmt, CompileContext context) {
@@ -114,7 +92,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileWhileBlock(WhileBlock stmt, CompileContext context) {
-        return null;
+        return ConditionBlockCompiler.compileWhile(stmt, context);
     }
 
     public CompiledCode compileLoopBlock(LoopBlock stmt, CompileContext context) {
@@ -257,7 +235,27 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMathSelfMod(MathSelfMod stmt, CompileContext context) {
-        return null;
+        CompiledCode on = stmt.left.compile(context);
+        String onText;
+        if(on.getType().isRef()) {
+            onText = "(**" + on.getCompiledText() + ")";
+        } else {
+            onText = "(*" + on.getCompiledText() + ")";
+        }
+
+        String op = stmt.op == MathOp.MINUS ? "--" : "++";
+        String text;
+        if(stmt.time == SelfModTime.POST) {
+            text = onText + op;
+        } else {
+            text = op + onText;
+        }
+
+        // TODO: make the return from this block work
+        return new CompiledCode()
+                .withText(text)
+                .withBinding(on.getBinding())
+                .withType(on.getType());
     }
 
     public CompiledCode compileSubscript(Subscript stmt, CompileContext context) {
@@ -306,15 +304,24 @@ public class ASTVisitor {
         CompiledVar binding = new CompiledVar(stmt.name, (CompiledType) type.getBinding());
         context.declareObject(binding);
 
-        String sb = type.getCompiledText() + (context.isOnStack() ? "* " : " ") + stmt.name;
+        String text = type.getCompiledText() + (context.isOnStack() ? "* " : " ") + stmt.name;
         return new CompiledCode()
                 .withBinding(binding)
-                .withText(sb)
+                .withText(text)
                 .withType(CompiledType.VOID);
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
-        return null;
+        CompiledCode type = stmt.type.compile(context);
+        CompiledVar binding = new CompiledVar(stmt.name, (CompiledType) type.getBinding());
+        context.declareObject(binding);
+
+        String text = type.getCompiledText() + (context.isOnStack() ? "* " : " ") + stmt.name +
+                " = " + stmt.value.compile(context).getCompiledText();
+        return new CompiledCode()
+                .withBinding(binding)
+                .withText(text)
+                .withType(CompiledType.VOID);
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
@@ -328,7 +335,7 @@ public class ASTVisitor {
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
         return new CompiledCode()
                 .withText("skiff_string_new(\"" + stmt.value + "\")")
-                .withType(context.getType("String"));
+                .withType(CompiledType.STRING);
     }
 
     public CompiledCode compileSequenceLiteral(SequenceLiteral stmt, CompileContext context) {
@@ -336,7 +343,9 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileBooleanLiteral(BooleanLiteral stmt, CompileContext context) {
-        return null;
+        return new CompiledCode()
+                .withText(stmt.value ? "1" : "0")
+                .withType(CompiledType.BOOL);
     }
 
     public CompiledCode compileRegexLiteral(RegexLiteral stmt, CompileContext context) {
