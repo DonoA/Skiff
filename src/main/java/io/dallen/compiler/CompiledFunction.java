@@ -8,7 +8,7 @@ public class CompiledFunction extends CompiledVar {
     private final List<CompiledType> args;
 
     public CompiledFunction(String name, String compiledName, CompiledType returns, List<CompiledType> args) {
-        super(name, CompiledType.FUNCTION);
+        super(name, false, CompiledType.FUNCTION);
         this.compiledName = compiledName;
         this.returns = returns;
         this.args = args;

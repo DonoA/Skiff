@@ -20,24 +20,22 @@ class FunctionCallCompiler {
         List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(context))
                 .collect(Collectors.toList());
 
-        checkVarTypes(func, compArgs);
+//        checkVarTypes(func, compArgs);
 
         StringBuilder sb = new StringBuilder();
         sb.append(func.getCompiledName());
         sb.append("(");
 
-        List<String> evalArgs = compArgs
+        String argText = compArgs
                 .stream()
-                .map(code -> {
-                    if(code.isOnStack()) {
-                        return code.getCompiledText();
-                    } else {
-                        return "&(" + code.getCompiledText() + ")";
+                .map(arg -> {
+                    if(arg.onStack()) {
+                        return  "*(" + arg.getCompiledText() + ")";
                     }
-                })
-                .collect(Collectors.toList());
+                    return  "(" + arg.getCompiledText() + ")";
+                }).collect(Collectors.joining(", "));
 
-        sb.append(String.join(", ", evalArgs));
+        sb.append(argText);
 
         sb.append(")");
 

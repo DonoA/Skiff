@@ -32,8 +32,7 @@ class VisitorUtils {
         sb.append(context.getIndent());
         sb.append("// Cleanup scope\n");
 
-        sb.append(context.getIndent()).append("skiff_gc_clean(").append(context.getDataStackSize()).append(", ")
-                .append(context.getRefStackSize()).append(");\n");
+        sb.append(context.getIndent()).append("skfree_ref_stack(").append(context.getRefStackSize()).append(");\n");
     }
 
     static class FunctionSig {
@@ -73,14 +72,14 @@ class VisitorUtils {
         ListIterator<AST.FunctionParam> paramItr = stmt.args.listIterator();
 
         compiledArgs.forEach(arg -> {
-            CompiledVar argVar = new CompiledVar(paramItr.next().name, arg.getType());
+            CompiledVar argVar = new CompiledVar(paramItr.next().name, true, arg.getType());
             innerContext.declareObject(argVar);
         });
 
         List<String> stringArgs = new ArrayList<>();
 
         if(context.getParentClass() != null && !isConstructor) {
-            stringArgs.add(context.getParentClass().getCompiledName() + " ** this");
+            stringArgs.add(context.getParentClass().getCompiledName() + " * this");
         }
 
         stringArgs.addAll(compiledArgs
@@ -116,7 +115,7 @@ class VisitorUtils {
             return "void";
         }
 
-        return returnType.getCompiledText() + " *";
+        return returnType.getCompiledText();
     }
 
     static CompiledCode compileBinary(AST.Statement l, AST.Statement r, AST.HasRaw op, CompileContext context) {

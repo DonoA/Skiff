@@ -42,7 +42,6 @@ class DottedCompiler {
         CompiledVar objVar = (CompiledVar) obj;
         sb.append("(*").append(lhs.getCompiledText()).append(")->").append(v.name);
         return new CompiledCode()
-                .setOnStack(false)
                 .withText(sb.toString())
                 .withType(objVar.getType());
     }

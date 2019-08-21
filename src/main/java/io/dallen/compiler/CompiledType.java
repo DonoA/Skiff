@@ -26,7 +26,7 @@ public class CompiledType extends CompiledObject {
 
     public static final CompiledType LIST = new CompiledType("List" ,-1)
         .setParent(CompiledType.ANYREF)
-        .addClassObject(new CompiledVar("size", CompiledType.INT))
+        .addClassObject(new CompiledVar("size", false, CompiledType.INT))
         .addClassObject(new CompiledFunction("getSize", "skiff_get_size", CompiledType.INT, new ArrayList<>()))
         .addClassObject(new CompiledFunction("getSub", "skiff_get_sub", CompiledType.ANYREF, new ArrayList<>()));
 

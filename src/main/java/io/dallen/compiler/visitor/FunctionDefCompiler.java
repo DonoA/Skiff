@@ -32,11 +32,11 @@ class FunctionDefCompiler {
             sb.append(allocateNewInstance(context, innerContext));
         }
 
-        if(!returns.getBinding().equals(CompiledType.VOID)){
-            sb.append(generateReturnDecl(returns, innerContext));
-        }
+//        if(!returns.getBinding().equals(CompiledType.VOID)){
+//            sb.append(generateReturnDecl(returns, innerContext));
+//        }
 
-        sb.append(copyFormals(innerContext, stmt.args));
+//        sb.append(copyFormals(innerContext, stmt.args));
 
         stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
 

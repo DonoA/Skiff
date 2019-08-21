@@ -48,7 +48,7 @@ public class ASTVisitor {
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(context);
-        String sb = type.getCompiledText() + "* formal_" + stmt.name;
+        String sb = type.getCompiledText() + " " + stmt.name;
         return new CompiledCode()
                 .withText(sb)
                 .withType((CompiledType) type.getBinding());
@@ -163,19 +163,19 @@ public class ASTVisitor {
         CompiledCode code = stmt.value.compile(context);
         StringBuilder sb = new StringBuilder();
         // rtn already created at start of function
-        if(stmt.value instanceof NumberLiteral) {
-            sb.append("rtn = ");
-            sb.append(code.getCompiledText());
-        } else {
-            sb.append("*rtn = ");
-            sb.append(code.isOnStack() ? "*(" : "(").append(code.getCompiledText()).append(")");
-        }
-        sb.append(";\n\n");
+//        if(stmt.value instanceof NumberLiteral) {
+//            sb.append("rtn = ");
+//            sb.append(code.getCompiledText());
+//        } else {
+//            sb.append("*rtn = ");
+//            sb.append(code.isOnStack() ? "*(" : "(").append(code.getCompiledText()).append(")");
+//        }
+//        sb.append(";\n\n");
         VisitorUtils.cleanupScope(sb, context);
-        sb.append(context.getIndent()).append("return rtn;");
+        sb.append(context.getIndent()).append("return ").append(code.getCompiledText());
         return new CompiledCode()
                 .withText(sb.toString())
-                .withSemicolon(false)
+                .withSemicolon(true)
                 .withType(CompiledType.VOID);
     }
 
@@ -209,24 +209,10 @@ public class ASTVisitor {
         CompiledCode lhs = stmt.left.compile(context);
         CompiledCode rhs = stmt.right.compile(context);
 
-        String lhsText = lhs.getCompiledText();
-
-        if(!lhs.isOnStack()) {
-            lhsText = "&(" + lhsText + ")";
-        }
-
-        String rhsText = rhs.getCompiledText();
-
-        if(!rhs.isOnStack()) {
-            rhsText = "&(" + rhsText + ")";
-        }
-
-        String c = "skiff_int_" +  stmt.op.getRawOp() + "(" + lhsText + ", " + rhsText + ")";
-
-        context.addDataStackSize(CompiledType.INT.getSize());
+        String text = lhs.getCompiledText() + " " + stmt.op.getSymbol() + " " + rhs.getCompiledText();
 
         return new CompiledCode()
-                .withText(c)
+                .withText(text)
                 .withType(lhs.getType());
     }
 
@@ -235,27 +221,28 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMathSelfMod(MathSelfMod stmt, CompileContext context) {
-        CompiledCode on = stmt.left.compile(context);
-        String onText;
-        if(on.getType().isRef()) {
-            onText = "(**" + on.getCompiledText() + ")";
-        } else {
-            onText = "(*" + on.getCompiledText() + ")";
-        }
-
-        String op = stmt.op == MathOp.MINUS ? "--" : "++";
-        String text;
-        if(stmt.time == SelfModTime.POST) {
-            text = onText + op;
-        } else {
-            text = op + onText;
-        }
-
-        // TODO: make the return from this block work
-        return new CompiledCode()
-                .withText(text)
-                .withBinding(on.getBinding())
-                .withType(on.getType());
+//        CompiledCode on = stmt.left.compile(context);
+//        String onText;
+//        if(on.getType().isRef()) {
+//            onText = "(**" + on.getCompiledText() + ")";
+//        } else {
+//            onText = "(*" + on.getCompiledText() + ")";
+//        }
+//
+//        String op = stmt.op == MathOp.MINUS ? "--" : "++";
+//        String text;
+//        if(stmt.time == SelfModTime.POST) {
+//            text = onText + op;
+//        } else {
+//            text = op + onText;
+//        }
+//
+//        // TODO: make the return from this block work
+//        return new CompiledCode()
+//                .withText(text)
+//                .withBinding(on.getBinding())
+//                .withType(on.getType());
+        return null;
     }
 
     public CompiledCode compileSubscript(Subscript stmt, CompileContext context) {
@@ -285,11 +272,16 @@ public class ASTVisitor {
 
     public CompiledCode compileAssign(Assign stmt, CompileContext context) {
         // Vars with different names must have different stack locations
+        // Each stack location should represent exactly one named var
         CompiledCode name = stmt.name.compile(context);
         CompiledCode value = stmt.value.compile(context);
 
-        boolean lhsDeRef = name.isOnStack();
-        boolean rhsDeRef = value.isOnStack();
+        boolean lhsDeRef = name.onStack();
+        if(name.getBinding() instanceof CompiledVar) {
+            lhsDeRef = lhsDeRef && ((CompiledVar) name.getBinding()).getType().isRef();
+        }
+
+        boolean rhsDeRef = value.onStack();
 
         String text = (lhsDeRef ? "*" : "") + "(" + name.getCompiledText() + ") = " +
                 (rhsDeRef ? "*" : "") + "(" + value.getCompiledText() + ")";
@@ -301,10 +293,16 @@ public class ASTVisitor {
 
     public CompiledCode compileDeclare(Declare stmt, CompileContext context) {
         CompiledCode type = stmt.type.compile(context);
-        CompiledVar binding = new CompiledVar(stmt.name, (CompiledType) type.getBinding());
+        CompiledVar binding = new CompiledVar(stmt.name, false, (CompiledType) type.getBinding());
         context.declareObject(binding);
 
-        String text = type.getCompiledText() + (context.isOnStack() ? "* " : " ") + stmt.name;
+        boolean isRef = ((CompiledType) type.getBinding()).isRef();
+
+        if(isRef) {
+            context.addRefStackSize(1);
+        }
+
+        String text = type.getCompiledText() + (isRef ? "* " : " ") + stmt.name + (isRef ? " = skalloc_ref_stack()": "");
         return new CompiledCode()
                 .withBinding(binding)
                 .withText(text)
@@ -312,15 +310,15 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
-        CompiledCode type = stmt.type.compile(context);
-        CompiledVar binding = new CompiledVar(stmt.name, (CompiledType) type.getBinding());
-        context.declareObject(binding);
+        CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name), context);
+        CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name), stmt.value), context);
 
-        String text = type.getCompiledText() + (context.isOnStack() ? "* " : " ") + stmt.name +
-                " = " + stmt.value.compile(context).getCompiledText();
+        String text = dec.getCompiledText() + "; " + value.getCompiledText() + ";";
+
         return new CompiledCode()
-                .withBinding(binding)
+                .withBinding(dec.getBinding())
                 .withText(text)
+                .withSemicolon(false)
                 .withType(CompiledType.VOID);
     }
 
@@ -328,7 +326,7 @@ public class ASTVisitor {
         context.addDataStackSize(CompiledType.INT.getSize());
 
         return new CompiledCode()
-                .withText("skiff_int_new(" + stmt.value.toString() + ")")
+                .withText(String.valueOf(stmt.value.intValue()))
                 .withType(CompiledType.INT);
     }
 
@@ -358,6 +356,10 @@ public class ASTVisitor {
         boolean onStack = true;
         try {
             compiledObject = context.getObject(stmt.name);
+            if(compiledObject instanceof CompiledVar) {
+                CompiledVar cv = ((CompiledVar) compiledObject);
+                onStack = !cv.isParam();
+            }
         } catch (NoSuchObjectException ex) {
             if(context.getParentClass() == null) {
                 throw ex;
@@ -372,8 +374,8 @@ public class ASTVisitor {
         }
         return new CompiledCode()
                 .withText(text)
-                .setOnStack(onStack)
                 .withBinding(compiledObject)
+                .onStack(onStack)
                 .withType(objType);
     }
 

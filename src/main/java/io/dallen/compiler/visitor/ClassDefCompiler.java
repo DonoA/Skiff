@@ -19,7 +19,7 @@ class ClassDefCompiler {
                 .setScopePrefix(stmt.name)
                 .setParentClass(cls);
 
-        innerContext.declareObject(new CompiledVar("this", cls));
+        innerContext.declareObject(new CompiledVar("this", true, cls));
 
         StringBuilder methods = new StringBuilder();
 

@@ -16,16 +16,22 @@ public class AST {
     }
 
     public enum MathOp implements HasRaw {
-        PLUS("add"), MINUS("sub"), MUL("mul"), DIV("div"), XOR("^");
+        PLUS("add", "+"), MINUS("sub", "-"), MUL("mul", "*"), DIV("div", "/"), XOR("xor", "^");
 
         private final String rawOp;
+        private final String symbol;
 
-        MathOp(String rawOp) {
+        MathOp(String rawOp, String symbol) {
+            this.symbol = symbol;
             this.rawOp = rawOp;
         }
 
         public String getRawOp() {
             return rawOp;
+        }
+
+        public String getSymbol() {
+            return symbol;
         }
     }
 
