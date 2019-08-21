@@ -50,14 +50,23 @@ class FunctionDefCompiler {
     }
 
     private static String allocateNewInstance(CompileContext context, CompileContext innerContext) {
-        String text = innerContext.getIndent() +
-                context.getParentClass().getCompiledName() +
+        String compiledName = context.getParentClass().getCompiledName();
+        String className = context.getParentClass().getName();
+
+        return innerContext.getIndent() +
+                CompileUtilities.underscoreJoin("skiff", className, "static") +
+                "();\n" +
+                innerContext.getIndent() +
+                compiledName +
                 " * this = (" +
-                context.getParentClass().getCompiledName() +
+                compiledName +
                 " *) skalloc(1, sizeof(" +
-                context.getParentClass().getCompiledName() +
-                "));\n";
-        return text;
+                compiledName +
+                "));\n" +
+                innerContext.getIndent() +
+                "this->class_ptr = &" +
+                CompileUtilities.underscoreJoin("skiff", className, "interface")
+                +";\n";
     }
 
     private static String generateReturns(boolean hasReturn, boolean isConstructor, CompileContext context,

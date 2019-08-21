@@ -19,10 +19,9 @@ public class CompileScope {
         declareObject(CompiledType.LIST);
 
         declareObject(new CompiledFunction(
-                "println",
-        "skiff_println",
-                      CompiledType.VOID,
-                      Collections.singletonList(CompiledType.STRING)));
+            "println",
+            "skiff_println",
+              Collections.singletonList(CompiledType.STRING)));
     }
 
     public void declareObject(CompiledObject decVar) {

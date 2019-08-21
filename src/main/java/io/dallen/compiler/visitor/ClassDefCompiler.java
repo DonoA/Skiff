@@ -38,8 +38,10 @@ class ClassDefCompiler {
                 .map(line -> line.compile(innerContext).getCompiledText())
                 .forEach(text -> methods.append(text).append("\n\n"));
 
-        String text = generateStruct(cls, fields) +
-                generateForewardDecs(compiledMethods) +
+        String text =
+                generateForwardDecs(cls, compiledMethods) +
+                generateStatics(cls, fields, compiledMethods, context) +
+                generateStruct(cls, fields) +
                 methods;
 
         return new CompiledCode()
@@ -68,8 +70,75 @@ class ClassDefCompiler {
                 .collect(Collectors.toList());
     }
 
+    private static String generateStatics(CompiledType cls, List<CompiledCode> fields,
+                                          List<VisitorUtils.FunctionSig> compiledMethods,
+                                          CompileContext context) {
+        StringBuilder text = new StringBuilder();
+
+        //struct skiff_person_class_struct
+        //{
+        //    skiff_string_t * (*get_name)(skiff_person_t *);
+        //    void (*inc_age)(skiff_person_t *);
+        //}
+
+        String classStructName = CompileUtilities.underscoreJoin("skiff", cls.getName(), "class", "struct");
+
+        text.append("struct ")
+                .append(classStructName)
+                .append("\n{\n");
+
+        compiledMethods
+                .stream()
+                .filter(method -> !method.getFunction().isConstructor())
+                .map(VisitorUtils.FunctionSig::getFunction)
+                .forEach(method -> {
+                    String argText = "";
+//                    method
+//                            .getArgs()
+//                            .stream()
+//                            .map(CompiledType::getCompiledName)
+//                            .collect(Collectors.joining(", "));
+                    text.append("    ")
+                            .append(method.getReturns().getCompiledName())
+                            .append(method.getReturns().isRef() ? "*" : "")
+                            .append(" (*").append(method.getName())
+                            .append(")(").append(argText).append(");\n");
+                });
+        text.append("};\n");
+
+        //struct skiff_person_class_struct skiff_person_interface;
+        String interfaceName = CompileUtilities.underscoreJoin("skiff", cls.getName(), "interface");
+        text.append("struct ")
+                .append(classStructName)
+                .append(" ")
+                .append(interfaceName)
+                .append(";\n");
+
+        //void skiff_person_static()
+        //{
+        //    skiff_person_interface.get_name = skiff_person_get_name;
+        //    skiff_person_interface.inc_age = skiff_person_inc_age;
+        //}
+        text.append("void ").append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "static"))
+                .append("()").append("\n{\n");
+
+        compiledMethods
+                .stream()
+                .filter(method -> !method.getFunction().isConstructor())
+                .map(VisitorUtils.FunctionSig::getFunction)
+                .forEach(method -> {
+                    text.append("    ").append(interfaceName).append(".").append(method.getName()).append(" = ")
+                            .append(method.getCompiledName()).append(";\n");
+                });
+
+        text.append("}\n");
+
+        return text.toString();
+    }
+
     private static String generateStruct(CompiledType cls, List<CompiledCode> fields) {
         StringBuilder text = new StringBuilder();
+
         text.append("typedef struct ")
                 .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "struct"))
                 .append(" ")
@@ -79,6 +148,10 @@ class ClassDefCompiler {
         text.append("struct ")
                 .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "struct"))
                 .append("\n{\n");
+
+        // struct skiff_person_class_struct * class_ptr
+        String classStructName = CompileUtilities.underscoreJoin("skiff", cls.getName(), "class", "struct");
+        text.append("    ").append("struct ").append(classStructName).append(" * ").append("class_ptr;\n");
 
         fields.forEach(code -> {
             text.append("    ");
@@ -91,8 +164,14 @@ class ClassDefCompiler {
         return text.toString();
     }
 
-    private static String generateForewardDecs(List<VisitorUtils.FunctionSig> compiledMethods) {
+    private static String generateForwardDecs(CompiledType cls, List<VisitorUtils.FunctionSig> compiledMethods) {
         StringBuilder sb = new StringBuilder();
+        sb.append("typedef struct ")
+                .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "struct"))
+                .append(" ")
+                .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "t"))
+                .append(";\n");
+
         compiledMethods.forEach(method -> {
             sb.append(method.getText())
                     .append(";\n");

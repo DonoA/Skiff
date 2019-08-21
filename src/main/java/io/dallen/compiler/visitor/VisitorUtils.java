@@ -90,7 +90,7 @@ class VisitorUtils {
 
         sb.append(")");
 
-        CompiledFunction func = new CompiledFunction(stmt.name, compiledName, (CompiledType) returnType.getBinding(),
+        CompiledFunction func = new CompiledFunction(stmt.name, compiledName, isConstructor, (CompiledType) returnType.getBinding(),
                 compiledArgs.stream().map(CompiledCode::getType).collect(Collectors.toList()));
 
         return new FunctionSig(func, sb.toString());
@@ -105,7 +105,7 @@ class VisitorUtils {
         return CompileUtilities.underscoreJoin("skiff", context.getScopePrefix(), stmtName);
     }
 
-    private static String generateReturnType(boolean isConstructor, CompileContext context, CompiledCode returnType) {
+    public static String generateReturnType(boolean isConstructor, CompileContext context, CompiledCode returnType) {
         if(isConstructor) {
             return context.getParentClass().getCompiledName() + " *";
         }

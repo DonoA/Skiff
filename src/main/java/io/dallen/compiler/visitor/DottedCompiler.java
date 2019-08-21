@@ -23,7 +23,7 @@ class DottedCompiler {
         }
         CompiledFunction func = (CompiledFunction) nameVar;
         StringBuilder sb = new StringBuilder();
-        sb.append(CompileUtilities.underscoreJoin("skiff", lhs.getType().getName(), func.getName()))
+        sb.append("(*").append(lhs.getCompiledText()).append(")->class_ptr->").append(func.getName())
                 .append("(*").append(lhs.getCompiledText());
         call.args.stream()
                 .map(e -> e.compile(context))
