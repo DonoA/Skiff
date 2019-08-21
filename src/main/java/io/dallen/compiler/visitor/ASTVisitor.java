@@ -288,7 +288,7 @@ public class ASTVisitor {
         CompiledVar binding = new CompiledVar(stmt.name, false, (CompiledType) type.getBinding());
         context.declareObject(binding);
 
-        boolean isRef = ((CompiledType) type.getBinding()).isRef();
+        boolean isRef = ((CompiledType) type.getBinding()).isRef() && context.isOnStack();
 
         if(isRef) {
             context.addRefStackSize(1);
@@ -315,8 +315,6 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
-        context.addDataStackSize(CompiledType.INT.getSize());
-
         return new CompiledCode()
                 .withText(String.valueOf(stmt.value.intValue()))
                 .withType(CompiledType.INT);

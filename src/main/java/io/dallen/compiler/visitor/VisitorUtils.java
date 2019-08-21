@@ -29,7 +29,6 @@ class VisitorUtils {
     }
 
     static void cleanupScope(StringBuilder sb, CompileContext context) {
-        sb.append(context.getIndent());
         sb.append("// Cleanup scope\n");
 
         sb.append(context.getIndent()).append("skfree_ref_stack(").append(context.getRefStackSize()).append(");\n");

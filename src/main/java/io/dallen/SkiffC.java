@@ -32,7 +32,7 @@ public class SkiffC {
     private static String preamble = "#include \"lib/skiff.h\"\n\n";
 
     public static void main(String[] argz) throws IOException {
-        String inFile = "test.skiff";
+        String inFile = "classes.skiff";
         String outfile = "test.c";
         String programText;
         try {

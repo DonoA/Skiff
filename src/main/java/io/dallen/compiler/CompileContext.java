@@ -55,28 +55,12 @@ public class CompileContext {
         indent = indent + newIndent;
     }
 
-    public int getDataStackSize() {
-        return dataStackSize;
-    }
-
-    public void addDataStackSize(int dataStackSize) {
-        this.dataStackSize += dataStackSize;
-    }
-
     public int getRefStackSize() {
         return refStackSize;
     }
 
     public void addRefStackSize(int refStackSize) {
         this.refStackSize += refStackSize;
-    }
-
-    public void trackObjCreation(CompiledType type) {
-        if(type.isRef()) {
-            addRefStackSize(1);
-        } else {
-            addDataStackSize(type.getSize());
-        }
     }
 
     public String getScopePrefix() {

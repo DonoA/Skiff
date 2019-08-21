@@ -39,8 +39,6 @@ class FunctionCallCompiler {
 
         sb.append(")");
 
-        context.trackObjCreation(func.getReturns());
-
         return new CompiledCode()
                 .withText(sb.toString())
                 .withType(func.getReturns());

@@ -14,9 +14,9 @@ typedef struct {
 
 skiff_string_t * skiff_string_new(char * cstr)
 {
-    skiff_string_t * str = (skiff_string_t *) calloc(1, sizeof(skiff_string_t));
+    skiff_string_t * str = (skiff_string_t *) skalloc(1, sizeof(skiff_string_t));
     str->len = strlen(cstr);
-    str->data = (char *) calloc(str->len, sizeof(char));
+    str->data = (char *) skalloc(str->len, sizeof(char));
     strcpy(str->data, cstr);
     return str;
 }

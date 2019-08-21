@@ -32,12 +32,6 @@ class FunctionDefCompiler {
             sb.append(allocateNewInstance(context, innerContext));
         }
 
-//        if(!returns.getBinding().equals(CompiledType.VOID)){
-//            sb.append(generateReturnDecl(returns, innerContext));
-//        }
-
-//        sb.append(copyFormals(innerContext, stmt.args));
-
         stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
 
         boolean hasReturn = stmt.body.get(stmt.body.size() - 1) instanceof AST.Return;
@@ -60,7 +54,7 @@ class FunctionDefCompiler {
                 context.getParentClass().getCompiledName() +
                 " * this = (" +
                 context.getParentClass().getCompiledName() +
-                " *) calloc(1, sizeof(" +
+                " *) skalloc(1, sizeof(" +
                 context.getParentClass().getCompiledName() +
                 "));\n";
         return text;
@@ -70,6 +64,7 @@ class FunctionDefCompiler {
                                           CompileContext innerContext) {
         StringBuilder sb = new StringBuilder();
         if(!hasReturn) {
+            sb.append(innerContext.getIndent());
             VisitorUtils.cleanupScope(sb, innerContext);
         }
 

@@ -36,8 +36,6 @@ class DottedCompiler {
                 .forEach(e -> sb.append(", ").append(e));
         sb.append(")");
 
-        context.trackObjCreation(func.getReturns());
-
         return new CompiledCode()
                 .withText(sb.toString())
                 .withType(func.getReturns());
@@ -47,7 +45,7 @@ class DottedCompiler {
         StringBuilder sb = new StringBuilder();
         CompiledObject obj = lhs.getType().getObject(v.name);
         CompiledVar objVar = (CompiledVar) obj;
-        sb.append("(").append(lhs.getCompiledText()).append(")->").append(v.name);
+        sb.append(lhs.onStack() ? "(*" : "(").append(lhs.getCompiledText()).append(")->").append(v.name);
         return new CompiledCode()
                 .withText(sb.toString())
                 .withType(objVar.getType());

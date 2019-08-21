@@ -13,10 +13,10 @@ typedef struct {
 
 skiff_list_t * skiff_list_new()
 {
-    skiff_list_t * new_list = (skiff_list_t *) calloc(1, sizeof(skiff_list_t));
+    skiff_list_t * new_list = (skiff_list_t *) skalloc(1, sizeof(skiff_list_t));
     new_list->size = 0;
     new_list->_cap = 10;
-    new_list->data = calloc(10, sizeof(void *));
+    new_list->data = skalloc(10, sizeof(void *));
     return new_list;
 }
 
