@@ -8,6 +8,7 @@ import org.junit.Rule;
 import org.junit.rules.Timeout;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
@@ -259,7 +260,7 @@ public class BasicBlockTest {
         String expected = new ClassDef(
                 "CLS",
                 List.of(),
-                List.of(ASTUtil.simpleType("Object")),
+                Optional.of(ASTUtil.simpleType("Object")),
                 List.of()
         ).toFlatString();
 

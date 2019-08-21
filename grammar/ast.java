@@ -174,25 +174,25 @@ public static class AnonFunctionDef extends BlockStatement {
 public static class ClassDef extends BlockStatement {
     public final String name;
     public final List<GenericType> genericTypes;
-    public final List<Type> extendClasses;
-    public ClassDef(String name, List<GenericType> genericTypes, List<Type> extendClasses, List<Statement> body) {
+    public final Optional<Type> extendClass;
+    public ClassDef(String name, List<GenericType> genericTypes, Optional<Type> extendClass, List<Statement> body) {
         super(body);
         this.name = name;
         this.genericTypes = genericTypes;
-        this.extendClasses = extendClasses;
+        this.extendClass = extendClass;
     }
 
     public String toString() {
         return "ClassDef(name = " + this.name.toString() + ", " + 
             "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
-            "extendClasses = " + "[" + this.extendClasses.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
+            "extendClass = " + this.extendClass.toString() + ", " + 
             "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ")";
     }
 
     public String toFlatString() {
         return "ClassDef(name = " + this.name.toString() + ", " + 
             "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
-            "extendClasses = " + "[" + this.extendClasses.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
+            "extendClass = " + this.extendClass.toString() + ", " + 
             "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
     }
 

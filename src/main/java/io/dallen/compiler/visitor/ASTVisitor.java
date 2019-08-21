@@ -173,7 +173,7 @@ public class ASTVisitor {
 
     public CompiledCode compileNew(New stmt, CompileContext context) {
         CompiledType typeCode = (CompiledType) stmt.type.compile(context).getBinding();
-        String functionName = CompileUtilities.underscoreJoin("skiff", typeCode.getName(), "new");
+        String functionName = VisitorUtils.underscoreJoin("skiff", typeCode.getName(), "new");
         StringBuilder sb = new StringBuilder();
         sb.append(functionName).append("(");
         List<String> argz = stmt.argz
@@ -245,7 +245,7 @@ public class ASTVisitor {
         }
         CompiledCode sub = stmt.sub.compile(context);
 
-        String cFunc = CompileUtilities.underscoreJoin("skiff", left.getType().getName(), "get", "sub", sub.getType().getName());
+        String cFunc = VisitorUtils.underscoreJoin("skiff", left.getType().getName(), "get", "sub", sub.getType().getName());
         String text = cFunc + "(" + left.getCompiledText() + ", " + sub.getCompiledText() + ")";
         return new CompiledCode()
             .withText(text)

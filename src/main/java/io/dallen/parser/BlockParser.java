@@ -7,6 +7,7 @@ import io.dallen.tokenizer.Token;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.dallen.tokenizer.Token.Keyword;
@@ -68,7 +69,7 @@ class BlockParser {
         parser.consumeExpected(Token.Keyword.CLASS);
         Token name = parser.consumeExpected(Token.Textless.NAME);
         List<AST.GenericType> genericTypes = new ArrayList<>();
-        List<AST.Type> extendList = new ArrayList<>();
+        Optional<AST.Type> extended = Optional.empty();
         if(parser.current().type == Token.Symbol.LEFT_ANGLE) {
             genericTypes = parser.getCommon().consumeGenericList();
         }
@@ -76,18 +77,14 @@ class BlockParser {
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
             List<Token> extendsTokens = parser.consumeTo(Token.Symbol.LEFT_BRACE);
-            List<List<Token>> extendsTokenSeg = BraceSplitter.splitAll(extendsTokens, Token.Symbol.COMMA);
-            extendList = extendsTokenSeg
-                    .stream()
-                    .map(seg -> new Parser(seg).getCommon().parseType())
-                    .collect(Collectors.toList());
+            extended = Optional.of(new Parser(extendsTokens).getCommon().parseType());
         }
 
         parser.tryConsumeExpected(Token.Symbol.LEFT_BRACE);
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
 
-        return new AST.ClassDef(name.literal, genericTypes, extendList, body);
+        return new AST.ClassDef(name.literal, genericTypes, extended, body);
     }
 
 

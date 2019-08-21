@@ -54,7 +54,7 @@ class FunctionDefCompiler {
         String className = context.getParentClass().getName();
 
         return innerContext.getIndent() +
-                CompileUtilities.underscoreJoin("skiff", className, "static") +
+                VisitorUtils.underscoreJoin("skiff", className, "static") +
                 "();\n" +
                 innerContext.getIndent() +
                 compiledName +
@@ -65,7 +65,7 @@ class FunctionDefCompiler {
                 "));\n" +
                 innerContext.getIndent() +
                 "this->class_ptr = &" +
-                CompileUtilities.underscoreJoin("skiff", className, "interface")
+                VisitorUtils.underscoreJoin("skiff", className, "interface")
                 +";\n";
     }
 

@@ -10,7 +10,7 @@ import java.util.ListIterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-class VisitorUtils {
+public class VisitorUtils {
 
     static Consumer<AST.Statement> compileToStringBuilder(StringBuilder sb, CompileContext context) {
         return stmt -> {
@@ -99,13 +99,13 @@ class VisitorUtils {
 
     private static String generateFuncName(boolean isConstructor, CompileContext context, String stmtName) {
         if(isConstructor) {
-            return CompileUtilities.underscoreJoin("skiff", stmtName, "new");
+            return VisitorUtils.underscoreJoin("skiff", stmtName, "new");
         }
 
-        return CompileUtilities.underscoreJoin("skiff", context.getScopePrefix(), stmtName);
+        return VisitorUtils.underscoreJoin("skiff", context.getScopePrefix(), stmtName);
     }
 
-    public static String generateReturnType(boolean isConstructor, CompileContext context, CompiledCode returnType) {
+    static String generateReturnType(boolean isConstructor, CompileContext context, CompiledCode returnType) {
         if(isConstructor) {
             return context.getParentClass().getCompiledName() + " *";
         }
@@ -123,5 +123,59 @@ class VisitorUtils {
         String text = lhs.getCompiledText() + " " + op.getRawOp() + " " + rhs.getCompiledText();
         return new CompiledCode()
                 .withText(text);
+    }
+
+    static class StructEntry {
+        private final String type;
+        private final String name;
+
+        public StructEntry(String type, String name) {
+            this.type = type;
+            this.name = name;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String toString() {
+            return this.type + " " + this.name;
+        }
+    }
+
+    static String compileStruct(String name, String outerIndent, String innerIndent, List<StructEntry> entries) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(outerIndent).append("struct ").append(name).append(" \n{\n");
+        for(StructEntry entry : entries) {
+            sb.append(innerIndent).append(entry.toString()).append(";\n");
+        }
+        sb.append(outerIndent).append("};\n");
+
+        return sb.toString();
+    }
+
+    public static String underscoreJoin(String... name) {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < name.length; i++) {
+            if(name[i].isEmpty()) {
+                continue;
+            }
+            char[] n = name[i].toCharArray();
+            for(int j = 0; j < n.length; j++) {
+                if(Character.isUpperCase(n[j]) && j != 0) {
+                    sb.append("_");
+                }
+                sb.append(Character.toLowerCase(n[j]));
+            }
+            if(i < name.length - 1) {
+                sb.append("_");
+            }
+        }
+        return sb.toString();
     }
 }

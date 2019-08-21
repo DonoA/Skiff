@@ -81,33 +81,22 @@ class ClassDefCompiler {
         //    void (*inc_age)(skiff_person_t *);
         //}
 
-        String classStructName = CompileUtilities.underscoreJoin("skiff", cls.getName(), "class", "struct");
+        String classStructName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "class", "struct");
 
-        text.append("struct ")
-                .append(classStructName)
-                .append("\n{\n");
-
-        compiledMethods
+        List<VisitorUtils.StructEntry> structEntries = compiledMethods
                 .stream()
                 .filter(method -> !method.getFunction().isConstructor())
                 .map(VisitorUtils.FunctionSig::getFunction)
-                .forEach(method -> {
-                    String argText = "";
-//                    method
-//                            .getArgs()
-//                            .stream()
-//                            .map(CompiledType::getCompiledName)
-//                            .collect(Collectors.joining(", "));
-                    text.append("    ")
-                            .append(method.getReturns().getCompiledName())
-                            .append(method.getReturns().isRef() ? "*" : "")
-                            .append(" (*").append(method.getName())
-                            .append(")(").append(argText).append(");\n");
-                });
-        text.append("};\n");
+                .map(method -> new VisitorUtils.StructEntry(
+                    method.getReturns().getCompiledName() + (method.getReturns().isRef() ? "*" : ""),
+                    "(*" + method.getName() + ")()"
+                ))
+                .collect(Collectors.toList());
+
+        text.append(VisitorUtils.compileStruct(classStructName, "", CompileContext.INDENT, structEntries));
 
         //struct skiff_person_class_struct skiff_person_interface;
-        String interfaceName = CompileUtilities.underscoreJoin("skiff", cls.getName(), "interface");
+        String interfaceName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "interface");
         text.append("struct ")
                 .append(classStructName)
                 .append(" ")
@@ -119,7 +108,7 @@ class ClassDefCompiler {
         //    skiff_person_interface.get_name = skiff_person_get_name;
         //    skiff_person_interface.inc_age = skiff_person_inc_age;
         //}
-        text.append("void ").append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "static"))
+        text.append("void ").append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "static"))
                 .append("()").append("\n{\n");
 
         compiledMethods
@@ -127,8 +116,8 @@ class ClassDefCompiler {
                 .filter(method -> !method.getFunction().isConstructor())
                 .map(VisitorUtils.FunctionSig::getFunction)
                 .forEach(method -> {
-                    text.append("    ").append(interfaceName).append(".").append(method.getName()).append(" = ")
-                            .append(method.getCompiledName()).append(";\n");
+                    text.append(CompileContext.INDENT).append(interfaceName).append(".").append(method.getName())
+                            .append(" = ").append(method.getCompiledName()).append(";\n");
                 });
 
         text.append("}\n");
@@ -139,22 +128,16 @@ class ClassDefCompiler {
     private static String generateStruct(CompiledType cls, List<CompiledCode> fields) {
         StringBuilder text = new StringBuilder();
 
-        text.append("typedef struct ")
-                .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "struct"))
-                .append(" ")
-                .append(cls.getCompiledName())
-                .append(";\n");
-
         text.append("struct ")
-                .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "struct"))
+                .append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "struct"))
                 .append("\n{\n");
 
         // struct skiff_person_class_struct * class_ptr
-        String classStructName = CompileUtilities.underscoreJoin("skiff", cls.getName(), "class", "struct");
-        text.append("    ").append("struct ").append(classStructName).append(" * ").append("class_ptr;\n");
+        String classStructName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "class", "struct");
+        text.append(CompileContext.INDENT).append("struct ").append(classStructName).append(" * ").append("class_ptr;\n");
 
         fields.forEach(code -> {
-            text.append("    ");
+            text.append(CompileContext.INDENT);
             text.append(code.getCompiledText());
             text.append(";\n");
         });
@@ -167,9 +150,9 @@ class ClassDefCompiler {
     private static String generateForwardDecs(CompiledType cls, List<VisitorUtils.FunctionSig> compiledMethods) {
         StringBuilder sb = new StringBuilder();
         sb.append("typedef struct ")
-                .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "struct"))
+                .append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "struct"))
                 .append(" ")
-                .append(CompileUtilities.underscoreJoin("skiff", cls.getName(), "t"))
+                .append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "t"))
                 .append(";\n");
 
         compiledMethods.forEach(method -> {

@@ -1,6 +1,8 @@
 package io.dallen.compiler;
 
 import io.dallen.compiler.visitor.ASTVisitor;
+import io.dallen.compiler.visitor.VisitorUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,7 @@ public class CompiledType extends CompiledObject {
 
     public CompiledType(String className, int size) {
         super(className);
-        this.compiledName = CompileUtilities.underscoreJoin("skiff", className, "t");
+        this.compiledName = VisitorUtils.underscoreJoin("skiff", className, "t");
         this.size = size;
         this.isRef = (size == -1);
         clazz = new CompileScope(null);

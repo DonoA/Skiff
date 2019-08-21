@@ -57,7 +57,7 @@
         "fields": {
             "name": "String",
             "genericTypes": "List<GenericType>",
-            "extendClasses": "List<Type>",
+            "extendClass": "Optional<Type>",
             "body": {
                 "type": "List<Statement>",
                 "bigPrint": true

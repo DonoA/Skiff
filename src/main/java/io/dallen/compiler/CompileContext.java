@@ -2,6 +2,8 @@ package io.dallen.compiler;
 
 public class CompileContext {
 
+    public final static String INDENT = "    ";
+
     private CompileScope scope;
     private String indent = "";
     private CompileContext parent;
@@ -27,7 +29,7 @@ public class CompileContext {
     }
 
     public CompileContext addIndent() {
-        addIndent("    ");
+        addIndent(INDENT);
         return this;
     }
 
