@@ -108,7 +108,7 @@ class VisitorUtils {
 
     private static String generateReturnType(boolean isConstructor, CompileContext context, CompiledCode returnType) {
         if(isConstructor) {
-            return context.getParentClass().getCompiledName() + " **";
+            return context.getParentClass().getCompiledName() + " *";
         }
 
         if(returnType.getBinding().equals(CompiledType.VOID)) {

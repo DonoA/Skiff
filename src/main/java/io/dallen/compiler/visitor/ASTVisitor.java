@@ -162,15 +162,7 @@ public class ASTVisitor {
     public CompiledCode compileReturn(Return stmt, CompileContext context) {
         CompiledCode code = stmt.value.compile(context);
         StringBuilder sb = new StringBuilder();
-        // rtn already created at start of function
-//        if(stmt.value instanceof NumberLiteral) {
-//            sb.append("rtn = ");
-//            sb.append(code.getCompiledText());
-//        } else {
-//            sb.append("*rtn = ");
-//            sb.append(code.isOnStack() ? "*(" : "(").append(code.getCompiledText()).append(")");
-//        }
-//        sb.append(";\n\n");
+
         VisitorUtils.cleanupScope(sb, context);
         sb.append(context.getIndent()).append("return ").append(code.getCompiledText());
         return new CompiledCode()
@@ -365,7 +357,7 @@ public class ASTVisitor {
                 throw ex;
             }
             compiledObject = context.getParentClass().getObject(stmt.name);
-            text = "(*this)->" + stmt.name;
+            text = "this->" + stmt.name;
             onStack = false;
         }
         CompiledType objType = CompiledType.CLASS;

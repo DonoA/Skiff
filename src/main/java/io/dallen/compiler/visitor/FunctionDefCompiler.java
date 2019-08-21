@@ -42,6 +42,10 @@ class FunctionDefCompiler {
 
         boolean hasReturn = stmt.body.get(stmt.body.size() - 1) instanceof AST.Return;
 
+        if(!hasReturn && !returns.getBinding().equals(CompiledType.VOID)) {
+            throw new CompileError("Function with non void return type must end with a return statement");
+        }
+
         sb.append(generateReturns(hasReturn, isConstructor, context, innerContext));
 
         return new CompiledCode()
@@ -54,9 +58,9 @@ class FunctionDefCompiler {
     private static String allocateNewInstance(CompileContext context, CompileContext innerContext) {
         String text = innerContext.getIndent() +
                 context.getParentClass().getCompiledName() +
-                " ** this = (" +
+                " * this = (" +
                 context.getParentClass().getCompiledName() +
-                " **) skalloc_heap(1, sizeof(" +
+                " *) calloc(1, sizeof(" +
                 context.getParentClass().getCompiledName() +
                 "));\n";
         return text;
@@ -84,38 +88,4 @@ class FunctionDefCompiler {
         return sb.toString();
     }
 
-    private static String generateReturnDecl(CompiledCode returnType, CompileContext innerContext) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(innerContext.getIndent()).append(returnType.getCompiledText()).append("* rtn = ");
-        if(returnType.getType().isRef()) {
-            sb.append("skalloc_ref_stack();\n");
-            return sb.toString();
-        }
-
-        int size = ((CompiledType) returnType.getBinding()).getSize();
-        sb.append("skalloc_data_stack(").append(size).append(");\n");
-        return sb.toString();
-    }
-
-    private static String copyFormals(CompileContext innerContext, List<AST.FunctionParam> args) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(innerContext.getIndent())
-                .append("// Copy formals\n");
-        args.forEach(arg -> {
-            CompiledCode code = arg.type.compile(innerContext);
-            sb.append(innerContext.getIndent()).append(code.getCompiledText()).append("* ").append(arg.name);
-            sb.append(" = ");
-            CompiledType type = ((CompiledType) code.getBinding());
-            innerContext.trackObjCreation(type);
-            if(type.isRef()) {
-                sb.append("skalloc_ref_stack();\n");
-            } else {
-                sb.append("skalloc_data_stack(").append(type.getSize()).append(");\n");
-            }
-            sb.append(innerContext.getIndent()).append("*").append(arg.name).append(" = ");
-            sb.append("*formal_").append(arg.name).append(";\n");
-        });
-        sb.append("\n");
-        return sb.toString();
-    }
 }

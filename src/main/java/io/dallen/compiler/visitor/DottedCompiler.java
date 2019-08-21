@@ -24,9 +24,16 @@ class DottedCompiler {
         CompiledFunction func = (CompiledFunction) nameVar;
         StringBuilder sb = new StringBuilder();
         sb.append(CompileUtilities.underscoreJoin("skiff", lhs.getType().getName(), func.getName()))
-                .append("(").append(lhs.getCompiledText());
-        call.args.stream().map(e -> e.compile(context))
-                .forEach(e -> sb.append(", ").append(e.getCompiledText()));
+                .append("(*").append(lhs.getCompiledText());
+        call.args.stream()
+                .map(e -> e.compile(context))
+                .map(arg -> {
+                    if(arg.onStack()) {
+                        return  "*(" + arg.getCompiledText() + ")";
+                    }
+                    return arg.getCompiledText();
+                })
+                .forEach(e -> sb.append(", ").append(e));
         sb.append(")");
 
         context.trackObjCreation(func.getReturns());
@@ -40,7 +47,7 @@ class DottedCompiler {
         StringBuilder sb = new StringBuilder();
         CompiledObject obj = lhs.getType().getObject(v.name);
         CompiledVar objVar = (CompiledVar) obj;
-        sb.append("(*").append(lhs.getCompiledText()).append(")->").append(v.name);
+        sb.append("(").append(lhs.getCompiledText()).append(")->").append(v.name);
         return new CompiledCode()
                 .withText(sb.toString())
                 .withType(objVar.getType());
