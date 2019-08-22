@@ -3,6 +3,7 @@ package io.dallen.compiler.visitor;
 import io.dallen.AST;
 import io.dallen.compiler.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
@@ -10,32 +11,41 @@ import java.util.stream.Collectors;
 class FunctionCallCompiler {
 
     static CompiledCode compileFunctionCall(AST.FunctionCall stmt, CompileContext context) {
-        CompiledObject nameVar = context.getObject(stmt.name);
-        if (!(nameVar instanceof CompiledFunction)) {
-            throw new CompileError("Variable not function " + stmt.name);
-        }
-
-        CompiledFunction func = (CompiledFunction) nameVar;
+        CompiledFunction func = context.getScope().getFunction(stmt.name);
 
         List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(context))
                 .collect(Collectors.toList());
 
 //        checkVarTypes(func, compArgs);
 
+        boolean isSuper = stmt.name.equals("super");
+
         StringBuilder sb = new StringBuilder();
-        sb.append(func.getCompiledName());
+        if(isSuper) {
+            String superName = context.getParentClass().getParent().getName();
+            sb.append(VisitorUtils.underscoreJoin("skiff", superName, "new"));
+        } else {
+            sb.append(func.getCompiledName());
+        }
         sb.append("(");
 
-        String argText = compArgs
+        List<String> argList = new ArrayList<>();
+
+        if(isSuper) {
+            argList.add("(" + context.getParentClass().getParent().getCompiledName() + ") this");
+            argList.add("0");
+        }
+
+        argList.addAll(compArgs
                 .stream()
                 .map(arg -> {
                     if(arg.onStack()) {
                         return  "*(" + arg.getCompiledText() + ")";
                     }
                     return  "(" + arg.getCompiledText() + ")";
-                }).collect(Collectors.joining(", "));
+                }).collect(Collectors.toList()));
 
-        sb.append(argText);
+        sb.append(String.join(", ", argList));
 
         sb.append(")");
 

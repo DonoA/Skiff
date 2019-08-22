@@ -17,11 +17,7 @@ class DottedCompiler {
     }
 
     private static CompiledCode compileFunctionDot(CompiledCode lhs, AST.FunctionCall call, CompileContext context) {
-        CompiledObject nameVar = lhs.getType().getObject(call.name);
-        if (!(nameVar instanceof CompiledFunction)) {
-            throw new CompileError("Variable not function " + call.name);
-        }
-        CompiledFunction func = (CompiledFunction) nameVar;
+        CompiledFunction func = lhs.getType().getMethod(call.name);
         StringBuilder sb = new StringBuilder();
         sb.append("(*").append(lhs.getCompiledText()).append(")->class_ptr->").append(func.getName())
                 .append("(*").append(lhs.getCompiledText());
@@ -43,12 +39,11 @@ class DottedCompiler {
 
     private static CompiledCode compileVarDot(CompiledCode lhs, AST.Variable v) {
         StringBuilder sb = new StringBuilder();
-        CompiledObject obj = lhs.getType().getObject(v.name);
-        CompiledVar objVar = (CompiledVar) obj;
+        CompiledVar obj = lhs.getType().getField(v.name);
         sb.append(lhs.onStack() ? "(*" : "(").append(lhs.getCompiledText()).append(")->").append(v.name);
         return new CompiledCode()
                 .withText(sb.toString())
-                .withType(objVar.getType());
+                .withType(obj.getType());
     }
 
 }

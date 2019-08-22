@@ -3,46 +3,116 @@ package io.dallen.compiler.visitor;
 import io.dallen.AST;
 import io.dallen.compiler.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 class ClassDefCompiler {
 
-    static CompiledCode compileClassDef(AST.ClassDef stmt, CompileContext context) {
+    private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext) {
+        CompiledType cls = new CompiledType(stmt.name, true);
 
-        CompiledType cls = new CompiledType(stmt.name, -1)
-                .setParent(CompiledType.ANYREF);
+        stmt.extendClass.ifPresentOrElse(ext -> {
+            cls.setParent((CompiledType) ext.compile(context).getBinding());
+        }, () -> cls.setParent(CompiledType.ANYREF));
 
         context.declareObject(cls);
 
+        Map<String, CompiledVar> declaredVars = new HashMap<>();
+        Map<String, CompiledFunction> declaredMethods = new HashMap<>();
+
+        // Collect Vars declared in this class
+        for(AST.Statement s : stmt.body) {
+            if(s instanceof AST.Declare) {
+                AST.Declare dec = (AST.Declare) s;
+                declaredVars.put(dec.name, new CompiledVar(dec.name, false,
+                        (CompiledType) dec.type.compile(innerContext).getBinding()));
+            } else if(s instanceof AST.FunctionDef) {
+                AST.FunctionDef dec = (AST.FunctionDef) s;
+                boolean isConstructor = dec.name.equals(cls.getName());
+                String compiledName = VisitorUtils.generateFuncName(isConstructor, innerContext, dec.name);
+                CompiledType returns = (CompiledType) dec.returns.compile(innerContext).getBinding();
+                List<CompiledType> argTypes = dec.args.stream().map(arg -> arg.type.compile(innerContext).getBinding())
+                        .map(obj -> (CompiledType) obj).collect(Collectors.toList());
+                CompiledFunction func = new CompiledFunction(dec.name, compiledName, isConstructor, returns, argTypes);
+                if(isConstructor) {
+                    cls.addConstructor(func);
+                } else {
+                    declaredMethods.put(dec.name, func);
+                }
+            } else {
+                throw new CompileError("Class statements must be function defs or Declares");
+            }
+        }
+
+        cls.getParent().getAllFields().forEach(f -> {
+            if(declaredVars.containsKey(f.getName())) {
+                throw new CompileError("Cannot have var with same name in super");
+            }
+            cls.addField(f);
+        });
+        declaredVars.values().forEach(cls::addField);
+
+        cls.getParent().getAllMethods()
+                .stream()
+                .filter(f -> !f.isConstructor())
+                .forEach(f -> {
+                    CompiledFunction override = declaredMethods.get(f.getName());
+                    if(override != null) {
+                        cls.addMethod(new CompiledType.CompiledMethod(override, true));
+                    } else {
+                        cls.addMethod(new CompiledType.CompiledMethod(f, false));
+                    }
+                });
+
+        declaredMethods.values().forEach(v -> {
+            if(cls.getMethod(v.getName()) == null) {
+                cls.addMethod(new CompiledType.CompiledMethod(v, true));
+            }
+        });
+
+        return cls;
+    }
+
+    static CompiledCode compileClassDef(AST.ClassDef stmt, CompileContext context) {
         CompileContext innerContext = new CompileContext(context)
-                .setScopePrefix(stmt.name)
-                .setParentClass(cls);
+                .setScopePrefix(stmt.name);
+
+        CompiledType cls = compileClass(stmt, context, innerContext);
+
+        innerContext.setParentClass(cls);
 
         innerContext.declareObject(new CompiledVar("this", true, cls));
+        innerContext.declareObject(new CompiledFunction("super", "super", List.of()));
 
-        StringBuilder methods = new StringBuilder();
+        String typedef = "typedef struct " + VisitorUtils.underscoreJoin("skiff", cls.getName(), "struct") +
+                " " + cls.getStructName() + ";\n";
 
-        List<CompiledCode> fields = compileFields(stmt.body, innerContext, cls);
+        String functionForwardDecs = generateForwardDecs(cls) + "\n";
 
-        List<VisitorUtils.FunctionSig> compiledMethods = stmt.body
-                .stream()
-                .filter(e -> e instanceof AST.FunctionDef)
-                .map(line -> extractMethod(cls, (AST.FunctionDef) line, innerContext))
-                .collect(Collectors.toList());
+        String classStructName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "class", "struct");
 
-        compiledMethods.forEach(method -> cls.addClassObject(method.getFunction()));
+        String classStruct = generateClassStruct(cls, classStructName);
 
-        stmt.body.stream()
-                .filter(e  -> e instanceof AST.FunctionDef)
-                .map(line -> line.compile(innerContext).getCompiledText())
-                .forEach(text -> methods.append(text).append("\n\n"));
+        String interfaceName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "interface");
 
-        String text =
-                generateForwardDecs(cls, compiledMethods) +
-                generateStatics(cls, fields, compiledMethods, context) +
-                generateStruct(cls, fields) +
-                methods;
+        String interfaceDec = "struct " + classStructName + " " + interfaceName + ";\n";
+
+        String staticInitFunc = generateStaticInit(cls, interfaceName);
+
+        String dataStruct = generateDataStruct(cls, classStructName);
+
+        String methodCode = generateMethodCode(stmt.body, innerContext);
+
+        String text = typedef +
+                functionForwardDecs +
+                classStruct +
+                interfaceDec +
+                staticInitFunc +
+                dataStruct +
+                methodCode;
 
         return new CompiledCode()
                 .withType(CompiledType.VOID)
@@ -51,125 +121,75 @@ class ClassDefCompiler {
                 .withSemicolon(false);
     }
 
-    private static List<CompiledCode> compileFields(List<AST.Statement> lines, CompileContext innerContext,
-                                                    CompiledType cls) {
-
-        return lines.stream()
-                .filter(line -> line instanceof AST.Declare || line instanceof AST.DeclareAssign)
-                .map(line -> {
-                    if(line instanceof AST.Declare){
-                        CompileContext anonContext = new CompileContext(innerContext)
-                                .setOnStack(false);
-                        CompiledCode code = line.compile(anonContext);
-                        cls.addClassObject(code.getBinding());
-                        return code;
-                    } else {
-                        throw new CompileError("Declare assign not supported yet");
-                    }
-                })
-                .collect(Collectors.toList());
+    private static String generateMethodCode(List<AST.Statement> body, CompileContext innerContext) {
+        return body.stream()
+                .filter(f -> f instanceof AST.FunctionDef)
+                .map(f->f.compile(innerContext))
+                .map(CompiledCode::getCompiledText)
+                .collect(Collectors.joining("\n\n"));
     }
 
-    private static String generateStatics(CompiledType cls, List<CompiledCode> fields,
-                                          List<VisitorUtils.FunctionSig> compiledMethods,
-                                          CompileContext context) {
-        StringBuilder text = new StringBuilder();
+    private static String generateDataStruct(CompiledType cls, String classStructName) {
+        List<VisitorUtils.StructEntry> entries = new ArrayList<>();
+        entries.add(new VisitorUtils.StructEntry("struct " + classStructName,  "* class_ptr"));
 
-        //struct skiff_person_class_struct
-        //{
-        //    skiff_string_t * (*get_name)(skiff_person_t *);
-        //    void (*inc_age)(skiff_person_t *);
-        //}
+        entries.addAll(cls.getAllFields().stream()
+                .map(field -> new VisitorUtils.StructEntry(field.getType().getCompiledName(), field.getName()))
+                .collect(Collectors.toList()));
 
-        String classStructName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "class", "struct");
+        return VisitorUtils.compileStruct(
+                VisitorUtils.underscoreJoin("skiff", cls.getName(), "struct"),
+                "", CompileContext.INDENT,
+                entries
+        );
+    }
 
-        List<VisitorUtils.StructEntry> structEntries = compiledMethods
+    private static String generateClassStruct(CompiledType cls, String classStructName) {
+        List<VisitorUtils.StructEntry> structEntries = cls.getAllMethods()
                 .stream()
-                .filter(method -> !method.getFunction().isConstructor())
-                .map(VisitorUtils.FunctionSig::getFunction)
                 .map(method -> new VisitorUtils.StructEntry(
-                    method.getReturns().getCompiledName() + (method.getReturns().isRef() ? "*" : ""),
-                    "(*" + method.getName() + ")()"
+                        method.getReturns().getCompiledName(),
+                        "(*" + method.getName() + ")()"
                 ))
                 .collect(Collectors.toList());
 
-        text.append(VisitorUtils.compileStruct(classStructName, "", CompileContext.INDENT, structEntries));
+        return VisitorUtils.compileStruct(classStructName, "", CompileContext.INDENT, structEntries);
+    }
 
-        //struct skiff_person_class_struct skiff_person_interface;
-        String interfaceName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "interface");
-        text.append("struct ")
-                .append(classStructName)
-                .append(" ")
-                .append(interfaceName)
-                .append(";\n");
+    private static String generateStaticInit(CompiledType cls, String interfaceName) {
+        StringBuilder text = new StringBuilder();
 
-        //void skiff_person_static()
-        //{
-        //    skiff_person_interface.get_name = skiff_person_get_name;
-        //    skiff_person_interface.inc_age = skiff_person_inc_age;
-        //}
         text.append("void ").append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "static"))
                 .append("()").append("\n{\n");
 
-        compiledMethods
-                .stream()
-                .filter(method -> !method.getFunction().isConstructor())
-                .map(VisitorUtils.FunctionSig::getFunction)
-                .forEach(method -> {
+        cls.getAllMethods()
+                .forEach(method ->
                     text.append(CompileContext.INDENT).append(interfaceName).append(".").append(method.getName())
-                            .append(" = ").append(method.getCompiledName()).append(";\n");
-                });
+                            .append(" = ").append(method.getCompiledName()).append(";\n"));
 
         text.append("}\n");
 
         return text.toString();
     }
 
-    private static String generateStruct(CompiledType cls, List<CompiledCode> fields) {
+    private static String generateForwardDecs(CompiledType cls) {
+        return cls.getAllMethods()
+                .stream()
+                .filter(CompiledType.CompiledMethod::isMine)
+                .map(method -> sigFor(cls, method))
+                .collect(Collectors.joining("\n"));
+    }
+
+    private static String sigFor(CompiledType cls, CompiledType.CompiledMethod method) {
         StringBuilder text = new StringBuilder();
 
-        text.append("struct ")
-                .append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "struct"))
-                .append("\n{\n");
-
-        // struct skiff_person_class_struct * class_ptr
-        String classStructName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "class", "struct");
-        text.append(CompileContext.INDENT).append("struct ").append(classStructName).append(" * ").append("class_ptr;\n");
-
-        fields.forEach(code -> {
-            text.append(CompileContext.INDENT);
-            text.append(code.getCompiledText());
-            text.append(";\n");
-        });
-
-        text.append("};\n\n");
+        text.append(method.getReturns().getCompiledName()).append(" ").append(method.getCompiledName()).append("(");
+        List<String> argList = new ArrayList<>();
+        argList.add(cls.getCompiledName());
+        argList.addAll(method.getArgs().stream().map(CompiledType::getCompiledName)
+                .collect(Collectors.toList()));
+        text.append(String.join(", ", argList)).append(");");
 
         return text.toString();
-    }
-
-    private static String generateForwardDecs(CompiledType cls, List<VisitorUtils.FunctionSig> compiledMethods) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("typedef struct ")
-                .append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "struct"))
-                .append(" ")
-                .append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "t"))
-                .append(";\n");
-
-        compiledMethods.forEach(method -> {
-            sb.append(method.getText())
-                    .append(";\n");
-        });
-        return sb.append("\n").toString();
-    }
-
-    private static VisitorUtils.FunctionSig extractMethod(CompiledType cls, AST.FunctionDef stmt, CompileContext context) {
-
-        CompileContext innerContext = new CompileContext(context);
-
-        boolean isConstructor = stmt.name.equals(cls.getName());
-
-        CompiledCode returnType = stmt.returns.compile(context);
-
-        return VisitorUtils.generateSig(isConstructor, context, returnType, stmt, innerContext);
     }
 }

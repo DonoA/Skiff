@@ -77,8 +77,12 @@ public class VisitorUtils {
 
         List<String> stringArgs = new ArrayList<>();
 
-        if(context.getParentClass() != null && !isConstructor) {
-            stringArgs.add(context.getParentClass().getCompiledName() + " * this");
+        if(context.getParentClass() != null) {
+            stringArgs.add(context.getParentClass().getCompiledName() + " this");
+        }
+
+        if(isConstructor) {
+            stringArgs.add("int new_inst");
         }
 
         stringArgs.addAll(compiledArgs
@@ -97,7 +101,7 @@ public class VisitorUtils {
     }
 
 
-    private static String generateFuncName(boolean isConstructor, CompileContext context, String stmtName) {
+    static String generateFuncName(boolean isConstructor, CompileContext context, String stmtName) {
         if(isConstructor) {
             return VisitorUtils.underscoreJoin("skiff", stmtName, "new");
         }
@@ -107,7 +111,7 @@ public class VisitorUtils {
 
     static String generateReturnType(boolean isConstructor, CompileContext context, CompiledCode returnType) {
         if(isConstructor) {
-            return context.getParentClass().getCompiledName() + " *";
+            return context.getParentClass().getCompiledName();
         }
 
         if(returnType.getBinding().equals(CompiledType.VOID)) {

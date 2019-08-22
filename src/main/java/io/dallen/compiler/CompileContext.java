@@ -10,7 +10,6 @@ public class CompileContext {
     private String scopePrefix = "";
     private CompiledType parentClass = null;
 
-    private int dataStackSize = 0;
     private int refStackSize = 0;
 
     private boolean onStack = true;
@@ -83,12 +82,16 @@ public class CompileContext {
         return this;
     }
 
-  public boolean isOnStack() {
+    public boolean isOnStack() {
     return onStack;
-  }
+    }
 
-  public CompileContext setOnStack(boolean onStack) {
+    public CompileContext setOnStack(boolean onStack) {
     this.onStack = onStack;
     return this;
-  }
+    }
+
+    public CompileScope getScope() {
+        return scope;
+    }
 }

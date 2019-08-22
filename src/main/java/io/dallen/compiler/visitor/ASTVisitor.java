@@ -3,6 +3,7 @@ package io.dallen.compiler.visitor;
 import io.dallen.AST.*;
 import io.dallen.compiler.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,7 @@ public class ASTVisitor {
     public CompiledCode compileType(Type stmt, CompileContext context) {
         CompiledCode typeName = stmt.name.compile(context);
         CompiledType typ = ((CompiledType) typeName.getBinding());
-        String name = typ.getCompiledName() + (typ.isRef() ? " *" : "");
+        String name = typ.getCompiledName();
         return new CompiledCode()
                 .withText(name)
                 .withBinding(typeName.getBinding())
@@ -174,14 +175,19 @@ public class ASTVisitor {
     public CompiledCode compileNew(New stmt, CompileContext context) {
         CompiledType typeCode = (CompiledType) stmt.type.compile(context).getBinding();
         String functionName = VisitorUtils.underscoreJoin("skiff", typeCode.getName(), "new");
+        String allocateNewInstace = "(" + typeCode.getCompiledName() +
+                ") skalloc(1, sizeof(" + typeCode.getStructName() + "))";
         StringBuilder sb = new StringBuilder();
         sb.append(functionName).append("(");
-        List<String> argz = stmt.argz
+        List<String> argz = new ArrayList<>();
+        argz.add(allocateNewInstace);
+        argz.add("1");
+        argz.addAll(stmt.argz
             .stream()
             .map(arg -> arg.compile(context).getCompiledText())
-            .collect(Collectors.toList());
+            .collect(Collectors.toList()));
 
-        sb.append(String.join(",", argz))
+        sb.append(String.join(", ", argz))
             .append(")");
 
         return new CompiledCode()
@@ -239,17 +245,14 @@ public class ASTVisitor {
 
     public CompiledCode compileSubscript(Subscript stmt, CompileContext context) {
         CompiledCode left = stmt.left.compile(context);
-        CompiledObject subscrCall = left.getType().getObject("getSub");
-        if(!(subscrCall instanceof CompiledFunction)) {
-            throw new CompileError("getSub is not a function");
-        }
+        CompiledFunction subscrCall = left.getType().getMethod("getSub");
         CompiledCode sub = stmt.sub.compile(context);
 
         String cFunc = VisitorUtils.underscoreJoin("skiff", left.getType().getName(), "get", "sub", sub.getType().getName());
         String text = cFunc + "(" + left.getCompiledText() + ", " + sub.getCompiledText() + ")";
         return new CompiledCode()
             .withText(text)
-            .withType(((CompiledFunction) subscrCall).getReturns());
+            .withType(subscrCall.getReturns());
     }
 
     public CompiledCode compileCompare(Compare stmt, CompileContext context) {
@@ -275,7 +278,12 @@ public class ASTVisitor {
 
         boolean rhsDeRef = value.onStack();
 
-        String text = (lhsDeRef ? "*" : "") + "(" + name.getCompiledText() + ") = " +
+        String cast = "";
+        if(!name.getType().getName().equals(value.getType().getName())) {
+            cast = "(" + name.getType().getCompiledName() + ")";
+        }
+
+        String text = (lhsDeRef ? "*" : "") + "(" + name.getCompiledText() + ") = " + cast +
                 (rhsDeRef ? "*" : "") + "(" + value.getCompiledText() + ")";
         return new CompiledCode()
             .withText(text)

@@ -51,6 +51,24 @@ public class CompileScope {
         return (CompiledType) varFor;
     }
 
+    public CompiledFunction getFunction(String name) {
+        CompiledObject varFor = getObject(name);
+        if(!(varFor instanceof CompiledFunction)) {
+            throw new CompileError("Variable '" + name + "' is not a function");
+        }
+
+        return (CompiledFunction) varFor;
+    }
+
+    public CompiledVar getVar(String name) {
+        CompiledObject varFor = getObject(name);
+        if(!(varFor instanceof CompiledVar)) {
+            throw new CompileError("Variable '" + name + "' is not a variable");
+        }
+
+        return (CompiledVar) varFor;
+    }
+
     public List<CompiledObject> getLocals() {
         return new ArrayList<>(variableTable.values());
     }

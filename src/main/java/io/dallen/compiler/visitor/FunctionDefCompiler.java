@@ -29,7 +29,7 @@ class FunctionDefCompiler {
                 .append(context.getIndent()).append("{\n");
 
         if(isConstructor) {
-            sb.append(allocateNewInstance(context, innerContext));
+            sb.append(initiateInstance(context, innerContext));
         }
 
         stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
@@ -49,24 +49,21 @@ class FunctionDefCompiler {
                 .withSemicolon(false);
     }
 
-    private static String allocateNewInstance(CompileContext context, CompileContext innerContext) {
-        String compiledName = context.getParentClass().getCompiledName();
+    private static String initiateInstance(CompileContext context, CompileContext innerContext) {
         String className = context.getParentClass().getName();
 
         return innerContext.getIndent() +
                 VisitorUtils.underscoreJoin("skiff", className, "static") +
                 "();\n" +
                 innerContext.getIndent() +
-                compiledName +
-                " * this = (" +
-                compiledName +
-                " *) skalloc(1, sizeof(" +
-                compiledName +
-                "));\n" +
-                innerContext.getIndent() +
+                "if(new_inst) { \n" +
+                innerContext.getIndent() + CompileContext.INDENT +
                 "this->class_ptr = &" +
                 VisitorUtils.underscoreJoin("skiff", className, "interface")
-                +";\n";
+                +";\n" +
+                innerContext.getIndent() +
+                "}\n";
+
     }
 
     private static String generateReturns(boolean hasReturn, boolean isConstructor, CompileContext context,
