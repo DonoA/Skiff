@@ -247,9 +247,9 @@ public class ASTVisitor {
         CompiledCode left = stmt.left.compile(context);
         CompiledFunction subscrCall = left.getType().getMethod("getSub");
         CompiledCode sub = stmt.sub.compile(context);
+        String name = (left.onStack() ? "(*" : "(") + left.getCompiledText() + ")";
 
-        String cFunc = VisitorUtils.underscoreJoin("skiff", left.getType().getName(), "get", "sub", sub.getType().getName());
-        String text = cFunc + "(" + left.getCompiledText() + ", " + sub.getCompiledText() + ")";
+        String text = name + "->class_ptr->" + subscrCall.getName() + "(" + name + ", " + sub.getCompiledText() +")";
         return new CompiledCode()
             .withText(text)
             .withType(subscrCall.getReturns());
@@ -330,7 +330,7 @@ public class ASTVisitor {
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
         return new CompiledCode()
-                .withText("skiff_string_new(\"" + stmt.value + "\")")
+                .withText("skiff_string_allocate_new(\"" + stmt.value + "\")")
                 .withType(CompiledType.STRING);
     }
 

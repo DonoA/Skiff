@@ -2,22 +2,47 @@
 
 #include <stdbool.h>
 #include <string.h>
-#include <string.h>
 
-typedef struct {
-    size_t id;
-    size_t _cap;
-    int32_t size;
-    void ** data;
-} skiff_list_t;
-
-skiff_list_t * skiff_list_new()
+typedef struct skiff_list_struct skiff_list_t;
+void * skiff_list_get_sub_int(skiff_list_t *, int32_t);
+void skiff_list_append(skiff_list_t *, void *);
+int32_t skiff_list_get_size(skiff_list_t *);
+struct skiff_list_class_struct 
 {
-    skiff_list_t * new_list = (skiff_list_t *) skalloc(1, sizeof(skiff_list_t));
-    new_list->size = 0;
-    new_list->_cap = 10;
-    new_list->data = skalloc(10, sizeof(void *));
-    return new_list;
+    void * (*getSub)(skiff_list_t *, int32_t);
+    void (*append)(skiff_list_t *, void *);
+    int32_t (*getSize)(skiff_list_t *);
+};
+struct skiff_list_class_struct skiff_list_interface;
+void skiff_list_static()
+{
+    skiff_list_interface.getSub = skiff_list_get_sub_int;
+    skiff_list_interface.append = skiff_list_append;
+    skiff_list_interface.getSize = skiff_list_get_size;
+}
+struct skiff_list_struct 
+{
+    struct skiff_list_class_struct * class_ptr;
+    uint32_t _cap;
+    uint32_t size;
+    void ** data;
+};
+
+skiff_list_t * skiff_list_new(skiff_list_t * this, int new_inst)
+{
+    skiff_list_static();
+    if(new_inst) {
+        this->class_ptr = &skiff_list_interface;
+    }
+    this->size = 0;
+    this->_cap = 10;
+    this->data = skalloc(10, sizeof(void *));
+    return this;
+}
+
+skiff_list_t * skiff_list_allocate_new()
+{
+    return skiff_list_new((skiff_list_t *) skalloc(1, sizeof(skiff_list_t)), 1);
 }
 
 void * skiff_list_get_sub_int(skiff_list_t * this, int32_t sub)

@@ -19,8 +19,9 @@ class DottedCompiler {
     private static CompiledCode compileFunctionDot(CompiledCode lhs, AST.FunctionCall call, CompileContext context) {
         CompiledFunction func = lhs.getType().getMethod(call.name);
         StringBuilder sb = new StringBuilder();
-        sb.append("(*").append(lhs.getCompiledText()).append(")->class_ptr->").append(func.getName())
-                .append("(*").append(lhs.getCompiledText());
+        String deref = (lhs.onStack() ? "*" : "");
+        sb.append("(").append(deref).append(lhs.getCompiledText()).append(")->class_ptr->").append(func.getName())
+                .append("(").append(deref).append(lhs.getCompiledText());
         call.args.stream()
                 .map(e -> e.compile(context))
                 .map(arg -> {

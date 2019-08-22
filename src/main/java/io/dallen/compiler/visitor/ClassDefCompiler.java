@@ -87,6 +87,8 @@ class ClassDefCompiler {
         innerContext.declareObject(new CompiledVar("this", true, cls));
         innerContext.declareObject(new CompiledFunction("super", "super", List.of()));
 
+        String headerComment = "\n\n///////////////////// Start Class " + cls.getName() + " /////////////////////////\n\n";
+
         String typedef = "typedef struct " + VisitorUtils.underscoreJoin("skiff", cls.getName(), "struct") +
                 " " + cls.getStructName() + ";\n";
 
@@ -106,13 +108,17 @@ class ClassDefCompiler {
 
         String methodCode = generateMethodCode(stmt.body, innerContext);
 
-        String text = typedef +
+        String footerComment = "\n\n///////////////////// End Class " + cls.getName() + " /////////////////////////\n\n";
+
+        String text = headerComment +
+                typedef +
                 functionForwardDecs +
                 classStruct +
                 interfaceDec +
                 staticInitFunc +
                 dataStruct +
-                methodCode;
+                methodCode +
+                footerComment;
 
         return new CompiledCode()
                 .withType(CompiledType.VOID)
