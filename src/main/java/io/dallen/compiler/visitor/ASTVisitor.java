@@ -174,6 +174,10 @@ public class ASTVisitor {
 
     public CompiledCode compileNew(New stmt, CompileContext context) {
         CompiledType typeCode = (CompiledType) stmt.type.compile(context).getBinding();
+        List<CompiledType> genericTypes = stmt.type.genericTypes
+                .stream()
+                .map(type -> (CompiledType) type.compile(context).getBinding())
+                .collect(Collectors.toList());
         String functionName = VisitorUtils.underscoreJoin("skiff", typeCode.getName(), "new");
         String allocateNewInstace = "(" + typeCode.getCompiledName() +
                 ") skalloc(1, sizeof(" + typeCode.getStructName() + "))";
@@ -190,8 +194,10 @@ public class ASTVisitor {
         sb.append(String.join(", ", argz))
             .append(")");
 
+        CompiledType exactType = typeCode.fillGenericTypes(genericTypes);
+
         return new CompiledCode()
-            .withType(typeCode)
+            .withType(exactType)
             .withText(sb.toString());
     }
 
@@ -292,17 +298,22 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDeclare(Declare stmt, CompileContext context) {
-        CompiledCode type = stmt.type.compile(context);
-        CompiledVar binding = new CompiledVar(stmt.name, false, (CompiledType) type.getBinding());
+        CompiledCode typeCode = stmt.type.compile(context);
+        List<CompiledType> genericTypes = stmt.type.genericTypes
+                .stream()
+                .map(type -> (CompiledType) type.compile(context).getBinding())
+                .collect(Collectors.toList());
+        CompiledType type = ((CompiledType) typeCode.getBinding()).fillGenericTypes(genericTypes);
+        CompiledVar binding = new CompiledVar(stmt.name, false, type);
         context.declareObject(binding);
 
-        boolean isRef = ((CompiledType) type.getBinding()).isRef() && context.isOnStack();
+        boolean isRef = type.isRef() && context.isOnStack();
 
         if(isRef) {
             context.addRefStackSize(1);
         }
 
-        String text = type.getCompiledText() + (isRef ? "* " : " ") + stmt.name + (isRef ? " = skalloc_ref_stack()": "");
+        String text = typeCode.getCompiledText() + (isRef ? "* " : " ") + stmt.name + (isRef ? " = skalloc_ref_stack()": "");
         return new CompiledCode()
                 .withBinding(binding)
                 .withText(text)

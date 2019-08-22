@@ -2,10 +2,8 @@ package io.dallen.compiler;
 
 import io.dallen.compiler.visitor.VisitorUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CompiledType extends CompiledObject {
     public static final CompiledType VOID = new CompiledType("Void", false)
@@ -37,20 +35,20 @@ public class CompiledType extends CompiledObject {
                 new CompiledFunction("getSub", "", false, CompiledType.ANYREF, new ArrayList<>()),
                 true));
 
-
-
     private final boolean isRef;
     // order is vital for both declared vars and declared functions
     private List<CompiledVar> declaredVars = new ArrayList<>();
     private List<CompiledMethod> declaredMethods = new ArrayList<>();
+    private List<CompiledFunction> constructors = new ArrayList<>();
 
     private Map<String, CompiledVar> declaredVarMap = new HashMap<>();
     private Map<String, CompiledMethod> declaredMethodMap = new HashMap<>();
 
+    private List<String> genericOrder = new ArrayList<>();
     private CompiledType parent = null;
     private String structName;
     private String compiledName;
-    private List<CompiledFunction> constructors = new ArrayList<>();
+    private boolean genericPlaceholder = false;
 
     public CompiledType(String className, boolean ref) {
         super(className);
@@ -125,6 +123,69 @@ public class CompiledType extends CompiledObject {
         this.compiledName = compiledName;
         this.structName = compiledName;
         return this;
+    }
+
+    public CompiledType addGeneric(String name) {
+        genericOrder.add(name);
+        return this;
+    }
+
+    public CompiledType isGenericPlaceholder(boolean v) {
+        this.genericPlaceholder = v;
+        return this;
+    }
+
+    public CompiledType fillGenericTypes(List<CompiledType> genericList) {
+        Map<String, CompiledType> generics = new HashMap<>();
+
+        ListIterator<String> genericNameItr = genericOrder.listIterator();
+
+        genericList.forEach(g -> {
+            generics.put(genericNameItr.next(), g);
+        });
+
+        CompiledType filledType = new CompiledType(getName(), isRef);
+
+        this.declaredVars.forEach(f -> {
+            CompiledVar post = f;
+            if(f.getType().genericPlaceholder) {
+                CompiledType comp = generics.get(f.getType().getName());
+                post = new CompiledVar(f.getName(), f.isParam(), comp);
+            }
+            filledType.addField(post);
+        });
+
+        this.declaredMethods.forEach(m -> {
+            CompiledFunction modFunc = fillFunction(generics, m);
+            filledType.addMethod(new CompiledMethod(modFunc, m.isMine()));
+        });
+
+        this.constructors.forEach(ctor -> {
+            filledType.addConstructor(fillFunction(generics, ctor));
+        });
+
+        return filledType;
+    }
+
+    private CompiledFunction fillFunction(Map<String, CompiledType> generics, CompiledFunction func) {
+        boolean newTypeNeeded = false;
+        CompiledType returns = func.getReturns();
+        if(func.getReturns().genericPlaceholder) {
+            returns = generics.get(func.getReturns().getName());
+            newTypeNeeded = true;
+        }
+        List<CompiledType> argTypes = func.getArgs().stream().map(arg -> {
+            if(arg.genericPlaceholder) {
+                return generics.get(arg.getName());
+            } else {
+                return arg;
+            }
+        }).collect(Collectors.toList());
+        if(newTypeNeeded) {
+            return new CompiledFunction(func.getName(), func.getCompiledName(), false, returns, argTypes);
+        } else {
+            return func;
+        }
     }
 
     public static class CompiledMethod extends CompiledFunction {

@@ -14,6 +14,11 @@ class ClassDefCompiler {
     private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext) {
         CompiledType cls = new CompiledType(stmt.name, true);
 
+        stmt.genericTypes.forEach(generic -> {
+            cls.addGeneric(generic.name);
+            innerContext.declareObject(new CompiledType(generic.name, true).setCompiledName("void *").isGenericPlaceholder(true));
+        });
+
         stmt.extendClass.ifPresentOrElse(ext -> {
             cls.setParent((CompiledType) ext.compile(context).getBinding());
         }, () -> cls.setParent(CompiledType.ANYREF));
@@ -73,6 +78,9 @@ class ClassDefCompiler {
             }
         });
 
+        innerContext.declareObject(new CompiledVar("this", true, cls));
+        innerContext.declareObject(new CompiledFunction("super", "super", List.of()));
+
         return cls;
     }
 
@@ -83,9 +91,6 @@ class ClassDefCompiler {
         CompiledType cls = compileClass(stmt, context, innerContext);
 
         innerContext.setParentClass(cls);
-
-        innerContext.declareObject(new CompiledVar("this", true, cls));
-        innerContext.declareObject(new CompiledFunction("super", "super", List.of()));
 
         String headerComment = "\n\n///////////////////// Start Class " + cls.getName() + " /////////////////////////\n\n";
 
