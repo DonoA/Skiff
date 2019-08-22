@@ -10,6 +10,7 @@ import io.dallen.tokenizer.Token;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -26,13 +27,13 @@ public class SkiffC {
 
     private static String readFile(String path) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, Charset.forName("UTF-8"));
+        return new String(encoded, StandardCharsets.UTF_8);
     }
 
     private static String preamble = "#include \"lib/skiff.h\"\n\n";
 
     public static void main(String[] argz) throws IOException {
-        String inFile = "classes.skiff";
+        String inFile = "generics.skiff";
         String outfile = "test.c";
         String programText;
         try {

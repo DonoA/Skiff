@@ -31,10 +31,10 @@ public class CompiledType extends CompiledObject {
         .setParent(CompiledType.ANYREF)
         .addField(new CompiledVar("size", false, CompiledType.INT))
         .addMethod(new CompiledMethod(
-                new CompiledFunction("getSize", "skiff_get_size", false, CompiledType.INT, new ArrayList<>()),
+                new CompiledFunction("getSize", "", false, CompiledType.INT, new ArrayList<>()),
                 true))
         .addMethod(new CompiledMethod(
-                new CompiledFunction("getSub", "skiff_get_sub", false, CompiledType.ANYREF, new ArrayList<>()),
+                new CompiledFunction("getSub", "", false, CompiledType.ANYREF, new ArrayList<>()),
                 true));
 
 

@@ -15,4 +15,4 @@ cmake-build-debug/
 target/
 *.skiff
 *.out
-*.o.dSYM/
+*.dSYM/
