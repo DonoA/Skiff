@@ -33,9 +33,9 @@ public class LexerTable {
         currentNode.parent.current++;
     }
 
-//    public void resetChildPos() {
-//        currentNode.parent.current = 0;
-//    }
+    public Node getCurrent() {
+        return currentNode;
+    }
 
     public Token.IdentifierType getIdent(String symbol) {
         return currentNode.getIdent(symbol);
@@ -45,7 +45,7 @@ public class LexerTable {
         currentNode.defineIdent(symbol, typ);
     }
 
-    private static class Node {
+    public static class Node {
         private final Map<String, Token.IdentifierType> symbolMap = new HashMap<>();
         private final Node parent;
         private final List<Node> children;
@@ -71,6 +71,10 @@ public class LexerTable {
 
         private void defineIdent(String symbol, Token.IdentifierType typ) {
             symbolMap.put(symbol, typ);
+        }
+
+        public Node getParent() {
+            return parent;
         }
     }
 

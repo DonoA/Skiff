@@ -1,6 +1,7 @@
 package io.dallen.parser.splitter;
 
 import io.dallen.parser.BraceManager;
+import io.dallen.parser.ParserError;
 import io.dallen.tokenizer.Token;
 
 import java.util.ArrayList;
@@ -9,19 +10,22 @@ import java.util.ListIterator;
 
 public class BraceSplitter {
 
-    public static List<List<Token>> splitAll(List<Token> tokens, Token.TokenType on) {
+    public static List<List<Token>> splitAll(List<Token> tokens, Token.TokenType on) throws ParserError {
         return braceSplitLeftToRight(tokens, on, Integer.MAX_VALUE);
     }
 
-    public static List<List<Token>> customSplitAll(BraceManager.BraceProfile braces, List<Token> tokens, Token.TokenType on) {
+    public static List<List<Token>> customSplitAll(BraceManager.BraceProfile braces, List<Token> tokens,
+                                                   Token.TokenType on) throws ParserError {
         return customBraceSplitLeftToRight(braces, tokens, on, Integer.MAX_VALUE);
     }
 
-    public static List<List<Token>> braceSplitLeftToRight(List<Token> tokens, Token.TokenType on, int limit) {
+    public static List<List<Token>> braceSplitLeftToRight(List<Token> tokens, Token.TokenType on,
+                                                          int limit) throws ParserError {
         return customBraceSplitLeftToRight(BraceManager.leftToRight, tokens, on, limit);
     }
 
-    public static List<List<Token>> customBraceSplitLeftToRight(BraceManager.BraceProfile braces, List<Token> tokens, Token.TokenType on, int limit) {
+    public static List<List<Token>> customBraceSplitLeftToRight(BraceManager.BraceProfile braces, List<Token> tokens,
+                                                                Token.TokenType on, int limit) throws ParserError {
         BraceManager braceManager = new BraceManager(braces);
 
         List<List<Token>> segments = new ArrayList<>();
@@ -43,7 +47,8 @@ public class BraceSplitter {
         return segments;
     }
 
-    public static List<List<Token>> braceSplitRightToLeft(List<Token> tokens, Token.TokenType on, int limit) {
+    public static List<List<Token>> braceSplitRightToLeft(List<Token> tokens, Token.TokenType on,
+                                                          int limit) throws ParserError {
         BraceManager braceManager = new BraceManager(BraceManager.rightToLeft);
 
         List<List<Token>> segments = new ArrayList<>();

@@ -4,7 +4,6 @@ import io.dallen.AST.*;
 import io.dallen.parser.splitter.*;
 import io.dallen.tokenizer.Token;
 
-import java.text.ParseException;
 import java.util.List;
 
 class ExpressionSplitParser {
@@ -32,26 +31,34 @@ class ExpressionSplitParser {
             .addLayer(new SplitLayer()
                     .addSplitRule(Token.Symbol.DOT, ExpressionSplitParser.statementAction(Dotted::new))).leftToRight(false);
 
-    static Statement split(List<Token> workingTokens) {
-        return new LayeredSplitter(splitSettings).execute(workingTokens);
+    static Statement split(Parser parser, List<Token> workingTokens) {
+        return new LayeredSplitter(splitSettings, parser).execute(workingTokens);
     }
 
-    private static Statement parseAssignment(List<Token> first, List<Token> second) {
-        List<List<Token>> res = BraceSplitter.splitAll(first, Token.Symbol.COLON);
+    private static Statement parseAssignment(Parser parser, List<Token> first, List<Token> second) {
+        List<List<Token>> res;
+        try {
+            res = BraceSplitter.splitAll(first, Token.Symbol.COLON);
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return null;
+        }
         if(res.size() == 1) {
-            Statement firstS = new Parser(first).parseExpression();
-            Statement secondS = new Parser(second).parseExpression();
+            Statement firstS = new Parser(first, parser).parseExpression();
+            Statement secondS = new Parser(second, parser).parseExpression();
             return new Assign(firstS, secondS);
         } else if(res.size() == 2) {
-            Type typ = new Parser(res.get(1)).getCommon().parseType();
+            Type typ = new Parser(res.get(1), parser).getCommon().parseType();
             if(res.get(0).size() != 1) {
-                throw new ParserError("Declare assign name had multiple parts", res.get(0).get(0));
+                parser.throwError("Declare assign name had multiple parts", res.get(0).get(0));
+                return null;
             }
             String name = res.get(0).get(0).literal;
-            Statement secondS = new Parser(second).parseExpression();
+            Statement secondS = new Parser(second, parser).parseExpression();
             return new DeclareAssign(typ, name, secondS);
         }
-        throw new ParserError("Assign name had many colons", res.get(0).get(0));
+        parser.throwError("Assign name had many colons", res.get(0).get(0));
+        return null;
     }
 
     private static SplitAction boolCombineAction(BoolOp op) {
@@ -59,12 +66,12 @@ class ExpressionSplitParser {
     }
 
     private static SplitAction compareAction(CompareOp op) {
-        return (first, second) -> {
+        return (parser, first, second) -> {
             if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE) {
                 return null;
             }
 
-            Parser rhsParser = new Parser(second);
+            Parser rhsParser = new Parser(second, parser);
 
             if(rhsParser.containsBefore(Token.Symbol.RIGHT_ANGLE, Token.Symbol.SEMICOLON)) {
                 List<Token> rhs = rhsParser.selectTo(Token.Symbol.RIGHT_ANGLE);
@@ -73,8 +80,8 @@ class ExpressionSplitParser {
                 }
             }
 
-            Statement firstS = new Parser(first).parseExpression();
-            Statement secondS = new Parser(second).parseExpression();
+            Statement firstS = new Parser(first, parser).parseExpression();
+            Statement secondS = new Parser(second, parser).parseExpression();
             return new Compare(firstS, op, secondS);
         };
     }
@@ -88,9 +95,9 @@ class ExpressionSplitParser {
     }
 
     private static SplitAction statementAction(StatementAction action) {
-        return (first, second) -> {
-            Statement firstS = new Parser(first).parseExpression();
-            Statement secondS = new Parser(second).parseExpression();
+        return (parser, first, second) -> {
+            Statement firstS = new Parser(first, parser).parseExpression();
+            Statement secondS = new Parser(second, parser).parseExpression();
             return action.handle(firstS, secondS);
         };
     }

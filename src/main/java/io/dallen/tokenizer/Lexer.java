@@ -1,12 +1,15 @@
 package io.dallen.tokenizer;
 
+import io.dallen.errors.ErrorCollector;
+import io.dallen.errors.ErrorPrinter;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
-public class Lexer {
+public class Lexer implements ErrorCollector {
     private String data;
     private int pos = 0;
+    private List<String> errorMsg = new ArrayList<>();
 
     public Lexer(String data) {
         this.data = data;
@@ -21,12 +24,20 @@ public class Lexer {
                 continue;
             }
 
+            // Skip comments
+            if(data.charAt(pos) == '/' && pos + 1 < data.length() && data.charAt(pos+1) == '/') {
+                while(data.charAt(pos) != '\n') {
+                    pos++;
+                }
+                continue;
+            }
+
             // Select longest token that matches the stream so "<=" will be selected over "<"
             Token.TokenType bestTokenType = selectBestToken();
             if (bestTokenType != Token.Textless.EOF) {
                 pos += bestTokenType.getText().length();
 
-                tokens.add(new Token(bestTokenType));
+                tokens.add(new Token(bestTokenType, pos));
                 continue;
             }
 
@@ -36,13 +47,15 @@ public class Lexer {
 
             // If we didn't match any literals
             if (selected == null) {
-                throw new RuntimeException("Unknown token: " + data.charAt(pos));
+                errorMsg.add(ErrorPrinter.pointToPos(data, pos, "Unknown token"));
+                pos++;
+                continue;
             }
             tokens.add(selected);
         }
-        tokens.add(new Token(Token.Textless.EOF));
+        tokens.add(new Token(Token.Textless.EOF, pos - 1));
 
-        return new EnrichLexer(tokens).enrich();
+        return new EnrichLexer(tokens, this).enrich();
     }
 
     private Token.TokenType selectBestToken() {
@@ -83,11 +96,11 @@ public class Lexer {
         char c = data.charAt(pos);
         // Select string
         if (c == '"') {
-            return new Token(Token.Textless.STRING_LITERAL, selectTo('"'));
+            return new Token(Token.Textless.STRING_LITERAL, selectTo('"'), pos);
         }
 
         if (c == '\'') {
-            return new Token(Token.Textless.SEQUENCE_LITERAL, selectTo('\''));
+            return new Token(Token.Textless.SEQUENCE_LITERAL, selectTo('\''), pos);
         }
 
         if (c == 'r' && data.length() > pos + 1 && data.charAt(pos + 1) == '/') {
@@ -98,7 +111,7 @@ public class Lexer {
                 regex.append(data.charAt(pos));
                 pos++;
             }
-            return new Token(Token.Textless.REGEX_LITERAL, regex.toString());
+            return new Token(Token.Textless.REGEX_LITERAL, regex.toString(), pos);
         }
 
         // Select number
@@ -111,7 +124,7 @@ public class Lexer {
                 sb.append(data.charAt(pos));
                 pos++;
             }
-            return new Token(Token.Textless.NUMBER_LITERAL, sb.toString());
+            return new Token(Token.Textless.NUMBER_LITERAL, sb.toString(), pos);
         }
 
         // Select name tokens, we have no idea what these are, they are likely bound to something
@@ -121,7 +134,7 @@ public class Lexer {
             sb.append(data.charAt(pos));
             pos++;
         }
-        Token name = new Token(Token.Textless.NAME, sb.toString());
+        Token name = new Token(Token.Textless.NAME, sb.toString(), pos);
 
         // if we selected nothing, that isn't a valid name token
         if (name.literal.isEmpty()) {
@@ -173,6 +186,14 @@ public class Lexer {
 
     private boolean isIgnored(char c) {
         return c == ' ' || c == '\n' || c == '\t';
+    }
+
+    public void throwError(String msg, Token on) {
+        errorMsg.add(ErrorPrinter.pointToPos(data, on.pos, msg));
+    }
+
+    public List<String> getErrors() {
+        return errorMsg;
     }
 
 }

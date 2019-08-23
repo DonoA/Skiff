@@ -19,10 +19,16 @@ class CommonParsing {
     List<AST.GenericType> consumeGenericList() {
         parser.consumeExpected(Token.Symbol.LEFT_ANGLE);
         List<Token> genericTokens = parser.consumeTo(Token.Symbol.RIGHT_ANGLE, BraceManager.leftToRightAngle);
-        List<List<Token>> genericTokenSeg = BraceSplitter.splitAll(genericTokens, Token.Symbol.COMMA);
+        List<List<Token>> genericTokenSeg;
+        try {
+            genericTokenSeg = BraceSplitter.splitAll(genericTokens, Token.Symbol.COMMA);
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return List.of();
+        }
         return genericTokenSeg
                 .stream()
-                .map(seg -> new Parser(seg).getCommon().parseGenericType())
+                .map(seg -> new Parser(seg, parser).getCommon().parseGenericType())
                 .collect(Collectors.toList());
     }
 
@@ -39,25 +45,45 @@ class CommonParsing {
     }
 
     AST.Type parseType() {
-        AST.Statement typeName = new Parser(parser.consumeTo(Token.Symbol.LEFT_ANGLE)).parseExpression();
+        AST.Statement typeName = new Parser(parser.consumeTo(Token.Symbol.LEFT_ANGLE), parser).parseExpression();
         if(parser.current().isEOF()) {
             return new AST.Type(typeName, 0, new ArrayList<>());
         }
-        List<AST.Type> genericParams = BraceSplitter
-                .customSplitAll(BraceManager.leftToRightAngle, parser.consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA)
-                .stream()
-                .map(e -> new Parser(e).getCommon().parseType())
-                .collect(Collectors.toList());
+        List<AST.Type> genericParams;
+        try {
+            genericParams = BraceSplitter
+                    .customSplitAll(BraceManager.leftToRightAngle, parser.consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA)
+                    .stream()
+                    .map(e -> new Parser(e, parser).getCommon().parseType())
+                    .collect(Collectors.toList());
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return null;
+        }
 
         return new AST.Type(typeName, 0, genericParams);
     }
 
     List<AST.FunctionParam> parseFunctionDecArgs(List<Token> paramTokens) {
-        return BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
-                .stream()
-                .map(e -> BraceSplitter.splitAll(e, Token.Symbol.COLON))
-                .map(e -> new AST.FunctionParam(new Parser(e.get(1)).getCommon().parseType(), e.get(0).get(0).literal))
-                .collect(Collectors.toList());
+        try {
+            return BraceSplitter.splitAll(paramTokens, Token.Symbol.COMMA)
+                    .stream()
+                    .map(e -> {
+                        try {
+                            return BraceSplitter.splitAll(e, Token.Symbol.COLON);
+                        } catch (ParserError parserError) {
+                            throw new ParserError.NoCatchParseError(parserError.msg, parserError.on);
+                        }
+                    })
+                    .map(e -> new AST.FunctionParam(new Parser(e.get(1), parser).getCommon().parseType(), e.get(0).get(0).literal))
+                    .collect(Collectors.toList());
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return List.of();
+        } catch (ParserError.NoCatchParseError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return List.of();
+        }
     }
 
 }

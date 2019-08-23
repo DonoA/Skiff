@@ -32,11 +32,11 @@ public class BasicExpressionTest {
     public void parseDeclare() {
         // x: Int;
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Int"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Int", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -50,11 +50,11 @@ public class BasicExpressionTest {
     public void parseAssign() {
         // x = 5;
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "5"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "5", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -68,13 +68,13 @@ public class BasicExpressionTest {
     public void parseDeclareAssign() {
         // x: String = "Hello World";
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "String"),
-                new Token(Token.Symbol.EQUAL),
-                new Token(Token.Textless.STRING_LITERAL, "Hello World"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "String", 0),
+                new Token(Token.Symbol.EQUAL, 0),
+                new Token(Token.Textless.STRING_LITERAL, "Hello World", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -92,16 +92,16 @@ public class BasicExpressionTest {
     public void parseFunctionCall() {
         // println(x, "Hello", 5);
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "println"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.STRING_LITERAL, "Hello"),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NUMBER_LITERAL, "5"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "println", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.STRING_LITERAL, "Hello", 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "5", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -123,16 +123,16 @@ public class BasicExpressionTest {
     public void parseNew() {
         // new MyClass(x, "Hello", 5)
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.NEW),
-                new Token(Token.Textless.NAME, "MyClass"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.STRING_LITERAL, "Hello"),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NUMBER_LITERAL, "5"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.NEW, 0),
+                new Token(Token.Textless.NAME, "MyClass", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.STRING_LITERAL, "Hello", 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "5", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -149,10 +149,10 @@ public class BasicExpressionTest {
     public void parseReturn() {
         // return x;
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.RETURN),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.RETURN, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -166,8 +166,8 @@ public class BasicExpressionTest {
     public void parseStringLiteral() {
         // "Hello"
         List<Token> tokens = List.of(
-                new Token(Token.Textless.STRING_LITERAL, "Hello"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.STRING_LITERAL, "Hello", 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -181,8 +181,8 @@ public class BasicExpressionTest {
     public void parseSequenceLiteral() {
         // 'Simple Sequence'
         List<Token> tokens = List.of(
-                new Token(Token.Textless.SEQUENCE_LITERAL, "Simple Sequence"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.SEQUENCE_LITERAL, "Simple Sequence", 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -196,8 +196,8 @@ public class BasicExpressionTest {
     public void parseRegexLiteral() {
         // r/$Regex[Pat-trn]^/gi
         List<Token> tokens = List.of(
-                new Token(Token.Textless.REGEX_LITERAL, "$Regex[Pat-trn]^\0gi"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.REGEX_LITERAL, "$Regex[Pat-trn]^\0gi", 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -211,8 +211,8 @@ public class BasicExpressionTest {
     public void parseNumberLiteral() {
         // 3.141592
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NUMBER_LITERAL, "3.141592"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NUMBER_LITERAL, "3.141592", 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -226,12 +226,12 @@ public class BasicExpressionTest {
     public void parseBooleanCombine() {
         // true && false || false
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.TRUE),
-                new Token(Token.Symbol.DOUBLE_AND),
-                new Token(Token.Keyword.FALSE),
-                new Token(Token.Symbol.DOUBLE_OR),
-                new Token(Token.Keyword.FALSE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.TRUE, 0),
+                new Token(Token.Symbol.DOUBLE_AND, 0),
+                new Token(Token.Keyword.FALSE, 0),
+                new Token(Token.Symbol.DOUBLE_OR, 0),
+                new Token(Token.Keyword.FALSE, 0),
+                new Token(Token.Textless.EOF, 0));
 
         List<Statement> statements = new Parser(tokens).parseBlock();
 
@@ -250,30 +250,30 @@ public class BasicExpressionTest {
     public void parseCompare() {
         // x != 1 && x == 1 && x <= 1 && < 1 && x > 1 && x >= 1
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.BANG_EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "1"),
-                new Token(Token.Symbol.DOUBLE_AND),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.DOUBLE_EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "1"),
-                new Token(Token.Symbol.DOUBLE_AND),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.LEFT_ANGLE_EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "1"),
-                new Token(Token.Symbol.DOUBLE_AND),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NUMBER_LITERAL, "1"),
-                new Token(Token.Symbol.DOUBLE_AND),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.RIGHT_ANGLE),
-                new Token(Token.Textless.NUMBER_LITERAL, "1"),
-                new Token(Token.Symbol.DOUBLE_AND),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.RIGHT_ANGLE_EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "1"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.BANG_EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                new Token(Token.Symbol.DOUBLE_AND, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.DOUBLE_EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                new Token(Token.Symbol.DOUBLE_AND, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.LEFT_ANGLE_EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                new Token(Token.Symbol.DOUBLE_AND, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                new Token(Token.Symbol.DOUBLE_AND, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                new Token(Token.Symbol.DOUBLE_AND, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.RIGHT_ANGLE_EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                new Token(Token.Textless.EOF, 0));
 
         List<Statement> statements = new Parser(tokens).parseBlock();
 
@@ -297,16 +297,16 @@ public class BasicExpressionTest {
         // 15 - y + x * 15 / 12
         // Parens: (15 - y) + ((x * 15) / 12)
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NUMBER_LITERAL, "15"),
-                new Token(Token.Symbol.MINUS),
-                new Token(Token.Textless.NAME, "y"),
-                new Token(Token.Symbol.PLUS),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.STAR),
-                new Token(Token.Textless.NUMBER_LITERAL, "15"),
-                new Token(Token.Symbol.SLASH),
-                new Token(Token.Textless.NUMBER_LITERAL, "12"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NUMBER_LITERAL, "15", 0),
+                new Token(Token.Symbol.MINUS, 0),
+                new Token(Token.Textless.NAME, "y", 0),
+                new Token(Token.Symbol.PLUS, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.STAR, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "15", 0),
+                new Token(Token.Symbol.SLASH, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "12", 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -333,12 +333,12 @@ public class BasicExpressionTest {
     public void parseMathAssign() {
         // x += y -= 5
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.PLUS_EQUAL),
-                new Token(Token.Textless.NAME, "y"),
-                new Token(Token.Symbol.MINUS_EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "5"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.PLUS_EQUAL, 0),
+                new Token(Token.Textless.NAME, "y", 0),
+                new Token(Token.Symbol.MINUS_EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "5", 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -353,9 +353,9 @@ public class BasicExpressionTest {
     public void parseInc() {
         // x++
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.DOUBLE_PLUS),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.DOUBLE_PLUS, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -369,9 +369,9 @@ public class BasicExpressionTest {
     public void parseDec() {
         // --y
         List<Token> tokens = List.of(
-                new Token(Token.Symbol.DOUBLE_MINUS),
-                new Token(Token.Textless.NAME, "y"),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Symbol.DOUBLE_MINUS, 0),
+                new Token(Token.Textless.NAME, "y", 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -387,18 +387,18 @@ public class BasicExpressionTest {
     public void parseNewGenericClass() {
         // new MyClass<String, Int>(15);
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.NEW),
-                new Token(Token.Textless.NAME, "MyClass", Token.IdentifierType.TYPE),
-                new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE),
-                new Token(Token.Symbol.RIGHT_ANGLE),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NUMBER_LITERAL, "15"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.NEW, 0),
+                new Token(Token.Textless.NAME, "MyClass", Token.IdentifierType.TYPE, 0),
+                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0),
+                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "15", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -420,17 +420,17 @@ public class BasicExpressionTest {
     public void parseGenericFunctionCall() {
         // println<String, Int>(15);
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "println"),
-                new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE),
-                new Token(Token.Symbol.RIGHT_ANGLE),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NUMBER_LITERAL, "15"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "println", 0),
+                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0),
+                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "15", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -448,14 +448,14 @@ public class BasicExpressionTest {
     public void parseListIndex() {
         // x[y[z]]
         List<Token> tokens = List.of(
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.LEFT_BRACKET),
-                new Token(Token.Textless.NAME, "y"),
-                new Token(Token.Symbol.LEFT_BRACKET),
-                new Token(Token.Textless.NAME, "z"),
-                new Token(Token.Symbol.RIGHT_BRACKET),
-                new Token(Token.Symbol.RIGHT_BRACKET),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.LEFT_BRACKET, 0),
+                new Token(Token.Textless.NAME, "y", 0),
+                new Token(Token.Symbol.LEFT_BRACKET, 0),
+                new Token(Token.Textless.NAME, "z", 0),
+                new Token(Token.Symbol.RIGHT_BRACKET, 0),
+                new Token(Token.Symbol.RIGHT_BRACKET, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -471,11 +471,11 @@ public class BasicExpressionTest {
     public void parseImport() {
         // import <myPackage>
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.IMPORT),
-                new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "myPackage"),
-                new Token(Token.Symbol.RIGHT_ANGLE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.IMPORT, 0),
+                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                new Token(Token.Textless.NAME, "myPackage", 0),
+                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -501,10 +501,10 @@ public class BasicExpressionTest {
     public void parseThrow() {
         // throw myExistingError;
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.THROW),
-                new Token(Token.Textless.NAME, "myExistingError"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.THROW, 0),
+                new Token(Token.Textless.NAME, "myExistingError", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());

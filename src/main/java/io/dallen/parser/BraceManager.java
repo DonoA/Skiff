@@ -106,7 +106,7 @@ public class BraceManager {
         this.braceProfile = braceProfile;
     }
 
-    public void check(Token t) {
+    public void check(Token t) throws ParserError {
         if(!(t.type instanceof Token.Symbol)) {
             return;
         }
@@ -121,7 +121,8 @@ public class BraceManager {
             if (braceStack.peek() == braceProfile.openBraceFor(tokenType)) {
                 braceStack.pop();
             } else {
-                throw new ParserError("Unknown token sequence", t);
+                throw new ParserError("Unexpected token in brace parsing, expected " +
+                        braceProfile.openBraceFor(tokenType).getName(), t);
             }
         }
     }

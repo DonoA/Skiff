@@ -2,6 +2,8 @@ package io.dallen.parser.splitter;
 
 import io.dallen.AST;
 import io.dallen.parser.BraceManager;
+import io.dallen.parser.Parser;
+import io.dallen.parser.ParserError;
 import io.dallen.tokenizer.Token;
 
 import java.util.List;
@@ -9,8 +11,10 @@ import java.util.List;
 public class LayeredSplitter {
 
     private final SplitSettings settings;
+    private final Parser parser;
 
-    public LayeredSplitter(SplitSettings settings) {
+    public LayeredSplitter(SplitSettings settings, Parser parser) {
+        this.parser = parser;
         this.settings = settings;
     }
 
@@ -64,13 +68,18 @@ public class LayeredSplitter {
     private AST.Statement handleToken(List<Token> tokens, BraceManager braceManager, SplitLayer layer, int loc) {
         Token t = tokens.get(loc);
 
-        braceManager.check(t);
+        try {
+            braceManager.check(t);
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return null;
+        }
         SplitAction action;
 
         if (braceManager.isEmpty() && (action = layer.actionFor(t.type)) != null) {
             List<Token> first = tokens.subList(0, loc);
             List<Token> second = tokens.subList(loc + 1, tokens.size());
-            return action.handle(first, second);
+            return action.handle(parser, first, second);
         }
         return null;
     }

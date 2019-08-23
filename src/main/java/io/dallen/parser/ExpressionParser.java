@@ -25,7 +25,10 @@ class ExpressionParser {
             .addCase(Symbol.LEFT_PAREN::equals, context -> {
                 context.parser.consumeExpected(Token.Symbol.LEFT_PAREN);
                 if(!context.parser.containsBefore(Token.Symbol.ARROW, Token.Symbol.SEMICOLON)){
-                    AST.Statement sub = new Parser(context.parser.consumeTo(Token.Symbol.RIGHT_PAREN)).parseExpression();
+                    AST.Statement sub = new Parser(
+                            context.parser.consumeTo(Token.Symbol.RIGHT_PAREN),
+                            context.parser
+                    ).parseExpression();
                     return new AST.Parened(sub);
                 }
                 return context.parseAnonFunc();
@@ -49,7 +52,8 @@ class ExpressionParser {
             .addCase(Keyword.NEXT::equals, context -> context.parseLiteral(j -> new AST.ContinueStatement()))
             .addCase(Symbol.UNDERSCORE::equals, context -> context.parseLiteral(j -> new AST.Variable("_")))
             .setDefault(context -> {
-                throw new ParserError("Unknown token sequence", context.parser.current());
+                context.parser.throwError("Token did not match any known patterns", context.parser.current());
+                return null;
             });
 
     ExpressionParser(Parser parser) {
@@ -59,7 +63,7 @@ class ExpressionParser {
     AST.Statement parseExpression() {
         workingTokens = parser.selectTo(Token.Symbol.SEMICOLON);
 
-        AST.Statement parsed = ExpressionSplitParser.split(workingTokens);
+        AST.Statement parsed = ExpressionSplitParser.split(parser, workingTokens);
         if (parsed != null) {
             parser.pos += workingTokens.size() + 1;
             return parsed;
@@ -71,11 +75,17 @@ class ExpressionParser {
     private AST.Statement parseNew() {
         parser.consumeExpected(Token.Keyword.NEW);
         List<Token> name = parser.consumeTo(Token.Symbol.LEFT_PAREN);
-        List<List<Token>> paramz = BraceSplitter.splitAll(parser.consumeTo(Token.Symbol.RIGHT_PAREN), Token.Symbol.COMMA);
-        AST.Type typeStmt = new Parser(name).getCommon().parseType();
+        List<List<Token>> paramz = null;
+        try {
+            paramz = BraceSplitter.splitAll(parser.consumeTo(Symbol.RIGHT_PAREN), Symbol.COMMA);
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return null;
+        }
+        AST.Type typeStmt = new Parser(name, parser).getCommon().parseType();
         List<AST.Statement> params = paramz
                 .stream()
-                .map(e -> new Parser(e).parseExpression())
+                .map(e -> new Parser(e, parser).parseExpression())
                 .collect(Collectors.toList());
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
         return new AST.New(typeStmt, params);
@@ -94,20 +104,20 @@ class ExpressionParser {
         AST.Type returns = AST.Type.VOID;
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
-            returns = new Parser(parser.consumeTo(Token.Symbol.ARROW)).getCommon().parseType();
+            returns = new Parser(parser.consumeTo(Token.Symbol.ARROW), parser).getCommon().parseType();
         }
 
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens).parseBlock();
+        List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
         return new AST.AnonFunctionDef(returns, params, body);
     }
 
     private AST.Statement parseIncDec(Token.TokenType consume, AST.MathOp type) {
         parser.consumeExpected(consume);
-        AST.Statement sub = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON)).parseExpression();
+        AST.Statement sub = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON), parser).parseExpression();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
         return new AST.MathSelfMod(sub, type, AST.SelfModTime.PRE);
     }
@@ -133,7 +143,7 @@ class ExpressionParser {
         if(parser.containsBefore(Token.Symbol.COLON, Token.Symbol.SEMICOLON)) {
             Token name = parser.consume();
             parser.consumeExpected(Token.Symbol.COLON);
-            AST.Type type = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON)).getCommon().parseType();
+            AST.Type type = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON), parser).getCommon().parseType();
             return new AST.Declare(type, name.literal);
         } else if(parser.containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
             return parseFunctionCall();
@@ -143,9 +153,9 @@ class ExpressionParser {
             return parsePreIncDec(Token.Symbol.DOUBLE_PLUS, AST.MathOp.PLUS);
         } else if(parser.containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
             List<Token> name = parser.consumeTo(Token.Symbol.LEFT_BRACKET);
-            AST.Statement left = new Parser(name).parseExpression();
+            AST.Statement left = new Parser(name, parser).parseExpression();
             List<Token> sub = parser.consumeTo(Token.Symbol.RIGHT_BRACKET);
-            AST.Statement inner = new Parser(sub).parseExpression();
+            AST.Statement inner = new Parser(sub, parser).parseExpression();
             return new AST.Subscript(left, inner);
         } else {
             Token name = parser.consume();
@@ -159,9 +169,15 @@ class ExpressionParser {
         List<AST.Type> generics = new ArrayList<>();
         if(parser.containsBefore(Token.Symbol.LEFT_ANGLE, Token.Symbol.LEFT_PAREN)) {
             funcName = parser.consumeTo(Token.Symbol.LEFT_ANGLE);
-            List<List<Token>> genericTokens = BraceSplitter.customSplitAll(
-                    BraceManager.leftToRightAngle, parser.consumeTo(Token.Symbol.RIGHT_ANGLE), Token.Symbol.COMMA);
-            generics = genericTokens.stream().map(tokenList -> new Parser(tokenList).getCommon().parseType())
+            List<List<Token>> genericTokens;
+            try {
+                genericTokens = BraceSplitter.customSplitAll(
+                        BraceManager.leftToRightAngle, parser.consumeTo(Symbol.RIGHT_ANGLE), Symbol.COMMA);
+            } catch (ParserError parserError) {
+                parser.throwError(parserError.msg, parserError.on);
+                return null;
+            }
+            generics = genericTokens.stream().map(tokenList -> new Parser(tokenList, parser).getCommon().parseType())
                     .collect(Collectors.toList());
 
             parser.consumeExpected(Token.Symbol.LEFT_PAREN);
@@ -170,7 +186,8 @@ class ExpressionParser {
         }
 
         if(funcName.size() > 1) {
-            throw new ParserError("Function call name was multi token", funcName.get(0));
+            parser.throwError("Function call name was multi token", funcName.get(0));
+            return null;
         }
         List<AST.Statement> funcParams = consumeFunctionParams();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
@@ -179,17 +196,23 @@ class ExpressionParser {
 
     private AST.Statement parsePreIncDec(Token.TokenType consume, AST.MathOp type) {
         List<Token> name = parser.consumeTo(consume);
-        AST.Statement left = new Parser(name).parseExpression();
+        AST.Statement left = new Parser(name, parser).parseExpression();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
         return new AST.MathSelfMod(left, type, AST.SelfModTime.POST);
     }
 
     private List<AST.Statement> consumeFunctionParams() {
         List<Token> params = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
-        List<List<Token>> paramTokens = BraceSplitter.splitAll(params, Token.Symbol.COMMA);
+        List<List<Token>> paramTokens;
+        try {
+            paramTokens = BraceSplitter.splitAll(params, Symbol.COMMA);
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return List.of();
+        }
         return paramTokens.stream()
                 .filter(arr -> !arr.isEmpty())
-                .map(Parser::new)
+                .map(t -> new Parser(t, parser))
                 .map(Parser::parseExpression)
                 .collect(Collectors.toList());
     }

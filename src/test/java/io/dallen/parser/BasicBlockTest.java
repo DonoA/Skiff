@@ -39,23 +39,23 @@ public class BasicBlockTest {
         def func(x: Int): Int { return x + 1; }
          */
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.DEF),
-                new Token(Token.Textless.NAME, "func"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Int"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Int"),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Keyword.RETURN),
-                new Token(Token.Textless.NAME, "x"),
-                new Token(Token.Symbol.PLUS),
-                new Token(Token.Textless.NUMBER_LITERAL, "1"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.DEF, 0),
+                new Token(Token.Textless.NAME, "func", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Int", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Int", 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Keyword.RETURN, 0),
+                new Token(Token.Textless.NAME, "x", 0),
+                new Token(Token.Symbol.PLUS, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -78,52 +78,57 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseClassDef() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.CLASS),
-                new Token(Token.Textless.NAME, "Cls"),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "age"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Int"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Keyword.DEF),
-                new Token(Token.Textless.NAME, "Cls"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "age"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Int"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "this"),
-                new Token(Token.Symbol.DOT),
-                new Token(Token.Textless.NAME, "age"),
-                new Token(Token.Symbol.EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "10"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.CLASS, 0),
+                new Token(Token.Textless.NAME, "Cls", 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "age", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Int", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Keyword.DEF, 0),
+                new Token(Token.Textless.NAME, "Cls", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "age", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Int", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "this", 0),
+                new Token(Token.Symbol.DOT, 0),
+                new Token(Token.Textless.NAME, "age", 0),
+                new Token(Token.Symbol.EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "10", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "ClassDef(" +
-                "name = Cls, " +
-                "genericTypes = [ ], " +
-                "extendClasses = [ ], " +
-                "body = [" +
-                "Declare(type = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), name = age), " +
-                "FunctionDef(" +
-                "genericTypes = [ ], " +
-                "returns = Type(name = Variable(name = Void), arraySize = 0, genericTypes = [ ]), " +
-                "name = Cls, " +
-                "args = [" +
-                "FunctionParam(type = Type(name = Variable(name = Int), arraySize = 0, genericTypes = [ ]), name = age) " +
-                "], " +
-                "body = [" +
-                "Assign(name = " +
-                "Dotted(left = Variable(name = this), right = Variable(name = age)), value = NumberLiteral(value = 10.0)) " +
-                "]) " +
-                "])";
+        String expected =
+                new ClassDef(
+                        "Cls",
+                        List.of(),
+                        Optional.empty(),
+                        List.of(
+                                new Declare(ASTUtil.simpleType("Int"), "age"),
+                                new FunctionDef(
+                                        List.of(),
+                                        ASTUtil.simpleType("Void"),
+                                        "Cls",
+                                        List.of(
+                                                new FunctionParam(ASTUtil.simpleType("Int"), "age")
+                                        ),
+                                        List.of(
+                                                new Assign(
+                                                        new Dotted(new Variable("this"), new Variable("age")),
+                                                        new NumberLiteral(10.0)
+                                                )
+                                        )
+                                )
+                        )
+                ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -151,36 +156,35 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseGenericClassDef() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.CLASS),
-                new Token(Token.Textless.NAME, "GClass"),
-                new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "U"),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NAME, "V"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "String"),
-                new Token(Token.Symbol.RIGHT_ANGLE),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "a"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "U"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.CLASS, 0),
+                new Token(Token.Textless.NAME, "GClass", 0),
+                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                new Token(Token.Textless.NAME, "U", 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.NAME, "V", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "String", 0),
+                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "a", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "U", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
 
-        String expected = "ClassDef(" +
-                "name = GClass, " +
-                "genericTypes = [" +
-                "GenericType(name = U, reqExtend = [ ]), " +
-                "GenericType(name = V, reqExtend = [" +
-                "Type(name = Variable(name = String), arraySize = 0, genericTypes = [ ]) ]) ], " +
-                "extendClasses = [ ], " +
-                "body = [" +
-                "Declare(type = Type(name = Variable(name = U), arraySize = 0, genericTypes = [ ]), name = a) " +
-                "])";
+        String expected = new ClassDef(
+                "GClass",
+                List.of(
+                        new GenericType("U", List.of()),
+                        new GenericType("V", List.of(ASTUtil.simpleType("String")))
+                ),
+                Optional.empty(),
+                List.of(new Declare(ASTUtil.simpleType("U"), "a"))
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -192,30 +196,30 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseGenericFunctionDef() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.DEF),
-                new Token(Token.Textless.NAME, "genFunc"),
-                new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "U"),
-                new Token(Token.Symbol.COMMA),
-                new Token(Token.Textless.NAME, "V"),
-                new Token(Token.Symbol.RIGHT_ANGLE),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "a"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "U"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "V"),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Keyword.RETURN),
-                new Token(Token.Textless.NAME, "a"),
-                new Token(Token.Symbol.DOT),
-                new Token(Token.Textless.NAME, "getV"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.DEF, 0),
+                new Token(Token.Textless.NAME, "genFunc", 0),
+                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                new Token(Token.Textless.NAME, "U", 0),
+                new Token(Token.Symbol.COMMA, 0),
+                new Token(Token.Textless.NAME, "V", 0),
+                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "a", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "U", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "V", 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Keyword.RETURN, 0),
+                new Token(Token.Textless.NAME, "a", 0),
+                new Token(Token.Symbol.DOT, 0),
+                new Token(Token.Textless.NAME, "getV", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -246,13 +250,13 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseClassInheritance() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.CLASS),
-                new Token(Token.Textless.NAME, "CLS"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Object"),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.CLASS, 0),
+                new Token(Token.Textless.NAME, "CLS", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Object", 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -274,17 +278,17 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseAnonFuncDef() {
         List<Token> tokens = List.of(
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "p"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "T"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Returns"),
-                new Token(Token.Symbol.ARROW),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "p", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "T", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Returns", 0),
+                new Token(Token.Symbol.ARROW, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -305,19 +309,19 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseIf() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.IF),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "isWorking"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "run"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.IF, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "isWorking", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "run", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -337,31 +341,31 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseIfElse() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.IF),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "isWorking"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "run"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Keyword.ELSE),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "stop"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.NAME, "setIsWorking"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Keyword.TRUE),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.IF, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "isWorking", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "run", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Keyword.ELSE, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "stop", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.NAME, "setIsWorking", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Keyword.TRUE, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -390,37 +394,37 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseIfElseIf() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.IF),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "isWorking"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "run"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Keyword.ELSE),
-                new Token(Token.Keyword.IF),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "readyToWork"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "stop"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.NAME, "setIsWorking"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Keyword.TRUE),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.IF, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "isWorking", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "run", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Keyword.ELSE, 0),
+                new Token(Token.Keyword.IF, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "readyToWork", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "stop", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.NAME, "setIsWorking", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Keyword.TRUE, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -450,19 +454,19 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseWhile() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.WHILE),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "notReady"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "wait"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.WHILE, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "notReady", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "wait", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -481,14 +485,14 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseLoop() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.LOOP),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "think"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.LOOP, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "think", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -508,29 +512,29 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseFor() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.FOR),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "i"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Int"),
-                new Token(Token.Symbol.EQUAL),
-                new Token(Token.Textless.NUMBER_LITERAL, "0"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.NAME, "i"),
-                new Token(Token.Symbol.LEFT_ANGLE),
-                new Token(Token.Textless.NAME, "mySize"),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Textless.NAME, "i"),
-                new Token(Token.Symbol.DOUBLE_PLUS),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "exec"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "i"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.FOR, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "i", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Int", 0),
+                new Token(Token.Symbol.EQUAL, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "0", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.NAME, "i", 0),
+                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                new Token(Token.Textless.NAME, "mySize", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Textless.NAME, "i", 0),
+                new Token(Token.Symbol.DOUBLE_PLUS, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "exec", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "i", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -573,29 +577,29 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseSwitch() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.SWITCH),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "i"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Keyword.CASE),
-                new Token(Token.Textless.NUMBER_LITERAL, "5"),
-                new Token(Token.Symbol.ARROW),
-                new Token(Token.Textless.NAME, "runFive"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Keyword.BREAK),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Keyword.CASE),
-                new Token(Token.Symbol.UNDERSCORE),
-                new Token(Token.Symbol.ARROW),
-                new Token(Token.Textless.NAME, "runOther"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.SWITCH, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "i", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Keyword.CASE, 0),
+                new Token(Token.Textless.NUMBER_LITERAL, "5", 0),
+                new Token(Token.Symbol.ARROW, 0),
+                new Token(Token.Textless.NAME, "runFive", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Keyword.BREAK, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Keyword.CASE, 0),
+                new Token(Token.Symbol.UNDERSCORE, 0),
+                new Token(Token.Symbol.ARROW, 0),
+                new Token(Token.Textless.NAME, "runOther", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -621,33 +625,33 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseMatch() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.MATCH),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "i"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Keyword.CASE),
-                new Token(Token.Textless.NAME, "v"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Int"),
-                new Token(Token.Symbol.ARROW),
-                new Token(Token.Textless.NAME, "checkInt"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Keyword.BREAK),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Keyword.CASE),
-                new Token(Token.Textless.NAME, "v"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Symbol.UNDERSCORE),
-                new Token(Token.Symbol.ARROW),
-                new Token(Token.Textless.NAME, "checkOther"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.MATCH, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "i", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Keyword.CASE, 0),
+                new Token(Token.Textless.NAME, "v", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Int", 0),
+                new Token(Token.Symbol.ARROW, 0),
+                new Token(Token.Textless.NAME, "checkInt", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Keyword.BREAK, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Keyword.CASE, 0),
+                new Token(Token.Textless.NAME, "v", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Symbol.UNDERSCORE, 0),
+                new Token(Token.Symbol.ARROW, 0),
+                new Token(Token.Textless.NAME, "checkOther", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());
@@ -673,27 +677,27 @@ public class BasicBlockTest {
     @org.junit.Test
     public void parseTryCatch() {
         List<Token> tokens = List.of(
-                new Token(Token.Keyword.TRY),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "errorFunc"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Keyword.CATCH),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "ex"),
-                new Token(Token.Symbol.COLON),
-                new Token(Token.Textless.NAME, "Error"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.LEFT_BRACE),
-                new Token(Token.Textless.NAME, "print"),
-                new Token(Token.Symbol.LEFT_PAREN),
-                new Token(Token.Textless.NAME, "ex"),
-                new Token(Token.Symbol.RIGHT_PAREN),
-                new Token(Token.Symbol.SEMICOLON),
-                new Token(Token.Symbol.RIGHT_BRACE),
-                new Token(Token.Textless.EOF));
+                new Token(Token.Keyword.TRY, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "errorFunc", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Keyword.CATCH, 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "ex", 0),
+                new Token(Token.Symbol.COLON, 0),
+                new Token(Token.Textless.NAME, "Error", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.LEFT_BRACE, 0),
+                new Token(Token.Textless.NAME, "print", 0),
+                new Token(Token.Symbol.LEFT_PAREN, 0),
+                new Token(Token.Textless.NAME, "ex", 0),
+                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
+                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseBlock();
 
         assertEquals(1, statements.size());

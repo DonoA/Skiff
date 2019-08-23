@@ -1,6 +1,8 @@
 package io.dallen.parser;
 
 import io.dallen.AST;
+import io.dallen.errors.ErrorCollector;
+import io.dallen.errors.ErrorPrinter;
 import io.dallen.tokenizer.Token;
 import io.dallen.AST.*;
 
@@ -8,7 +10,7 @@ import io.dallen.tokenizer.Token.Textless;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Parser {
+public class Parser implements ErrorCollector {
 
     private List<Token> tokens;
 
@@ -19,18 +21,54 @@ public class Parser {
     private final BlockParser blockParser;
     private final ExpressionParser expressionParser;
     private final CommonParsing common;
+    private final Parser parent;
+    private final List<String> errorMsg;
+    private final String code;
 
     public Parser(List<Token> tokens) {
-        this(tokens, false);
+        this(tokens, null, false, null);
     }
 
-    Parser(List<Token> tokens, boolean inMatch) {
+    public Parser(List<Token> tokens, String code) {
+        this(tokens, null, false, code);
+    }
+
+    public Parser(List<Token> tokens, Parser parent) {
+        this(tokens, parent, false, null);
+    }
+
+    Parser(List<Token> tokens, Parser parent, boolean inMatch) {
+        this(tokens, parent, inMatch, null);
+    }
+
+    Parser(List<Token> tokens, Parser parent, boolean inMatch, String code) {
         this.tokens = tokens;
         this.inMatch = inMatch;
+        this.parent = parent;
+
+        if(this.parent == null) {
+            this.errorMsg = new ArrayList<>();
+            this.code = code;
+        } else {
+            this.errorMsg = null;
+            this.code = null;
+        }
 
         this.blockParser = new BlockParser(this);
         this.expressionParser = new ExpressionParser(this);
         this.common = new CommonParsing(this);
+    }
+
+    public void throwError(String msg, Token on) {
+        if (parent == null) {
+            errorMsg.add(ErrorPrinter.pointToPos(code, on.pos, msg));
+        } else {
+            parent.throwError(msg, on);
+        }
+    }
+
+    public List<String> getErrors() {
+        return errorMsg;
     }
 
     Token current() {
@@ -50,7 +88,9 @@ public class Parser {
     Token consumeExpected(Token.TokenType type) {
         Token t;
         if ((t = consume()).type != type) {
-            throw new ParserError("Parse error Expected: " + type.toString(), t);
+            throwError("Parse error Expected: " + type.toString(), t);
+            // TODO: make sure parser can recover from this
+            return null;
         }
         return t;
     }
@@ -89,12 +129,20 @@ public class Parser {
                 if (braceManager.isEmpty()) {
                     break;
                 }
-                throw new ParserError("Parse error", current());
+                // TODO: allow parser to recover from this
+                throwError("Parse error", current());
+                return null;
             }
             if (current().type == type && braceManager.isEmpty()) {
                 break;
             }
-            braceManager.check(current());
+            try {
+                braceManager.check(current());
+            } catch(ParserError ex) {
+                // TODO: allow parser to recover from this
+                throwError(ex.msg, ex.on);
+                return null;
+            }
             tokens.add(current());
             next();
         }

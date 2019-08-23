@@ -1,8 +1,8 @@
 package io.dallen.tokenizer;
 
-import java.util.ArrayList;
+import io.dallen.errors.ErrorCollector;
+
 import java.util.List;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class EnrichLexer {
@@ -13,8 +13,11 @@ public class EnrichLexer {
             "String", "Int", "List"
     );
 
-    public EnrichLexer(List<Token> tokens) {
+    private final ErrorCollector errors;
+
+    public EnrichLexer(List<Token> tokens, ErrorCollector errors) {
         this.tokens = tokens;
+        this.errors = errors;
     }
 
     public List<Token> enrich() {
@@ -25,6 +28,10 @@ public class EnrichLexer {
             }
 
             if(token.type == Token.Symbol.RIGHT_BRACE) {
+                if(table.getCurrent() == null) {
+                    errors.throwError("Too many close braces", token);
+                    return List.of();
+                }
                 table.toParent();
             }
 
@@ -32,6 +39,16 @@ public class EnrichLexer {
                 Token next = tokens.get(i + 1);
                 table.defineIdent(next.literal, Token.IdentifierType.TYPE);
             }
+        }
+
+        if(table.getCurrent() == null) {
+            errors.throwError("Too many close braces", tokens.get(tokens.size() - 1));
+            return List.of();
+        }
+
+        if(table.getCurrent().getParent() != null) {
+            errors.throwError("Expected more close braces", tokens.get(tokens.size() - 1));
+            return List.of();
         }
 
         return tokens
@@ -50,7 +67,7 @@ public class EnrichLexer {
                         if(ident == null) {
                             ident = Token.IdentifierType.VARIABLE;
                         }
-                        return new Token(token.type, token.literal, ident);
+                        return new Token(token.type, token.literal, ident, token.pos);
                     } else {
                         return token;
                     }

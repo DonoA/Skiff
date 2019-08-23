@@ -1,6 +1,5 @@
 package io.dallen;
 
-import io.dallen.compiler.visitor.ASTVisitor;
 import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
 import io.dallen.parser.Parser;
@@ -9,7 +8,6 @@ import io.dallen.tokenizer.Token;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -33,7 +31,7 @@ public class SkiffC {
     private static String preamble = "#include \"lib/skiff.h\"\n\n";
 
     public static void main(String[] argz) throws IOException {
-        String inFile = "generics.skiff";
+        String inFile = "classes.skiff";
         String outfile = "test.c";
         String programText;
         try {
@@ -43,14 +41,36 @@ public class SkiffC {
             return;
         }
         Lexer lexer = new Lexer(programText);
-        List<Token> tokenStream = lexer.lex();
-        printTokenStream(tokenStream);
+        List<Token> tokenStream = null;
+        try {
+            tokenStream = lexer.lex();
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        } finally {
+//        printTokenStream(tokenStream);
+            System.out.println(String.join("\n", lexer.getErrors()));
+        }
+
+        if(tokenStream == null || tokenStream.isEmpty()) {
+            return;
+        }
 
         System.out.println(" ======== PARSE =========== ");
 
-        Parser parser = new Parser(tokenStream);
-        List<AST.Statement> statements = parser.parseBlock();
-        statements.forEach(System.out::println);
+        Parser parser = new Parser(tokenStream, programText);
+        List<AST.Statement> statements = null;
+        try {
+            statements = parser.parseBlock();
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        } finally {
+//        statements.forEach(System.out::println);
+            System.out.println(String.join("\n", parser.getErrors()));
+        }
+
+        if(statements == null || statements.isEmpty()) {
+            return;
+        }
 
         System.out.println(" ======== COMPILE =========== ");
 
@@ -73,7 +93,7 @@ public class SkiffC {
     public static String compile(String code, CompileContext context) {
         Lexer lexer = new Lexer(code);
         List<Token> tokenStream = lexer.lex();
-        Parser parser = new Parser(tokenStream);
+        Parser parser = new Parser(tokenStream, code);
         List<AST.Statement> statements = parser.parseBlock();
         return statements
                 .stream()

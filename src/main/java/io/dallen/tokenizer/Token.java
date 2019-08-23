@@ -132,25 +132,26 @@ public class Token {
         TYPE, VARIABLE
     }
 
-
     public final TokenType type;
     public final String literal;
     public final IdentifierType ident;
+    public final int pos;
 
-    public static final Token EOF = new Token(Textless.EOF);
+    public static final Token EOF = new Token(Textless.EOF, 0);
 
-    public Token(TokenType type) {
-        this(type, "");
+    public Token(TokenType type, int pos) {
+        this(type, "", pos);
     }
 
-    public Token(TokenType type, String lit) {
-        this(type, lit, null);
+    public Token(TokenType type, String lit, int pos) {
+        this(type, lit, null, pos);
     }
 
-    public Token(TokenType type, String lit, IdentifierType ident) {
+    public Token(TokenType type, String lit, IdentifierType ident, int pos) {
         this.type = type;
         this.literal = lit;
         this.ident = ident;
+        this.pos = pos;
     }
 
     @Override
