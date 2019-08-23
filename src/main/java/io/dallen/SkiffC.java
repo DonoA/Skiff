@@ -75,15 +75,26 @@ public class SkiffC {
         System.out.println(" ======== COMPILE =========== ");
 
         CompileContext context = new CompileContext(null);
-        List<String> compiledText = statements
-                .stream()
-                .map(e -> e.compile(context))
-                .map(CompiledCode::getCompiledText)
-                .collect(Collectors.toList());
+        List<String> compiledText = null;
+        try {
+            compiledText = statements
+                    .stream()
+                    .map(e -> e.compile(context))
+                    .map(CompiledCode::getCompiledText)
+                    .collect(Collectors.toList());
 
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            // print errors from context
+        }
+
+        if(compiledText == null || compiledText.isEmpty()) {
+            return;
+        }
         String code = preamble + String.join("\n", compiledText);
 
-        System.out.println(code);
+//        System.out.println(code);
 
         try (PrintWriter out = new PrintWriter(outfile)) {
             out.println(code);
