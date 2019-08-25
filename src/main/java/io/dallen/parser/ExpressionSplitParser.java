@@ -1,6 +1,7 @@
 package io.dallen.parser;
 
 import io.dallen.AST.*;
+import io.dallen.ASTEnums;
 import io.dallen.parser.splitter.*;
 import io.dallen.tokenizer.Token;
 
@@ -12,22 +13,22 @@ class ExpressionSplitParser {
             .addLayer(new SplitLayer()
                     .addSplitRule(Token.Symbol.EQUAL, ExpressionSplitParser::parseAssignment))
             .addLayer(new SplitLayer()
-                    .addSplitRule(Token.Symbol.PLUS_EQUAL, ExpressionSplitParser.mathAssignAction(MathOp.PLUS))
-                    .addSplitRule(Token.Symbol.MINUS_EQUAL, ExpressionSplitParser.mathAssignAction(MathOp.MINUS)))
+                    .addSplitRule(Token.Symbol.PLUS_EQUAL, ExpressionSplitParser.mathAssignAction(ASTEnums.MathOp.PLUS))
+                    .addSplitRule(Token.Symbol.MINUS_EQUAL, ExpressionSplitParser.mathAssignAction(ASTEnums.MathOp.MINUS)))
             .addLayer(new SplitLayer()
-                    .addSplitRule(Token.Symbol.DOUBLE_AND, ExpressionSplitParser.boolCombineAction(BoolOp.AND)))
+                    .addSplitRule(Token.Symbol.DOUBLE_AND, ExpressionSplitParser.boolCombineAction(ASTEnums.BoolOp.AND)))
             .addLayer(new SplitLayer()
-                    .addSplitRule(Token.Symbol.DOUBLE_OR, ExpressionSplitParser.boolCombineAction(BoolOp.OR)))
+                    .addSplitRule(Token.Symbol.DOUBLE_OR, ExpressionSplitParser.boolCombineAction(ASTEnums.BoolOp.OR)))
             .addLayer(new SplitLayer()
-                    .addSplitRule(Token.Symbol.DOUBLE_EQUAL, ExpressionSplitParser.compareAction(CompareOp.EQ))
-                    .addSplitRule(Token.Symbol.LEFT_ANGLE, ExpressionSplitParser.compareAction(CompareOp.LT))
-                    .addSplitRule(Token.Symbol.RIGHT_ANGLE, ExpressionSplitParser.compareAction(CompareOp.GT)))
+                    .addSplitRule(Token.Symbol.DOUBLE_EQUAL, ExpressionSplitParser.compareAction(ASTEnums.CompareOp.EQ))
+                    .addSplitRule(Token.Symbol.LEFT_ANGLE, ExpressionSplitParser.compareAction(ASTEnums.CompareOp.LT))
+                    .addSplitRule(Token.Symbol.RIGHT_ANGLE, ExpressionSplitParser.compareAction(ASTEnums.CompareOp.GT)))
             .addLayer(new SplitLayer()
-                    .addSplitRule(Token.Symbol.SLASH, ExpressionSplitParser.mathAction(MathOp.DIV))
-                    .addSplitRule(Token.Symbol.STAR, ExpressionSplitParser.mathAction(MathOp.MUL)))
+                    .addSplitRule(Token.Symbol.SLASH, ExpressionSplitParser.mathAction(ASTEnums.MathOp.DIV))
+                    .addSplitRule(Token.Symbol.STAR, ExpressionSplitParser.mathAction(ASTEnums.MathOp.MUL)))
             .addLayer(new SplitLayer()
-                    .addSplitRule(Token.Symbol.PLUS, ExpressionSplitParser.mathAction(MathOp.PLUS))
-                    .addSplitRule(Token.Symbol.MINUS, ExpressionSplitParser.mathAction(MathOp.MINUS)))
+                    .addSplitRule(Token.Symbol.PLUS, ExpressionSplitParser.mathAction(ASTEnums.MathOp.PLUS))
+                    .addSplitRule(Token.Symbol.MINUS, ExpressionSplitParser.mathAction(ASTEnums.MathOp.MINUS)))
             .addLayer(new SplitLayer()
                     .addSplitRule(Token.Symbol.DOT, ExpressionSplitParser.statementAction(Dotted::new))).leftToRight(false);
 
@@ -46,7 +47,7 @@ class ExpressionSplitParser {
         if(res.size() == 1) {
             Statement firstS = new Parser(first, parser).parseExpression();
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new Assign(firstS, secondS);
+            return new Assign(firstS, secondS, first);
         } else if(res.size() == 2) {
             Type typ = new Parser(res.get(1), parser).getCommon().parseType();
             if(res.get(0).size() != 1) {
@@ -55,17 +56,17 @@ class ExpressionSplitParser {
             }
             String name = res.get(0).get(0).literal;
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new DeclareAssign(typ, name, secondS);
+            return new DeclareAssign(typ, name, secondS, first);
         }
         parser.throwError("Assign name had many colons", res.get(0).get(0));
         return null;
     }
 
-    private static SplitAction boolCombineAction(BoolOp op) {
-        return statementAction((first, second) -> new BoolCombine(first, op, second));
+    private static SplitAction boolCombineAction(ASTEnums.BoolOp op) {
+        return statementAction((first, second, tokens) -> new BoolCombine(first, op, second, tokens));
     }
 
-    private static SplitAction compareAction(CompareOp op) {
+    private static SplitAction compareAction(ASTEnums.CompareOp op) {
         return (parser, first, second) -> {
             if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE) {
                 return null;
@@ -82,28 +83,28 @@ class ExpressionSplitParser {
 
             Statement firstS = new Parser(first, parser).parseExpression();
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new Compare(firstS, op, secondS);
+            return new Compare(firstS, op, secondS, first);
         };
     }
 
-    private static SplitAction mathAction(MathOp op) {
-        return statementAction((first, second) -> new MathStatement(first, op, second));
+    private static SplitAction mathAction(ASTEnums.MathOp op) {
+        return statementAction((first, second, tokens) -> new MathStatement(first, op, second, tokens));
     }
 
-    private static SplitAction mathAssignAction(MathOp op) {
-        return statementAction((first, second) -> new MathAssign(first, op, second));
+    private static SplitAction mathAssignAction(ASTEnums.MathOp op) {
+        return statementAction((first, second, tokens) -> new MathAssign(first, op, second, tokens));
     }
 
     private static SplitAction statementAction(StatementAction action) {
         return (parser, first, second) -> {
             Statement firstS = new Parser(first, parser).parseExpression();
             Statement secondS = new Parser(second, parser).parseExpression();
-            return action.handle(firstS, secondS);
+            return action.handle(firstS, secondS, first);
         };
     }
 
     private interface StatementAction {
-        Statement handle(Statement first, Statement second);
+        Statement handle(Statement first, Statement second, List<Token> tokens);
     }
 
 

@@ -1,123 +1,201 @@
 #! /bin/python3
-import json, sys
+import json
+import sys
 
-def generate_toString(typ, name, literal, flat):
-    typ_name = typ
+cbo = '{'
+cbc = '}'
+
+class ASTField:
+    def __init__(self, name, typ, big_print, lazy, is_list, no_flat_string):
+        self.name = name
+        self.typ = typ
+        self.big_print = big_print
+        self.lazy = lazy
+        self.is_list = is_list
+        self.no_flat_string = no_flat_string
+
+class ASTClass:
+    def __init__(self, name, extends, literal, fields):
+        self.name = name
+        self.extends = extends
+        self.literal = literal
+        self.fields = fields
+        self.super_fields = []
+
+def comile_class(name, spec):
+    extends = None
+    if 'extends' in spec:
+        extends = spec['extends']
+    
+    literal = False
+    if 'literal' in spec:
+        literal = spec['literal']
+    
+    field_decs = []
+    fields = []
+    if 'fields' in spec:
+        field_decs = spec['fields']
+
+    for fname, field in field_decs.items():
+        big_print = False
+        lazy = False
+        typ = field
+        no_flat_string = False
+
+        if type(field) is dict:
+            if 'bigPrint' in field:
+                big_print = field['bigPrint']
+
+            if 'lazy' in field:
+                lazy = field['lazy']
+
+            if 'noFlatString' in field:
+                no_flat_string = field['noFlatString']
+
+            typ = field['type']
+
+        is_list = 'List' in typ
+        no_flat_string = no_flat_string or 'String' in typ
+
+        fields.append(ASTField(
+            fname, typ, big_print, lazy, is_list, no_flat_string
+        ))
+    
+    return ASTClass(name, extends, literal, fields)
+
+def get_parent_fields(all_classes, clazz):
+    if clazz.extends is None:
+        return []
+    return all_classes[clazz.extends].fields + \
+        get_parent_fields(all_classes, all_classes[clazz.extends])
+
+def generate_toString(field, clazz):
+    return _generate_to_string(field, clazz, False)
+
+def generate_toFlatString(field, clazz):
+    return _generate_to_string(field, clazz, True)
+
+def _generate_to_string(field, clazz, flat):
+    name = field.name
+
     sep = ''
-    if type(typ) is dict:
-        typ_name = typ['type']
-        if 'bigPrint' in typ and typ['bigPrint'] == True:
-            sep = '\\n'
+    if field.big_print and not flat:
+        sep = '\\n'
 
     to_string = 'toString()'
-
-    if flat == True:
-        sep = ''
+    if flat and not field.no_flat_string:
         to_string = 'toFlatString()'
 
+    string_construction = f"this.{name}.{to_string}"
 
-    if 'List' in typ_name:
-        return f"\"[{sep}\" + this.{name}.stream().map(e -> e.{to_string}).collect(Collectors.joining(\", {sep}\")) + \" {sep}]\""
-    if literal:
-        return f"\"\\\"\" + this.{name}.toString() + \"\\\"\""
-    if 'String' in typ_name or 'Double' in typ_name or 'Op' in typ_name or 'Integer' in typ_name:
-        return f"this.{name}.toString()"
-    return f"this.{name}.{to_string}"
+    if field.is_list:
+        string_construction = f"\"[{sep}\" + this.{name}.stream().map(e -> e.{to_string}).collect(Collectors.joining(\", {sep}\")) + \" {sep}]\""
+    elif clazz.literal:
+        string_construction = f"\"\\\"\" + this.{name}.toString() + \"\\\"\""
+    
+    return f"{name} = \" + {string_construction} + \""
 
-def generate_extends(spec):
-    if 'extends' not in spec:
-        return ('', '', [])
-    arr = spec['extends'].split('(')
-    extends = 'extends ' + arr[0]
-    if len(arr) != 2:
-        arr.append(')')
-    super_init = 'super(' + arr[1] + ';'
-    ignores = []
-    if len(arr[1]) > 1:
-        ignores = arr[1][0:-1].split(',')
-    return (extends, super_init, ignores)
+def generate_def(class_name, clazz):
+    all_class_fields = clazz.fields + clazz.super_fields
 
-def generate_def(class_name, spec):
-    cbo = "{"
-    cbc = "}"
-
-    raw_fields = spec['fields']
-
-    fields = {}
-    ctr_params = []
+    ctr_params = [f'{f.typ} {f.name}' for f in filter(lambda x: not x.lazy, all_class_fields)]
     java_fields = []
-    ctr_assign = []
 
-    (extends, super_init, ignores) = generate_extends(spec)
+    for f in clazz.fields:
+        final = 'final'
+        if f.lazy:
+            final = ''
+        java_fields.append(f'        public {final} {f.typ} {f.name};')
+    java_fields = '\n'.join(java_fields)
 
-    for name, typ in raw_fields.items():
-        if type(typ) is dict:
-            fields[name] = typ['type']
-            if 'lazy' in typ and typ['lazy'] == True:
-                if name not in ignores:
-                    java_fields.append('public ' + typ['type'] + ' ' + name + ';')
-                    ctr_assign.append(f"this.{name} = null;")
-            else:
-                ctr_params.append(typ['type'] + ' ' + name)
-                if name not in ignores:
-                    java_fields.append('public final ' + typ['type'] + ' ' + name + ';')
-                    ctr_assign.append(f"this.{name} = {name};")
-        else:
-            fields[name] = typ
-            ctr_params.append(typ + ' ' + name)
-            if name not in ignores:
-                java_fields.append('public final ' + typ + ' ' + name + ';')
-                ctr_assign.append(f"this.{name} = {name};")
+    ctr_assign = '\n'.join([
+        f'            this.{f.name} = {f.name};' for f in filter(lambda x: not x.lazy, clazz.fields)
+    ])
 
+    extends = ''
+    super_init = ''
+    if clazz.extends is not None:
+        extends = f'extends {clazz.extends}'
+        superf = ', '.join([
+            f'{f.name}' for f in clazz.super_fields
+        ])
+        super_init = f'super({superf});'
 
-    literal = False
-    if 'literal' in spec and spec['literal'] == True:
-        literal = True
+    to_string_values = ', " + \n                "'.join([
+        generate_toString(f, clazz) for f in all_class_fields
+    ])
+    to_string_flat_values = ', " + \n                "'.join([
+        generate_toFlatString(f, clazz) for f in all_class_fields
+    ])
 
-    ctr_params = ', '.join(ctr_params)
-    to_string_values = ', " + \n            "'.join([f"{name} = \" + {generate_toString(typ, name, literal, False)} + \"" for name, typ in raw_fields.items()])
-    to_string_flat_values = ', " + \n            "'.join([f"{name} = \" + {generate_toString(typ, name, literal, True)} + \"" for name, typ in raw_fields.items()])
+    return f"""
+    public static class {class_name} {extends} {cbo}
+{java_fields}
+        public {class_name}({', '.join(ctr_params)}) {cbo}
+            {super_init}
+{ctr_assign}
+        {cbc}
 
-    java_fields = '\n    '.join(java_fields)
-    ctr_assign = '\n        '.join(ctr_assign)
+        public String toString() {cbo}
+            return "{class_name}({to_string_values})";
+        {cbc}
 
-    return (f"""
-public static class {class_name} {extends} {cbo}
-    {java_fields}
-    public {class_name}({ctr_params}) {cbo}
-        {super_init}
-        {ctr_assign}
+        public String toFlatString() {cbo}
+            return "{class_name}({to_string_flat_values})";
+        {cbc}
+
+        public CompiledCode compile(CompileContext context) {cbo}
+            return ASTVisitor.instance.compile{class_name}(this, context);
+        {cbc}
     {cbc}
-
-    public String toString() {cbo}
-        return "{class_name}({to_string_values})";
-    {cbc}
-
-    public String toFlatString() {cbo}
-        return "{class_name}({to_string_flat_values})";
-    {cbc}
-
-    public CompiledCode compile(CompileContext context) {cbo}
-        return ASTVisitor.instance.compile{class_name}(this, context);
-    {cbc}
-{cbc}
-    """, f"""
-public CompiledCode compile{class_name}({class_name} stmt, CompileContext context) {cbo} 
-    return null; 
-{cbc}
     """
-    )
+
+def generate_visit(class_name, clazz):
+    return f'''
+    public CompiledCode compile{class_name}({class_name} stmt, CompileContext context) {cbo} 
+        return null;
+    {cbc}
+    '''
 
 data = {}
+
+ast_header = '''
+package io.dallen;
+
+import io.dallen.compiler.visitor.ASTVisitor;
+import io.dallen.compiler.CompileContext;
+import io.dallen.compiler.CompiledCode;
+import io.dallen.tokenizer.Token;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@SuppressWarnings({"Duplicates", "WeakerAccess", "Convert2MethodRef", "RedundantStringOperation", "OptionalUsedAsFieldOrParameterType"})
+public class AST {
+'''
+
+ast_footer = '''
+}
+'''
 
 with open('grammar.json', 'r') as f:
     data = json.load(f)
 
 with open('ast.java', 'w+') as ast:
     with open('visitor.java', 'w+') as visit:
-        for key, value in data.items():
-            (ast_code, visitor_code) = generate_def(key, value) 
-            ast.write(ast_code)
-            visit.write(visitor_code)
+        classes = {name: comile_class(name, spec) for name, spec in data.items()}
+        
+        for name, clazz in classes.items():
+            clazz.super_fields = get_parent_fields(classes, clazz)
 
+        ast.write(ast_header)        
+        for name, clazz in classes.items():
+            ast_code = generate_def(name, clazz)
+            ast.write(ast_code)
+        ast.write(ast_footer)
+
+        for name, clazz in classes.items():
+            visitor_code = generate_visit(name, clazz) 
+            visit.write(visitor_code)
 

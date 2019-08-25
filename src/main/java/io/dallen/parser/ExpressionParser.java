@@ -1,6 +1,7 @@
 package io.dallen.parser;
 
 import io.dallen.AST;
+import io.dallen.ASTEnums;
 import io.dallen.compiler.CompileError;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.tokenizer.Token;
@@ -25,32 +26,33 @@ class ExpressionParser {
             .addCase(Symbol.LEFT_PAREN::equals, context -> {
                 context.parser.consumeExpected(Token.Symbol.LEFT_PAREN);
                 if(!context.parser.containsBefore(Token.Symbol.ARROW, Token.Symbol.SEMICOLON)){
+                    List<Token> tokens = context.parser.consumeTo(Token.Symbol.RIGHT_PAREN);
                     AST.Statement sub = new Parser(
-                            context.parser.consumeTo(Token.Symbol.RIGHT_PAREN),
+                            tokens,
                             context.parser
                     ).parseExpression();
-                    return new AST.Parened(sub);
+                    return new AST.Parened(sub, tokens);
                 }
                 return context.parseAnonFunc();
             })
             .addCase(Textless.NAME::equals, context -> context.handleNameToken(context.workingTokens))
-            .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, AST.MathOp.MINUS))
-            .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, AST.MathOp.MINUS))
-            .addCase(Keyword.TRUE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.TRUE)))
-            .addCase(Keyword.FALSE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.FALSE)))
+            .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, ASTEnums.MathOp.MINUS))
+            .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, ASTEnums.MathOp.MINUS))
+            .addCase(Keyword.TRUE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.TRUE, context.workingTokens)))
+            .addCase(Keyword.FALSE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.FALSE, context.workingTokens)))
             .addCase(Textless.NUMBER_LITERAL::equals, context ->
-                    context.parseLiteral(lit -> new AST.NumberLiteral(Double.parseDouble(lit))))
+                    context.parseLiteral(lit -> new AST.NumberLiteral(Double.parseDouble(lit), context.workingTokens)))
             .addCase(Textless.REGEX_LITERAL::equals, context -> {
                 String[] seg = context.parser.consume().literal.split("\0");
-                AST.RegexLiteral lit = new AST.RegexLiteral(seg[0], seg[1]);
+                AST.RegexLiteral lit = new AST.RegexLiteral(seg[0], seg[1], context.workingTokens);
                 context.parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
                 return lit;
             })
-            .addCase(Textless.SEQUENCE_LITERAL::equals, context -> context.parseLiteral(AST.SequenceLiteral::new))
-            .addCase(Textless.STRING_LITERAL::equals, context -> context.parseLiteral(AST.StringLiteral::new))
-            .addCase(Keyword.BREAK::equals, context -> context.parseLiteral(j -> new AST.BreakStatement()))
-            .addCase(Keyword.NEXT::equals, context -> context.parseLiteral(j -> new AST.ContinueStatement()))
-            .addCase(Symbol.UNDERSCORE::equals, context -> context.parseLiteral(j -> new AST.Variable("_")))
+            .addCase(Textless.SEQUENCE_LITERAL::equals, context -> context.parseLiteralTokens(AST.SequenceLiteral::new, context.workingTokens))
+            .addCase(Textless.STRING_LITERAL::equals, context -> context.parseLiteralTokens(AST.StringLiteral::new, context.workingTokens))
+            .addCase(Keyword.BREAK::equals, context -> context.parseLiteral(j -> new AST.BreakStatement(context.workingTokens)))
+            .addCase(Keyword.NEXT::equals, context -> context.parseLiteral(j -> new AST.ContinueStatement(context.workingTokens)))
+            .addCase(Symbol.UNDERSCORE::equals, context -> context.parseLiteral(j -> new AST.Variable("_", context.workingTokens)))
             .setDefault(context -> {
                 context.parser.throwError("Token did not match any known patterns", context.parser.current());
                 return null;
@@ -88,7 +90,7 @@ class ExpressionParser {
                 .map(e -> new Parser(e, parser).parseExpression())
                 .collect(Collectors.toList());
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.New(typeStmt, params);
+        return new AST.New(typeStmt, params, name);
     }
 
     private AST.Statement parseAnonFunc() {
@@ -101,7 +103,7 @@ class ExpressionParser {
             throw new CompileError("Failed to parse function args for anon func");
         }
 
-        AST.Type returns = AST.Type.VOID;
+        AST.Type returns = Parser.VOID;
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
             returns = new Parser(parser.consumeTo(Token.Symbol.ARROW), parser).getCommon().parseType();
@@ -112,14 +114,14 @@ class ExpressionParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
-        return new AST.AnonFunctionDef(returns, params, body);
+        return new AST.AnonFunctionDef(returns, params, body, paramTokens);
     }
 
-    private AST.Statement parseIncDec(Token.TokenType consume, AST.MathOp type) {
-        parser.consumeExpected(consume);
+    private AST.Statement parseIncDec(Token.TokenType consume, ASTEnums.MathOp type) {
+        Token t = parser.consumeExpected(consume);
         AST.Statement sub = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON), parser).parseExpression();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.MathSelfMod(sub, type, AST.SelfModTime.PRE);
+        return new AST.MathSelfMod(sub, type, ASTEnums.SelfModTime.PRE, List.of(t));
     }
 
     private AST.Statement parseLiteral(LiteralConstructor constructor) {
@@ -128,15 +130,25 @@ class ExpressionParser {
         return lit;
     }
 
+    private AST.Statement parseLiteralTokens(LiteralTokenConstructor constructor, List<Token> tokens) {
+        AST.Statement lit = constructor.construct(parser.consume().literal, tokens);
+        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        return lit;
+    }
+
     private interface LiteralConstructor {
         AST.Statement construct(String lit);
+    }
+
+    private interface LiteralTokenConstructor {
+        AST.Statement construct(String lit, List<Token> tokens);
     }
 
     private static final AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser> nameTokenSwitch =
             new AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser>()
                     .addCase(Textless.NAME::equals, context -> context.handleNameToken(context.workingTokens))
-                    .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, AST.MathOp.MINUS))
-                    .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, AST.MathOp.MINUS));
+                    .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, ASTEnums.MathOp.MINUS))
+                    .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, ASTEnums.MathOp.MINUS));
 
     private AST.Statement handleNameToken(List<Token> workingTokens) {
 
@@ -144,23 +156,23 @@ class ExpressionParser {
             Token name = parser.consume();
             parser.consumeExpected(Token.Symbol.COLON);
             AST.Type type = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON), parser).getCommon().parseType();
-            return new AST.Declare(type, name.literal);
+            return new AST.Declare(type, name.literal, workingTokens);
         } else if(parser.containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
             return parseFunctionCall();
         } else if(parser.containsBefore(Token.Symbol.DOUBLE_MINUS, Token.Symbol.SEMICOLON)) {
-            return parsePreIncDec(Token.Symbol.DOUBLE_MINUS, AST.MathOp.MINUS);
+            return parsePreIncDec(Token.Symbol.DOUBLE_MINUS, ASTEnums.MathOp.MINUS);
         } else if(parser.containsBefore(Token.Symbol.DOUBLE_PLUS, Token.Symbol.SEMICOLON)) {
-            return parsePreIncDec(Token.Symbol.DOUBLE_PLUS, AST.MathOp.PLUS);
+            return parsePreIncDec(Token.Symbol.DOUBLE_PLUS, ASTEnums.MathOp.PLUS);
         } else if(parser.containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
             List<Token> name = parser.consumeTo(Token.Symbol.LEFT_BRACKET);
             AST.Statement left = new Parser(name, parser).parseExpression();
             List<Token> sub = parser.consumeTo(Token.Symbol.RIGHT_BRACKET);
             AST.Statement inner = new Parser(sub, parser).parseExpression();
-            return new AST.Subscript(left, inner);
+            return new AST.Subscript(left, inner, workingTokens);
         } else {
             Token name = parser.consume();
             parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-            return new AST.Variable(name.literal);
+            return new AST.Variable(name.literal, workingTokens);
         }
     }
 
@@ -191,14 +203,14 @@ class ExpressionParser {
         }
         List<AST.Statement> funcParams = consumeFunctionParams();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics);
+        return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics, funcName);
     }
 
-    private AST.Statement parsePreIncDec(Token.TokenType consume, AST.MathOp type) {
+    private AST.Statement parsePreIncDec(Token.TokenType consume, ASTEnums.MathOp type) {
         List<Token> name = parser.consumeTo(consume);
         AST.Statement left = new Parser(name, parser).parseExpression();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.MathSelfMod(left, type, AST.SelfModTime.POST);
+        return new AST.MathSelfMod(left, type, ASTEnums.SelfModTime.POST, name);
     }
 
     private List<AST.Statement> consumeFunctionParams() {

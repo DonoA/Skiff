@@ -1,6 +1,11 @@
 {
     "Statement": {
-        "fields": {}
+        "fields": {
+            "tokens": {
+                "type": "List<Token>",
+                "noFlatString": true
+            }
+        }
     },
     "Expression": {
         "extends": "Statement",
@@ -9,7 +14,6 @@
     "Type": {
         "fields": {
             "name": "Statement",
-            "arraySize": "Integer",
             "genericTypes": "List<Type>"
         }
     },
@@ -29,38 +33,29 @@
         }
     },
     "FunctionDef": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
             "genericTypes": "List<GenericType>",
             "returns": "Type",
             "name": "String",
-            "args": "List<FunctionParam>",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "args": "List<FunctionParam>"
         }
     },
     "AnonFunctionDef": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
             "returns": "Type",
-            "args": "List<FunctionParam>",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "args": "List<FunctionParam>"
         }
     },
     "ClassDef": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
             "name": "String",
             "genericTypes": "List<GenericType>",
-            "extendClass": "Optional<Type>",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
+            "extendClass": {
+                "type": "Optional<Type>",
+                "noFlatString": true
             }
         }
     },
@@ -71,13 +66,9 @@
         }
     },
     "IfBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
             "condition": "Statement",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            },
             "elseBlock": {
                 "type": "ElseBlock",
                 "lazy": true
@@ -85,11 +76,11 @@
         }
     },
     "ElseBlock": {
-        "extends": "Statement()",
+        "extends": "Statement",
         "fields": { }
     },
     "ElseIfBlock": {
-        "extends": "ElseBlock()",
+        "extends": "ElseBlock",
         "fields": {
             "on": "IfBlock",
             "elseBlock": {
@@ -99,7 +90,7 @@
         }
     },
     "ElseAlwaysBlock": {
-        "extends": "ElseBlock()",
+        "extends": "ElseBlock",
         "fields": {
             "body": {
                 "type": "List<Statement>",
@@ -108,65 +99,41 @@
         }
     },
     "WhileBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
-            "condition": "Statement",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "condition": "Statement"
         }
     },
     "LoopBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
         }
     },
     "ForBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
             "start": "Statement",
             "condition": "Statement",
-            "step": "Statement",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "step": "Statement"
         }
     },
     "ForIterBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
             "item": "Statement",
-            "list": "Statement",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "list": "Statement"
         }
     },
     "MatchBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
-            "on": "Statement",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "on": "Statement"
         }
     },
     "SwitchBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
-            "on": "Statement",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "on": "Statement"
         }
     },
     "CaseStatement": {
@@ -190,32 +157,23 @@
         "fields": { }
     },
     "TryBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
-            "catchBlock": "CatchBlock",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
+            "catchBlock": {
+                "type": "CatchBlock",
+                "lazy": true
             }
         }
     },
     "CatchBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
-            "ex": "Statement",
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
+            "ex": "Statement"
         }
     },
     "FinallyBlock": {
-        "extends": "BlockStatement(body)",
+        "extends": "BlockStatement",
         "fields": {
-            "body": {
-                "type": "List<Statement>",
-                "bigPrint": true
-            }
         }
     },
     "FunctionCall": {
@@ -268,7 +226,10 @@
     "ImportStatement": {
         "extends": "Expression",
         "fields": {
-            "type": "ImportType",
+            "type": {
+                "type": "ASTEnums.ImportType",
+                "noFlatString": true
+            },
             "value": "String"
         }
     },
@@ -276,7 +237,10 @@
         "extends": "Expression",
         "fields": {
             "left": "Statement",
-            "op": "MathOp",
+            "op": {
+                "type": "ASTEnums.MathOp",
+                "noFlatString": true
+            },
             "right": "Statement"
         }
     },
@@ -284,7 +248,10 @@
         "extends": "Expression",
         "fields": {
             "left": "Statement",
-            "op": "MathOp",
+            "op": {
+                "type": "ASTEnums.MathOp",
+                "noFlatString": true
+            },
             "right": "Statement"
         }
     },
@@ -292,8 +259,14 @@
         "extends": "Expression",
         "fields": {
             "left": "Statement",
-            "op": "MathOp",
-            "time": "SelfModTime"
+            "op": {
+                "type": "ASTEnums.MathOp",
+                "noFlatString": true
+            },
+            "time": {
+                "type": "ASTEnums.SelfModTime",
+                "noFlatString": true
+            }
         }
     },
     "Subscript": {
@@ -307,7 +280,10 @@
         "extends": "Expression",
         "fields": {
             "left": "Statement",
-            "op": "CompareOp",
+            "op": {
+                "type": "ASTEnums.CompareOp",
+                "noFlatString": true
+            },
             "right": "Statement"
         }
     },
@@ -315,7 +291,10 @@
         "extends": "Expression",
         "fields": {
             "left": "Statement",
-            "op": "BoolOp",
+            "op": {
+                "type": "ASTEnums.BoolOp",
+                "noFlatString": true
+            },
             "right": "Statement"
         }
     },
@@ -344,7 +323,10 @@
     "NumberLiteral": {
         "extends": "Expression",
         "fields": {
-            "value": "Double"
+            "value": {
+                "type": "Double",
+                "noFlatString": true
+            }
         }
     },
     "StringLiteral": {

@@ -1,6 +1,7 @@
 package io.dallen.compiler.visitor;
 
 import io.dallen.AST;
+import io.dallen.ASTEnums;
 import io.dallen.SkiffC;
 import io.dallen.compiler.*;
 
@@ -121,7 +122,7 @@ public class VisitorUtils {
         return returnType.getCompiledText();
     }
 
-    static CompiledCode compileBinary(AST.Statement l, AST.Statement r, AST.HasRaw op, CompileContext context) {
+    static CompiledCode compileBinary(AST.Statement l, AST.Statement r, ASTEnums.HasRaw op, CompileContext context) {
         CompiledCode lhs = l.compile(context);
         CompiledCode rhs = r.compile(context);
         String text = lhs.getCompiledText() + " " + op.getRawOp() + " " + rhs.getCompiledText();

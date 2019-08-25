@@ -47,7 +47,7 @@ class CommonParsing {
     AST.Type parseType() {
         AST.Statement typeName = new Parser(parser.consumeTo(Token.Symbol.LEFT_ANGLE), parser).parseExpression();
         if(parser.current().isEOF()) {
-            return new AST.Type(typeName, 0, new ArrayList<>());
+            return new AST.Type(typeName, List.of());
         }
         List<AST.Type> genericParams;
         try {
@@ -61,7 +61,7 @@ class CommonParsing {
             return null;
         }
 
-        return new AST.Type(typeName, 0, genericParams);
+        return new AST.Type(typeName, genericParams);
     }
 
     List<AST.FunctionParam> parseFunctionDecArgs(List<Token> paramTokens) {

@@ -321,8 +321,8 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
-        CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name), context);
-        CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name), stmt.value), context);
+        CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name, stmt.tokens), context);
+        CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name, stmt.tokens), stmt.value, stmt.tokens), context);
 
         String text = dec.getCompiledText() + "; " + value.getCompiledText() + ";";
 
