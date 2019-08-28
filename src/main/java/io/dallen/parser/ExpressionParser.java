@@ -38,21 +38,22 @@ class ExpressionParser {
             .addCase(Textless.NAME::equals, context -> context.handleNameToken(context.workingTokens))
             .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, ASTEnums.MathOp.MINUS))
             .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, ASTEnums.MathOp.MINUS))
-            .addCase(Keyword.TRUE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.TRUE, context.workingTokens)))
-            .addCase(Keyword.FALSE::equals, context -> context.parseLiteral(j -> new AST.BooleanLiteral(Boolean.FALSE, context.workingTokens)))
+            .addCase(Keyword.TRUE::equals, context -> context.parseLiteral((j, t) -> new AST.BooleanLiteral(Boolean.TRUE, t)))
+            .addCase(Keyword.FALSE::equals, context -> context.parseLiteral((j, t) -> new AST.BooleanLiteral(Boolean.FALSE, t)))
             .addCase(Textless.NUMBER_LITERAL::equals, context ->
-                    context.parseLiteral(lit -> new AST.NumberLiteral(Double.parseDouble(lit), context.workingTokens)))
+                    context.parseLiteral((lit, t) -> new AST.NumberLiteral(Double.parseDouble(lit), t)))
             .addCase(Textless.REGEX_LITERAL::equals, context -> {
-                String[] seg = context.parser.consume().literal.split("\0");
-                AST.RegexLiteral lit = new AST.RegexLiteral(seg[0], seg[1], context.workingTokens);
+                Token t = context.parser.consume();
+                String[] seg = t.literal.split("\0");
+                AST.RegexLiteral lit = new AST.RegexLiteral(seg[0], seg[1], List.of(t));
                 context.parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
                 return lit;
             })
-            .addCase(Textless.SEQUENCE_LITERAL::equals, context -> context.parseLiteralTokens(AST.SequenceLiteral::new, context.workingTokens))
-            .addCase(Textless.STRING_LITERAL::equals, context -> context.parseLiteralTokens(AST.StringLiteral::new, context.workingTokens))
-            .addCase(Keyword.BREAK::equals, context -> context.parseLiteral(j -> new AST.BreakStatement(context.workingTokens)))
-            .addCase(Keyword.NEXT::equals, context -> context.parseLiteral(j -> new AST.ContinueStatement(context.workingTokens)))
-            .addCase(Symbol.UNDERSCORE::equals, context -> context.parseLiteral(j -> new AST.Variable("_", context.workingTokens)))
+            .addCase(Textless.SEQUENCE_LITERAL::equals, context -> context.parseLiteral(AST.SequenceLiteral::new))
+            .addCase(Textless.STRING_LITERAL::equals, context -> context.parseLiteral(AST.StringLiteral::new))
+            .addCase(Keyword.BREAK::equals, context -> context.parseLiteral((j, t) -> new AST.BreakStatement(t)))
+            .addCase(Keyword.NEXT::equals, context -> context.parseLiteral((j, t) -> new AST.ContinueStatement(t)))
+            .addCase(Symbol.UNDERSCORE::equals, context -> context.parseLiteral((j, t) -> new AST.Variable("_", t)))
             .setDefault(context -> {
                 context.parser.throwError("Token did not match any known patterns", context.parser.current());
                 return null;
@@ -75,11 +76,13 @@ class ExpressionParser {
     }
 
     private AST.Statement parseNew() {
+        List<Token> tokens = parser.selectToEOF();
         parser.consumeExpected(Token.Keyword.NEW);
         List<Token> name = parser.consumeTo(Token.Symbol.LEFT_PAREN);
         List<List<Token>> paramz = null;
+        List<Token> paramTokens = parser.consumeTo(Symbol.RIGHT_PAREN);
         try {
-            paramz = BraceSplitter.splitAll(parser.consumeTo(Symbol.RIGHT_PAREN), Symbol.COMMA);
+            paramz = BraceSplitter.splitAll(paramTokens, Symbol.COMMA);
         } catch (ParserError parserError) {
             parser.throwError(parserError.msg, parserError.on);
             return null;
@@ -90,7 +93,7 @@ class ExpressionParser {
                 .map(e -> new Parser(e, parser).parseExpression())
                 .collect(Collectors.toList());
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.New(typeStmt, params, name);
+        return new AST.New(typeStmt, params, tokens);
     }
 
     private AST.Statement parseAnonFunc() {
@@ -118,26 +121,18 @@ class ExpressionParser {
     }
 
     private AST.Statement parseIncDec(Token.TokenType consume, ASTEnums.MathOp type) {
+        List<Token> tokens = parser.selectToEOF();
         Token t = parser.consumeExpected(consume);
         AST.Statement sub = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON), parser).parseExpression();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.MathSelfMod(sub, type, ASTEnums.SelfModTime.PRE, List.of(t));
+        return new AST.MathSelfMod(sub, type, ASTEnums.SelfModTime.PRE, tokens);
     }
 
-    private AST.Statement parseLiteral(LiteralConstructor constructor) {
-        AST.Statement lit = constructor.construct(parser.consume().literal);
+    private AST.Statement parseLiteral(LiteralTokenConstructor constructor) {
+        Token t = parser.consume();
+        AST.Statement lit = constructor.construct(t.literal, List.of(t));
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
         return lit;
-    }
-
-    private AST.Statement parseLiteralTokens(LiteralTokenConstructor constructor, List<Token> tokens) {
-        AST.Statement lit = constructor.construct(parser.consume().literal, tokens);
-        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return lit;
-    }
-
-    private interface LiteralConstructor {
-        AST.Statement construct(String lit);
     }
 
     private interface LiteralTokenConstructor {
@@ -164,11 +159,12 @@ class ExpressionParser {
         } else if(parser.containsBefore(Token.Symbol.DOUBLE_PLUS, Token.Symbol.SEMICOLON)) {
             return parsePreIncDec(Token.Symbol.DOUBLE_PLUS, ASTEnums.MathOp.PLUS);
         } else if(parser.containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
+            List<Token> tokens = parser.selectToEOF();
             List<Token> name = parser.consumeTo(Token.Symbol.LEFT_BRACKET);
             AST.Statement left = new Parser(name, parser).parseExpression();
             List<Token> sub = parser.consumeTo(Token.Symbol.RIGHT_BRACKET);
             AST.Statement inner = new Parser(sub, parser).parseExpression();
-            return new AST.Subscript(left, inner, workingTokens);
+            return new AST.Subscript(left, inner, tokens);
         } else {
             Token name = parser.consume();
             parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
@@ -177,6 +173,7 @@ class ExpressionParser {
     }
 
     private AST.Statement parseFunctionCall() {
+        List<Token> tokens = parser.selectTo(Symbol.SEMICOLON);
         List<Token> funcName;
         List<AST.Type> generics = new ArrayList<>();
         if(parser.containsBefore(Token.Symbol.LEFT_ANGLE, Token.Symbol.LEFT_PAREN)) {
@@ -203,14 +200,15 @@ class ExpressionParser {
         }
         List<AST.Statement> funcParams = consumeFunctionParams();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics, funcName);
+        return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics, tokens);
     }
 
     private AST.Statement parsePreIncDec(Token.TokenType consume, ASTEnums.MathOp type) {
+        List<Token> tokens = parser.selectToEOF();
         List<Token> name = parser.consumeTo(consume);
         AST.Statement left = new Parser(name, parser).parseExpression();
         parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.MathSelfMod(left, type, ASTEnums.SelfModTime.POST, name);
+        return new AST.MathSelfMod(left, type, ASTEnums.SelfModTime.POST, tokens);
     }
 
     private List<AST.Statement> consumeFunctionParams() {

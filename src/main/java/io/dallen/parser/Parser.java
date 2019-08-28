@@ -12,7 +12,12 @@ import java.util.List;
 
 public class Parser implements ErrorCollector {
 
-    public final static AST.Type VOID = new Type(new Variable("Void", List.of()), List.of());
+    public final static AST.Type VOID = new Type(
+            new Variable(
+                    "Void",
+                    List.of(new Token(Token.Textless.NAME, "Void", 0))
+            ),
+            List.of());
 
     private List<Token> tokens;
 
@@ -153,14 +158,49 @@ public class Parser implements ErrorCollector {
     }
 
     // Just selects the tokens, does not advance the current location
-    List<Token> selectTo(Token.TokenType type) {
-        List<Token> selected = new ArrayList<>();
+    List<Token> selectTo(List<Token.TokenType> types, boolean includeStop) {
+        List<Token> tkns = new ArrayList<>();
         int loc = pos;
-        while (loc < tokens.size() && tokens.get(loc).type != type) {
-            selected.add(tokens.get(loc));
+        BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
+        while (loc < tokens.size()) {
+            if (tokens.get(loc).type == Textless.EOF) {
+                if (braceManager.isEmpty()) {
+                    break;
+                }
+                // TODO: allow parser to recover from this
+                throwError("Parse error", tokens.get(loc));
+                return null;
+            }
+            if (types.contains(tokens.get(loc).type) && braceManager.isEmpty()) {
+                if(includeStop) {
+                    tkns.add(tokens.get(loc));
+                }
+                break;
+            }
+            try {
+                braceManager.check(tokens.get(loc));
+            } catch(ParserError ex) {
+                // TODO: allow parser to recover from this
+                throwError(ex.msg, ex.on);
+                return null;
+            }
+            tkns.add(tokens.get(loc));
             loc++;
         }
-        return selected;
+        return tkns;
+    }
+
+    List<Token> selectTo(Token.TokenType typ) {
+        return selectTo(List.of(typ), false);
+    }
+
+    // Just selects the tokens, does not advance the current location
+    List<Token> selectToEOF() {
+        return selectTo(List.of(Textless.EOF, Token.Symbol.SEMICOLON), false);
+    }
+
+    List<Token> selectToBlockEnd() {
+        return selectTo(List.of(Textless.EOF, Token.Symbol.RIGHT_BRACE), true);
     }
 
     // Check if one token comes before another

@@ -79,7 +79,7 @@ public class LayeredSplitter {
         if (braceManager.isEmpty() && (action = layer.actionFor(t.type)) != null) {
             List<Token> first = tokens.subList(0, loc);
             List<Token> second = tokens.subList(loc + 1, tokens.size());
-            return action.handle(parser, first, second);
+            return action.handle(parser, first, second, tokens);
         }
         return null;
     }

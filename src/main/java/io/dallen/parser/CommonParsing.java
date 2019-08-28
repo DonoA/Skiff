@@ -10,6 +10,13 @@ import java.util.stream.Collectors;
 
 class CommonParsing {
 
+    static <T> List<T> joinLists(List<T> l1, List<T> l2) {
+        List<T> l = new ArrayList<>();
+        l.addAll(l1);
+        l.addAll(l2);
+        return l;
+    }
+
     private Parser parser;
 
     CommonParsing(Parser parser) {

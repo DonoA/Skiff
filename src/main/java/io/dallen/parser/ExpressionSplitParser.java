@@ -36,7 +36,7 @@ class ExpressionSplitParser {
         return new LayeredSplitter(splitSettings, parser).execute(workingTokens);
     }
 
-    private static Statement parseAssignment(Parser parser, List<Token> first, List<Token> second) {
+    private static Statement parseAssignment(Parser parser, List<Token> first, List<Token> second, List<Token> allTokens) {
         List<List<Token>> res;
         try {
             res = BraceSplitter.splitAll(first, Token.Symbol.COLON);
@@ -47,7 +47,7 @@ class ExpressionSplitParser {
         if(res.size() == 1) {
             Statement firstS = new Parser(first, parser).parseExpression();
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new Assign(firstS, secondS, first);
+            return new Assign(firstS, secondS, allTokens);
         } else if(res.size() == 2) {
             Type typ = new Parser(res.get(1), parser).getCommon().parseType();
             if(res.get(0).size() != 1) {
@@ -56,7 +56,7 @@ class ExpressionSplitParser {
             }
             String name = res.get(0).get(0).literal;
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new DeclareAssign(typ, name, secondS, first);
+            return new DeclareAssign(typ, name, secondS, allTokens);
         }
         parser.throwError("Assign name had many colons", res.get(0).get(0));
         return null;
@@ -67,7 +67,7 @@ class ExpressionSplitParser {
     }
 
     private static SplitAction compareAction(ASTEnums.CompareOp op) {
-        return (parser, first, second) -> {
+        return (parser, first, second, tokens) -> {
             if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE) {
                 return null;
             }
@@ -83,7 +83,7 @@ class ExpressionSplitParser {
 
             Statement firstS = new Parser(first, parser).parseExpression();
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new Compare(firstS, op, secondS, first);
+            return new Compare(firstS, op, secondS, tokens);
         };
     }
 
@@ -96,16 +96,20 @@ class ExpressionSplitParser {
     }
 
     private static SplitAction statementAction(StatementAction action) {
-        return (parser, first, second) -> {
+        return (parser, first, second, token) -> {
             Statement firstS = new Parser(first, parser).parseExpression();
             Statement secondS = new Parser(second, parser).parseExpression();
-            return action.handle(firstS, secondS, first);
+            List<Token> workingTokens;
+            if(token.get(token.size() - 1).type == Token.Textless.EOF) {
+                workingTokens = token.subList(0, token.size()-1);
+            } else {
+                workingTokens = token;
+            }
+            return action.handle(firstS, secondS, workingTokens);
         };
     }
 
     private interface StatementAction {
         Statement handle(Statement first, Statement second, List<Token> tokens);
     }
-
-
 }

@@ -65,6 +65,7 @@ class BlockParser {
     }
 
     private AST.ClassDef parseClassDef() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.CLASS);
         Token name = parser.consumeExpected(Token.Textless.NAME);
         List<AST.GenericType> genericTypes = new ArrayList<>();
@@ -83,7 +84,7 @@ class BlockParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
-        return new AST.ClassDef(name.literal, genericTypes, extended, body, List.of(name));
+        return new AST.ClassDef(name.literal, genericTypes, extended, body, allTokens);
     }
 
 
@@ -242,15 +243,18 @@ class BlockParser {
     }
 
     private AST.LoopBlock parseLoopBlock() {
+        List<Token> allTokens = parser.selectToBlockEnd();
+
         parser.next();
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
-        return new AST.LoopBlock(body, bodyTokens);
+        return new AST.LoopBlock(body, allTokens);
     }
 
     private AST.FunctionDef parseFunctionDef() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.DEF);
 
         List<AST.GenericType> genericTypes = new ArrayList<>();
@@ -282,19 +286,21 @@ class BlockParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
-        return new AST.FunctionDef(genericTypes, returnType, funcName, params, body, bodyTokens);
+        return new AST.FunctionDef(genericTypes, returnType, funcName, params, body, allTokens);
     }
 
     private AST.Return parseReturn() {
+        List<Token> tokens = parser.selectTo(Token.Symbol.SEMICOLON);
         parser.consumeExpected(Token.Keyword.RETURN);
 
-        List<Token> tokens = parser.consumeTo(Token.Symbol.SEMICOLON);
-        AST.Statement value = new Parser(tokens, parser).parseExpression();
+        List<Token> valueTokens = parser.consumeTo(Token.Symbol.SEMICOLON);
+        AST.Statement value = new Parser(valueTokens, parser).parseExpression();
         return new AST.Return(value, tokens);
     }
 
     private AST.ImportStatement parseImport() {
-        Token t = parser.consumeExpected(Token.Keyword.IMPORT);
+        List<Token> tokens = parser.selectToEOF();
+        parser.consumeExpected(Token.Keyword.IMPORT);
 
         ASTEnums.ImportType typ;
         String location;
@@ -307,14 +313,15 @@ class BlockParser {
             parser.consumeExpected(Token.Symbol.RIGHT_ANGLE);
             typ = ASTEnums.ImportType.SYSTEM;
         }
-        return new AST.ImportStatement(typ, location, List.of(t));
+        return new AST.ImportStatement(typ, location, tokens);
     }
 
     private AST.ThrowStatement parseThrow() {
+        List<Token> allTokens = parser.selectToEOF();
         parser.consumeExpected(Token.Keyword.THROW);
 
         List<Token> tokens = parser.consumeTo(Token.Symbol.SEMICOLON);
         AST.Statement value = new Parser(tokens, parser).parseExpression();
-        return new AST.ThrowStatement(value, tokens);
+        return new AST.ThrowStatement(value, allTokens);
     }
 }
