@@ -245,7 +245,7 @@ public class AST {
     
     public static class IfBlock extends BlockStatement {
         public final Statement condition;
-        public  ElseBlock elseBlock;
+        public  Optional<ElseBlock> elseBlock;
         public IfBlock(Statement condition, List<Statement> body, List<Token> tokens) {
             super(body, tokens);
             this.condition = condition;
@@ -260,7 +260,7 @@ public class AST {
 
         public String toFlatString() {
             return "IfBlock(condition = " + this.condition.toFlatString() + ", " + 
-                "elseBlock = " + this.elseBlock.toFlatString() + ", " + 
+                "elseBlock = " + this.elseBlock.toString() + ", " + 
                 "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
@@ -292,7 +292,7 @@ public class AST {
     
     public static class ElseIfBlock extends ElseBlock {
         public final IfBlock on;
-        public  ElseBlock elseBlock;
+        public  Optional<ElseBlock> elseBlock;
         public ElseIfBlock(IfBlock on, List<Token> tokens) {
             super(tokens);
             this.on = on;
@@ -306,7 +306,7 @@ public class AST {
 
         public String toFlatString() {
             return "ElseIfBlock(on = " + this.on.toFlatString() + ", " + 
-                "elseBlock = " + this.elseBlock.toFlatString() + ", " + 
+                "elseBlock = " + this.elseBlock.toString() + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
@@ -576,7 +576,7 @@ public class AST {
     }
     
     public static class TryBlock extends BlockStatement {
-        public  CatchBlock catchBlock;
+        public  Optional<CatchBlock> catchBlock;
         public TryBlock(List<Statement> body, List<Token> tokens) {
             super(body, tokens);
 
@@ -589,7 +589,7 @@ public class AST {
         }
 
         public String toFlatString() {
-            return "TryBlock(catchBlock = " + this.catchBlock.toFlatString() + ", " + 
+            return "TryBlock(catchBlock = " + this.catchBlock.toString() + ", " + 
                 "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }

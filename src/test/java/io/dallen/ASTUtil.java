@@ -21,7 +21,7 @@ public class ASTUtil {
 
     public static AST.FunctionCall simpleFuncCall(String name) {
         return new AST.FunctionCall(name, List.of(), List.of(), List.of(
-                new Token(Token.Textless.NAME, "think", 0),
+                new Token(Token.Textless.NAME, name, 0),
                 new Token(Token.Symbol.LEFT_PAREN, 0),
                 new Token(Token.Symbol.RIGHT_PAREN, 0)
         ));

@@ -24,8 +24,8 @@ class ExpressionParser {
         new AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser>()
             .addCase(Keyword.NEW::equals, ExpressionParser::parseNew)
             .addCase(Symbol.LEFT_PAREN::equals, context -> {
-                context.parser.consumeExpected(Token.Symbol.LEFT_PAREN);
                 if(!context.parser.containsBefore(Token.Symbol.ARROW, Token.Symbol.SEMICOLON)){
+                    context.parser.consumeExpected(Token.Symbol.LEFT_PAREN);
                     List<Token> tokens = context.parser.consumeTo(Token.Symbol.RIGHT_PAREN);
                     AST.Statement sub = new Parser(
                             tokens,
@@ -97,6 +97,8 @@ class ExpressionParser {
     }
 
     private AST.Statement parseAnonFunc() {
+        List<Token> allTokens = parser.selectToBlockEnd();
+        parser.consumeExpected(Symbol.LEFT_PAREN);
         List<Token> paramTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
 
         List<AST.FunctionParam> params;
@@ -117,7 +119,7 @@ class ExpressionParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
-        return new AST.AnonFunctionDef(returns, params, body, paramTokens);
+        return new AST.AnonFunctionDef(returns, params, body, allTokens);
     }
 
     private AST.Statement parseIncDec(Token.TokenType consume, ASTEnums.MathOp type) {

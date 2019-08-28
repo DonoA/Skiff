@@ -158,7 +158,7 @@ public class Parser implements ErrorCollector {
     }
 
     // Just selects the tokens, does not advance the current location
-    List<Token> selectTo(List<Token.TokenType> types, boolean includeStop) {
+    List<Token> selectTo(List<Token.TokenType> types) {
         List<Token> tkns = new ArrayList<>();
         int loc = pos;
         BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
@@ -171,12 +171,11 @@ public class Parser implements ErrorCollector {
                 throwError("Parse error", tokens.get(loc));
                 return null;
             }
+
             if (types.contains(tokens.get(loc).type) && braceManager.isEmpty()) {
-                if(includeStop) {
-                    tkns.add(tokens.get(loc));
-                }
                 break;
             }
+
             try {
                 braceManager.check(tokens.get(loc));
             } catch(ParserError ex) {
@@ -191,16 +190,45 @@ public class Parser implements ErrorCollector {
     }
 
     List<Token> selectTo(Token.TokenType typ) {
-        return selectTo(List.of(typ), false);
+        return selectTo(List.of(typ));
     }
 
     // Just selects the tokens, does not advance the current location
     List<Token> selectToEOF() {
-        return selectTo(List.of(Textless.EOF, Token.Symbol.SEMICOLON), false);
+        return selectTo(List.of(Textless.EOF, Token.Symbol.SEMICOLON));
     }
 
     List<Token> selectToBlockEnd() {
-        return selectTo(List.of(Textless.EOF, Token.Symbol.RIGHT_BRACE), true);
+        List<Token> tkns = new ArrayList<>();
+        int loc = pos;
+        BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
+        while (loc < tokens.size()) {
+            if (tokens.get(loc).type == Textless.EOF) {
+                if (braceManager.isEmpty()) {
+                    break;
+                }
+                // TODO: allow parser to recover from this
+                throwError("Parse error", tokens.get(loc));
+                return null;
+            }
+
+            if ((tokens.get(loc).type == Textless.EOF || tokens.get(loc).type == Token.Symbol.RIGHT_BRACE) &&
+                    (braceManager.isEmpty() || braceManager.stackDepth() == 1)) {
+                tkns.add(tokens.get(loc));
+                break;
+            }
+
+            try {
+                braceManager.check(tokens.get(loc));
+            } catch(ParserError ex) {
+                // TODO: allow parser to recover from this
+                throwError(ex.msg, ex.on);
+                return null;
+            }
+            tkns.add(tokens.get(loc));
+            loc++;
+        }
+        return tkns;
     }
 
     // Check if one token comes before another

@@ -70,7 +70,8 @@
         "fields": {
             "condition": "Statement",
             "elseBlock": {
-                "type": "ElseBlock",
+                "type": "Optional<ElseBlock>",
+                "noFlatString": true,
                 "lazy": true
             }
         }
@@ -84,7 +85,8 @@
         "fields": {
             "on": "IfBlock",
             "elseBlock": {
-                "type": "ElseBlock",
+                "type": "Optional<ElseBlock>",
+                "noFlatString": true,
                 "lazy": true
             }
         }
@@ -160,7 +162,8 @@
         "extends": "BlockStatement",
         "fields": {
             "catchBlock": {
-                "type": "CatchBlock",
+                "type": "Optional<CatchBlock>",
+                "noFlatString": true,
                 "lazy": true
             }
         }

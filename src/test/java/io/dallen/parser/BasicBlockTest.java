@@ -2,6 +2,7 @@ package io.dallen.parser;
 
 import io.dallen.AST;
 import io.dallen.AST.*;
+import io.dallen.ASTEnums;
 import io.dallen.ASTUtil;
 import io.dallen.tokenizer.Token;
 import org.junit.Rule;
@@ -65,7 +66,44 @@ public class BasicBlockTest {
                 ASTUtil.simpleType("Int"),
                 "func",
                 List.of(new FunctionParam(ASTUtil.simpleType("Int"), "x")),
-                List.of(new Return(new MathStatement(new Variable("x"), MathOp.PLUS, new NumberLiteral(1.0))))
+                List.of(
+                        new Return(
+                                new MathStatement(
+                                        ASTUtil.simpleVar("x"),
+                                        ASTEnums.MathOp.PLUS,
+                                        ASTUtil.simpleNumLit(1d),
+                                        List.of(
+                                                new Token(Token.Textless.NAME, "x", 0),
+                                                new Token(Token.Symbol.PLUS, 0),
+                                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                        )
+                                ),
+                                List.of(
+                                        new Token(Token.Keyword.RETURN, 0),
+                                        new Token(Token.Textless.NAME, "x", 0),
+                                        new Token(Token.Symbol.PLUS, 0),
+                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                )
+                        )
+                ),
+                List.of(
+                        new Token(Token.Keyword.DEF, 0),
+                        new Token(Token.Textless.NAME, "func", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "Int", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "Int", 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Keyword.RETURN, 0),
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.PLUS, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
@@ -112,7 +150,15 @@ public class BasicBlockTest {
                         List.of(),
                         Optional.empty(),
                         List.of(
-                                new Declare(ASTUtil.simpleType("Int"), "age"),
+                                new Declare(
+                                        ASTUtil.simpleType("Int"),
+                                        "age",
+                                        List.of(
+                                                new Token(Token.Textless.NAME, "age", 0),
+                                                new Token(Token.Symbol.COLON, 0),
+                                                new Token(Token.Textless.NAME, "Int", 0)
+                                        )
+                                ),
                                 new FunctionDef(
                                         List.of(),
                                         ASTUtil.simpleType("Void"),
@@ -122,11 +168,68 @@ public class BasicBlockTest {
                                         ),
                                         List.of(
                                                 new Assign(
-                                                        new Dotted(new Variable("this"), new Variable("age")),
-                                                        new NumberLiteral(10.0)
+                                                        new Dotted(
+                                                                ASTUtil.simpleVar("this"),
+                                                                ASTUtil.simpleVar("age"),
+                                                                List.of(
+                                                                        new Token(Token.Textless.NAME, "this", 0),
+                                                                        new Token(Token.Symbol.DOT, 0),
+                                                                        new Token(Token.Textless.NAME, "age", 0)
+                                                                )
+                                                        ),
+                                                        ASTUtil.simpleNumLit(10d),
+                                                        List.of(
+                                                                new Token(Token.Textless.NAME, "this", 0),
+                                                                new Token(Token.Symbol.DOT, 0),
+                                                                new Token(Token.Textless.NAME, "age", 0),
+                                                                new Token(Token.Symbol.EQUAL, 0),
+                                                                new Token(Token.Textless.NUMBER_LITERAL, "10", 0)
+                                                        )
                                                 )
+                                        ),
+                                        List.of(
+                                                new Token(Token.Keyword.DEF, 0),
+                                                new Token(Token.Textless.NAME, "Cls", 0),
+                                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                                new Token(Token.Textless.NAME, "age", 0),
+                                                new Token(Token.Symbol.COLON, 0),
+                                                new Token(Token.Textless.NAME, "Int", 0),
+                                                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                                                new Token(Token.Symbol.LEFT_BRACE, 0),
+                                                new Token(Token.Textless.NAME, "this", 0),
+                                                new Token(Token.Symbol.DOT, 0),
+                                                new Token(Token.Textless.NAME, "age", 0),
+                                                new Token(Token.Symbol.EQUAL, 0),
+                                                new Token(Token.Textless.NUMBER_LITERAL, "10", 0),
+                                                new Token(Token.Symbol.SEMICOLON, 0),
+                                                new Token(Token.Symbol.RIGHT_BRACE, 0)
                                         )
                                 )
+                        ),
+                        List.of(
+                                new Token(Token.Keyword.CLASS, 0),
+                                new Token(Token.Textless.NAME, "Cls", 0),
+                                new Token(Token.Symbol.LEFT_BRACE, 0),
+                                new Token(Token.Textless.NAME, "age", 0),
+                                new Token(Token.Symbol.COLON, 0),
+                                new Token(Token.Textless.NAME, "Int", 0),
+                                new Token(Token.Symbol.SEMICOLON, 0),
+                                new Token(Token.Keyword.DEF, 0),
+                                new Token(Token.Textless.NAME, "Cls", 0),
+                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                new Token(Token.Textless.NAME, "age", 0),
+                                new Token(Token.Symbol.COLON, 0),
+                                new Token(Token.Textless.NAME, "Int", 0),
+                                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                                new Token(Token.Symbol.LEFT_BRACE, 0),
+                                new Token(Token.Textless.NAME, "this", 0),
+                                new Token(Token.Symbol.DOT, 0),
+                                new Token(Token.Textless.NAME, "age", 0),
+                                new Token(Token.Symbol.EQUAL, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "10", 0),
+                                new Token(Token.Symbol.SEMICOLON, 0),
+                                new Token(Token.Symbol.RIGHT_BRACE, 0),
+                                new Token(Token.Symbol.RIGHT_BRACE, 0)
                         )
                 ).toFlatString();
 
@@ -183,7 +286,28 @@ public class BasicBlockTest {
                         new GenericType("V", List.of(ASTUtil.simpleType("String")))
                 ),
                 Optional.empty(),
-                List.of(new Declare(ASTUtil.simpleType("U"), "a"))
+                List.of(new Declare(ASTUtil.simpleType("U"), "a", List.of(
+                        new Token(Token.Textless.NAME, "a", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "U", 0)
+                ))),
+                List.of(
+                        new Token(Token.Keyword.CLASS, 0),
+                        new Token(Token.Textless.NAME, "GClass", 0),
+                        new Token(Token.Symbol.LEFT_ANGLE, 0),
+                        new Token(Token.Textless.NAME, "U", 0),
+                        new Token(Token.Symbol.COMMA, 0),
+                        new Token(Token.Textless.NAME, "V", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "String", 0),
+                        new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "a", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "U", 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
@@ -228,15 +352,57 @@ public class BasicBlockTest {
                 List.of(
                         new GenericType("U", List.of()),
                         new GenericType("V", List.of())
-                        ),
+                ),
                 ASTUtil.simpleType("V"),
                 "genFunc",
                 List.of(new FunctionParam(ASTUtil.simpleType("U"), "a")),
                 List.of(
                         new Return(
                                 new Dotted(
-                                        new Variable("a"),
-                                        ASTUtil.simpleFuncCall("getV")))
+                                        ASTUtil.simpleVar("a"),
+                                        ASTUtil.simpleFuncCall("getV"),
+                                        List.of(
+                                                new Token(Token.Textless.NAME, "a", 0),
+                                                new Token(Token.Symbol.DOT, 0),
+                                                new Token(Token.Textless.NAME, "getV", 0),
+                                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                                new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                        )
+                                ),
+                                List.of(
+                                        new Token(Token.Keyword.RETURN, 0),
+                                        new Token(Token.Textless.NAME, "a", 0),
+                                        new Token(Token.Symbol.DOT, 0),
+                                        new Token(Token.Textless.NAME, "getV", 0),
+                                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                                        new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                )
+                        )
+                ),
+                List.of(
+                        new Token(Token.Keyword.DEF, 0),
+                        new Token(Token.Textless.NAME, "genFunc", 0),
+                        new Token(Token.Symbol.LEFT_ANGLE, 0),
+                        new Token(Token.Textless.NAME, "U", 0),
+                        new Token(Token.Symbol.COMMA, 0),
+                        new Token(Token.Textless.NAME, "V", 0),
+                        new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "a", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "U", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "V", 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Keyword.RETURN, 0),
+                        new Token(Token.Textless.NAME, "a", 0),
+                        new Token(Token.Symbol.DOT, 0),
+                        new Token(Token.Textless.NAME, "getV", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
                 )
         ).toFlatString();
 
@@ -265,7 +431,15 @@ public class BasicBlockTest {
                 "CLS",
                 List.of(),
                 Optional.of(ASTUtil.simpleType("Object")),
-                List.of()
+                List.of(),
+                List.of(
+                        new Token(Token.Keyword.CLASS, 0),
+                        new Token(Token.Textless.NAME, "CLS", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "Object", 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
@@ -296,7 +470,19 @@ public class BasicBlockTest {
         String expected = new AST.AnonFunctionDef(
                 ASTUtil.simpleType("Returns"),
                 List.of(new FunctionParam(ASTUtil.simpleType("T"), "p")),
-                List.of()
+                List.of(),
+                List.of(
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "p", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "T", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "Returns", 0),
+                        new Token(Token.Symbol.ARROW, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
@@ -328,7 +514,7 @@ public class BasicBlockTest {
 
         String expected = new IfBlock(
                 ASTUtil.simpleFuncCall("isWorking"),
-                List.of(ASTUtil.simpleFuncCall("run"))
+                List.of(ASTUtil.simpleFuncCall("run")), List.of()
         ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
@@ -372,15 +558,55 @@ public class BasicBlockTest {
 
         IfBlock start = new IfBlock(
                 ASTUtil.simpleFuncCall("isWorking"),
-                List.of(ASTUtil.simpleFuncCall("run"))
+                List.of(ASTUtil.simpleFuncCall("run")),
+                List.of(
+                        new Token(Token.Keyword.IF, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "isWorking", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "run", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         );
 
-        start.elseBlock = new ElseAlwaysBlock(
-          List.of(
-                  ASTUtil.simpleFuncCall("stop"),
-                  new FunctionCall("setIsWorking", List.of(new BooleanLiteral(true)), List.of())
-          )
-        );
+        start.elseBlock = Optional.of(new ElseAlwaysBlock(
+                List.of(
+                        ASTUtil.simpleFuncCall("stop"),
+                        new FunctionCall(
+                                "setIsWorking",
+                                List.of(
+                                        new BooleanLiteral(true, List.of(new Token(Token.Keyword.TRUE, 0)))
+                                ),
+                                List.of(),
+                                List.of(
+                                        new Token(Token.Textless.NAME, "setIsWorking", 0),
+                                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                                        new Token(Token.Keyword.TRUE, 0),
+                                        new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                )
+                        )
+                ),
+                List.of(
+                        new Token(Token.Keyword.ELSE, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "stop", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Textless.NAME, "setIsWorking", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Keyword.TRUE, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
+        ));
 
         String expected = start.toFlatString();
 
@@ -431,16 +657,16 @@ public class BasicBlockTest {
 
         IfBlock ifBlock = new IfBlock(
                 ASTUtil.simpleFuncCall("isWorking"),
-                List.of(ASTUtil.simpleFuncCall("run"))
+                List.of(ASTUtil.simpleFuncCall("run")), List.of()
         );
 
-        ifBlock.elseBlock = new ElseIfBlock(
+        ifBlock.elseBlock = Optional.of(new ElseIfBlock(
                 new IfBlock(
                         ASTUtil.simpleFuncCall("readyToWork"), List.of(
                         ASTUtil.simpleFuncCall("stop"),
-                        new FunctionCall("setIsWorking", List.of(new BooleanLiteral(true)), List.of())
-                ))
-        );
+                        new FunctionCall("setIsWorking", List.of(new BooleanLiteral(true, List.of())), List.of(), List.of())
+                ), List.of()), List.of()
+        ));
 
         String expected = ifBlock.toFlatString();
 
@@ -471,9 +697,26 @@ public class BasicBlockTest {
 
         assertEquals(1, statements.size());
 
-        String expected = "WhileBlock(" +
-                "condition = FunctionCall(name = notReady, args = [ ], genericTypes = [ ]), " +
-                "body = [FunctionCall(name = wait, args = [ ], genericTypes = [ ]) ])";
+        String expected = new WhileBlock(
+                ASTUtil.simpleFuncCall("notReady"),
+                List.of(
+                        ASTUtil.simpleFuncCall("wait")
+                ),
+                List.of(
+                        new Token(Token.Keyword.WHILE, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "notReady", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "wait", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
+        ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -499,8 +742,17 @@ public class BasicBlockTest {
 
 //        String expected = "LoopBlock(body = [FunctionCall(name = think, args = [ ]) ])";
         String expected = new LoopBlock(List.of(
-                ASTUtil.simpleFuncCall("think")
-        )).toFlatString();
+                        ASTUtil.simpleFuncCall("think")
+                ),
+                List.of(
+                        new Token(Token.Keyword.LOOP, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "think", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
     }
@@ -543,11 +795,71 @@ public class BasicBlockTest {
                 new DeclareAssign(
                         ASTUtil.simpleType("Int"),
                         "i",
-                        new NumberLiteral(0.0)
+                        ASTUtil.simpleNumLit(0d),
+                        List.of(
+                                new Token(Token.Textless.NAME, "i", 0),
+                                new Token(Token.Symbol.COLON, 0),
+                                new Token(Token.Textless.NAME, "Int", 0),
+                                new Token(Token.Symbol.EQUAL, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "0", 0)
+                        )
                 ),
-                new Compare(new Variable("i"), CompareOp.LT, new Variable("mySize")),
-                new MathSelfMod(new Variable("i"), MathOp.PLUS, SelfModTime.POST),
-                List.of(new FunctionCall("exec", List.of(new Variable("i")), List.of()))
+                new Compare(
+                        ASTUtil.simpleVar("i"),
+                        ASTEnums.CompareOp.LT,
+                        ASTUtil.simpleVar("mySize"),
+                        List.of(
+                                new Token(Token.Textless.NAME, "i", 0),
+                                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                                new Token(Token.Textless.NAME, "mySize", 0)
+                        )
+                ),
+                new MathSelfMod(
+                        ASTUtil.simpleVar("i"),
+                        ASTEnums.MathOp.PLUS,
+                        ASTEnums.SelfModTime.POST,
+                        List.of(
+                                new Token(Token.Textless.NAME, "i", 0),
+                                new Token(Token.Symbol.DOUBLE_PLUS, 0)
+                        )
+                ),
+                List.of(
+                        new FunctionCall(
+                                "exec",
+                                List.of(ASTUtil.simpleVar("i")),
+                                List.of(),
+                                List.of(
+                                        new Token(Token.Textless.NAME, "exec", 0),
+                                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                                        new Token(Token.Textless.NAME, "i", 0),
+                                        new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                )
+                        )
+                ),
+                List.of(
+                        new Token(Token.Keyword.FOR, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "i", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "Int", 0),
+                        new Token(Token.Symbol.EQUAL, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "0", 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Textless.NAME, "i", 0),
+                        new Token(Token.Symbol.LEFT_ANGLE, 0),
+                        new Token(Token.Textless.NAME, "mySize", 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Textless.NAME, "i", 0),
+                        new Token(Token.Symbol.DOUBLE_PLUS, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "exec", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "i", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         ).toFlatString();
 
 
@@ -605,13 +917,56 @@ public class BasicBlockTest {
         assertEquals(1, statements.size());
 
         String expected = new SwitchBlock(
-                new Variable("i"),
+                ASTUtil.simpleVar("i"),
                 List.of(
-                        new CaseStatement(new NumberLiteral(5.0)),
+                        new CaseStatement(ASTUtil.simpleNumLit(5d), List.of(
+                                new Token(Token.Keyword.CASE, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "5", 0),
+                                new Token(Token.Symbol.ARROW, 0),
+                                new Token(Token.Textless.NAME, "runFive", 0),
+                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                new Token(Token.Symbol.RIGHT_PAREN, 0)
+                        )),
                         ASTUtil.simpleFuncCall("runFive"),
-                        new BreakStatement(),
-                        new CaseStatement(new Variable("_")),
+                        new BreakStatement(List.of(new Token(Token.Keyword.BREAK, 0))),
+                        new CaseStatement(
+                                new Variable("_", List.of(
+                                        new Token(Token.Symbol.UNDERSCORE, 0)
+                                )),
+                                List.of(
+                                        new Token(Token.Keyword.CASE, 0),
+                                        new Token(Token.Symbol.UNDERSCORE, 0),
+                                        new Token(Token.Symbol.ARROW, 0),
+                                        new Token(Token.Textless.NAME, "runOther", 0),
+                                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                                        new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                )
+                        ),
                         ASTUtil.simpleFuncCall("runOther")
+                ),
+                List.of(
+                        new Token(Token.Keyword.SWITCH, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "i", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Keyword.CASE, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "5", 0),
+                        new Token(Token.Symbol.ARROW, 0),
+                        new Token(Token.Textless.NAME, "runFive", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Keyword.BREAK, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Keyword.CASE, 0),
+                        new Token(Token.Symbol.UNDERSCORE, 0),
+                        new Token(Token.Symbol.ARROW, 0),
+                        new Token(Token.Textless.NAME, "runOther", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
                 )
         ).toFlatString();
 
@@ -657,13 +1012,77 @@ public class BasicBlockTest {
         assertEquals(1, statements.size());
 
         String expected = new MatchBlock(
-                new Variable("i"),
+                ASTUtil.simpleVar("i"),
                 List.of(
-                        new CaseMatchStatement(new Declare(ASTUtil.simpleType("Int"), "v")),
+                        new CaseMatchStatement(
+                                new Declare(ASTUtil.simpleType("Int"), "v", List.of(
+                                        new Token(Token.Textless.NAME, "v", 0),
+                                        new Token(Token.Symbol.COLON, 0),
+                                        new Token(Token.Textless.NAME, "Int", 0)
+                                )),
+                                List.of(
+                                        new Token(Token.Keyword.CASE, 0),
+                                        new Token(Token.Textless.NAME, "v", 0),
+                                        new Token(Token.Symbol.COLON, 0),
+                                        new Token(Token.Textless.NAME, "Int", 0),
+                                        new Token(Token.Symbol.ARROW, 0),
+                                        new Token(Token.Textless.NAME, "checkInt", 0),
+                                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                                        new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                )
+                        ),
                         ASTUtil.simpleFuncCall("checkInt"),
-                        new BreakStatement(),
-                        new CaseMatchStatement(new Declare(ASTUtil.simpleType("_"), "v")),
+                        new BreakStatement(List.of(new Token(Token.Keyword.BREAK, 0))),
+                        new CaseMatchStatement(
+                                new Declare(
+                                        new Type( new Variable("_", List.of(new Token(Token.Symbol.UNDERSCORE, 0))), List.of()),
+                                        "v",
+                                        List.of(
+                                                new Token(Token.Textless.NAME, "v", 0),
+                                                new Token(Token.Symbol.COLON, 0),
+                                                new Token(Token.Symbol.UNDERSCORE, 0)
+                                        )
+                                ),
+                                List.of(
+                                        new Token(Token.Keyword.CASE, 0),
+                                        new Token(Token.Textless.NAME, "v", 0),
+                                        new Token(Token.Symbol.COLON, 0),
+                                        new Token(Token.Symbol.UNDERSCORE, 0),
+                                        new Token(Token.Symbol.ARROW, 0),
+                                        new Token(Token.Textless.NAME, "checkOther", 0),
+                                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                                        new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                )
+                        ),
                         ASTUtil.simpleFuncCall("checkOther")
+                ),
+                List.of(
+                        new Token(Token.Keyword.MATCH, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "i", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Keyword.CASE, 0),
+                        new Token(Token.Textless.NAME, "v", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "Int", 0),
+                        new Token(Token.Symbol.ARROW, 0),
+                        new Token(Token.Textless.NAME, "checkInt", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Keyword.BREAK, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Keyword.CASE, 0),
+                        new Token(Token.Textless.NAME, "v", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Symbol.UNDERSCORE, 0),
+                        new Token(Token.Symbol.ARROW, 0),
+                        new Token(Token.Textless.NAME, "checkOther", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
                 )
         ).toFlatString();
 
@@ -703,12 +1122,56 @@ public class BasicBlockTest {
         assertEquals(1, statements.size());
 
         TryBlock tryBlock = new TryBlock(
-                List.of(ASTUtil.simpleFuncCall("errorFunc"))
+                List.of(ASTUtil.simpleFuncCall("errorFunc")),
+                List.of(
+                        new Token(Token.Keyword.TRY, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "errorFunc", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         );
 
-        tryBlock.catchBlock = new CatchBlock(new Declare(ASTUtil.simpleType("Error"), "ex"), List.of(
-                new FunctionCall("print", List.of(new Variable("ex")), List.of())
-        ));
+        tryBlock.catchBlock = Optional.of(new CatchBlock(
+                new Declare(
+                        ASTUtil.simpleType("Error"),
+                        "ex",
+                        List.of(
+                                new Token(Token.Textless.NAME, "ex", 0),
+                                new Token(Token.Symbol.COLON, 0),
+                                new Token(Token.Textless.NAME, "Error", 0)
+                        )
+                ),
+                List.of(
+                        new FunctionCall(
+                                "print",
+                                List.of(ASTUtil.simpleVar("ex")),
+                                List.of(),
+                                List.of(
+                                        new Token(Token.Textless.NAME, "print", 0),
+                                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                                        new Token(Token.Textless.NAME, "ex", 0),
+                                        new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                )
+                        )
+                ),
+                List.of(
+                        new Token(Token.Keyword.CATCH, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "ex", 0),
+                        new Token(Token.Symbol.COLON, 0),
+                        new Token(Token.Textless.NAME, "Error", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "print", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "ex", 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )));
 
         String expected = tryBlock.toFlatString();
 

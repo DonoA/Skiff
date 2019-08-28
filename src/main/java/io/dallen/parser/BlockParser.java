@@ -90,6 +90,7 @@ class BlockParser {
 
 
     private void attachCatchBlock(ArrayList<AST.Statement> statements) {
+        List<Token> allTokens = parser.selectToBlockEnd();
         if(statements.size() < 1) {
             throw new CompileError("Else statement requires If, none found");
         }
@@ -106,13 +107,14 @@ class BlockParser {
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
         if(parentStmt instanceof AST.TryBlock) {
-            ((AST.TryBlock) parentStmt).catchBlock = new AST.CatchBlock(cond, body, bodyTokens);
+            ((AST.TryBlock) parentStmt).catchBlock = Optional.of(new AST.CatchBlock(cond, body, allTokens));
         } else {
             throw new CompileError("Catch statement requires Try, " + parentStmt.getClass().getName() + " found");
         }
     }
 
     private void attachElseBlock(ArrayList<AST.Statement> statements) {
+        List<Token> allTokens = parser.selectToBlockEnd();
         if(statements.size() < 1) {
             throw new CompileError("Else statement requires If, none found");
         }
@@ -122,18 +124,18 @@ class BlockParser {
         AST.ElseBlock toAttach;
         if(parser.current().type == Token.Keyword.IF) {
             AST.IfBlock on = parseIfBlock();
-            toAttach = new AST.ElseIfBlock(on, List.of(t));
+            toAttach = new AST.ElseIfBlock(on, allTokens);
         } else {
             parser.consumeExpected(Token.Symbol.LEFT_BRACE);
             List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
             List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
-            toAttach = new AST.ElseAlwaysBlock(body, bodyTokens);
+            toAttach = new AST.ElseAlwaysBlock(body, allTokens);
         }
 
         if(parentStmt instanceof AST.IfBlock) {
-            ((AST.IfBlock) parentStmt).elseBlock = toAttach;
+            ((AST.IfBlock) parentStmt).elseBlock = Optional.of(toAttach);
         } else if(parentStmt instanceof AST.ElseIfBlock) {
-            ((AST.ElseIfBlock) parentStmt).elseBlock = toAttach;
+            ((AST.ElseIfBlock) parentStmt).elseBlock = Optional.of(toAttach);
         } else {
             throw new CompileError("Else statement requires If, " + parentStmt.getClass().getName() + " found");
         }
@@ -151,13 +153,12 @@ class BlockParser {
     }
 
     private AST.ForBlock parseForBlock() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.FOR);
 
         List<List<Token>> seg;
-        List<Token> tokens;
         try {
-            tokens = consumeParens();
-            seg = BraceSplitter.splitAll(tokens, Token.Symbol.SEMICOLON);
+            seg = BraceSplitter.splitAll(consumeParens(), Token.Symbol.SEMICOLON);
         } catch (ParserError parserError) {
             parser.throwError(parserError.msg, parserError.on);
             return null;
@@ -170,20 +171,22 @@ class BlockParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
-        return new AST.ForBlock(initStmt, condStmt, stepStmt, body, tokens);
+        return new AST.ForBlock(initStmt, condStmt, stepStmt, body, allTokens);
     }
 
     private AST.SwitchBlock parseSwitchBlock() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.SWITCH);
 
         AST.Statement cond = consumeAndParseParens();
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
-        return new AST.SwitchBlock(cond, body, bodyTokens);
+        return new AST.SwitchBlock(cond, body, allTokens);
     }
 
     private AST.MatchBlock parseMatchBlock() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.MATCH);
 
         AST.Statement cond = consumeAndParseParens();
@@ -191,38 +194,42 @@ class BlockParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser, true).parseBlock();
 
-        return new AST.MatchBlock(cond, body, bodyTokens);
+        return new AST.MatchBlock(cond, body, allTokens);
     }
 
     private AST.CaseStatement parseCase() {
+        List<Token> allTokens = parser.selectToEOF();
         parser.consumeExpected(Token.Keyword.CASE);
 
         List<Token> onTokens = parser.consumeTo(Token.Symbol.ARROW);
         AST.Statement on = new Parser(onTokens, parser).parseExpression();
 
-        return new AST.CaseStatement(on, onTokens);
+        return new AST.CaseStatement(on, allTokens);
     }
 
     private AST.CaseMatchStatement parseMatchCase() {
+        List<Token> allTokens = parser.selectToEOF();
         parser.consumeExpected(Token.Keyword.CASE);
 
         List<Token> onTokens = parser.consumeTo(Token.Symbol.ARROW);
         AST.Statement on = new Parser(onTokens, parser).parseExpression();
 
-        return new AST.CaseMatchStatement(on, onTokens);
+        return new AST.CaseMatchStatement(on, allTokens);
     }
 
     private AST.IfBlock parseIfBlock() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.IF);
 
         AST.Statement cond = consumeAndParseParens();
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
-        return new AST.IfBlock(cond, body, bodyTokens);
+        return new AST.IfBlock(cond, body, allTokens);
     }
 
     private AST.WhileBlock parseWhileBlock() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Keyword.WHILE);
 
         AST.Statement cond = consumeAndParseParens();
@@ -230,16 +237,17 @@ class BlockParser {
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
 
-        return new AST.WhileBlock(cond, body, bodyTokens);
+        return new AST.WhileBlock(cond, body, allTokens);
     }
 
     private AST.TryBlock parseTryBlock() {
+        List<Token> allTokens = parser.selectToBlockEnd();
         parser.next();
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
-        return new AST.TryBlock(body, bodyTokens);
+        return new AST.TryBlock(body, allTokens);
     }
 
     private AST.LoopBlock parseLoopBlock() {

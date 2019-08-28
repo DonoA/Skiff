@@ -131,4 +131,8 @@ public class BraceManager {
         return braceStack.isEmpty();
     }
 
+    public int stackDepth() {
+        return braceStack.size();
+    }
+
 }
