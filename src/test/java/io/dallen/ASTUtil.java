@@ -1,5 +1,6 @@
 package io.dallen;
 
+import io.dallen.ast.AST;
 import io.dallen.tokenizer.Token;
 
 import java.util.List;

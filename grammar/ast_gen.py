@@ -170,7 +170,7 @@ def generate_visit(class_name, clazz):
 data = {}
 
 ast_header = '''
-package io.dallen;
+package io.dallen.ast;
 
 import io.dallen.compiler.visitor.ASTVisitor;
 import io.dallen.compiler.CompileContext;

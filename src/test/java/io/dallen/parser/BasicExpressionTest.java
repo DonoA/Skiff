@@ -1,13 +1,11 @@
 package io.dallen.parser;
 
-import static io.dallen.AST.*;
+import static io.dallen.ast.AST.*;
 import static org.junit.Assert.*;
 
-import io.dallen.ASTEnums;
+import io.dallen.ast.ASTEnums;
 import io.dallen.ASTUtil;
 import io.dallen.tokenizer.Token;
-import org.junit.Rule;
-import org.junit.rules.Timeout;
 
 import java.util.List;
 
@@ -50,9 +48,9 @@ public class BasicExpressionTest {
                     new Token(Token.Symbol.COLON, 0),
                     new Token(Token.Textless.NAME, "Int", 0)
                 )
-        ).toFlatString();
+        ).toString();
 
-        assertEquals(expected, statements.get(0).toFlatString());
+        assertEquals(expected, statements.get(0).toString());
     }
 
     @org.junit.Test

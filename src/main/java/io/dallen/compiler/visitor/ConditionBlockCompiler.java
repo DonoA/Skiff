@@ -1,6 +1,6 @@
 package io.dallen.compiler.visitor;
 
-import io.dallen.AST;
+import io.dallen.ast.AST;
 import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
 import io.dallen.compiler.CompiledType;
@@ -37,10 +37,10 @@ public class ConditionBlockCompiler {
     static CompiledCode compileIfBlock(AST.IfBlock stmt, CompileContext context) {
         StringBuilder text = compileGenericLoop("if", stmt.body, stmt.condition, context);
 
-        if (stmt.validElseBlock) {
+        if (stmt.elseBlock.isPresent()) {
             text.append("\n");
             text.append(context.getIndent());
-            text.append(stmt.elseBlock.compile(context).getCompiledText());
+            text.append(stmt.elseBlock.get().compile(context).getCompiledText());
         }
 
         return new CompiledCode()

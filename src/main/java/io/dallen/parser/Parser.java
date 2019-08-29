@@ -1,10 +1,10 @@
 package io.dallen.parser;
 
-import io.dallen.AST;
+import io.dallen.ast.AST;
 import io.dallen.errors.ErrorCollector;
 import io.dallen.errors.ErrorPrinter;
 import io.dallen.tokenizer.Token;
-import io.dallen.AST.*;
+import io.dallen.ast.AST.*;
 
 import io.dallen.tokenizer.Token.Textless;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package io.dallen.parser;
 
-import io.dallen.AST;
+import io.dallen.ast.AST;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.tokenizer.Token;
 

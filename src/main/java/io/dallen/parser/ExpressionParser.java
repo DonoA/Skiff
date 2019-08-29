@@ -1,7 +1,7 @@
 package io.dallen.parser;
 
-import io.dallen.AST;
-import io.dallen.ASTEnums;
+import io.dallen.ast.AST;
+import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.CompileError;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.tokenizer.Token;

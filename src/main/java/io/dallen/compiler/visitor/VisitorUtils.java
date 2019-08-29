@@ -1,7 +1,7 @@
 package io.dallen.compiler.visitor;
 
-import io.dallen.AST;
-import io.dallen.ASTEnums;
+import io.dallen.ast.AST;
+import io.dallen.ast.ASTEnums;
 import io.dallen.SkiffC;
 import io.dallen.compiler.*;
 

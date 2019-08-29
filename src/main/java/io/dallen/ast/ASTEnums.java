@@ -1,4 +1,4 @@
-package io.dallen;
+package io.dallen.ast;
 
 public class ASTEnums {
     public interface HasRaw {

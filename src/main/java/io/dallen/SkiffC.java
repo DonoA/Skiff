@@ -1,5 +1,6 @@
 package io.dallen;
 
+import io.dallen.ast.AST;
 import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
 import io.dallen.parser.Parser;

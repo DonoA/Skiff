@@ -70,15 +70,9 @@
         "fields": {
             "condition": "Statement",
             "elseBlock": {
-                "type": "ElseBlock",
+                "type": "ASTOptional<ElseBlock>",
                 "lazy": true,
-                "default": "new ElseBlock(List.of())"
-            },
-            "validElseBlock": {
-                "type": "Boolean",
-                "noFlatString": true,
-                "lazy": true,
-                "default": "false"
+                "default": "ASTOptional.empty()"
             }
         }
     },
@@ -91,15 +85,9 @@
         "fields": {
             "on": "IfBlock",
             "elseBlock": {
-                "type": "ElseBlock",
+                "type": "ASTOptional<ElseBlock>",
                 "lazy": true,
-                "default": "new ElseBlock(List.of())"
-            },
-            "validElseBlock": {
-                "type": "Boolean",
-                "lazy": true,
-                "noFlatString": true,
-                "default": "false"
+                "default": "ASTOptional.empty()"
             }
         }
     },

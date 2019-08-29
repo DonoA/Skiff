@@ -1,7 +1,5 @@
 package io.dallen.compiler;
 
-import io.dallen.AST;
-
 import static org.junit.Assert.assertEquals;
 
 public class BasicExpressions {

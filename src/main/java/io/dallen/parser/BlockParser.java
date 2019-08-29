@@ -1,7 +1,8 @@
 package io.dallen.parser;
 
-import io.dallen.AST;
-import io.dallen.ASTEnums;
+import io.dallen.ast.AST;
+import io.dallen.ast.ASTEnums;
+import io.dallen.ast.ASTOptional;
 import io.dallen.compiler.CompileError;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.tokenizer.Token;
@@ -134,12 +135,10 @@ class BlockParser {
 
         if(parentStmt instanceof AST.IfBlock) {
             AST.IfBlock ifBlock = (AST.IfBlock) parentStmt;
-            ifBlock.elseBlock = toAttach;
-            ifBlock.validElseBlock = true;
+            ifBlock.elseBlock = ASTOptional.of(toAttach);
         } else if(parentStmt instanceof AST.ElseIfBlock) {
             AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
-            elseIfBlock.elseBlock = toAttach;
-            elseIfBlock.validElseBlock = true;
+            elseIfBlock.elseBlock = ASTOptional.of(toAttach);
         } else {
             throw new CompileError("Else statement requires If, " + parentStmt.getClass().getName() + " found");
         }

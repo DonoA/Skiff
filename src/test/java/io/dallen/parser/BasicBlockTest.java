@@ -1,12 +1,11 @@
 package io.dallen.parser;
 
-import io.dallen.AST;
-import io.dallen.AST.*;
-import io.dallen.ASTEnums;
+import io.dallen.ast.AST;
+import io.dallen.ast.AST.*;
+import io.dallen.ast.ASTEnums;
+import io.dallen.ast.ASTOptional;
 import io.dallen.ASTUtil;
 import io.dallen.tokenizer.Token;
-import org.junit.Rule;
-import org.junit.rules.Timeout;
 
 import java.util.List;
 import java.util.Optional;
@@ -589,7 +588,7 @@ public class BasicBlockTest {
                 )
         );
 
-        start.elseBlock = new ElseAlwaysBlock(
+        start.elseBlock = ASTOptional.of(new ElseAlwaysBlock(
                 List.of(
                         ASTUtil.simpleFuncCall("stop"),
                         new FunctionCall(
@@ -620,9 +619,7 @@ public class BasicBlockTest {
                         new Token(Token.Symbol.SEMICOLON, 0),
                         new Token(Token.Symbol.RIGHT_BRACE, 0)
                 )
-        );
-
-        start.validElseBlock = true;
+        ));
 
         String expected = start.toFlatString();
 
@@ -690,7 +687,7 @@ public class BasicBlockTest {
                 )
         );
 
-        ifBlock.elseBlock = new ElseIfBlock(
+        ifBlock.elseBlock = ASTOptional.of(new ElseIfBlock(
                 new IfBlock(
                         ASTUtil.simpleFuncCall("readyToWork"),
                         List.of(
@@ -752,8 +749,7 @@ public class BasicBlockTest {
                         new Token(Token.Symbol.SEMICOLON, 0),
                         new Token(Token.Symbol.RIGHT_BRACE, 0)
                 )
-        );
-        ifBlock.validElseBlock = true;
+        ));
 
         String expected = ifBlock.toFlatString();
 

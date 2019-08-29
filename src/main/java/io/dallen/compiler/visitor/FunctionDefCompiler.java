@@ -1,9 +1,7 @@
 package io.dallen.compiler.visitor;
 
-import io.dallen.AST;
+import io.dallen.ast.AST;
 import io.dallen.compiler.*;
-
-import java.util.List;
 
 class FunctionDefCompiler {
 
