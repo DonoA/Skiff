@@ -455,7 +455,7 @@ public class BasicExpressionTest {
                                                         ASTUtil.simpleNumLit(1d),
                                                         List.of(
                                                                 new Token(Token.Textless.NAME, "x", 0),
-                                                                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                                                                new Token(Token.Symbol.RIGHT_ANGLE_EQUAL, 0),
                                                                 new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
                                                         )
                                                 ),
