@@ -107,7 +107,7 @@ class BlockParser {
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
 
         if(parentStmt instanceof AST.TryBlock) {
-            ((AST.TryBlock) parentStmt).catchBlock = Optional.of(new AST.CatchBlock(cond, body, allTokens));
+            ((AST.TryBlock) parentStmt).catchBlock = new AST.CatchBlock(cond, body, allTokens);
         } else {
             throw new CompileError("Catch statement requires Try, " + parentStmt.getClass().getName() + " found");
         }
@@ -133,9 +133,13 @@ class BlockParser {
         }
 
         if(parentStmt instanceof AST.IfBlock) {
-            ((AST.IfBlock) parentStmt).elseBlock = Optional.of(toAttach);
+            AST.IfBlock ifBlock = (AST.IfBlock) parentStmt;
+            ifBlock.elseBlock = toAttach;
+            ifBlock.validElseBlock = true;
         } else if(parentStmt instanceof AST.ElseIfBlock) {
-            ((AST.ElseIfBlock) parentStmt).elseBlock = Optional.of(toAttach);
+            AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
+            elseIfBlock.elseBlock = toAttach;
+            elseIfBlock.validElseBlock = true;
         } else {
             throw new CompileError("Else statement requires If, " + parentStmt.getClass().getName() + " found");
         }

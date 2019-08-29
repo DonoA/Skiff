@@ -245,22 +245,27 @@ public class AST {
     
     public static class IfBlock extends BlockStatement {
         public final Statement condition;
-        public  Optional<ElseBlock> elseBlock;
+        public  ElseBlock elseBlock;
+        public  Boolean validElseBlock;
         public IfBlock(Statement condition, List<Statement> body, List<Token> tokens) {
             super(body, tokens);
             this.condition = condition;
+            this.elseBlock = new ElseBlock(List.of());
+            this.validElseBlock = false;
         }
 
         public String toString() {
             return "IfBlock(condition = " + this.condition.toString() + ", " + 
                 "elseBlock = " + this.elseBlock.toString() + ", " + 
+                "validElseBlock = " + this.validElseBlock.toString() + ", " + 
                 "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public String toFlatString() {
             return "IfBlock(condition = " + this.condition.toFlatString() + ", " + 
-                "elseBlock = " + this.elseBlock.toString() + ", " + 
+                "elseBlock = " + this.elseBlock.toFlatString() + ", " + 
+                "validElseBlock = " + this.validElseBlock.toString() + ", " + 
                 "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
@@ -292,21 +297,26 @@ public class AST {
     
     public static class ElseIfBlock extends ElseBlock {
         public final IfBlock on;
-        public  Optional<ElseBlock> elseBlock;
+        public  ElseBlock elseBlock;
+        public  Boolean validElseBlock;
         public ElseIfBlock(IfBlock on, List<Token> tokens) {
             super(tokens);
             this.on = on;
+            this.elseBlock = new ElseBlock(List.of());
+            this.validElseBlock = false;
         }
 
         public String toString() {
             return "ElseIfBlock(on = " + this.on.toString() + ", " + 
                 "elseBlock = " + this.elseBlock.toString() + ", " + 
+                "validElseBlock = " + this.validElseBlock.toString() + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public String toFlatString() {
             return "ElseIfBlock(on = " + this.on.toFlatString() + ", " + 
-                "elseBlock = " + this.elseBlock.toString() + ", " + 
+                "elseBlock = " + this.elseBlock.toFlatString() + ", " + 
+                "validElseBlock = " + this.validElseBlock.toString() + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
@@ -576,7 +586,7 @@ public class AST {
     }
     
     public static class TryBlock extends BlockStatement {
-        public  Optional<CatchBlock> catchBlock;
+        public  CatchBlock catchBlock;
         public TryBlock(List<Statement> body, List<Token> tokens) {
             super(body, tokens);
 
@@ -589,7 +599,7 @@ public class AST {
         }
 
         public String toFlatString() {
-            return "TryBlock(catchBlock = " + this.catchBlock.toString() + ", " + 
+            return "TryBlock(catchBlock = " + this.catchBlock.toFlatString() + ", " + 
                 "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }

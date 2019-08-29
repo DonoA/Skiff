@@ -37,10 +37,10 @@ public class ConditionBlockCompiler {
     static CompiledCode compileIfBlock(AST.IfBlock stmt, CompileContext context) {
         StringBuilder text = compileGenericLoop("if", stmt.body, stmt.condition, context);
 
-        if (stmt.elseBlock.isPresent()) {
+        if (stmt.validElseBlock) {
             text.append("\n");
             text.append(context.getIndent());
-            text.append(stmt.elseBlock.get().compile(context).getCompiledText());
+            text.append(stmt.elseBlock.compile(context).getCompiledText());
         }
 
         return new CompiledCode()

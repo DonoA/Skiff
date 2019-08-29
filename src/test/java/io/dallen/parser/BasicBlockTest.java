@@ -514,7 +514,21 @@ public class BasicBlockTest {
 
         String expected = new IfBlock(
                 ASTUtil.simpleFuncCall("isWorking"),
-                List.of(ASTUtil.simpleFuncCall("run")), List.of()
+                List.of(ASTUtil.simpleFuncCall("run")),
+                List.of(
+                        new Token(Token.Keyword.IF, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "isWorking", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "run", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
@@ -575,7 +589,7 @@ public class BasicBlockTest {
                 )
         );
 
-        start.elseBlock = Optional.of(new ElseAlwaysBlock(
+        start.elseBlock = new ElseAlwaysBlock(
                 List.of(
                         ASTUtil.simpleFuncCall("stop"),
                         new FunctionCall(
@@ -606,7 +620,9 @@ public class BasicBlockTest {
                         new Token(Token.Symbol.SEMICOLON, 0),
                         new Token(Token.Symbol.RIGHT_BRACE, 0)
                 )
-        ));
+        );
+
+        start.validElseBlock = true;
 
         String expected = start.toFlatString();
 
@@ -657,16 +673,87 @@ public class BasicBlockTest {
 
         IfBlock ifBlock = new IfBlock(
                 ASTUtil.simpleFuncCall("isWorking"),
-                List.of(ASTUtil.simpleFuncCall("run")), List.of()
+                List.of(ASTUtil.simpleFuncCall("run")),
+                List.of(
+                        new Token(Token.Keyword.IF, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "isWorking", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "run", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
         );
 
-        ifBlock.elseBlock = Optional.of(new ElseIfBlock(
+        ifBlock.elseBlock = new ElseIfBlock(
                 new IfBlock(
-                        ASTUtil.simpleFuncCall("readyToWork"), List.of(
-                        ASTUtil.simpleFuncCall("stop"),
-                        new FunctionCall("setIsWorking", List.of(new BooleanLiteral(true, List.of())), List.of(), List.of())
-                ), List.of()), List.of()
-        ));
+                        ASTUtil.simpleFuncCall("readyToWork"),
+                        List.of(
+                                ASTUtil.simpleFuncCall("stop"),
+                                new FunctionCall(
+                                        "setIsWorking",
+                                        List.of(
+                                            new BooleanLiteral(
+                                                    true,
+                                                    List.of(new Token(Token.Keyword.TRUE, 0))
+                                            )
+                                        ),
+                                        List.of(),
+                                        List.of(
+                                                new Token(Token.Textless.NAME, "setIsWorking", 0),
+                                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                                new Token(Token.Keyword.TRUE, 0),
+                                                new Token(Token.Symbol.RIGHT_PAREN, 0)
+                                        )
+                                )
+                        ),
+                        List.of(
+                                new Token(Token.Keyword.IF, 0),
+                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                new Token(Token.Textless.NAME, "readyToWork", 0),
+                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                                new Token(Token.Symbol.LEFT_BRACE, 0),
+                                new Token(Token.Textless.NAME, "stop", 0),
+                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                                new Token(Token.Symbol.SEMICOLON, 0),
+                                new Token(Token.Textless.NAME, "setIsWorking", 0),
+                                new Token(Token.Symbol.LEFT_PAREN, 0),
+                                new Token(Token.Keyword.TRUE, 0),
+                                new Token(Token.Symbol.RIGHT_PAREN, 0),
+                                new Token(Token.Symbol.SEMICOLON, 0),
+                                new Token(Token.Symbol.RIGHT_BRACE, 0)
+                        )
+                ),
+                List.of(
+                        new Token(Token.Keyword.ELSE, 0),
+                        new Token(Token.Keyword.IF, 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Textless.NAME, "readyToWork", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.LEFT_BRACE, 0),
+                        new Token(Token.Textless.NAME, "stop", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Textless.NAME, "setIsWorking", 0),
+                        new Token(Token.Symbol.LEFT_PAREN, 0),
+                        new Token(Token.Keyword.TRUE, 0),
+                        new Token(Token.Symbol.RIGHT_PAREN, 0),
+                        new Token(Token.Symbol.SEMICOLON, 0),
+                        new Token(Token.Symbol.RIGHT_BRACE, 0)
+                )
+        );
+        ifBlock.validElseBlock = true;
 
         String expected = ifBlock.toFlatString();
 
@@ -1134,7 +1221,7 @@ public class BasicBlockTest {
                 )
         );
 
-        tryBlock.catchBlock = Optional.of(new CatchBlock(
+        tryBlock.catchBlock = new CatchBlock(
                 new Declare(
                         ASTUtil.simpleType("Error"),
                         "ex",
@@ -1171,7 +1258,7 @@ public class BasicBlockTest {
                         new Token(Token.Symbol.RIGHT_PAREN, 0),
                         new Token(Token.Symbol.SEMICOLON, 0),
                         new Token(Token.Symbol.RIGHT_BRACE, 0)
-                )));
+                ));
 
         String expected = tryBlock.toFlatString();
 

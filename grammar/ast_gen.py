@@ -6,13 +6,14 @@ cbo = '{'
 cbc = '}'
 
 class ASTField:
-    def __init__(self, name, typ, big_print, lazy, is_list, no_flat_string):
+    def __init__(self, name, typ, big_print, lazy, is_list, no_flat_string, default):
         self.name = name
         self.typ = typ
         self.big_print = big_print
         self.lazy = lazy
         self.is_list = is_list
         self.no_flat_string = no_flat_string
+        self.default = default
 
 class ASTClass:
     def __init__(self, name, extends, literal, fields):
@@ -41,6 +42,7 @@ def comile_class(name, spec):
         lazy = False
         typ = field
         no_flat_string = False
+        default = None 
 
         if type(field) is dict:
             if 'bigPrint' in field:
@@ -48,6 +50,12 @@ def comile_class(name, spec):
 
             if 'lazy' in field:
                 lazy = field['lazy']
+
+            if 'default' in field:
+                default = field['default']
+                if not lazy:
+                    print(f'ERROR: Field {fname} with a default must be lazy!')
+                    sys.exit(1)
 
             if 'noFlatString' in field:
                 no_flat_string = field['noFlatString']
@@ -58,7 +66,7 @@ def comile_class(name, spec):
         no_flat_string = no_flat_string or 'String' in typ
 
         fields.append(ASTField(
-            fname, typ, big_print, lazy, is_list, no_flat_string
+            fname, typ, big_print, lazy, is_list, no_flat_string, default
         ))
     
     return ASTClass(name, extends, literal, fields)
@@ -110,6 +118,8 @@ def generate_def(class_name, clazz):
 
     ctr_assign = '\n'.join([
         f'            this.{f.name} = {f.name};' for f in filter(lambda x: not x.lazy, clazz.fields)
+    ] + [
+        f'            this.{f.name} = {f.default};' for f in filter(lambda x: x.default is not None, clazz.fields)
     ])
 
     extends = ''

@@ -390,7 +390,16 @@ public class BasicExpressionTest {
         assertEquals(1, statements.size());
 
         String expected = new BoolCombine(
-                ASTUtil.simpleVar("x"),
+                new Compare(
+                        ASTUtil.simpleVar("x"),
+                        ASTEnums.CompareOp.NE,
+                        ASTUtil.simpleNumLit(1d),
+                        List.of(
+                                new Token(Token.Textless.NAME, "x", 0),
+                                new Token(Token.Symbol.BANG_EQUAL, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                        )
+                ),
                 ASTEnums.BoolOp.AND,
                 new BoolCombine(
                         new Compare(
@@ -398,19 +407,34 @@ public class BasicExpressionTest {
                                 ASTEnums.CompareOp.EQ,
                                 ASTUtil.simpleNumLit(1d),
                                 List.of(
-
+                                        new Token(Token.Textless.NAME, "x", 0),
+                                        new Token(Token.Symbol.DOUBLE_EQUAL, 0),
+                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
                                 )
                         ),
                         ASTEnums.BoolOp.AND,
                         new BoolCombine(
-                                ASTUtil.simpleVar("x"),
+                                new Compare(
+                                        ASTUtil.simpleVar("x"),
+                                        ASTEnums.CompareOp.LE,
+                                        ASTUtil.simpleNumLit(1d),
+                                        List.of(
+                                                new Token(Token.Textless.NAME, "x", 0),
+                                                new Token(Token.Symbol.LEFT_ANGLE_EQUAL, 0),
+                                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                        )
+                                ),
                                 ASTEnums.BoolOp.AND,
                                 new BoolCombine(
                                         new Compare(
                                                 ASTUtil.simpleVar("x"),
                                                 ASTEnums.CompareOp.LT,
                                                 ASTUtil.simpleNumLit(1d),
-                                                List.of()
+                                                List.of(
+                                                        new Token(Token.Textless.NAME, "x", 0),
+                                                        new Token(Token.Symbol.LEFT_ANGLE, 0),
+                                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                                )
                                         ),
                                         ASTEnums.BoolOp.AND,
                                         new BoolCombine(
@@ -418,19 +442,112 @@ public class BasicExpressionTest {
                                                         ASTUtil.simpleVar("x"),
                                                         ASTEnums.CompareOp.GT,
                                                         ASTUtil.simpleNumLit(1d),
-                                                        List.of()
+                                                        List.of(
+                                                                new Token(Token.Textless.NAME, "x", 0),
+                                                                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                                                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                                        )
                                                 ),
                                                 ASTEnums.BoolOp.AND,
-                                                ASTUtil.simpleVar("x"),
-                                                List.of()
+                                                new Compare(
+                                                        ASTUtil.simpleVar("x"),
+                                                        ASTEnums.CompareOp.GE,
+                                                        ASTUtil.simpleNumLit(1d),
+                                                        List.of(
+                                                                new Token(Token.Textless.NAME, "x", 0),
+                                                                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                                                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                                        )
+                                                ),
+                                                List.of(
+                                                        new Token(Token.Textless.NAME, "x", 0),
+                                                        new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                                                        new Token(Token.Textless.NAME, "x", 0),
+                                                        new Token(Token.Symbol.RIGHT_ANGLE_EQUAL, 0),
+                                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                                )
                                         ),
-                                        List.of()
+                                        List.of(
+                                                new Token(Token.Textless.NAME, "x", 0),
+                                                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                                new Token(Token.Symbol.DOUBLE_AND, 0),
+                                                new Token(Token.Textless.NAME, "x", 0),
+                                                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                                new Token(Token.Symbol.DOUBLE_AND, 0),
+                                                new Token(Token.Textless.NAME, "x", 0),
+                                                new Token(Token.Symbol.RIGHT_ANGLE_EQUAL, 0),
+                                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                        )
                                 ),
-                                List.of()
+                                List.of(
+                                        new Token(Token.Textless.NAME, "x", 0),
+                                        new Token(Token.Symbol.LEFT_ANGLE_EQUAL, 0),
+                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                                        new Token(Token.Textless.NAME, "x", 0),
+                                        new Token(Token.Symbol.LEFT_ANGLE, 0),
+                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                                        new Token(Token.Textless.NAME, "x", 0),
+                                        new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                                        new Token(Token.Textless.NAME, "x", 0),
+                                        new Token(Token.Symbol.RIGHT_ANGLE_EQUAL, 0),
+                                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                                )
                         ),
-                        List.of()
+                        List.of(
+                                new Token(Token.Textless.NAME, "x", 0),
+                                new Token(Token.Symbol.DOUBLE_EQUAL, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                new Token(Token.Symbol.DOUBLE_AND, 0),
+                                new Token(Token.Textless.NAME, "x", 0),
+                                new Token(Token.Symbol.LEFT_ANGLE_EQUAL, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                new Token(Token.Symbol.DOUBLE_AND, 0),
+                                new Token(Token.Textless.NAME, "x", 0),
+                                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                new Token(Token.Symbol.DOUBLE_AND, 0),
+                                new Token(Token.Textless.NAME, "x", 0),
+                                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                                new Token(Token.Symbol.DOUBLE_AND, 0),
+                                new Token(Token.Textless.NAME, "x", 0),
+                                new Token(Token.Symbol.RIGHT_ANGLE_EQUAL, 0),
+                                new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                        )
                 ),
-                List.of()
+                List.of(
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.BANG_EQUAL, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.DOUBLE_EQUAL, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.LEFT_ANGLE_EQUAL, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.LEFT_ANGLE, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0),
+                        new Token(Token.Symbol.DOUBLE_AND, 0),
+                        new Token(Token.Textless.NAME, "x", 0),
+                        new Token(Token.Symbol.RIGHT_ANGLE_EQUAL, 0),
+                        new Token(Token.Textless.NUMBER_LITERAL, "1", 0)
+                )
         ).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());
