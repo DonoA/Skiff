@@ -35,16 +35,18 @@ public class SkiffC {
         compile("classes.skiff", "test.c", true);
     }
 
-    public static void compile(String infile, String outfile, boolean debug) {
+    public static boolean compile(String infile, String outfile, boolean debug) {
         DEBUG = debug;
         String preamble = "#include \"" + new File("lib/skiff.h").getAbsolutePath() + "\"\n\n";
+
+        boolean passed = true;
 
         String programText;
         try {
             programText = readFile(infile);
         } catch(IOException err) {
             System.err.println("Bad file");
-            return;
+            return false;
         }
         Lexer lexer = new Lexer(programText);
         List<Token> tokenStream = null;
@@ -56,11 +58,12 @@ public class SkiffC {
 //        printTokenStream(tokenStream);
             if(!lexer.getErrors().isEmpty()) {
                 System.out.println(String.join("\n", lexer.getErrors()));
+                passed = false;
             }
         }
 
         if(tokenStream == null || tokenStream.isEmpty()) {
-            return;
+            return false;
         }
 
         if(DEBUG) {
@@ -77,11 +80,12 @@ public class SkiffC {
 //        statements.forEach(System.out::println);
             if(!parser.getErrors().isEmpty()) {
                 System.out.println(String.join("\n", parser.getErrors()));
+                passed = false;
             }
         }
 
         if(statements == null || statements.isEmpty()) {
-            return;
+            return false;
         }
         if(DEBUG) {
             System.out.println(" ======== COMPILE =========== ");
@@ -99,11 +103,15 @@ public class SkiffC {
         } catch(Exception ex) {
             ex.printStackTrace();
         } finally {
+            if(!context.getErrors().isEmpty()) {
+                System.out.println(String.join("\n", context.getErrors()));
+                passed = false;
+            }
             // print errors from context
         }
 
         if(compiledText == null || compiledText.isEmpty()) {
-            return;
+            return false;
         }
         String code = preamble + String.join("\n", compiledText);
 
@@ -114,5 +122,6 @@ public class SkiffC {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+        return passed;
     }
 }

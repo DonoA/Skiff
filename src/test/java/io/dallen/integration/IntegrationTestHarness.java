@@ -2,11 +2,13 @@ package io.dallen.integration;
 
 import io.dallen.SkiffC;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 class IntegrationTestHarness {
     private static final String workingDir = "working";
@@ -20,8 +22,11 @@ class IntegrationTestHarness {
     TestResult run() {
         try {
             Files.createDirectories(new File("working/" + testName).toPath());
-            SkiffC.compile("src/test/resources/" + testName + "/" + testName + ".skiff",
+            boolean passed = SkiffC.compile("src/test/resources/" + testName + "/" + testName + ".skiff",
                     "working/" + testName + "/" + testName + ".c", false);
+            if(!passed) {
+                throw new RuntimeException("SkiffC failed!");
+            }
 
             TestResult gccResult = exec("gcc -Wall " +
                     "-o working/" + testName + "/" + testName +
@@ -62,7 +67,7 @@ class IntegrationTestHarness {
         private final String stdOut;
         private final String stdErr;
 
-        public TestResult(int returnCode, String stdOut, String stdErr) {
+        TestResult(int returnCode, String stdOut, String stdErr) {
             this.returnCode = returnCode;
             this.stdOut = stdOut;
             this.stdErr = stdErr;

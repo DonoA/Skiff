@@ -21,11 +21,17 @@ class Person : Thing {
     def incAge() {
         this.age = age + 1;
     }
+
+    def getAge(): Int {
+        return this.age;
+    }
 }
 
 def main(args: List<String>): Int {
-    dave: Thing;
-    dave = new Person("Dave", 15);
-    println(dave.getName());
-    return args.getSize();
+    thing: Thing;
+    thing = new Person("Dave", 15);
+    println(thing.getName());
+    dave: Person = thing;
+    dave.incAge();
+    return dave.getAge();
 }
