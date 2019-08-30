@@ -6,7 +6,7 @@ import io.dallen.errors.ErrorPrinter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Lexer implements ErrorCollector {
+public class Lexer implements ErrorCollector<Token> {
     private String data;
     private int pos = 0;
     private List<String> errorMsg = new ArrayList<>();
@@ -149,7 +149,8 @@ public class Lexer implements ErrorCollector {
         pos++;
         while (true) {
             if(pos >= data.length()) {
-                throw new RuntimeException("Failed to find " + c + " in lexing");
+                errorMsg.add(ErrorPrinter.pointToPos(data, pos, "Failed to find " + c + " in lexing"));
+                return "";
             }
 
             // check for escaped chars

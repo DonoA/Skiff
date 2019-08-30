@@ -3,7 +3,7 @@ package io.dallen.parser;
 import io.dallen.ast.AST;
 import io.dallen.ast.ASTEnums;
 import io.dallen.ast.ASTOptional;
-import io.dallen.compiler.CompileError;
+import io.dallen.compiler.CompileException;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.tokenizer.Token;
 import io.dallen.tokenizer.Token.Keyword;
@@ -93,7 +93,8 @@ class BlockParser {
     private void attachCatchBlock(ArrayList<AST.Statement> statements) {
         List<Token> allTokens = parser.selectToBlockEnd();
         if(statements.size() < 1) {
-            throw new CompileError("Else statement requires If, none found");
+            parser.throwError("Catch statement requires Try, none found", allTokens.get(0));
+            return;
         }
         AST.Statement parentStmt = statements.get(statements.size() - 1);
 
@@ -110,14 +111,16 @@ class BlockParser {
         if(parentStmt instanceof AST.TryBlock) {
             ((AST.TryBlock) parentStmt).catchBlock = new AST.CatchBlock(cond, body, allTokens);
         } else {
-            throw new CompileError("Catch statement requires Try, " + parentStmt.getClass().getName() + " found");
+            parser.throwError("Catch statement requires Try, " + parentStmt.getClass().getName() + " found",
+                    allTokens.get(0));
         }
     }
 
     private void attachElseBlock(ArrayList<AST.Statement> statements) {
         List<Token> allTokens = parser.selectToBlockEnd();
         if(statements.size() < 1) {
-            throw new CompileError("Else statement requires If, none found");
+            parser.throwError("Else statement requires If, none found", allTokens.get(0));
+            return;
         }
         AST.Statement parentStmt = statements.get(statements.size() - 1);
 
@@ -140,7 +143,8 @@ class BlockParser {
             AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
             elseIfBlock.elseBlock = ASTOptional.of(toAttach);
         } else {
-            throw new CompileError("Else statement requires If, " + parentStmt.getClass().getName() + " found");
+            parser.throwError("Else statement requires If, " + parentStmt.getClass().getName() + " found",
+                    allTokens.get(0));
         }
     }
 
@@ -281,7 +285,8 @@ class BlockParser {
         try {
             params = parser.getCommon().parseFunctionDecArgs(paramTokens);
         } catch (IndexOutOfBoundsException ex) {
-            throw new CompileError("Failed to parse function args for " + funcName);
+            parser.throwError("Catch statement requires Try, none found", allTokens.get(0));
+            return null;
         }
 
         AST.Type returnType = Parser.VOID;

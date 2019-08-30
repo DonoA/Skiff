@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 class ClassDefCompiler {
 
-    private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext) {
+    private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext)
+            throws CompileException {
         CompiledType cls = new CompiledType(stmt.name, true);
 
         stmt.genericTypes.forEach(generic -> {
@@ -34,6 +36,14 @@ class ClassDefCompiler {
                 AST.Declare dec = (AST.Declare) s;
                 declaredVars.put(dec.name, new CompiledVar(dec.name, false,
                         (CompiledType) dec.type.compile(innerContext).getBinding()));
+
+                if(cls.getParent()
+                        .getAllFields()
+                        .stream()
+                        .map(CompiledObject::getName)
+                        .anyMatch(f -> f.equals(dec.name))) {
+                    context.throwError("Cannot have var with same name in super", dec);
+                }
             } else if(s instanceof AST.FunctionDef) {
                 AST.FunctionDef dec = (AST.FunctionDef) s;
                 boolean isConstructor = dec.name.equals(cls.getName());
@@ -48,16 +58,11 @@ class ClassDefCompiler {
                     declaredMethods.put(dec.name, func);
                 }
             } else {
-                throw new CompileError("Class statements must be function defs or Declares");
+                context.throwError("Class statements must be function defs or Declares", s);
             }
         }
 
-        cls.getParent().getAllFields().forEach(f -> {
-            if(declaredVars.containsKey(f.getName())) {
-                throw new CompileError("Cannot have var with same name in super");
-            }
-            cls.addField(f);
-        });
+        cls.getParent().getAllFields().forEach(cls::addField);
         declaredVars.values().forEach(cls::addField);
 
         cls.getParent().getAllMethods()

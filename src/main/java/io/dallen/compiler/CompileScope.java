@@ -42,35 +42,16 @@ public class CompileScope {
         return parent.getObject(name);
     }
 
-    public CompiledType getType(String name) {
-        CompiledObject varFor = getObject(name);
-        if(!(varFor instanceof CompiledType)) {
-            throw new CompileError("Variable '" + name + "' is not a class");
-        }
-
-        return (CompiledType) varFor;
-    }
-
-    public CompiledFunction getFunction(String name) {
+    public CompiledFunction getFunction(String name) throws CompileException {
         CompiledObject varFor = getObject(name);
         if(!(varFor instanceof CompiledFunction)) {
-            throw new CompileError("Variable '" + name + "' is not a function");
+            throw new CompileException("Variable '" + name + "' is not a function", null);
         }
 
         return (CompiledFunction) varFor;
     }
 
-    public CompiledVar getVar(String name) {
-        CompiledObject varFor = getObject(name);
-        if(!(varFor instanceof CompiledVar)) {
-            throw new CompileError("Variable '" + name + "' is not a variable");
-        }
-
-        return (CompiledVar) varFor;
-    }
-
     public List<CompiledObject> getLocals() {
         return new ArrayList<>(variableTable.values());
     }
-
 }

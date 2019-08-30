@@ -2,7 +2,7 @@ package io.dallen.parser;
 
 import io.dallen.ast.AST;
 import io.dallen.ast.ASTEnums;
-import io.dallen.compiler.CompileError;
+import io.dallen.compiler.CompileException;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.tokenizer.Token;
 import io.dallen.tokenizer.Token.Keyword;
@@ -105,7 +105,8 @@ class ExpressionParser {
         try {
             params = parser.getCommon().parseFunctionDecArgs(paramTokens);
         } catch (IndexOutOfBoundsException ex) {
-            throw new CompileError("Failed to parse function args for anon func");
+            parser.throwError("Failed to parse function args for anon func", paramTokens.get(0));
+            return null;
         }
 
         AST.Type returns = Parser.VOID;

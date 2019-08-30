@@ -75,7 +75,7 @@ public class SkiffC {
 
         System.out.println(" ======== COMPILE =========== ");
 
-        CompileContext context = new CompileContext(null);
+        CompileContext context = new CompileContext(programText);
         List<String> compiledText = null;
         try {
             compiledText = statements

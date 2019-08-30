@@ -1,12 +1,10 @@
 package io.dallen.errors;
 
-import io.dallen.tokenizer.Token;
-
 import java.util.List;
 
-public interface ErrorCollector {
+public interface ErrorCollector<T> {
 
-    void throwError(String msg, Token on);
+    void throwError(String msg, T on);
 
     List<String> getErrors();
 

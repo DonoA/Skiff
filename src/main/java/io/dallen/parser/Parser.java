@@ -10,7 +10,7 @@ import io.dallen.tokenizer.Token.Textless;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Parser implements ErrorCollector {
+public class Parser implements ErrorCollector<Token> {
 
     public final static AST.Type VOID = new Type(
             new Variable(

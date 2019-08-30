@@ -2,6 +2,7 @@ package io.dallen.compiler.visitor;
 
 import io.dallen.ast.AST;
 import io.dallen.compiler.*;
+import io.dallen.errors.ErrorCollector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +12,33 @@ import java.util.stream.Collectors;
 class FunctionCallCompiler {
 
     static CompiledCode compileFunctionCall(AST.FunctionCall stmt, CompileContext context) {
-        CompiledFunction func = context.getScope().getFunction(stmt.name);
+        CompiledFunction func;
+        try {
+            func = context.getScope().getFunction(stmt.name);
+        } catch(CompileException ex) {
+            context.throwError(ex.getMessage(), stmt);
+            return new CompiledCode()
+                    .withText("")
+                    .withType(CompiledType.VOID);
+        }
 
         List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(context))
                 .collect(Collectors.toList());
 
-//        checkVarTypes(func, compArgs);
+        if (func.getArgs().size() != compArgs.size()) {
+            context.throwError("Differing param count", stmt);
+        }
+
+        ListIterator<CompiledType> expected = func.getArgs().listIterator();
+        ListIterator<CompiledCode> found = compArgs.listIterator();
+
+        while (expected.hasNext()) {
+            CompiledType typ1 = expected.next();
+            CompiledType typ2 = found.next().getType();
+            if (!typ1.equals(typ2)) {
+                context.throwError("Differing param types", stmt);
+            }
+        }
 
         boolean isSuper = stmt.name.equals("super");
 
@@ -54,21 +76,8 @@ class FunctionCallCompiler {
                 .withType(func.getReturns());
     }
 
-    private static void checkVarTypes(CompiledFunction func, List<CompiledCode> compArgs) {
-        if (func.getArgs().size() != compArgs.size()) {
-            throw new CompileError("Differing param count " + func.getName());
-        }
+    private static void checkVarTypes(CompiledFunction func, List<CompiledCode> compArgs, ErrorCollector<AST.Statement> errors) {
 
-        ListIterator<CompiledType> expected = func.getArgs().listIterator();
-        ListIterator<CompiledCode> found = compArgs.listIterator();
-
-        while (expected.hasNext()) {
-            CompiledType typ1 = expected.next();
-            CompiledType typ2 = found.next().getType();
-            if (!typ1.equals(typ2)) {
-                throw new CompileError("Differing param types " + func.getName());
-            }
-        }
     }
 
 }

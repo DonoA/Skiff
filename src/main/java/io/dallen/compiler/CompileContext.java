@@ -1,12 +1,21 @@
 package io.dallen.compiler;
 
-public class CompileContext {
+import io.dallen.ast.AST;
+import io.dallen.errors.ErrorCollector;
+import io.dallen.errors.ErrorPrinter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class CompileContext implements ErrorCollector<AST.Statement> {
 
     public final static String INDENT = "    ";
 
-    private CompileScope scope;
+    private final CompileScope scope;
     private String indent = "";
-    private CompileContext parent;
+    private final CompileContext parent;
+    private final List<String> errors;
+    private final String code;
     private String scopePrefix = "";
     private CompiledType parentClass = null;
 
@@ -14,17 +23,22 @@ public class CompileContext {
 
     private boolean onStack = true;
 
+    public CompileContext(String code) {
+        this.parent = null;
+        this.errors = new ArrayList<>();
+        this.code = code;
+        this.scope = new CompileScope(null);
+        this.scope.loadBuiltins();
+    }
+
     public CompileContext(CompileContext parent) {
         this.parent = parent;
-        if(parent != null) {
-            this.scope = new CompileScope(parent.scope);
-            this.indent = parent.indent;
-            this.parentClass = parent.parentClass;
-            this.onStack = parent.onStack;
-        } else {
-            this.scope = new CompileScope(null);
-            this.scope.loadBuiltins();
-        }
+        this.errors = null;
+        this.code = null;
+        this.scope = new CompileScope(parent.scope);
+        this.indent = parent.indent;
+        this.parentClass = parent.parentClass;
+        this.onStack = parent.onStack;
     }
 
     public CompileContext addIndent() {
@@ -38,10 +52,6 @@ public class CompileContext {
 
     public CompiledObject getObject(String name) throws NoSuchObjectException {
         return scope.getObject(name);
-    }
-
-    public CompiledType getType(String name) {
-        return scope.getType(name);
     }
 
     public String getIndent() {
@@ -93,5 +103,22 @@ public class CompileContext {
 
     public CompileScope getScope() {
         return scope;
+    }
+
+    @Override
+    public void throwError(String msg, AST.Statement stmt) {
+        if(parent == null) {
+            errors.add(ErrorPrinter.pointToPos(code, stmt.tokens.get(0).pos, msg));
+        } else {
+            parent.throwError(msg, stmt);
+        }
+    }
+
+    @Override
+    public List<String> getErrors() {
+        if(parent == null) {
+            return errors;
+        }
+        return parent.getErrors();
     }
 }

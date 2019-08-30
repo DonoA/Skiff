@@ -3,6 +3,8 @@ package io.dallen.compiler.visitor;
 import io.dallen.ast.AST;
 import io.dallen.compiler.*;
 
+import java.util.Optional;
+
 class FunctionDefCompiler {
 
     static CompiledCode compileFunctionDef(AST.FunctionDef stmt, CompileContext context) {
@@ -16,7 +18,7 @@ class FunctionDefCompiler {
                 .addIndent();
 
         if(!returns.getBinding().equals(CompiledType.VOID) && isConstructor) {
-            throw new CompileError("Constructor must return void");
+            context.throwError("Constructor must return void", stmt);
         }
 
         VisitorUtils.FunctionSig sig = VisitorUtils.generateSig(isConstructor, context, returns, stmt, innerContext);
@@ -32,13 +34,17 @@ class FunctionDefCompiler {
 
         stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
 
-        boolean hasReturn = stmt.body.get(stmt.body.size() - 1) instanceof AST.Return;
+        Optional<AST.Return> returnOptional = Optional.empty();
 
-        if(!hasReturn && !returns.getBinding().equals(CompiledType.VOID)) {
-            throw new CompileError("Function with non void return type must end with a return statement");
+        if(stmt.body.get(stmt.body.size() - 1) instanceof AST.Return) {
+            returnOptional = Optional.of((AST.Return) stmt.body.get(stmt.body.size() - 1));
         }
 
-        sb.append(generateReturns(hasReturn, isConstructor, context, innerContext));
+        if(returnOptional.isEmpty() && !returns.getBinding().equals(CompiledType.VOID)) {
+            context.throwError("Function with non void return type must end with a return statement", stmt);
+        }
+
+        sb.append(generateReturns(returnOptional, isConstructor, context, innerContext));
 
         return new CompiledCode()
                 .withText(sb.toString())
@@ -64,18 +70,16 @@ class FunctionDefCompiler {
 
     }
 
-    private static String generateReturns(boolean hasReturn, boolean isConstructor, CompileContext context,
+    private static String generateReturns(Optional<AST.Return> returns, boolean isConstructor, CompileContext context,
                                           CompileContext innerContext) {
         StringBuilder sb = new StringBuilder();
-        if(!hasReturn) {
+        if(returns.isEmpty()) {
             sb.append(innerContext.getIndent());
             VisitorUtils.cleanupScope(sb, innerContext);
         }
 
         if(isConstructor) {
-            if(hasReturn) {
-                throw new CompileError("Constructor cannot return!");
-            }
+            returns.ifPresent(returnz -> context.throwError("Constructor cannot return!", returnz));
 
             sb.append(innerContext.getIndent())
                     .append("return this;\n");

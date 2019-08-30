@@ -13,7 +13,10 @@ class DottedCompiler {
         if(stmt.right instanceof AST.Variable) {
             return compileVarDot(lhs, (AST.Variable) stmt.right);
         }
-        throw new CompileError("Dotted on invalid type " + stmt.right.toFlatString());
+        context.throwError("Dotted on invalid type", stmt);
+        return new CompiledCode()
+                .withText("")
+                .withType(CompiledType.VOID);
     }
 
     private static CompiledCode compileFunctionDot(CompiledCode lhs, AST.FunctionCall call, CompileContext context) {
