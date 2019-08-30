@@ -1,0 +1,17 @@
+class Person<T> {
+    dat: T;
+
+    def Person(dat: T) {
+        this.dat = dat;
+    }
+
+    def getDat(): T {
+        return this.dat;
+    }
+}
+
+def main(args: List<String>): Int {
+    dave: Person<Int>;
+    dave = new Person<Int>(5);
+    return dave.getDat();
+}

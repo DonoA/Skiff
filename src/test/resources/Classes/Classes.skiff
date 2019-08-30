@@ -1,0 +1,31 @@
+class Thing {
+    name: String;
+
+    def Thing(name: String) {
+        this.name = name;
+    }
+
+    def getName(): String {
+        return name;
+    }
+}
+
+class Person : Thing {
+    age: Int;
+
+    def Person(name: String, age: Int) {
+        super(name);
+        this.age = age;
+    }
+
+    def incAge() {
+        this.age = age + 1;
+    }
+}
+
+def main(args: List<String>): Int {
+    dave: Thing;
+    dave = new Person("Dave", 15);
+    println(dave.getName());
+    return args.getSize();
+}

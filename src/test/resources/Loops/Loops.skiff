@@ -1,0 +1,9 @@
+def main(args: List<String>): Int {
+    i: Int = 0;
+    
+    while(i < 10) {
+        i++;
+    }
+
+    return i;
+}

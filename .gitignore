@@ -13,6 +13,7 @@ Test/main.cpp
 CMakeLists.txt
 cmake-build-debug/
 target/
-*.skiff
+test.skiff
 *.out
 *.dSYM/
+working/
