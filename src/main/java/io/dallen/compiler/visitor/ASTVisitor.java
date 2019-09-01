@@ -1,6 +1,7 @@
 package io.dallen.compiler.visitor;
 
 import io.dallen.ast.AST.*;
+import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
 import java.util.ArrayList;
@@ -225,28 +226,20 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMathSelfMod(MathSelfMod stmt, CompileContext context) {
-//        CompiledCode on = stmt.left.compile(context);
-//        String onText;
-//        if(on.getType().isRef()) {
-//            onText = "(**" + on.getCompiledText() + ")";
-//        } else {
-//            onText = "(*" + on.getCompiledText() + ")";
-//        }
-//
-//        String op = stmt.op == MathOp.MINUS ? "--" : "++";
-//        String text;
-//        if(stmt.time == SelfModTime.POST) {
-//            text = onText + op;
-//        } else {
-//            text = op + onText;
-//        }
-//
-//        // TODO: make the return from this block work
-//        return new CompiledCode()
-//                .withText(text)
-//                .withBinding(on.getBinding())
-//                .withType(on.getType());
-        return null;
+        CompiledCode on = stmt.left.compile(context);
+        String op = stmt.op == ASTEnums.MathOp.MINUS ? "--" : "++";
+        String text = on.getCompiledText();
+        if(stmt.time == ASTEnums.SelfModTime.POST) {
+            text = text + op;
+        } else {
+            text = op + text;
+        }
+
+        // TODO: make the return from this block work
+        return new CompiledCode()
+                .withText(text)
+                .withBinding(on.getBinding())
+                .withType(on.getType());
     }
 
     public CompiledCode compileSubscript(Subscript stmt, CompileContext context) {

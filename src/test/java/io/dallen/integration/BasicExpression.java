@@ -21,7 +21,7 @@ public class BasicExpression {
 
         IntegrationTestHarness.TestResult actual = harness.run();
         IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
-                0, "Hello World!\n", ""
+                10, "loop\nloop\nloop\nloop\nloop\nloop\nloop\nloop\nloop\nloop\n", ""
         );
         assertEquals(expected, actual);
     }
