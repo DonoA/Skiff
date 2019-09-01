@@ -1,7 +1,7 @@
-class Person<T> {
+class Wrapper<T> {
     dat: T;
 
-    def Person(dat: T) {
+    def Wrapper(dat: T) {
         this.dat = dat;
     }
 
@@ -11,7 +11,13 @@ class Person<T> {
 }
 
 def main(args: List<String>): Int {
-    dave: Person<Int>;
-    dave = new Person<Int>(5);
-    return dave.getDat();
+    intData: Wrapper<Int>;
+    intData = new Wrapper<Int>(5);
+
+    dave: Wrapper<String>;
+    dave = new Wrapper<String>("My name Dave!");
+
+    println(dave.getDat());
+
+    return intData.getDat();
 }

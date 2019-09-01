@@ -94,6 +94,10 @@ public class CompiledType extends CompiledObject {
         return this;
     }
 
+    public List<CompiledFunction> getConstructors() {
+        return constructors;
+    }
+
     public List<CompiledVar> getAllFields() {
         return this.declaredVars;
     }

@@ -36,4 +36,15 @@ public class BasicExpression {
         );
         assertEquals(expected, actual);
     }
+
+    @org.junit.Test
+    public void generics() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Generics");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                5, "My name Dave!\n", ""
+        );
+        assertEquals(expected, actual);
+    }
 }

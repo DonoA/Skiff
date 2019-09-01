@@ -84,7 +84,9 @@ class ClassDefCompiler {
         });
 
         innerContext.declareObject(new CompiledVar("this", true, cls));
-        innerContext.declareObject(new CompiledFunction("super", "super", List.of()));
+        cls.getParent().getConstructors().forEach(ctr -> {
+            innerContext.declareObject(new CompiledFunction("super", "super", ctr.getArgs()));
+        });
 
         return cls;
     }
