@@ -98,7 +98,18 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileLoopBlock(LoopBlock stmt, CompileContext context) {
-        return null;
+        CompileContext innerContext = new CompileContext(context);
+        innerContext.addIndent();
+        StringBuilder sb = new StringBuilder();
+        sb.append("while(1)\n").append(context.getIndent()).append("{\n");
+        stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
+        sb.append(innerContext.getIndent());
+        VisitorUtils.cleanupScope(sb, innerContext);
+        sb.append(context.getIndent()).append("}");
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withType(CompiledType.VOID)
+                .withSemicolon(false);
     }
 
     public CompiledCode compileForBlock(ForBlock stmt, CompileContext context) {
@@ -126,15 +137,80 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileBreakStatement(BreakStatement stmt, CompileContext context) {
-        return null;
+        return VisitorUtils.compileFlowKeyword("break", context);
+
     }
 
     public CompiledCode compileContinueStatement(ContinueStatement stmt, CompileContext context) {
-        return null;
+        return VisitorUtils.compileFlowKeyword("continue", context);
     }
 
     public CompiledCode compileTryBlock(TryBlock stmt, CompileContext context) {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        CatchBlock ctch = stmt.catchBlock;
+
+        CompileContext catchContext = new CompileContext(context).setIndent(CompileContext.INDENT);
+        CompiledCode exceptType = ctch.ex.type.compile(context);
+        catchContext.declareObject(new CompiledVar(ctch.ex.name, true, (CompiledType) exceptType.getBinding()));
+
+        String exceptionClassName = VisitorUtils.underscoreJoin(
+                "skiff",
+                exceptType.getBinding().getName(),
+                "interface"
+        );
+        int catchId = context.getGlobalCounter();
+        String catchFuncName = "skiff_catch_" + String.valueOf(catchId);
+        sb.append("skiff_start_try(")
+                .append(catchFuncName)
+                .append(", &").append(exceptionClassName).append(", sp_ref);\n");
+        sb.append(context.getIndent())
+                .append("int skiff_continue_exec_")
+                .append(catchId)
+                .append(" = setjmp(catch_layer_tail->current_catch_state);\n");
+        sb.append(context.getIndent())
+                .append("if(skiff_continue_exec_").append(catchId).append(" == 0)\n")
+                .append(context.getIndent()).append("{\n");
+
+        CompileContext innerContext = new CompileContext(context).addIndent();
+
+        stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
+
+        sb.append(context.getIndent()).append("}\n");
+        sb.append(context.getIndent()).append("skiff_end_try();\n");
+
+        StringBuilder catchText = new StringBuilder();
+        catchText.append("void skiff_catch_")
+                .append(catchId)
+                .append("(skiff_catch_layer_t * layer, skiff_exception_t * ")
+                .append(ctch.ex.name)
+                .append(")\n");
+        catchText.append("{\n");
+        ctch.body.forEach(VisitorUtils.compileToStringBuilder(catchText, catchContext));
+        catchText.append(catchContext.getIndent())
+                .append("skfree_set_ref_stack(layer->sp_ref_val);\n");
+        catchText.append(catchContext.getIndent())
+                .append("longjmp(layer->current_catch_state, 1);\n");
+        catchText.append("}\n");
+
+        context.addDependentCode(catchText.toString());
+
+//        void skiff_catch_1(skiff_catch_layer_t * layer, skiff_exception_t * ex)
+//        {
+//            longjmp(layer->current_catch_state, 0);
+//        }
+
+//        skiff_start_try(skiff_catch_1, &skiff_exception_interface);
+//        int skiff_continue_exec_1 = setjmp(catch_layer_tail->current_catch_state);
+//        if(skiff_continue_exec_1 == 0) {
+//            // try body code start
+//            skiff_an_error();
+//            // try body code end
+//        }
+//        skiff_end_try();
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withSemicolon(false)
+                .withType(CompiledType.VOID);
     }
 
     public CompiledCode compileCatchBlock(CatchBlock stmt, CompileContext context) {
@@ -150,7 +226,11 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileParened(Parened stmt, CompileContext context) {
-        return null;
+        CompiledCode sub = stmt.sub.compile(context);
+        return new CompiledCode()
+                .withText("(" + sub.getCompiledText() + ")")
+                .withType(sub.getType())
+                .withBinding(sub.getBinding());
     }
 
     public CompiledCode compileDotted(Dotted stmt, CompileContext context) {
@@ -203,7 +283,11 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileThrowStatement(ThrowStatement stmt, CompileContext context) {
-        return null;
+        CompiledCode inner = stmt.value.compile(context);
+
+        return new CompiledCode()
+                .withText("skiff_throw(" + inner.getCompiledText() + ")")
+                .withType(CompiledType.VOID);
     }
 
     public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
@@ -230,12 +314,11 @@ public class ASTVisitor {
         String op = stmt.op == ASTEnums.MathOp.MINUS ? "--" : "++";
         String text = on.getCompiledText();
         if(stmt.time == ASTEnums.SelfModTime.POST) {
-            text = text + op;
+            text = "(" + text + op + ")";
         } else {
-            text = op + text;
+            text = "(" + op + text + ")";
         }
 
-        // TODO: make the return from this block work
         return new CompiledCode()
                 .withText(text)
                 .withBinding(on.getBinding())

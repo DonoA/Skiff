@@ -1,10 +1,20 @@
 def main(args: List<String>): Int {
     i: Int = 0;
     
-    while(i < 10) {
-        println("loop");
+    while(i < 2) {
+        println("while");
         i++;
     }
 
-    return i;
+    j: Int = 4;
+
+    loop {
+        println("loop");
+        if(j < 1) {
+            break;
+        }
+        j--;
+    }
+
+    return i + j;
 }

@@ -103,7 +103,8 @@ class BlockParser {
         parser.consumeExpected(Token.Symbol.LEFT_PAREN);
         List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-        AST.Statement cond = new Parser(condTokens, parser).parseExpression();
+
+        AST.FunctionParam cond = parser.getCommon().parseFunctionDecArgs(condTokens).get(0);
 
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();

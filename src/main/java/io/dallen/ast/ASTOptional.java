@@ -20,7 +20,7 @@ public class ASTOptional<T extends AST.Statement> {
     }
 
     public boolean isPresent() {
-        return dat == null;
+        return dat != null;
     }
 
     public T get() {

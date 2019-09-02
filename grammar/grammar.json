@@ -170,7 +170,7 @@
     "CatchBlock": {
         "extends": "BlockStatement",
         "fields": {
-            "ex": "Statement"
+            "ex": "FunctionParam"
         }
     },
     "FinallyBlock": {

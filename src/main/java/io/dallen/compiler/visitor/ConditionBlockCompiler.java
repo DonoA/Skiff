@@ -19,6 +19,7 @@ public class ConditionBlockCompiler {
         sb.append("{\n");
         CompileContext innerContext = new CompileContext(context).addIndent();
         body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
+        sb.append(innerContext.getIndent());
         VisitorUtils.cleanupScope(sb, innerContext);
         sb.append(context.getIndent());
         sb.append("}");

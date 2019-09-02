@@ -185,4 +185,14 @@ public class VisitorUtils {
         }
         return sb.toString();
     }
+
+    static CompiledCode compileFlowKeyword(String name, CompileContext context) {
+        StringBuilder sb = new StringBuilder();
+        VisitorUtils.cleanupScope(sb, context);
+        sb.append(context.getIndent()).append(name).append(";");
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withType(CompiledType.VOID)
+                .withSemicolon(false);
+    }
 }

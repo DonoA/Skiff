@@ -602,8 +602,8 @@ public class AST {
     }
     
     public static class CatchBlock extends BlockStatement {
-        public final Statement ex;
-        public CatchBlock(Statement ex, List<Statement> body, List<Token> tokens) {
+        public final FunctionParam ex;
+        public CatchBlock(FunctionParam ex, List<Statement> body, List<Token> tokens) {
             super(body, tokens);
             this.ex = ex;
         }

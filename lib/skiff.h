@@ -2,8 +2,11 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <setjmp.h>
 #include "skiff_string.h"
 #include "skiff_list.h"
+#include "skiff_exception.h"
+#include "try_catch.h"
 
 void skiff_print(skiff_string_t *);
 void skiff_println(skiff_string_t *);
@@ -11,8 +14,19 @@ void skiff_println(skiff_string_t *);
 int main(int, char **);
 int32_t skiff_main(skiff_list_t *);
 
+void skiff_catch_0(skiff_catch_layer_t * layer, skiff_exception_t * ex)
+{
+    printf("Error caught!");
+    longjmp(layer->current_catch_state, 0);
+}
+
 int main(int argc, char * argv[])
 {
+    catch_layer_tail = catch_layer_head = calloc(1, sizeof(skiff_catch_layer_t));
+    catch_layer_head->catch_class_ptr = &skiff_exception_interface;
+    catch_layer_head->current_catch = skiff_catch_0;
+    catch_layer_head->prev = catch_layer_head->next = NULL;
+
     skiff_list_t * argz = skiff_list_allocate_new();
     for(size_t i = 0; i < argc; i++)
     {

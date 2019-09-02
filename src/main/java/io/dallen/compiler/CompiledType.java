@@ -25,14 +25,20 @@ public class CompiledType extends CompiledObject {
     public static final CompiledType STRING = new CompiledType("String", true)
         .setParent(CompiledType.ANYREF);
 
+    public static final CompiledType EXCEPTION = new CompiledType("Exception", true)
+            .setParent(CompiledType.ANYREF)
+            .addMethod(new CompiledMethod(
+                    new CompiledFunction("getMessage", "", false, CompiledType.STRING, List.of()),
+                    true));
+
     public static final CompiledType LIST = new CompiledType("List" ,true)
         .setParent(CompiledType.ANYREF)
         .addField(new CompiledVar("size", false, CompiledType.INT))
         .addMethod(new CompiledMethod(
-                new CompiledFunction("getSize", "", false, CompiledType.INT, new ArrayList<>()),
+                new CompiledFunction("getSize", "", false, CompiledType.INT, List.of()),
                 true))
         .addMethod(new CompiledMethod(
-                new CompiledFunction("getSub", "", false, CompiledType.ANYREF, new ArrayList<>()),
+                new CompiledFunction("getSub", "", false, CompiledType.ANYREF, List.of()),
                 true));
 
     private final boolean isRef;

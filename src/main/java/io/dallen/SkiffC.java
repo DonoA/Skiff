@@ -31,8 +31,8 @@ public class SkiffC {
         return new String(encoded, StandardCharsets.UTF_8);
     }
 
-    public static void main(String[] argz) throws IOException {
-        compile("classes.skiff", "test.c", true);
+    public static void main(String[] argz) {
+        compile("test.skiff", "test.c", true);
     }
 
     public static boolean compile(String infile, String outfile, boolean debug) {

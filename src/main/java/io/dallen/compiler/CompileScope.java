@@ -17,6 +17,7 @@ public class CompileScope {
         declareObject(CompiledType.INT);
         declareObject(CompiledType.BOOL);
         declareObject(CompiledType.LIST);
+        declareObject(CompiledType.EXCEPTION);
 
         declareObject(new CompiledFunction(
             "println",
@@ -35,7 +36,6 @@ public class CompileScope {
         }
 
         if(parent == null) {
-
             throw new NoSuchObjectException(name);
         }
 

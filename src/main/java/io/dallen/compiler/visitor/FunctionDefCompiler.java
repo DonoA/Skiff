@@ -8,13 +8,13 @@ import java.util.Optional;
 class FunctionDefCompiler {
 
     static CompiledCode compileFunctionDef(AST.FunctionDef stmt, CompileContext context) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder functionCode = new StringBuilder();
         CompiledCode returns = stmt.returns.compile(context);
 
         boolean isConstructor = context.getParentClass() != null &&
                 stmt.name.equals(context.getParentClass().getName());
 
-        CompileContext innerContext = new CompileContext(context)
+        CompileContext innerContext = new CompileContext(context, true)
                 .addIndent();
 
         if(!returns.getBinding().equals(CompiledType.VOID) && isConstructor) {
@@ -24,15 +24,15 @@ class FunctionDefCompiler {
         VisitorUtils.FunctionSig sig = VisitorUtils.generateSig(isConstructor, context, returns, stmt, innerContext);
         context.declareObject(sig.getFunction());
 
-        sb.append(sig.getText());
-        sb.append("\n")
+        functionCode.append(sig.getText());
+        functionCode.append("\n")
                 .append(context.getIndent()).append("{\n");
 
         if(isConstructor) {
-            sb.append(initiateInstance(context, innerContext));
+            functionCode.append(initiateInstance(context, innerContext));
         }
 
-        stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
+        stmt.body.forEach(VisitorUtils.compileToStringBuilder(functionCode, innerContext));
 
         Optional<AST.Return> returnOptional = Optional.empty();
 
@@ -44,10 +44,15 @@ class FunctionDefCompiler {
             context.throwError("Function with non void return type must end with a return statement", stmt);
         }
 
-        sb.append(generateReturns(returnOptional, isConstructor, context, innerContext));
+        functionCode.append(generateReturns(returnOptional, isConstructor, context, innerContext));
+
+        StringBuilder text = new StringBuilder();
+
+        innerContext.getDependentCode().forEach(s -> text.append(s).append("\n"));
+        text.append(functionCode.toString());
 
         return new CompiledCode()
-                .withText(sb.toString())
+                .withText(text.toString())
                 .withType(CompiledType.VOID)
                 .withBinding(sig.getFunction())
                 .withSemicolon(false);

@@ -23,3 +23,8 @@ void skfree_ref_stack(size_t ref_len)
 {
     sp_ref -= ref_len;
 }
+
+void skfree_set_ref_stack(size_t ref_len)
+{
+    sp_ref = ref_len;
+}

@@ -1218,14 +1218,9 @@ public class BasicBlockTest {
         );
 
         tryBlock.catchBlock = new CatchBlock(
-                new Declare(
+                new FunctionParam(
                         ASTUtil.simpleType("Error"),
-                        "ex",
-                        List.of(
-                                new Token(Token.Textless.NAME, "ex", 0),
-                                new Token(Token.Symbol.COLON, 0),
-                                new Token(Token.Textless.NAME, "Error", 0)
-                        )
+                        "ex"
                 ),
                 List.of(
                         new FunctionCall(
