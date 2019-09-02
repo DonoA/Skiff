@@ -325,11 +325,10 @@ class BlockParser {
             location = parser.consume().literal;
             typ = ASTEnums.ImportType.LOCAL;
         } else {
-            parser.consumeExpected(Token.Symbol.LEFT_ANGLE);
             location = parser.consumeExpected(Token.Textless.NAME).literal;
-            parser.consumeExpected(Token.Symbol.RIGHT_ANGLE);
             typ = ASTEnums.ImportType.SYSTEM;
         }
+        parser.consumeExpected(Token.Symbol.SEMICOLON);
         return new AST.ImportStatement(typ, location, tokens);
     }
 

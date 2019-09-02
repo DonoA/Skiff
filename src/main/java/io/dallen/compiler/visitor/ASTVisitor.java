@@ -1,11 +1,14 @@
 package io.dallen.compiler.visitor;
 
+import io.dallen.SkiffC;
 import io.dallen.ast.AST.*;
 import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ASTVisitor {
@@ -194,19 +197,6 @@ public class ASTVisitor {
 
         context.addDependentCode(catchText.toString());
 
-//        void skiff_catch_1(skiff_catch_layer_t * layer, skiff_exception_t * ex)
-//        {
-//            longjmp(layer->current_catch_state, 0);
-//        }
-
-//        skiff_start_try(skiff_catch_1, &skiff_exception_interface);
-//        int skiff_continue_exec_1 = setjmp(catch_layer_tail->current_catch_state);
-//        if(skiff_continue_exec_1 == 0) {
-//            // try body code start
-//            skiff_an_error();
-//            // try body code end
-//        }
-//        skiff_end_try();
         return new CompiledCode()
                 .withText(sb.toString())
                 .withSemicolon(false)
@@ -291,7 +281,15 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
-        return null;
+        String systemPath = new File("lib/" + stmt.value.toLowerCase() + ".skiff").getAbsolutePath();
+        Optional<String> importCode = SkiffC.compile(systemPath, context.isDebug());
+        if(importCode.isEmpty()) {
+            return new CompiledCode()
+                    .withText("");
+        }
+        String text = "// Import " + stmt.value + "\n" + importCode.get() +"\n";
+        return new CompiledCode()
+                .withText(text);
     }
 
     public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) {

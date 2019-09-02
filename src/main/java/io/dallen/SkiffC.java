@@ -15,11 +15,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class SkiffC {
-
-    public static boolean DEBUG = true;
 
     private static void printTokenStream(List<Token> tokens) {
         tokens.forEach(e -> System.out.print(" " + e.toString()));
@@ -36,7 +35,16 @@ public class SkiffC {
     }
 
     public static boolean compile(String infile, String outfile, boolean debug) {
-        DEBUG = debug;
+        Optional<String> code = compile(infile, debug);
+        try (PrintWriter out = new PrintWriter(outfile)) {
+            code.ifPresent(out::println);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return code.isPresent();
+    }
+
+    public static Optional<String> compile(String infile, boolean debug) {
         String preamble = "#include \"" + new File("lib/skiff.h").getAbsolutePath() + "\"\n\n";
 
         boolean passed = true;
@@ -46,7 +54,7 @@ public class SkiffC {
             programText = readFile(infile);
         } catch(IOException err) {
             System.err.println("Bad file");
-            return false;
+            return Optional.empty();
         }
         Lexer lexer = new Lexer(programText);
         List<Token> tokenStream = null;
@@ -63,11 +71,11 @@ public class SkiffC {
         }
 
         if(tokenStream == null || tokenStream.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
 
-        if(DEBUG) {
-            System.out.println(" ======== PARSE =========== ");
+        if(debug) {
+            System.out.println(" ======== PARSE " + infile + " =========== ");
         }
 
         Parser parser = new Parser(tokenStream, programText);
@@ -85,13 +93,13 @@ public class SkiffC {
         }
 
         if(statements == null || statements.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
-        if(DEBUG) {
-            System.out.println(" ======== COMPILE =========== ");
+        if(debug) {
+            System.out.println(" ======== COMPILE " + infile + " =========== ");
         }
 
-        CompileContext context = new CompileContext(programText);
+        CompileContext context = new CompileContext(programText, debug);
         List<String> compiledText = null;
         try {
             compiledText = statements
@@ -111,17 +119,19 @@ public class SkiffC {
         }
 
         if(compiledText == null || compiledText.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
         String code = preamble + String.join("\n", compiledText);
 
 //        System.out.println(code);
 
-        try (PrintWriter out = new PrintWriter(outfile)) {
-            out.println(code);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        if(!passed) {
+            return Optional.empty();
+        } else {
+            return Optional.of(code);
         }
-        return passed;
     }
+
+
+
 }

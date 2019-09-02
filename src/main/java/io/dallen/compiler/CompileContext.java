@@ -20,16 +20,18 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     private String scopePrefix = "";
     private CompiledType parentClass = null;
     private int globalCounter = 1;
+    private final boolean debug;
 
     private int refStackSize = 0;
 
     private boolean onStack = true;
 
-    public CompileContext(String code) {
+    public CompileContext(String code, boolean debug) {
         this.parent = null;
         this.errors = new ArrayList<>();
         this.code = code;
         this.dependents = new ArrayList<>();
+        this.debug = debug;
         this.scope = new CompileScope(null);
         this.scope.loadBuiltins();
     }
@@ -52,6 +54,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         this.indent = parent.indent;
         this.parentClass = parent.parentClass;
         this.onStack = parent.onStack;
+        this.debug = parent.debug;
     }
 
     public CompileContext addIndent() {
@@ -149,6 +152,10 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         } else {
             return dependents;
         }
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 
     @Override

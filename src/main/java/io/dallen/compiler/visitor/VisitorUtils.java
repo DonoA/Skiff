@@ -18,13 +18,13 @@ public class VisitorUtils {
     static Consumer<AST.Statement> compileToStringBuilder(StringBuilder sb, CompileContext context) {
         return stmt -> {
             CompiledCode s = stmt.compile(context);
-            if(SkiffC.DEBUG && !(stmt instanceof AST.BlockStatement)) {
+            if(context.isDebug() && !(stmt instanceof AST.BlockStatement)) {
                 sb.append(context.getIndent()).append("/* ").append(stmt.toFlatString()).append(" */\n");
             }
             sb.append(context.getIndent());
             sb.append(s.getCompiledText());
             sb.append(s.isRequiresSemicolon() ? ";" : "");
-            if(SkiffC.DEBUG && !(stmt instanceof AST.BlockStatement)) {
+            if(context.isDebug() && !(stmt instanceof AST.BlockStatement)) {
                 sb.append(" /* End ").append(stmt.getClass().getSimpleName()).append(" */");
             }
             sb.append("\n");
@@ -32,7 +32,9 @@ public class VisitorUtils {
     }
 
     static void cleanupScope(StringBuilder sb, CompileContext context) {
-        sb.append("// Cleanup scope\n");
+        if(context.isDebug()) {
+            sb.append("// Cleanup scope\n");
+        }
 
         sb.append(context.getIndent()).append("skfree_ref_stack(").append(context.getRefStackSize()).append(");\n");
     }

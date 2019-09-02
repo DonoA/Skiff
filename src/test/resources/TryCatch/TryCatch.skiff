@@ -1,0 +1,17 @@
+def anError() {
+    throw new Exception("Error message");
+    println("Never executed!");
+}
+
+def main(args: List<String>): Int {
+    try {
+        anError();
+    } catch(ex: Exception) {
+        println("Oh no!");
+        println(ex.getMessage());
+    }
+
+    println("We resume here!");
+
+    return 0;
+}
