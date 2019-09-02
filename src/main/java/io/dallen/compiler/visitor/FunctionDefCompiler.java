@@ -7,11 +7,11 @@ import java.util.Optional;
 
 class FunctionDefCompiler {
 
-    static CompiledCode compileFunctionDef(AST.FunctionDef stmt, CompileContext context) {
+    static CompiledCode compileFunctionDef(AST.FunctionDef stmt, boolean isStatic, CompileContext context) {
         StringBuilder functionCode = new StringBuilder();
         CompiledCode returns = stmt.returns.compile(context);
 
-        boolean isConstructor = context.getParentClass() != null &&
+        boolean isConstructor = context.getParentClass() != null && !isStatic &&
                 stmt.name.equals(context.getParentClass().getName());
 
         CompileContext innerContext = new CompileContext(context, true)
@@ -21,8 +21,11 @@ class FunctionDefCompiler {
             context.throwError("Constructor must return void", stmt);
         }
 
-        VisitorUtils.FunctionSig sig = VisitorUtils.generateSig(isConstructor, context, returns, stmt, innerContext);
-        context.declareObject(sig.getFunction());
+        VisitorUtils.FunctionSig sig = VisitorUtils.generateSig(isConstructor, isStatic, context, returns, stmt,
+                innerContext);
+        if(!isConstructor) {
+            context.declareObject(sig.getFunction());
+        }
 
         functionCode.append(sig.getText());
         functionCode.append("\n")
@@ -36,7 +39,7 @@ class FunctionDefCompiler {
 
         Optional<AST.Return> returnOptional = Optional.empty();
 
-        if(stmt.body.get(stmt.body.size() - 1) instanceof AST.Return) {
+        if(stmt.body.size() > 0 && stmt.body.get(stmt.body.size() - 1) instanceof AST.Return) {
             returnOptional = Optional.of((AST.Return) stmt.body.get(stmt.body.size() - 1));
         }
 
@@ -68,7 +71,7 @@ class FunctionDefCompiler {
                 "if(new_inst) { \n" +
                 innerContext.getIndent() + CompileContext.INDENT +
                 "this->class_ptr = &" +
-                VisitorUtils.underscoreJoin("skiff", className, "interface")
+                context.getParentClass().getInterfaceName()
                 +";\n" +
                 innerContext.getIndent() +
                 "}\n";

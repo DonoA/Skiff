@@ -19,6 +19,14 @@
         return null;
     }
     
+    public CompiledCode compileFunctionDefModifier(FunctionDefModifier stmt, CompileContext context) { 
+        return null;
+    }
+    
+    public CompiledCode compileFieldModifier(FieldModifier stmt, CompileContext context) { 
+        return null;
+    }
+    
     public CompiledCode compileFunctionDef(FunctionDef stmt, CompileContext context) { 
         return null;
     }
@@ -112,10 +120,6 @@
     }
     
     public CompiledCode compileDotted(Dotted stmt, CompileContext context) { 
-        return null;
-    }
-    
-    public CompiledCode compileArrowed(Arrowed stmt, CompileContext context) { 
         return null;
     }
     

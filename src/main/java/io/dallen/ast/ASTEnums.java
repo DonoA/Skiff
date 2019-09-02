@@ -80,4 +80,18 @@ public class ASTEnums {
             return rawOp;
         }
     }
+
+    public enum DecModType implements HasRaw {
+        PRIVATE("private"), STATIC("static");
+
+        private final String rawOp;
+
+        DecModType(String rawOp) {
+            this.rawOp = rawOp;
+        }
+
+        public String getRawOp() {
+            return rawOp;
+        }
+    }
 }

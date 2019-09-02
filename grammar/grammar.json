@@ -32,6 +32,26 @@
             }
         }
     },
+    "FunctionDefModifier": {
+        "extends": "Statement",
+        "fields": {
+            "type": {
+                "type": "ASTEnums.DecModType",
+                "noFlatString": true
+            },
+            "on": "FunctionDef"
+        }
+    },
+    "FieldModifier": {
+        "extends": "Statement",
+        "fields": {
+            "type": {
+                "type": "ASTEnums.DecModType",
+                "noFlatString": true
+            },
+            "on": "Declare"
+        }
+    },
     "FunctionDef": {
         "extends": "BlockStatement",
         "fields": {
@@ -53,6 +73,10 @@
         "fields": {
             "name": "String",
             "genericTypes": "List<GenericType>",
+            "isStruct": {
+                "type": "Boolean",
+                "noFlatString": true
+            },
             "extendClass": {
                 "type": "Optional<Type>",
                 "noFlatString": true
@@ -199,13 +223,6 @@
             "right": "Statement"
         }
     },
-    "Arrowed": {
-        "extends": "Expression",
-        "fields": {
-            "left": "Statement",
-            "right": "Statement"
-        }
-    },
     "Return": {
         "extends": "Expression",
         "fields": {
@@ -315,10 +332,8 @@
         }
     },
     "DeclareAssign": {
-        "extends": "Statement",
+        "extends": "Declare",
         "fields": {
-            "type": "Type",
-            "name": "String",
             "value": "Statement"
         }
     },

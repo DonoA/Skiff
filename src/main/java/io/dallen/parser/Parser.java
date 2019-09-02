@@ -244,7 +244,11 @@ public class Parser implements ErrorCollector<Token> {
         return before == Textless.EOF;
     }
 
-    public List<AST.Statement> parseBlock() {
+    public List<AST.Statement> parseAll() {
+        return blockParser.parseAll();
+    }
+
+    public AST.Statement parseBlock() {
         return blockParser.parseBlock();
     }
 

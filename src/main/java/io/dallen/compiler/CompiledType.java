@@ -14,6 +14,7 @@ public class CompiledType extends CompiledObject {
         .setParent(CompiledType.ANY)
         .setCompiledName("int32_t");
     public static final CompiledType BOOL = new CompiledType("Bool" ,false)
+        .setCompiledName("uint8_t")
         .setParent(CompiledType.ANY);
 
     public static final CompiledType ANYREF = new CompiledType("AnyRef", true)
@@ -29,36 +30,40 @@ public class CompiledType extends CompiledObject {
             .setParent(CompiledType.ANYREF)
             .addMethod(new CompiledMethod(
                     new CompiledFunction("getMessage", "", false, CompiledType.STRING, List.of()),
-                    true));
+                    true, false));
 
     public static final CompiledType LIST = new CompiledType("List" ,true)
         .setParent(CompiledType.ANYREF)
-        .addField(new CompiledVar("size", false, CompiledType.INT))
+//        .addField(new CompiledVar("size", false, CompiledType.INT))
         .addMethod(new CompiledMethod(
                 new CompiledFunction("getSize", "", false, CompiledType.INT, List.of()),
-                true))
+                true, false))
         .addMethod(new CompiledMethod(
                 new CompiledFunction("getSub", "", false, CompiledType.ANYREF, List.of()),
-                true));
+                true, false));
 
     private final boolean isRef;
     // order is vital for both declared vars and declared functions
-    private List<CompiledVar> declaredVars = new ArrayList<>();
+    private List<CompiledField> declaredVars = new ArrayList<>();
     private List<CompiledMethod> declaredMethods = new ArrayList<>();
     private List<CompiledFunction> constructors = new ArrayList<>();
 
-    private Map<String, CompiledVar> declaredVarMap = new HashMap<>();
+    private Map<String, CompiledField> declaredVarMap = new HashMap<>();
     private Map<String, CompiledMethod> declaredMethodMap = new HashMap<>();
+    private Map<String, CompiledMethod> staticMethodMap = new HashMap<>();
+    private Map<String, CompiledField> staticFieldMap = new HashMap<>();
 
     private List<String> genericOrder = new ArrayList<>();
     private CompiledType parent = null;
     private String structName;
     private String compiledName;
+    private String interfaceName;
     private boolean genericPlaceholder = false;
 
     public CompiledType(String className, boolean ref) {
         super(className);
         this.structName = VisitorUtils.underscoreJoin("skiff", className, "t");
+        this.interfaceName = VisitorUtils.underscoreJoin("skiff", className, "interface");
         this.compiledName = this.structName + (ref ? " *" : "");
         this.isRef = ref;
     }
@@ -75,13 +80,13 @@ public class CompiledType extends CompiledObject {
         return getField(name);
     }
 
-    public CompiledType addField(CompiledVar obj) {
+    public CompiledType addField(CompiledField obj) {
         declaredVars.add(obj);
         declaredVarMap.put(obj.getName(), obj);
         return this;
     }
 
-    public CompiledVar getField(String name) {
+    public CompiledField getField(String name) {
         return declaredVarMap.get(name);
     }
 
@@ -95,6 +100,24 @@ public class CompiledType extends CompiledObject {
         return declaredMethodMap.get(name);
     }
 
+    public CompiledType addStaticMethod(CompiledMethod obj) {
+        staticMethodMap.put(obj.getName(), obj);
+        return this;
+    }
+
+    public CompiledMethod getStaticMethod(String name) {
+        return staticMethodMap.get(name);
+    }
+
+    public CompiledType addStaticField(CompiledField obj) {
+        staticFieldMap.put(obj.getName(), obj);
+        return this;
+    }
+
+    public CompiledField getStaticField(String name) {
+        return staticFieldMap.get(name);
+    }
+
     public CompiledType addConstructor(CompiledFunction func) {
         constructors.add(func);
         return this;
@@ -104,8 +127,12 @@ public class CompiledType extends CompiledObject {
         return constructors;
     }
 
-    public List<CompiledVar> getAllFields() {
+    public List<CompiledField> getAllFields() {
         return this.declaredVars;
+    }
+
+    public Collection<CompiledField> getAllStaticFields() {
+        return this.staticFieldMap.values();
     }
 
     public List<CompiledMethod> getAllMethods() {
@@ -157,17 +184,17 @@ public class CompiledType extends CompiledObject {
         CompiledType filledType = new CompiledType(getName(), isRef);
 
         this.declaredVars.forEach(f -> {
-            CompiledVar post = f;
+            CompiledField post = f;
             if(f.getType().genericPlaceholder) {
                 CompiledType comp = generics.get(f.getType().getName());
-                post = new CompiledVar(f.getName(), f.isParam(), comp);
+                post = new CompiledField(new CompiledVar(f.getName(), f.isParam(), comp), f.isPrivate());
             }
             filledType.addField(post);
         });
 
         this.declaredMethods.forEach(m -> {
             CompiledFunction modFunc = fillFunction(generics, m);
-            filledType.addMethod(new CompiledMethod(modFunc, m.isMine()));
+            filledType.addMethod(new CompiledMethod(modFunc, m.isMine(), m.isPrivate()));
         });
 
         this.constructors.forEach(ctor -> {
@@ -198,16 +225,54 @@ public class CompiledType extends CompiledObject {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CompiledType that = (CompiledType) o;
+        return Objects.equals(structName, that.structName) &&
+                Objects.equals(compiledName, that.compiledName);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(structName, compiledName);
+    }
+
+    public String getInterfaceName() {
+        return interfaceName;
+    }
+
     public static class CompiledMethod extends CompiledFunction {
         private final boolean mine;
+        private final boolean priv;
 
-        public CompiledMethod(CompiledFunction func, boolean mine) {
+        public CompiledMethod(CompiledFunction func, boolean mine, boolean priv) {
             super(func.getName(), func.getCompiledName(), func.isConstructor(), func.getReturns(), func.getArgs());
             this.mine = mine;
+            this.priv = priv;
         }
 
         public boolean isMine() {
             return mine;
+        }
+
+        public boolean isPrivate() {
+            return priv;
+        }
+    }
+
+    public static class CompiledField extends CompiledVar {
+        private final boolean priv;
+
+        public CompiledField(CompiledVar v, boolean priv) {
+            super(v.getName(), v.isParam(), v.getType());
+            this.priv = priv;
+        }
+
+        public boolean isPrivate() {
+            return priv;
         }
     }
 }

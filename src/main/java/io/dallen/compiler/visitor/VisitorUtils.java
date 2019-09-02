@@ -57,11 +57,11 @@ public class VisitorUtils {
         }
     }
 
-    static FunctionSig generateSig(boolean isConstructor, CompileContext context, CompiledCode returnType,
+    static FunctionSig generateSig(boolean isConstructor, boolean isStatic, CompileContext context, CompiledCode returnType,
                                    AST.FunctionDef stmt, CompileContext innerContext) {
         StringBuilder sb = new StringBuilder();
 
-        String compiledName = generateFuncName(isConstructor, context, stmt.name);
+        String compiledName = generateFuncName(isConstructor, isStatic, context, stmt.name);
 
         sb.append(generateReturnType(isConstructor, context, returnType));
         sb.append(" ");
@@ -82,7 +82,7 @@ public class VisitorUtils {
 
         List<String> stringArgs = new ArrayList<>();
 
-        if(context.getParentClass() != null) {
+        if(context.getParentClass() != null && !isStatic) {
             stringArgs.add(context.getParentClass().getCompiledName() + " this");
         }
 
@@ -106,9 +106,13 @@ public class VisitorUtils {
     }
 
 
-    static String generateFuncName(boolean isConstructor, CompileContext context, String stmtName) {
+    static String generateFuncName(boolean isConstructor, boolean isStatic, CompileContext context, String stmtName) {
         if(isConstructor) {
             return VisitorUtils.underscoreJoin("skiff", stmtName, "new");
+        }
+
+        if(isStatic) {
+            return VisitorUtils.underscoreJoin("skiff", "static", stmtName);
         }
 
         return VisitorUtils.underscoreJoin("skiff", context.getScopePrefix(), stmtName);

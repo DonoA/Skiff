@@ -59,7 +59,7 @@ class ExpressionSplitParser {
             }
             String name = res.get(0).get(0).literal;
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new DeclareAssign(typ, name, secondS, allTokens);
+            return new DeclareAssign(secondS, typ, name, allTokens);
         }
         parser.throwError("Assign name had many colons", res.get(0).get(0));
         return null;

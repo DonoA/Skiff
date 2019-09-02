@@ -1,6 +1,7 @@
 package io.dallen.compiler.visitor;
 
 import io.dallen.SkiffC;
+import io.dallen.ast.AST;
 import io.dallen.ast.AST.*;
 import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
@@ -43,8 +44,16 @@ public class ASTVisitor {
         throw new UnsupportedOperationException("Cannot compile statement type Block");
     }
 
+    public CompiledCode compileFunctionDefModifier(FunctionDefModifier stmt, CompileContext context) {
+        return null;
+    }
+
+    public CompiledCode compileFieldModifier(FieldModifier stmt, CompileContext context) {
+        return null;
+    }
+
     public CompiledCode compileFunctionDef(FunctionDef stmt, CompileContext context) {
-        return FunctionDefCompiler.compileFunctionDef(stmt, context);
+        return FunctionDefCompiler.compileFunctionDef(stmt, false, context);
     }
 
     public CompiledCode compileAnonFunctionDef(AnonFunctionDef stmt, CompileContext context) {
@@ -128,7 +137,39 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileSwitchBlock(SwitchBlock stmt, CompileContext context) {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        CompiledCode onCode = stmt.on.compile(context);
+        for (int i = 0; i < stmt.body.size(); i++) {
+            if(!(stmt.body.get(i) instanceof AST.CaseStatement)) {
+                continue;
+            }
+            AST.CaseStatement caseStatement = (AST.CaseStatement) stmt.body.get(i);
+            if(i != 0) {
+                sb.append(context.getIndent()).append("else ");
+            }
+            CompiledCode equalCode = caseStatement.on.compile(context);
+            sb.append("if(").append(onCode.getCompiledText()).append(" == ")
+                    .append(equalCode.getCompiledText()).append(")\n").append(context.getIndent()).append("{\n");
+            CompileContext innerContext = new CompileContext(context).addIndent();
+            for (int j = i + 1; j < stmt.body.size(); j++) {
+                if(stmt.body.get(j) instanceof AST.BreakStatement) {
+                    break;
+                }
+                if(stmt.body.get(j) instanceof AST.CaseStatement) {
+                    continue;
+                }
+                CompiledCode innerCode = stmt.body.get(j).compile(innerContext);
+                sb.append(innerContext.getIndent()).append(innerCode.getCompiledText());
+                if(innerCode.isRequiresSemicolon()) {
+                    sb.append(";");
+                }
+                sb.append("\n");
+            }
+            sb.append(context.getIndent()).append("}\n");
+        }
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withSemicolon(false);
     }
 
     public CompiledCode compileCaseStatement(CaseStatement stmt, CompileContext context) {
@@ -156,11 +197,7 @@ public class ASTVisitor {
         CompiledCode exceptType = ctch.ex.type.compile(context);
         catchContext.declareObject(new CompiledVar(ctch.ex.name, true, (CompiledType) exceptType.getBinding()));
 
-        String exceptionClassName = VisitorUtils.underscoreJoin(
-                "skiff",
-                exceptType.getBinding().getName(),
-                "interface"
-        );
+        String exceptionClassName = ((CompiledType) exceptType.getBinding()).getInterfaceName();
         int catchId = context.getGlobalCounter();
         String catchFuncName = "skiff_catch_" + String.valueOf(catchId);
         sb.append("skiff_start_try(")
@@ -227,10 +264,6 @@ public class ASTVisitor {
         return DottedCompiler.compileDotted(stmt, context);
     }
 
-    public CompiledCode compileArrowed(Arrowed stmt, CompileContext context) {
-        return null;
-    }
-
     public CompiledCode compileReturn(Return stmt, CompileContext context) {
         CompiledCode code = stmt.value.compile(context);
         StringBuilder sb = new StringBuilder();
@@ -281,7 +314,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
-        String systemPath = new File("lib/" + stmt.value.toLowerCase() + ".skiff").getAbsolutePath();
+        String systemPath = new File("lib/" + stmt.value + ".skiff").getAbsolutePath();
         Optional<String> importCode = SkiffC.compile(systemPath, context.isDebug());
         if(importCode.isEmpty()) {
             return new CompiledCode()
@@ -444,12 +477,17 @@ public class ASTVisitor {
                 onStack = !cv.isParam();
             }
         } catch (NoSuchObjectException ex) {
-            if(context.getParentClass() == null) {
+            if(stmt.name.equals("null")) {
+                text = "0";
+                compiledObject = CompiledVar.NULL;
+                onStack = false;
+            } else  if(context.getParentClass() == null) {
                 throw ex;
+            } else {
+                compiledObject = context.getParentClass().getObject(stmt.name);
+                text = "this->" + stmt.name;
+                onStack = false;
             }
-            compiledObject = context.getParentClass().getObject(stmt.name);
-            text = "this->" + stmt.name;
-            onStack = false;
         }
         CompiledType objType = CompiledType.CLASS;
         if (compiledObject instanceof CompiledVar) {

@@ -1,6 +1,7 @@
 package io.dallen.compiler.visitor;
 
 import io.dallen.ast.AST;
+import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
 import java.util.ArrayList;
@@ -11,6 +12,39 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 class ClassDefCompiler {
+
+    private static CompiledType.CompiledMethod createCompiledFunc(AST.FunctionDef dec, boolean isConstructor, boolean isStatic,
+                                                                  boolean isPrivate, CompileContext innerContext) {
+        String compiledName = VisitorUtils.generateFuncName(isConstructor, isStatic, innerContext, dec.name);
+        CompiledType returns = (CompiledType) dec.returns.compile(innerContext).getBinding();
+        List<CompiledType> argTypes = dec.args.stream().map(arg -> arg.type.compile(innerContext).getBinding())
+                .map(obj -> (CompiledType) obj).collect(Collectors.toList());
+        return new CompiledType.CompiledMethod(
+                new CompiledFunction(dec.name, compiledName, isConstructor, returns, argTypes),
+                true, isPrivate);
+    }
+
+    private static CompiledType.CompiledField createCompiledField(AST.Declare dec, boolean isPrivate, CompileContext innerContext) {
+        return new CompiledType.CompiledField(
+                new CompiledVar(
+                        dec.name,
+                        false,
+                        (CompiledType) dec.type.compile(innerContext).getBinding()),
+                isPrivate
+        );
+    }
+
+    private static void checkCollision(CompiledType cls, AST.Declare dec, CompileContext context) {
+        boolean checkNameCollision = cls.getParent()
+                .getAllFields()
+                .stream()
+                .map(CompiledObject::getName)
+                .anyMatch(f -> f.equals(dec.name));
+
+        if(checkNameCollision) {
+            context.throwError("Cannot have var with same name in super", dec);
+        }
+    }
 
     private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext)
             throws CompileException {
@@ -27,35 +61,48 @@ class ClassDefCompiler {
 
         context.declareObject(cls);
 
-        Map<String, CompiledVar> declaredVars = new HashMap<>();
-        Map<String, CompiledFunction> declaredMethods = new HashMap<>();
+        Map<String, CompiledType.CompiledField> declaredVars = new HashMap<>();
+        Map<String, CompiledType.CompiledMethod> declaredMethods = new HashMap<>();
 
         // Collect Vars declared in this class
         for(AST.Statement s : stmt.body) {
             if(s instanceof AST.Declare) {
                 AST.Declare dec = (AST.Declare) s;
-                declaredVars.put(dec.name, new CompiledVar(dec.name, false,
-                        (CompiledType) dec.type.compile(innerContext).getBinding()));
+                declaredVars.put(dec.name, createCompiledField(dec, false, innerContext));
+                checkCollision(cls, dec, context);
 
-                if(cls.getParent()
-                        .getAllFields()
-                        .stream()
-                        .map(CompiledObject::getName)
-                        .anyMatch(f -> f.equals(dec.name))) {
-                    context.throwError("Cannot have var with same name in super", dec);
-                }
             } else if(s instanceof AST.FunctionDef) {
                 AST.FunctionDef dec = (AST.FunctionDef) s;
                 boolean isConstructor = dec.name.equals(cls.getName());
-                String compiledName = VisitorUtils.generateFuncName(isConstructor, innerContext, dec.name);
-                CompiledType returns = (CompiledType) dec.returns.compile(innerContext).getBinding();
-                List<CompiledType> argTypes = dec.args.stream().map(arg -> arg.type.compile(innerContext).getBinding())
-                        .map(obj -> (CompiledType) obj).collect(Collectors.toList());
-                CompiledFunction func = new CompiledFunction(dec.name, compiledName, isConstructor, returns, argTypes);
+                CompiledType.CompiledMethod func = createCompiledFunc(dec, isConstructor, false, false, innerContext);
                 if(isConstructor) {
                     cls.addConstructor(func);
                 } else {
                     declaredMethods.put(dec.name, func);
+                }
+            } else if(s instanceof AST.FunctionDefModifier) {
+                AST.FunctionDefModifier mod = (AST.FunctionDefModifier) s;
+                boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
+                boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
+
+                CompiledType.CompiledMethod func = createCompiledFunc(mod.on, false, isStatic, isPrivate, innerContext);
+
+                if(isStatic) {
+                    cls.addStaticMethod(func);
+                } else {
+                    declaredMethods.put(mod.on.name, func);
+                }
+            } else if(s instanceof AST.FieldModifier) {
+                AST.FieldModifier mod = (AST.FieldModifier) s;
+                boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
+                boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
+
+                CompiledType.CompiledField field = createCompiledField(mod.on, isPrivate, innerContext);
+                if(isStatic) {
+                    cls.addStaticField(field);
+                } else {
+                    declaredVars.put(mod.on.name, field);
+                    checkCollision(cls, mod.on, context);
                 }
             } else {
                 context.throwError("Class statements must be function defs or Declares", s);
@@ -71,15 +118,15 @@ class ClassDefCompiler {
                 .forEach(f -> {
                     CompiledFunction override = declaredMethods.get(f.getName());
                     if(override != null) {
-                        cls.addMethod(new CompiledType.CompiledMethod(override, true));
+                        cls.addMethod(new CompiledType.CompiledMethod(override, true, f.isPrivate()));
                     } else {
-                        cls.addMethod(new CompiledType.CompiledMethod(f, false));
+                        cls.addMethod(new CompiledType.CompiledMethod(f, false, f.isPrivate()));
                     }
                 });
 
         declaredMethods.values().forEach(v -> {
             if(cls.getMethod(v.getName()) == null) {
-                cls.addMethod(new CompiledType.CompiledMethod(v, true));
+                cls.addMethod(new CompiledType.CompiledMethod(v, true, v.isPrivate()));
             }
         });
 
@@ -110,11 +157,9 @@ class ClassDefCompiler {
 
         String classStruct = generateClassStruct(cls, classStructName);
 
-        String interfaceName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "interface");
+        String interfaceDec = "struct " + classStructName + " " + cls.getInterfaceName() + ";\n";
 
-        String interfaceDec = "struct " + classStructName + " " + interfaceName + ";\n";
-
-        String staticInitFunc = generateStaticInit(cls, interfaceName);
+        String staticInitFunc = generateStaticInit(cls, cls.getInterfaceName());
 
         String dataStruct = generateDataStruct(cls, classStructName);
 
@@ -140,11 +185,21 @@ class ClassDefCompiler {
     }
 
     private static String generateMethodCode(List<AST.Statement> body, CompileContext innerContext) {
-        return body.stream()
+        String simple = body.stream()
                 .filter(f -> f instanceof AST.FunctionDef)
                 .map(f->f.compile(innerContext))
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.joining("\n\n"));
+
+        String modified = body.stream()
+                .filter(f -> f instanceof AST.FunctionDefModifier)
+                .map(f -> (AST.FunctionDefModifier) f)
+                .map(f-> FunctionDefCompiler.compileFunctionDef(f.on, f.type == ASTEnums.DecModType.STATIC,
+                        innerContext))
+                .map(CompiledCode::getCompiledText)
+                .collect(Collectors.joining("\n\n"));
+
+        return simple + "\n\n" + modified;
     }
 
     private static String generateDataStruct(CompiledType cls, String classStructName) {
@@ -170,6 +225,12 @@ class ClassDefCompiler {
                         "(*" + method.getName() + ")()"
                 ))
                 .collect(Collectors.toList());
+
+        cls.getAllStaticFields()
+                .stream()
+                .map(f -> new VisitorUtils.StructEntry(
+                    f.getType().getCompiledName(), f.getName()
+                )).forEach(structEntries::add);
 
         return VisitorUtils.compileStruct(classStructName, "", CompileContext.INDENT, structEntries);
     }

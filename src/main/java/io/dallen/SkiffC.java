@@ -81,7 +81,7 @@ public class SkiffC {
         Parser parser = new Parser(tokenStream, programText);
         List<AST.Statement> statements = null;
         try {
-            statements = parser.parseBlock();
+            statements = parser.parseAll();
         } catch(Exception ex) {
             ex.printStackTrace();
         } finally {
@@ -125,7 +125,7 @@ public class SkiffC {
 
 //        System.out.println(code);
 
-        if(!passed) {
+        if(!passed && !debug) {
             return Optional.empty();
         } else {
             return Optional.of(code);

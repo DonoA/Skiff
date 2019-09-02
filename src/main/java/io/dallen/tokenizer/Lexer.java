@@ -35,9 +35,8 @@ public class Lexer implements ErrorCollector<Token> {
             // Select longest token that matches the stream so "<=" will be selected over "<"
             Token.TokenType bestTokenType = selectBestToken();
             if (bestTokenType != Token.Textless.EOF) {
-                pos += bestTokenType.getText().length();
-
                 tokens.add(new Token(bestTokenType, pos));
+                pos += bestTokenType.getText().length();
                 continue;
             }
 
@@ -93,14 +92,15 @@ public class Lexer implements ErrorCollector<Token> {
     }
 
     private Token selectLiteral() {
+        int startPos = pos;
         char c = data.charAt(pos);
         // Select string
         if (c == '"') {
-            return new Token(Token.Textless.STRING_LITERAL, selectTo('"'), pos);
+            return new Token(Token.Textless.STRING_LITERAL, selectTo('"'), startPos);
         }
 
         if (c == '\'') {
-            return new Token(Token.Textless.SEQUENCE_LITERAL, selectTo('\''), pos);
+            return new Token(Token.Textless.SEQUENCE_LITERAL, selectTo('\''), startPos);
         }
 
         if (c == 'r' && data.length() > pos + 1 && data.charAt(pos + 1) == '/') {
@@ -111,7 +111,7 @@ public class Lexer implements ErrorCollector<Token> {
                 regex.append(data.charAt(pos));
                 pos++;
             }
-            return new Token(Token.Textless.REGEX_LITERAL, regex.toString(), pos);
+            return new Token(Token.Textless.REGEX_LITERAL, regex.toString(), startPos);
         }
 
         // Select number
@@ -124,7 +124,7 @@ public class Lexer implements ErrorCollector<Token> {
                 sb.append(data.charAt(pos));
                 pos++;
             }
-            return new Token(Token.Textless.NUMBER_LITERAL, sb.toString(), pos);
+            return new Token(Token.Textless.NUMBER_LITERAL, sb.toString(), startPos);
         }
 
         // Select name tokens, we have no idea what these are, they are likely bound to something
@@ -134,7 +134,7 @@ public class Lexer implements ErrorCollector<Token> {
             sb.append(data.charAt(pos));
             pos++;
         }
-        Token name = new Token(Token.Textless.NAME, sb.toString(), pos);
+        Token name = new Token(Token.Textless.NAME, sb.toString(), startPos);
 
         // if we selected nothing, that isn't a valid name token
         if (name.literal.isEmpty()) {

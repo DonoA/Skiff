@@ -2,7 +2,6 @@ package io.dallen.parser;
 
 import io.dallen.ast.AST;
 import io.dallen.ast.ASTEnums;
-import io.dallen.compiler.CompileException;
 import io.dallen.parser.splitter.BraceSplitter;
 import io.dallen.tokenizer.Token;
 import io.dallen.tokenizer.Token.Keyword;
@@ -118,7 +117,7 @@ class ExpressionParser {
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseBlock();
+        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
 
         return new AST.AnonFunctionDef(returns, params, body, allTokens);
     }
