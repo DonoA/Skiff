@@ -1117,7 +1117,7 @@ public class BasicBlockTest {
                         new BreakStatement(List.of(new Token(Token.Keyword.BREAK, 0))),
                         new CaseMatchStatement(
                                 new Declare(
-                                        new Type( new Variable("_", List.of(new Token(Token.Symbol.UNDERSCORE, 0))), List.of()),
+                                        new Type( new Variable("_", List.of(new Token(Token.Symbol.UNDERSCORE, 0))), List.of(), List.of()),
                                         "v",
                                         List.of(
                                                 new Token(Token.Textless.NAME, "v", 0),

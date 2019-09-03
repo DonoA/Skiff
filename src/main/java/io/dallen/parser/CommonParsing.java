@@ -17,6 +17,15 @@ class CommonParsing {
         return l;
     }
 
+    static AST.Type voidFor(Token t) {
+        return new AST.Type(
+                new AST.Variable(
+                        "Void",
+                        List.of(new Token(Token.Textless.NAME, "Void", 0))
+                ),
+                List.of(), List.of(t));
+    }
+
     private Parser parser;
 
     CommonParsing(Parser parser) {
@@ -52,9 +61,10 @@ class CommonParsing {
     }
 
     AST.Type parseType() {
+        List<Token> tokens = parser.selectTo(Token.Symbol.LEFT_ANGLE);
         AST.Statement typeName = new Parser(parser.consumeTo(Token.Symbol.LEFT_ANGLE), parser).parseExpression();
         if(parser.current().isEOF()) {
-            return new AST.Type(typeName, List.of());
+            return new AST.Type(typeName, List.of(), tokens);
         }
         List<AST.Type> genericParams;
         try {
@@ -68,7 +78,7 @@ class CommonParsing {
             return null;
         }
 
-        return new AST.Type(typeName, genericParams);
+        return new AST.Type(typeName, genericParams, tokens);
     }
 
     List<AST.FunctionParam> parseFunctionDecArgs(List<Token> paramTokens) {

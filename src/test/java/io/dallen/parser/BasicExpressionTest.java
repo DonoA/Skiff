@@ -733,9 +733,9 @@ public class BasicExpressionTest {
                                 List.of(new Token(Token.Textless.NAME, "MyClass", Token.IdentifierType.TYPE, 0))
                         ),
                         List.of(
-                                new Type(new Variable("String", List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))), List.of()),
-                                new Type(new Variable("Int", List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))), List.of())
-                        )
+                                new Type(new Variable("String", List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))), List.of(), List.of()),
+                                new Type(new Variable("Int", List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))), List.of(), List.of())
+                        ), List.of()
                 ),
                 List.of(
                         ASTUtil.simpleNumLit(15d)
@@ -780,8 +780,8 @@ public class BasicExpressionTest {
                 "println",
                 List.of(ASTUtil.simpleNumLit(15d)),
                 List.of(
-                        new Type(new Variable("String", List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))), List.of()),
-                        new Type(new Variable("Int", List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))), List.of())
+                        new Type(new Variable("String", List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))), List.of(), List.of()),
+                        new Type(new Variable("Int", List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))), List.of(), List.of())
                 ),
                 List.of(new Token(Token.Textless.NAME, "println", 0),
                         new Token(Token.Symbol.LEFT_ANGLE, 0),

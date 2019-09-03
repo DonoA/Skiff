@@ -17,7 +17,9 @@ public class ASTUtil {
     }
 
     public static AST.Type simpleType(String name) {
-        return new AST.Type(new AST.Variable(name, List.of(new Token(Token.Textless.NAME, name, 0))), List.of());
+        return new AST.Type(new AST.Variable(name, List.of(new Token(Token.Textless.NAME, name, 0))), List.of(), List.of(
+                new Token(Token.Textless.NAME, name, 0)
+        ));
     }
 
     public static AST.FunctionCall simpleFuncCall(String name) {

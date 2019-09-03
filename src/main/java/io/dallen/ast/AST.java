@@ -53,23 +53,25 @@ public class AST {
         }
     }
     
-    public static class Type  {
+    public static class Type extends Statement {
         public final Statement name;
         public final List<Type> genericTypes;
-        public Type(Statement name, List<Type> genericTypes) {
-            
+        public Type(Statement name, List<Type> genericTypes, List<Token> tokens) {
+            super(tokens);
             this.name = name;
             this.genericTypes = genericTypes;
         }
 
         public String toString() {
             return "Type(name = " + this.name.toString() + ", " + 
-                "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
+                "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
+                "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public String toFlatString() {
             return "Type(name = " + this.name.toFlatString() + ", " + 
-                "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ")";
+                "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
+                "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public CompiledCode compile(CompileContext context) {

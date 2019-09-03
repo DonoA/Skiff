@@ -13,13 +13,23 @@ import java.util.stream.Collectors;
 
 public class VisitorUtils {
 
-
-
     static Consumer<AST.Statement> compileToStringBuilder(StringBuilder sb, CompileContext context) {
         return stmt -> {
             CompiledCode s = stmt.compile(context);
             if(context.isDebug() && !(stmt instanceof AST.BlockStatement)) {
-                sb.append(context.getIndent()).append("/* ").append(stmt.toFlatString()).append(" */\n");
+                String flat = stmt.toFlatString();
+                sb.append(context.getIndent()).append("/* ");
+                if(flat.length() < SkiffC.MAX_COL) {
+                    sb.append(flat);
+                } else {
+                    sb.append("\n");
+                    int lines = (flat.length() / SkiffC.MAX_COL) + 1;
+                    for (int i = 0; i < lines; i++) {
+                        sb.append(context.getIndent()).append(flat, i * SkiffC.MAX_COL, Math.min((i + 1) * SkiffC.MAX_COL, flat.length())).append("\n");
+                    }
+                    sb.append(context.getIndent());
+                }
+                sb.append(" */\n");
             }
             sb.append(context.getIndent());
             sb.append(s.getCompiledText());

@@ -29,6 +29,13 @@ public class ASTVisitor {
     public CompiledCode compileType(Type stmt, CompileContext context) {
         CompiledCode typeName = stmt.name.compile(context);
         CompiledType typ = ((CompiledType) typeName.getBinding());
+        if(typ == null) {
+            context.throwError("Type not found", stmt);
+            return new CompiledCode()
+                    .withText("")
+                    .withBinding(typeName.getBinding())
+                    .withType(CompiledType.CLASS);
+        }
         String name = typ.getCompiledName();
         return new CompiledCode()
                 .withText(name)

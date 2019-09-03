@@ -13,9 +13,9 @@ public class EnrichLexer {
             "String", "Int", "List"
     );
 
-    private final ErrorCollector errors;
+    private final ErrorCollector<Token> errors;
 
-    public EnrichLexer(List<Token> tokens, ErrorCollector errors) {
+    public EnrichLexer(List<Token> tokens, ErrorCollector<Token> errors) {
         this.tokens = tokens;
         this.errors = errors;
     }
@@ -35,9 +35,24 @@ public class EnrichLexer {
                 table.toParent();
             }
 
-            if(token.type == Token.Keyword.CLASS) {
-                Token next = tokens.get(i + 1);
-                table.defineIdent(next.literal, Token.IdentifierType.TYPE);
+            if(token.type != Token.Keyword.CLASS) {
+                continue;
+            }
+
+            Token next = tokens.get(i + 1);
+            table.defineIdent(next.literal, Token.IdentifierType.TYPE);
+
+            if(tokens.get(i + 2).type == Token.Symbol.LEFT_ANGLE) {
+                int index = i + 2;
+                while(true) {
+                    table.defineIdent(tokens.get(index + 1).literal, Token.IdentifierType.TYPE);
+                    int nextIndex = indexOfNext(index, Token.Symbol.COMMA);
+                    if(nextIndex == -1) {
+                        i = index;
+                        break;
+                    }
+                    index = nextIndex;
+                }
             }
         }
 
@@ -73,5 +88,14 @@ public class EnrichLexer {
                     }
                 })
                 .collect(Collectors.toList());
+    }
+
+    private int indexOfNext(int start, Token.TokenType typ) {
+        for (int i = start; i < tokens.size(); i++) {
+            if(tokens.get(i).type == typ) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

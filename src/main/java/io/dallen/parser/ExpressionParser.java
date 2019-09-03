@@ -108,7 +108,7 @@ class ExpressionParser {
             return null;
         }
 
-        AST.Type returns = Parser.VOID;
+        AST.Type returns = CommonParsing.voidFor(parser.current());
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
             returns = new Parser(parser.consumeTo(Token.Symbol.ARROW), parser).getCommon().parseType();

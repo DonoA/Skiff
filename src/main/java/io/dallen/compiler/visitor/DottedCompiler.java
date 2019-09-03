@@ -76,6 +76,12 @@ class DottedCompiler {
         } else {
             obj = lhs.getType().getField(v.name);
         }
+        if(obj == null) {
+            context.throwError("No such field", v);
+            return new CompiledCode()
+                    .withText("")
+                    .withType(CompiledType.VOID);
+        }
         if(obj.isPrivate() && (context.getParentClass() == null || !context.getParentClass().equals(lhs.getType()))) {
             context.throwError("Cannot access private field", v);
         }

@@ -344,7 +344,7 @@ class BlockParser {
             return null;
         }
 
-        AST.Type returnType = Parser.VOID;
+        AST.Type returnType = CommonParsing.voidFor(parser.current());
 
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);

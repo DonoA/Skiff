@@ -12,13 +12,6 @@ import java.util.List;
 
 public class Parser implements ErrorCollector<Token> {
 
-    public final static AST.Type VOID = new Type(
-            new Variable(
-                    "Void",
-                    List.of(new Token(Token.Textless.NAME, "Void", 0))
-            ),
-            List.of());
-
     private List<Token> tokens;
 
     int pos;

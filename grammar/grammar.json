@@ -12,6 +12,7 @@
         "fields": {}
     },
     "Type": {
+        "extends": "Statement",
         "fields": {
             "name": "Statement",
             "genericTypes": "List<Type>"
