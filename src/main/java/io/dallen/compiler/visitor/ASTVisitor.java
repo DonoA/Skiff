@@ -297,10 +297,17 @@ public class ASTVisitor {
         List<String> argz = new ArrayList<>();
         argz.add(allocateNewInstace);
         argz.add("1");
-        argz.addAll(stmt.argz
-            .stream()
-            .map(arg -> arg.compile(context).getCompiledText())
-            .collect(Collectors.toList()));
+        if(stmt.argz.size() != typeCode.getConstructors().get(0).getArgs().size()) {
+            context.throwError("Arg count does not match constructor!", stmt);
+        }
+        for (int i = 0; i < stmt.argz.size(); i++) {
+            String argType = "";
+            String argText = stmt.argz.get(i).compile(context).getCompiledText();
+            if(typeCode.getConstructors().get(0).getArgs().get(0).isGenericPlaceholder()) {
+                argType = "(void *)";
+            }
+            argz.add(argType + argText);
+        }
 
         sb.append(String.join(", ", argz))
             .append(")");

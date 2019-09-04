@@ -733,9 +733,31 @@ public class BasicExpressionTest {
                                 List.of(new Token(Token.Textless.NAME, "MyClass", Token.IdentifierType.TYPE, 0))
                         ),
                         List.of(
-                                new Type(new Variable("String", List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))), List.of(), List.of()),
-                                new Type(new Variable("Int", List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))), List.of(), List.of())
-                        ), List.of()
+                                new Type(
+                                        new Variable(
+                                                "String",
+                                                List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))
+                                        ),
+                                        List.of(),
+                                        List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))
+                                ),
+                                new Type(
+                                        new Variable(
+                                                "Int",
+                                                List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))
+                                        ),
+                                        List.of(),
+                                        List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))
+                                )
+                        ),
+                        List.of(
+                                new Token(Token.Textless.NAME, "MyClass", Token.IdentifierType.TYPE, 0),
+                                new Token(Token.Symbol.LEFT_ANGLE, 0),
+                                new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0),
+                                new Token(Token.Symbol.COMMA, 0),
+                                new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0),
+                                new Token(Token.Symbol.RIGHT_ANGLE, 0)
+                        )
                 ),
                 List.of(
                         ASTUtil.simpleNumLit(15d)
@@ -780,8 +802,22 @@ public class BasicExpressionTest {
                 "println",
                 List.of(ASTUtil.simpleNumLit(15d)),
                 List.of(
-                        new Type(new Variable("String", List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))), List.of(), List.of()),
-                        new Type(new Variable("Int", List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))), List.of(), List.of())
+                        new Type(
+                                new Variable(
+                                        "String",
+                                        List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))
+                                ),
+                                List.of(),
+                                List.of(new Token(Token.Textless.NAME, "String", Token.IdentifierType.TYPE, 0))
+                        ),
+                        new Type(
+                                new Variable(
+                                        "Int",
+                                        List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))
+                                ),
+                                List.of(),
+                                List.of(new Token(Token.Textless.NAME, "Int", Token.IdentifierType.TYPE, 0))
+                        )
                 ),
                 List.of(new Token(Token.Textless.NAME, "println", 0),
                         new Token(Token.Symbol.LEFT_ANGLE, 0),
@@ -841,12 +877,11 @@ public class BasicExpressionTest {
 
     @org.junit.Test
     public void parseImport() {
-        // import <myPackage>
+        // import MyPackage
         List<Token> tokens = List.of(
                 new Token(Token.Keyword.IMPORT, 0),
-                new Token(Token.Symbol.LEFT_ANGLE, 0),
-                new Token(Token.Textless.NAME, "myPackage", 0),
-                new Token(Token.Symbol.RIGHT_ANGLE, 0),
+                new Token(Token.Textless.NAME, "MyPackage", 0),
+                new Token(Token.Symbol.SEMICOLON, 0),
                 new Token(Token.Textless.EOF, 0));
         List<Statement> statements = new Parser(tokens).parseAll();
 
@@ -854,12 +889,10 @@ public class BasicExpressionTest {
 
         String expected = new ImportStatement(
                 ASTEnums.ImportType.SYSTEM,
-                "myPackage",
+                "MyPackage",
                 List.of(
                         new Token(Token.Keyword.IMPORT, 0),
-                        new Token(Token.Symbol.LEFT_ANGLE, 0),
-                        new Token(Token.Textless.NAME, "myPackage", 0),
-                        new Token(Token.Symbol.RIGHT_ANGLE, 0)
+                        new Token(Token.Textless.NAME, "MyPackage", 0)
                 )).toFlatString();
 
         assertEquals(expected, statements.get(0).toFlatString());

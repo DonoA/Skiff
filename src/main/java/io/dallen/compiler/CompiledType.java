@@ -28,6 +28,15 @@ public class CompiledType extends CompiledObject {
 
     public static final CompiledType EXCEPTION = new CompiledType("Exception", true)
             .setParent(CompiledType.ANYREF)
+            .addConstructor(
+                    new CompiledFunction(
+                            "Exception",
+                            "skiff_exception_new",
+                            true,
+                            CompiledType.VOID,
+                            List.of(CompiledType.STRING)
+                    )
+            )
             .addMethod(new CompiledMethod(
                     new CompiledFunction("getMessage", "", false, CompiledType.STRING, List.of()),
                     true, false));
@@ -170,6 +179,10 @@ public class CompiledType extends CompiledObject {
     public CompiledType isGenericPlaceholder(boolean v) {
         this.genericPlaceholder = v;
         return this;
+    }
+
+    public boolean isGenericPlaceholder() {
+        return this.genericPlaceholder;
     }
 
     public CompiledType fillGenericTypes(List<CompiledType> genericList) {

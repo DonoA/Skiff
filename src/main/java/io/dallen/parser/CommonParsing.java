@@ -61,7 +61,7 @@ class CommonParsing {
     }
 
     AST.Type parseType() {
-        List<Token> tokens = parser.selectTo(Token.Symbol.LEFT_ANGLE);
+        List<Token> tokens = parser.selectToWithEnd(Token.Symbol.RIGHT_ANGLE);
         AST.Statement typeName = new Parser(parser.consumeTo(Token.Symbol.LEFT_ANGLE), parser).parseExpression();
         if(parser.current().isEOF()) {
             return new AST.Type(typeName, List.of(), tokens);

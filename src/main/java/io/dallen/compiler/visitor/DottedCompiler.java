@@ -40,6 +40,7 @@ class DottedCompiler {
             context.throwError("Cannot access private field", call);
         }
         StringBuilder sb = new StringBuilder();
+        sb.append("(").append(func.getReturns().getCompiledName()).append(")");
         if(isStatic) {
             sb.append(func.getCompiledName()).append("(");
         } else {

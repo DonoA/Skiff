@@ -151,7 +151,7 @@ public class Parser implements ErrorCollector<Token> {
     }
 
     // Just selects the tokens, does not advance the current location
-    List<Token> selectTo(List<Token.TokenType> types) {
+    List<Token> selectTo(List<Token.TokenType> types, boolean includeEnd) {
         List<Token> tkns = new ArrayList<>();
         int loc = pos;
         BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
@@ -179,16 +179,23 @@ public class Parser implements ErrorCollector<Token> {
             tkns.add(tokens.get(loc));
             loc++;
         }
+        if(includeEnd && loc < tokens.size()) {
+            tkns.add(tokens.get(loc));
+        }
         return tkns;
     }
 
     List<Token> selectTo(Token.TokenType typ) {
-        return selectTo(List.of(typ));
+        return selectTo(List.of(typ), false);
+    }
+
+    List<Token> selectToWithEnd(Token.TokenType typ) {
+        return selectTo(List.of(typ), true);
     }
 
     // Just selects the tokens, does not advance the current location
     List<Token> selectToEOF() {
-        return selectTo(List.of(Textless.EOF, Token.Symbol.SEMICOLON));
+        return selectTo(List.of(Textless.EOF, Token.Symbol.SEMICOLON), false);
     }
 
     List<Token> selectToBlockEnd() {

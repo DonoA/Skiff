@@ -2,7 +2,7 @@ package io.dallen.integration;
 
 import static org.junit.Assert.assertEquals;
 
-public class BasicExpression {
+public class BasicExpressionTest {
 
     @org.junit.Test
     public void helloWorld() {
@@ -21,7 +21,7 @@ public class BasicExpression {
 
         IntegrationTestHarness.TestResult actual = harness.run();
         IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
-                10, "loop\nloop\nloop\nloop\nloop\nloop\nloop\nloop\nloop\nloop\n", ""
+                2, "while\nwhile\nloop\nloop\nloop\nloop\nloop\n", ""
         );
         assertEquals(expected, actual);
     }
@@ -44,6 +44,17 @@ public class BasicExpression {
         IntegrationTestHarness.TestResult actual = harness.run();
         IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
                 5, "My name Dave!\n", ""
+        );
+        assertEquals(expected, actual);
+    }
+
+    @org.junit.Test
+    public void tryCatch() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("TryCatch");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                0, "Oh no!\nError message\nWe resume here!\n", ""
         );
         assertEquals(expected, actual);
     }
