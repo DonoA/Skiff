@@ -44,7 +44,8 @@ class FunctionDefCompiler {
         }
 
         if(returnOptional.isEmpty() && !returns.getBinding().equals(CompiledType.VOID)) {
-            context.throwError("Function with non void return type must end with a return statement", stmt);
+            // TODO: Branch checking to ensure that there is a way nothing can be returned
+//            context.throwError("Function with non void return type must end with a return statement", stmt);
         }
 
         functionCode.append(generateReturns(returnOptional, isConstructor, context, innerContext));
@@ -82,8 +83,7 @@ class FunctionDefCompiler {
                                           CompileContext innerContext) {
         StringBuilder sb = new StringBuilder();
         if(returns.isEmpty()) {
-            sb.append(innerContext.getIndent());
-            VisitorUtils.cleanupScope(sb, innerContext);
+            VisitorUtils.cleanupScope(sb, innerContext, true);
         }
 
         if(isConstructor) {

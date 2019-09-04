@@ -13,5 +13,7 @@ def main(args: List<String>): Int {
 
     println("We resume here!");
 
-    return 0;
+    list: List<String> = null;
+
+    return list.getSize();
 }

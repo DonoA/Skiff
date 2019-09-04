@@ -2,7 +2,7 @@ package io.dallen.integration;
 
 import static org.junit.Assert.assertEquals;
 
-public class BasicExpressionTest {
+public class IntegrationTest {
 
     @org.junit.Test
     public void helloWorld() {
@@ -54,7 +54,18 @@ public class BasicExpressionTest {
 
         IntegrationTestHarness.TestResult actual = harness.run();
         IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
-                0, "Oh no!\nError message\nWe resume here!\n", ""
+                1, "Oh no!\nError message\nWe resume here!\nTop Level Error Caught! Message: Invalid access to storage!\n", ""
+        );
+        assertEquals(expected, actual);
+    }
+
+    @org.junit.Test
+    public void optional() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Optional");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                5, "", ""
         );
         assertEquals(expected, actual);
     }

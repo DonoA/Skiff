@@ -1,0 +1,33 @@
+class Optional<T> {
+    private data: T;
+
+    def Optional(data: T) {
+        this.data = data;
+    }
+
+    static def of(data: T): Optional<T> {
+        return new Optional<T>(data);
+    }
+
+    static def empty(): Optional<T> {
+        return new Optional<T>(null);
+    }
+
+    def get(): T {
+        return data;
+    }
+
+    def isPresent(): Bool {
+        return data != null;
+    }
+}
+
+def main(args: List<String>): Int {
+    op: Optional<Int> = Optional.of<Int>(5);
+    if(op.isPresent()) {
+        return op.get();
+    } else {
+        return 0;
+    }
+}
+

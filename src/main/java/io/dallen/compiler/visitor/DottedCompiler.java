@@ -52,15 +52,23 @@ class DottedCompiler {
             }
         }
 
-        sb.append(call.args.stream()
-                .map(e -> e.compile(context))
-                .map(arg -> {
-                    if(arg.onStack()) {
-                        return  "*(" + arg.getCompiledText() + ")";
-                    }
-                    return arg.getCompiledText();
-                })
-                .collect(Collectors.joining(", ")));
+        for (int i = 0; i < call.args.size(); i++) {
+            CompiledCode arg = call.args.get(i).compile(context);
+            String cast = "";
+            String text;
+            if(arg.onStack()) {
+                text = "*(" + arg.getCompiledText() + ")";
+            } else {
+                text = arg.getCompiledText();
+            }
+            if(func.getArgs().get(i).isGenericPlaceholder()) {
+                cast = "(" + func.getArgs().get(i).getCompiledName() + ")";
+            }
+            sb.append(cast).append(text);
+            if(i != call.args.size() - 1) {
+                sb.append(", ");
+            }
+        }
         sb.append(")");
 
         return new CompiledCode()

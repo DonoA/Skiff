@@ -42,14 +42,15 @@ public class CompiledType extends CompiledObject {
                     true, false));
 
     public static final CompiledType LIST = new CompiledType("List" ,true)
-        .setParent(CompiledType.ANYREF)
-//        .addField(new CompiledVar("size", false, CompiledType.INT))
-        .addMethod(new CompiledMethod(
-                new CompiledFunction("getSize", "", false, CompiledType.INT, List.of()),
-                true, false))
-        .addMethod(new CompiledMethod(
-                new CompiledFunction("getSub", "", false, CompiledType.ANYREF, List.of()),
-                true, false));
+            .addGeneric("T")
+            .setParent(CompiledType.ANYREF)
+//            .addField(new CompiledVar("size", false, CompiledType.INT))
+            .addMethod(new CompiledMethod(
+                    new CompiledFunction("getSize", "", false, CompiledType.INT, List.of()),
+                    true, false))
+            .addMethod(new CompiledMethod(
+                    new CompiledFunction("getSub", "", false, CompiledType.ANYREF, List.of()),
+                    true, false));
 
     private final boolean isRef;
     // order is vital for both declared vars and declared functions

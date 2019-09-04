@@ -122,8 +122,7 @@ public class ASTVisitor {
         StringBuilder sb = new StringBuilder();
         sb.append("while(1)\n").append(context.getIndent()).append("{\n");
         stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
-        sb.append(innerContext.getIndent());
-        VisitorUtils.cleanupScope(sb, innerContext);
+        VisitorUtils.cleanupScope(sb, innerContext, true);
         sb.append(context.getIndent()).append("}");
         return new CompiledCode()
                 .withText(sb.toString())
@@ -275,7 +274,8 @@ public class ASTVisitor {
         CompiledCode code = stmt.value.compile(context);
         StringBuilder sb = new StringBuilder();
 
-        VisitorUtils.cleanupScope(sb, context);
+        // Calculate how much needs to be deleted from the last function
+        VisitorUtils.cleanupScope(sb, context, false);
         sb.append(context.getIndent()).append("return ").append(code.getCompiledText());
         return new CompiledCode()
                 .withText(sb.toString())

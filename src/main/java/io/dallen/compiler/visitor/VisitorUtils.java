@@ -41,12 +41,15 @@ public class VisitorUtils {
         };
     }
 
-    static void cleanupScope(StringBuilder sb, CompileContext context) {
+    static void cleanupScope(StringBuilder sb, CompileContext context, boolean indent) {
         if(context.isDebug()) {
             sb.append("// Cleanup scope\n");
         }
 
-        sb.append(context.getIndent()).append("skfree_ref_stack(").append(context.getRefStackSize()).append(");\n");
+        if(indent) {
+            sb.append(context.getIndent());
+        }
+        sb.append("skfree_ref_stack(").append(context.getRefStackSize()).append(");\n");
     }
 
     static class FunctionSig {
@@ -204,7 +207,7 @@ public class VisitorUtils {
 
     static CompiledCode compileFlowKeyword(String name, CompileContext context) {
         StringBuilder sb = new StringBuilder();
-        VisitorUtils.cleanupScope(sb, context);
+        VisitorUtils.cleanupScope(sb, context, true);
         sb.append(context.getIndent()).append(name).append(";");
         return new CompiledCode()
                 .withText(sb.toString())
