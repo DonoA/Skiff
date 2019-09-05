@@ -33,7 +33,7 @@ class FunctionDefCompiler {
                 .append(context.getIndent()).append("{\n");
 
         if(isConstructor) {
-            functionCode.append(initiateInstance(context, innerContext));
+            functionCode.append(initiateInstance(context.getContainingClass(), innerContext));
         }
 
         stmt.body.forEach(VisitorUtils.compileToStringBuilder(functionCode, innerContext));
@@ -63,8 +63,8 @@ class FunctionDefCompiler {
                 .withSemicolon(false);
     }
 
-    private static String initiateInstance(CompileContext context, CompileContext innerContext) {
-        String className = context.getContainingClass().getName();
+    static String initiateInstance(CompiledType cls, CompileContext innerContext) {
+        String className = cls.getName();
 
         return innerContext.getIndent() +
                 VisitorUtils.underscoreJoin("skiff", className, "static") +
@@ -73,7 +73,7 @@ class FunctionDefCompiler {
                 "if(new_inst) { \n" +
                 innerContext.getIndent() + CompileContext.INDENT +
                 "this->class_ptr = &" +
-                context.getContainingClass().getInterfaceName()
+                cls.getInterfaceName()
                 +";\n" +
                 innerContext.getIndent() +
                 "}\n";

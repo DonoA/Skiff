@@ -24,13 +24,15 @@ public class CompiledType extends CompiledObject {
     private String compiledName;
     private String interfaceName;
     private boolean genericPlaceholder = false;
+    private final boolean dataClass;
 
-    public CompiledType(String className, boolean ref) {
+    public CompiledType(String className, boolean ref, boolean dataClass) {
         super(className);
         this.structName = VisitorUtils.underscoreJoin("skiff", className, "t");
         this.interfaceName = VisitorUtils.underscoreJoin("skiff", className, "interface");
         this.compiledName = this.structName + (ref ? " *" : "");
         this.isRef = ref;
+        this.dataClass = dataClass;
     }
 
     public String getStructName() {
@@ -150,7 +152,7 @@ public class CompiledType extends CompiledObject {
             generics.put(genericNameItr.next(), g);
         });
 
-        CompiledType filledType = new CompiledType(getName(), isRef);
+        CompiledType filledType = new CompiledType(getName(), isRef, dataClass);
 
         this.declaredVars.forEach(f -> {
             CompiledField post = f;
@@ -213,4 +215,7 @@ public class CompiledType extends CompiledObject {
         return interfaceName;
     }
 
+    public boolean isDataClass() {
+        return dataClass;
+    }
 }

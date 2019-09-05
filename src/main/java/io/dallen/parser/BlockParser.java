@@ -38,7 +38,7 @@ class BlockParser {
             })
             .addCase(Keyword.DEF::equals, BlockParser::parseFunctionDef)
             .addCase(Keyword.CLASS::equals, BlockParser::parseClassDef)
-            .addCase(Keyword.STRUCT::equals, BlockParser::parseStructDef)
+            .addCase(Keyword.STRUCT::equals, BlockParser::parseClassDef)
             .addCase(Keyword.PRIVATE::equals, BlockParser::parsePrivate)
             .addCase(Keyword.STATIC::equals, BlockParser::parseStatic)
             .addCase(Keyword.RETURN::equals, BlockParser::parseReturn)
@@ -74,7 +74,14 @@ class BlockParser {
 
     private AST.ClassDef parseClassDef() {
         List<Token> allTokens = parser.selectToBlockEnd();
-        parser.consumeExpected(Token.Keyword.CLASS);
+
+        boolean isStruct = parser.current().type == Keyword.STRUCT;
+        if(isStruct) {
+            parser.consumeExpected(Keyword.STRUCT);
+        } else {
+            parser.consumeExpected(Keyword.CLASS);
+        }
+
         Token name = parser.consumeExpected(Token.Textless.NAME);
         List<AST.GenericType> genericTypes = new ArrayList<>();
         Optional<AST.Type> extended = Optional.empty();
@@ -92,33 +99,8 @@ class BlockParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
 
-        return new AST.ClassDef(name.literal, genericTypes, false, extended, body, allTokens);
+        return new AST.ClassDef(name.literal, genericTypes, isStruct, extended, body, allTokens);
     }
-
-    private AST.ClassDef parseStructDef() {
-        List<Token> allTokens = parser.selectToBlockEnd();
-        parser.consumeExpected(Token.Keyword.CLASS);
-        Token name = parser.consumeExpected(Token.Textless.NAME);
-        List<AST.GenericType> genericTypes = new ArrayList<>();
-        Optional<AST.Type> extended = Optional.empty();
-        if(parser.current().type == Token.Symbol.LEFT_ANGLE) {
-            genericTypes = parser.getCommon().consumeGenericList();
-        }
-
-        if(parser.current().type == Token.Symbol.COLON) {
-            parser.consumeExpected(Token.Symbol.COLON);
-            List<Token> extendsTokens = parser.consumeTo(Token.Symbol.LEFT_BRACE);
-            extended = Optional.of(new Parser(extendsTokens, parser).getCommon().parseType());
-        }
-
-        parser.tryConsumeExpected(Token.Symbol.LEFT_BRACE);
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
-
-        return new AST.ClassDef(name.literal, genericTypes, false, extended, body, allTokens);
-    }
-
-
 
     private void attachCatchBlock(ArrayList<AST.Statement> statements) {
         List<Token> allTokens = parser.selectToBlockEnd();

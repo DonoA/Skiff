@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 class ClassDefCompiler {
@@ -50,11 +51,16 @@ class ClassDefCompiler {
                                     CompileContext context, CompileContext innerContext) {
 
         if(s instanceof AST.Declare) {
+            // TODO: These decs must be ordered if this is a data class, maybe refactor this methods to be a
+            // different method for data classes
             AST.Declare dec = (AST.Declare) s;
             declaredVars.put(dec.name, createCompiledField(dec, false, innerContext));
             checkCollision(cls, dec, context);
 
         } else if(s instanceof AST.FunctionDef) {
+            if(cls.isDataClass()) {
+                context.throwError("Data classes have no methods", s);
+            }
             AST.FunctionDef dec = (AST.FunctionDef) s;
             boolean isConstructor = dec.name.equals(cls.getName());
             CompiledMethod func = createCompiledFunc(dec, isConstructor, false, false, innerContext);
@@ -64,6 +70,9 @@ class ClassDefCompiler {
                 declaredMethods.put(dec.name, func);
             }
         } else if(s instanceof AST.FunctionDefModifier) {
+            if(cls.isDataClass()) {
+                context.throwError("Data classes have no methods", s);
+            }
             AST.FunctionDefModifier mod = (AST.FunctionDefModifier) s;
             boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
             boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
@@ -76,6 +85,9 @@ class ClassDefCompiler {
                 declaredMethods.put(mod.on.name, func);
             }
         } else if(s instanceof AST.FieldModifier) {
+            if(cls.isDataClass()) {
+                context.throwError("Data classes cannot have static or private fields", s);
+            }
             AST.FieldModifier mod = (AST.FieldModifier) s;
             boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
             boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
@@ -88,18 +100,58 @@ class ClassDefCompiler {
                 checkCollision(cls, mod.on, context);
             }
         } else {
-            context.throwError("Class statements must be function defs or Declares", s);
+            context.throwError("Class and Struct statements must be method or field declarations", s);
         }
+    }
+
+    private static String capNameFor(String name) {
+        if(Character.isLowerCase(name.charAt(0))) {
+            return String.valueOf(Character.toUpperCase(name.charAt(0))) +
+                    name.substring(1);
+        }
+        return name;
+    }
+
+    private static void generateDataClassMethods(CompiledType cls) {
+        List<CompiledType> args = cls.getAllFields().stream().map(CompiledVar::getType).collect(Collectors.toList());
+
+        cls.addConstructor(new CompiledFunction(
+                cls.getName(),
+                VisitorUtils.underscoreJoin("skiff", cls.getName(), "new"),
+                true,
+                BuiltinTypes.VOID,
+                args));
+
+        cls.getAllFields().forEach(f -> {
+            String fName = capNameFor(f.getName());
+            cls.addMethod(new CompiledMethod(new CompiledFunction(
+                "get" + fName,
+                    VisitorUtils.underscoreJoin("skiff", cls.getName(), "get", f.getName()),
+                    false,
+                    f.getType(),
+                    List.of()
+            ), true, false));
+
+            cls.addMethod(new CompiledMethod(new CompiledFunction(
+                    "set" + fName,
+                    VisitorUtils.underscoreJoin("skiff", cls.getName(), "set", f.getName()),
+                    false,
+                    BuiltinTypes.VOID,
+                    List.of(f.getType())
+            ), true, false));
+        });
     }
 
     private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext)
             throws CompileException {
-        CompiledType cls = new CompiledType(stmt.name, true);
+        CompiledType cls = new CompiledType(stmt.name, true, stmt.isStruct);
 
         // Declare generic order
         stmt.genericTypes.forEach(generic -> {
             cls.addGeneric(generic.name);
-            innerContext.declareObject(new CompiledType(generic.name, true).setCompiledName("void *").isGenericPlaceholder(true));
+            innerContext.declareObject(new CompiledType(generic.name, true, false)
+                    .setCompiledName("void *")
+                    .isGenericPlaceholder(true));
         });
 
         // Set parent class or default if none found
@@ -145,9 +197,13 @@ class ClassDefCompiler {
 
         // Declare special class keywords
         innerContext.declareObject(new CompiledVar("this", true, cls));
-        cls.getParent().getConstructors().forEach(ctr -> {
-            innerContext.declareObject(new CompiledFunction("super", "super", ctr.getArgs()));
-        });
+        cls.getParent().getConstructors().forEach(ctr ->
+                innerContext.declareObject(new CompiledFunction("super", "super", ctr.getArgs()))
+        );
+
+        if(cls.isDataClass()) {
+            generateDataClassMethods(cls);
+        }
 
         return cls;
     }
@@ -179,6 +235,11 @@ class ClassDefCompiler {
 
         String methodCode = generateMethodCode(stmt.body, innerContext);
 
+        String dataClassCode = "";
+        if(cls.isDataClass()) {
+            dataClassCode = getDataClassCode(cls, context);
+        }
+
         String footerComment = "\n\n///////////////////// End Class " + cls.getName() + " /////////////////////////\n\n";
 
         String text = headerComment +
@@ -189,12 +250,60 @@ class ClassDefCompiler {
                 staticInitFunc +
                 dataStruct +
                 methodCode +
+                dataClassCode +
                 footerComment;
 
         return new CompiledCode()
                 .withText(text)
                 .withBinding(cls)
                 .withSemicolon(false);
+    }
+
+    private static String getDataClassCode(CompiledType cls, CompileContext context) {
+        StringBuilder text = new StringBuilder();
+
+        CompileContext ctrContext = new CompileContext(context).addIndent();
+        CompiledFunction ctr = cls.getConstructors().get(0);
+        text.append(cls.getCompiledName()).append(" ").append(ctr.getCompiledName())
+                .append("(").append(cls.getCompiledName()).append(" this, int new_inst");
+
+        cls.getAllFields()
+                .stream()
+                .map(arg -> arg.getType().getCompiledName() + " " + arg.getName())
+                .forEach(arg -> text.append(", ").append(arg));
+
+        text.append(")\n{\n");
+
+        text.append(FunctionDefCompiler.initiateInstance(cls, ctrContext));
+
+        cls.getAllFields()
+                .stream()
+                .map(arg -> "(this->" + arg.getName() + ") = " + arg.getName())
+                .forEach(arg -> text.append(ctrContext.getIndent()).append(arg).append(";\n"));
+
+        text.append(ctrContext.getIndent()).append("return this;\n");
+        text.append("}\n");
+
+        cls.getAllFields().forEach(f -> {
+            String fName = capNameFor(f.getName());
+            CompiledMethod getter = cls.getMethod("get" + fName);
+            text.append(getter.getReturns().getCompiledName()).append(" ")
+                    .append(getter.getCompiledName())
+                    .append("(").append(cls.getCompiledName()).append("this)\n")
+                    .append("{\n")
+                    .append(CompileContext.INDENT).append("return (this)->").append(f.getName()).append(";\n")
+                    .append("}\n");
+
+            CompiledMethod setter = cls.getMethod("set" + fName);
+            text.append("void").append(" ")
+                    .append(setter.getCompiledName())
+                    .append("(").append(cls.getCompiledName()).append("this, ")
+                    .append(f.getType().getCompiledName()).append(" new_value)\n")
+                    .append("{\n")
+                    .append(CompileContext.INDENT).append("(this)->").append(f.getName()).append(" = new_value;\n")
+                    .append("}\n");
+        });
+        return text.toString();
     }
 
     private static String generateMethodCode(List<AST.Statement> body, CompileContext innerContext) {
