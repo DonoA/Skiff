@@ -8,8 +8,9 @@ public class CompiledFunction extends CompiledVar {
     private final List<CompiledType> args;
     private final boolean isConstructor;
 
-    public CompiledFunction(String name, String compiledName, boolean isConstructor, CompiledType returns, List<CompiledType> args) {
-        super(name, false, CompiledType.FUNCTION);
+    public CompiledFunction(String name, String compiledName, boolean isConstructor, CompiledType returns,
+                            List<CompiledType> args) {
+        super(name, false, BuiltinTypes.FUNCTION);
         this.isConstructor = isConstructor;
         this.compiledName = compiledName;
         this.returns = returns;
@@ -17,7 +18,7 @@ public class CompiledFunction extends CompiledVar {
     }
 
     public CompiledFunction(String name, String compiledName, List<CompiledType> args) {
-        this(name, compiledName, false, CompiledType.VOID, args);
+        this(name, compiledName, false, BuiltinTypes.VOID, args);
     }
 
     public CompiledType getReturns() {

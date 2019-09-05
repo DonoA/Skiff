@@ -3,8 +3,6 @@ package io.dallen.compiler.visitor;
 import io.dallen.ast.AST;
 import io.dallen.compiler.*;
 
-import java.util.stream.Collectors;
-
 class DottedCompiler {
 
     static CompiledCode compileDotted(AST.Dotted stmt, CompileContext context) {
@@ -16,13 +14,12 @@ class DottedCompiler {
             return compileVarDot(lhs, (AST.Variable) stmt.right, context);
         }
         context.throwError("Dotted on invalid type", stmt);
-        return new CompiledCode()
-                .withText("")
-                .withType(CompiledType.VOID);
+        return new CompiledCode();
     }
 
     private static CompiledCode compileFunctionDot(CompiledCode lhs, AST.FunctionCall call, CompileContext context) {
-        CompiledType.CompiledMethod func;
+        CompiledMethod func;
+
         boolean isStatic = lhs.getBinding() instanceof CompiledType;
         if(isStatic) {
             CompiledType clazz = (CompiledType) lhs.getBinding();
@@ -30,15 +27,16 @@ class DottedCompiler {
         } else {
             func = lhs.getType().getMethod(call.name);
         }
+
         if(func == null) {
             context.throwError("Method not found", call);
-            return new CompiledCode()
-                    .withText("")
-                    .withType(CompiledType.VOID);
+            return new CompiledCode();
         }
-        if(func.isPrivate() && (context.getParentClass() == null || !context.getParentClass().equals(lhs.getType()))) {
+
+        if(func.isPrivate() && (context.getContainingClass() == null || !context.getContainingClass().equals(lhs.getType()))) {
             context.throwError("Cannot access private field", call);
         }
+
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(func.getReturns().getCompiledName()).append(")");
         if(isStatic) {
@@ -54,6 +52,7 @@ class DottedCompiler {
 
         for (int i = 0; i < call.args.size(); i++) {
             CompiledCode arg = call.args.get(i).compile(context);
+
             String cast = "";
             String text;
             if(arg.onStack()) {
@@ -61,9 +60,11 @@ class DottedCompiler {
             } else {
                 text = arg.getCompiledText();
             }
+
             if(func.getArgs().get(i).isGenericPlaceholder()) {
                 cast = "(" + func.getArgs().get(i).getCompiledName() + ")";
             }
+
             sb.append(cast).append(text);
             if(i != call.args.size() - 1) {
                 sb.append(", ");
@@ -78,28 +79,31 @@ class DottedCompiler {
 
     private static CompiledCode compileVarDot(CompiledCode lhs, AST.Variable v, CompileContext context) {
         StringBuilder sb = new StringBuilder();
-        CompiledType.CompiledField obj;
+        CompiledField obj;
+
         boolean isStatic = lhs.getBinding() instanceof CompiledType;
         if(isStatic) {
             obj = ((CompiledType) lhs.getBinding()).getStaticField(v.name);
         } else {
             obj = lhs.getType().getField(v.name);
         }
+
         if(obj == null) {
             context.throwError("No such field", v);
-            return new CompiledCode()
-                    .withText("")
-                    .withType(CompiledType.VOID);
+            return new CompiledCode();
         }
-        if(obj.isPrivate() && (context.getParentClass() == null || !context.getParentClass().equals(lhs.getType()))) {
+
+        if(obj.isPrivate() && (context.getContainingClass() == null || !context.getContainingClass().equals(lhs.getType()))) {
             context.throwError("Cannot access private field", v);
         }
+
         if(isStatic) {
             CompiledType lhsType = ((CompiledType) lhs.getBinding());
             sb.append(lhsType.getInterfaceName()).append(".").append(v.name);
         } else {
             sb.append(lhs.onStack() ? "(*" : "(").append(lhs.getCompiledText()).append(")->").append(v.name);
         }
+
         return new CompiledCode()
                 .withText(sb.toString())
                 .withType(obj.getType());

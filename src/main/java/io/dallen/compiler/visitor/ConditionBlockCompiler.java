@@ -3,11 +3,10 @@ package io.dallen.compiler.visitor;
 import io.dallen.ast.AST;
 import io.dallen.compiler.CompileContext;
 import io.dallen.compiler.CompiledCode;
-import io.dallen.compiler.CompiledType;
 
 import java.util.List;
 
-public class ConditionBlockCompiler {
+class ConditionBlockCompiler {
 
     private static StringBuilder compileGenericLoop(String blockName, List<AST.Statement> body, AST.Statement condition, CompileContext context) {
         StringBuilder sb = new StringBuilder();
@@ -30,7 +29,6 @@ public class ConditionBlockCompiler {
 
         return new CompiledCode()
                 .withText(text.toString())
-                .withType(CompiledType.VOID)
                 .withSemicolon(false);
     }
 
@@ -45,7 +43,6 @@ public class ConditionBlockCompiler {
 
         return new CompiledCode()
                 .withText(text.toString())
-                .withType(CompiledType.VOID)
                 .withSemicolon(false);
     }
 

@@ -2,7 +2,7 @@ package io.dallen.compiler;
 
 public class CompiledVar extends CompiledObject {
 
-    public static final CompiledVar NULL = new CompiledVar("null", true, CompiledType.ANYREF);
+    public static final CompiledVar NULL = new CompiledVar("null", true, BuiltinTypes.ANYREF);
 
     private final CompiledType type;
     private final boolean isParam;

@@ -8,7 +8,7 @@ public class CompiledCode {
     private boolean onStack;
 
     public CompiledCode() {
-        this.compiledText = null;
+        this.compiledText = "";
         this.binding = null;
         this.type = null;
         this.requiresSemicolon = true;

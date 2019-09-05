@@ -12,31 +12,31 @@ public class CompileScope {
     }
 
     public void loadBuiltins() {
-        declareObject(CompiledType.VOID);
-        declareObject(CompiledType.STRING);
-        declareObject(CompiledType.INT);
-        declareObject(CompiledType.BOOL);
-        declareObject(CompiledType.LIST);
-        declareObject(CompiledType.EXCEPTION);
+        declareObject(BuiltinTypes.VOID);
+        declareObject(BuiltinTypes.STRING);
+        declareObject(BuiltinTypes.INT);
+        declareObject(BuiltinTypes.BOOL);
+        declareObject(BuiltinTypes.LIST);
+        declareObject(BuiltinTypes.EXCEPTION);
 
         declareObject(new CompiledFunction(
             "println",
             "skiff_println",
-              Collections.singletonList(CompiledType.STRING)));
+              Collections.singletonList(BuiltinTypes.STRING)));
     }
 
     public void declareObject(CompiledObject decVar) {
         variableTable.put(decVar.getName(), decVar);
     }
 
-    public CompiledObject getObject(String name) throws NoSuchObjectException {
+    public CompiledObject getObject(String name) throws NoSuchElementException {
         CompiledObject varFor = variableTable.get(name);
         if(varFor != null) {
             return varFor;
         }
 
         if(parent == null) {
-            throw new NoSuchObjectException(name);
+            throw new NoSuchElementException(name);
         }
 
         return parent.getObject(name);

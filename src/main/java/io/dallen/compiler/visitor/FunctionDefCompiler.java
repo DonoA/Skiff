@@ -11,18 +11,19 @@ class FunctionDefCompiler {
         StringBuilder functionCode = new StringBuilder();
         CompiledCode returns = stmt.returns.compile(context);
 
-        boolean isConstructor = context.getParentClass() != null && !isStatic &&
-                stmt.name.equals(context.getParentClass().getName());
+        boolean isConstructor = context.getContainingClass() != null && !isStatic &&
+                stmt.name.equals(context.getContainingClass().getName());
 
         CompileContext innerContext = new CompileContext(context, true)
                 .addIndent();
 
-        if(!returns.getBinding().equals(CompiledType.VOID) && isConstructor) {
+        if(!returns.getBinding().equals(BuiltinTypes.VOID) && isConstructor) {
             context.throwError("Constructor must return void", stmt);
         }
 
         VisitorUtils.FunctionSig sig = VisitorUtils.generateSig(isConstructor, isStatic, context, returns, stmt,
                 innerContext);
+
         if(!isConstructor) {
             context.declareObject(sig.getFunction());
         }
@@ -43,7 +44,7 @@ class FunctionDefCompiler {
             returnOptional = Optional.of((AST.Return) stmt.body.get(stmt.body.size() - 1));
         }
 
-        if(returnOptional.isEmpty() && !returns.getBinding().equals(CompiledType.VOID)) {
+        if(returnOptional.isEmpty() && !returns.getBinding().equals(BuiltinTypes.VOID)) {
             // TODO: Branch checking to ensure that there is a way nothing can be returned
 //            context.throwError("Function with non void return type must end with a return statement", stmt);
         }
@@ -57,13 +58,13 @@ class FunctionDefCompiler {
 
         return new CompiledCode()
                 .withText(text.toString())
-                .withType(CompiledType.VOID)
+                .withType(BuiltinTypes.VOID)
                 .withBinding(sig.getFunction())
                 .withSemicolon(false);
     }
 
     private static String initiateInstance(CompileContext context, CompileContext innerContext) {
-        String className = context.getParentClass().getName();
+        String className = context.getContainingClass().getName();
 
         return innerContext.getIndent() +
                 VisitorUtils.underscoreJoin("skiff", className, "static") +
@@ -72,7 +73,7 @@ class FunctionDefCompiler {
                 "if(new_inst) { \n" +
                 innerContext.getIndent() + CompileContext.INDENT +
                 "this->class_ptr = &" +
-                context.getParentClass().getInterfaceName()
+                context.getContainingClass().getInterfaceName()
                 +";\n" +
                 innerContext.getIndent() +
                 "}\n";

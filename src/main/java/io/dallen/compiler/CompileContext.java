@@ -6,6 +6,7 @@ import io.dallen.errors.ErrorPrinter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class CompileContext implements ErrorCollector<AST.Statement> {
 
@@ -18,7 +19,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     private final List<String> dependents;
     private final String code;
     private String scopePrefix = "";
-    private CompiledType parentClass = null;
+    private CompiledType containingClass = null;
     private int globalCounter = 1;
     private final boolean debug;
 
@@ -52,7 +53,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         }
         this.scope = new CompileScope(parent.scope);
         this.indent = parent.indent;
-        this.parentClass = parent.parentClass;
+        this.containingClass = parent.containingClass;
         this.onStack = parent.onStack;
         this.debug = parent.debug;
     }
@@ -66,7 +67,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         scope.declareObject(decVar);
     }
 
-    public CompiledObject getObject(String name) throws NoSuchObjectException {
+    public CompiledObject getObject(String name) throws NoSuchElementException {
         return scope.getObject(name);
     }
 
@@ -108,12 +109,12 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         return this;
     }
 
-    public CompiledType getParentClass() {
-        return parentClass;
+    public CompiledType getContainingClass() {
+        return containingClass;
     }
 
-    public CompileContext setParentClass(CompiledType parentClass) {
-        this.parentClass = parentClass;
+    public CompileContext setContainingClass(CompiledType containingClass) {
+        this.containingClass = containingClass;
         return this;
     }
 

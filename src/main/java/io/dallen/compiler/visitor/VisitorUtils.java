@@ -95,8 +95,8 @@ public class VisitorUtils {
 
         List<String> stringArgs = new ArrayList<>();
 
-        if(context.getParentClass() != null && !isStatic) {
-            stringArgs.add(context.getParentClass().getCompiledName() + " this");
+        if(context.getContainingClass() != null && !isStatic) {
+            stringArgs.add(context.getContainingClass().getCompiledName() + " this");
         }
 
         if(isConstructor) {
@@ -133,11 +133,7 @@ public class VisitorUtils {
 
     static String generateReturnType(boolean isConstructor, CompileContext context, CompiledCode returnType) {
         if(isConstructor) {
-            return context.getParentClass().getCompiledName();
-        }
-
-        if(returnType.getBinding().equals(CompiledType.VOID)) {
-            return "void";
+            return context.getContainingClass().getCompiledName();
         }
 
         return returnType.getCompiledText();
@@ -174,14 +170,13 @@ public class VisitorUtils {
         }
     }
 
-    static String compileStruct(String name, String outerIndent, String innerIndent, List<StructEntry> entries) {
+    static String compileStruct(String name, List<StructEntry> entries) {
         StringBuilder sb = new StringBuilder();
-        sb.append(outerIndent).append("struct ").append(name).append(" \n{\n");
+        sb.append("struct ").append(name).append(" \n{\n");
         for(StructEntry entry : entries) {
-            sb.append(innerIndent).append(entry.toString()).append(";\n");
+            sb.append(CompileContext.INDENT).append(entry.toString()).append(";\n");
         }
-        sb.append(outerIndent).append("};\n");
-
+        sb.append("};\n");
         return sb.toString();
     }
 
@@ -211,7 +206,7 @@ public class VisitorUtils {
         sb.append(context.getIndent()).append(name).append(";");
         return new CompiledCode()
                 .withText(sb.toString())
-                .withType(CompiledType.VOID)
+                .withType(BuiltinTypes.VOID)
                 .withSemicolon(false);
     }
 }

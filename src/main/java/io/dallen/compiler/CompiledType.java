@@ -6,51 +6,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CompiledType extends CompiledObject {
-    public static final CompiledType VOID = new CompiledType("Void", false)
-        .setCompiledName("void");
-    public static final CompiledType ANY = new CompiledType("Any", false);
-
-    public static final CompiledType INT = new CompiledType("Int", false)
-        .setParent(CompiledType.ANY)
-        .setCompiledName("int32_t");
-    public static final CompiledType BOOL = new CompiledType("Bool" ,false)
-        .setCompiledName("uint8_t")
-        .setParent(CompiledType.ANY);
-
-    public static final CompiledType ANYREF = new CompiledType("AnyRef", true)
-        .setParent(CompiledType.ANY);
-    public static final CompiledType CLASS = new CompiledType("Class", true)
-        .setParent(CompiledType.ANYREF);
-    public static final CompiledType FUNCTION = new CompiledType("Function", true)
-        .setParent(CompiledType.ANYREF);
-    public static final CompiledType STRING = new CompiledType("String", true)
-        .setParent(CompiledType.ANYREF);
-
-    public static final CompiledType EXCEPTION = new CompiledType("Exception", true)
-            .setParent(CompiledType.ANYREF)
-            .addConstructor(
-                    new CompiledFunction(
-                            "Exception",
-                            "skiff_exception_new",
-                            true,
-                            CompiledType.VOID,
-                            List.of(CompiledType.STRING)
-                    )
-            )
-            .addMethod(new CompiledMethod(
-                    new CompiledFunction("getMessage", "", false, CompiledType.STRING, List.of()),
-                    true, false));
-
-    public static final CompiledType LIST = new CompiledType("List" ,true)
-            .addGeneric("T")
-            .setParent(CompiledType.ANYREF)
-//            .addField(new CompiledVar("size", false, CompiledType.INT))
-            .addMethod(new CompiledMethod(
-                    new CompiledFunction("getSize", "", false, CompiledType.INT, List.of()),
-                    true, false))
-            .addMethod(new CompiledMethod(
-                    new CompiledFunction("getSub", "", false, CompiledType.ANYREF, List.of()),
-                    true, false));
 
     private final boolean isRef;
     // order is vital for both declared vars and declared functions
@@ -258,35 +213,4 @@ public class CompiledType extends CompiledObject {
         return interfaceName;
     }
 
-    public static class CompiledMethod extends CompiledFunction {
-        private final boolean mine;
-        private final boolean priv;
-
-        public CompiledMethod(CompiledFunction func, boolean mine, boolean priv) {
-            super(func.getName(), func.getCompiledName(), func.isConstructor(), func.getReturns(), func.getArgs());
-            this.mine = mine;
-            this.priv = priv;
-        }
-
-        public boolean isMine() {
-            return mine;
-        }
-
-        public boolean isPrivate() {
-            return priv;
-        }
-    }
-
-    public static class CompiledField extends CompiledVar {
-        private final boolean priv;
-
-        public CompiledField(CompiledVar v, boolean priv) {
-            super(v.getName(), v.isParam(), v.getType());
-            this.priv = priv;
-        }
-
-        public boolean isPrivate() {
-            return priv;
-        }
-    }
 }

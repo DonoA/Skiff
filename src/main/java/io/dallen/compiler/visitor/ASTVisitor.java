@@ -9,6 +9,7 @@ import io.dallen.compiler.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -32,15 +33,14 @@ public class ASTVisitor {
         if(typ == null) {
             context.throwError("Type not found", stmt);
             return new CompiledCode()
-                    .withText("")
                     .withBinding(typeName.getBinding())
-                    .withType(CompiledType.CLASS);
+                    .withType(BuiltinTypes.CLASS);
         }
         String name = typ.getCompiledName();
         return new CompiledCode()
                 .withText(name)
                 .withBinding(typeName.getBinding())
-                .withType(CompiledType.CLASS);
+                .withType(BuiltinTypes.CLASS);
     }
 
     public CompiledCode compileGenericType(GenericType stmt, CompileContext context) {
@@ -84,7 +84,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileElseBlock(ElseBlock stmt, CompileContext context) {
-        return new CompiledCode().withText("");
+        return new CompiledCode();
     }
 
     public CompiledCode compileElseIfBlock(ElseIfBlock stmt, CompileContext context) {
@@ -108,7 +108,6 @@ public class ASTVisitor {
 
         return new CompiledCode()
                 .withText(sb.toString())
-                .withType(CompiledType.VOID)
                 .withSemicolon(false);
     }
 
@@ -126,7 +125,6 @@ public class ASTVisitor {
         sb.append(context.getIndent()).append("}");
         return new CompiledCode()
                 .withText(sb.toString())
-                .withType(CompiledType.VOID)
                 .withSemicolon(false);
     }
 
@@ -196,58 +194,11 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileTryBlock(TryBlock stmt, CompileContext context) {
-        StringBuilder sb = new StringBuilder();
-        CatchBlock ctch = stmt.catchBlock;
-
-        CompileContext catchContext = new CompileContext(context).setIndent(CompileContext.INDENT);
-        CompiledCode exceptType = ctch.ex.type.compile(context);
-        catchContext.declareObject(new CompiledVar(ctch.ex.name, true, (CompiledType) exceptType.getBinding()));
-
-        String exceptionClassName = ((CompiledType) exceptType.getBinding()).getInterfaceName();
-        int catchId = context.getGlobalCounter();
-        String catchFuncName = "skiff_catch_" + String.valueOf(catchId);
-        sb.append("skiff_start_try(")
-                .append(catchFuncName)
-                .append(", &").append(exceptionClassName).append(", sp_ref);\n");
-        sb.append(context.getIndent())
-                .append("int skiff_continue_exec_")
-                .append(catchId)
-                .append(" = setjmp(catch_layer_tail->current_catch_state);\n");
-        sb.append(context.getIndent())
-                .append("if(skiff_continue_exec_").append(catchId).append(" == 0)\n")
-                .append(context.getIndent()).append("{\n");
-
-        CompileContext innerContext = new CompileContext(context).addIndent();
-
-        stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
-
-        sb.append(context.getIndent()).append("}\n");
-        sb.append(context.getIndent()).append("skiff_end_try();\n");
-
-        StringBuilder catchText = new StringBuilder();
-        catchText.append("void skiff_catch_")
-                .append(catchId)
-                .append("(skiff_catch_layer_t * layer, skiff_exception_t * ")
-                .append(ctch.ex.name)
-                .append(")\n");
-        catchText.append("{\n");
-        ctch.body.forEach(VisitorUtils.compileToStringBuilder(catchText, catchContext));
-        catchText.append(catchContext.getIndent())
-                .append("skfree_set_ref_stack(layer->sp_ref_val);\n");
-        catchText.append(catchContext.getIndent())
-                .append("longjmp(layer->current_catch_state, 1);\n");
-        catchText.append("}\n");
-
-        context.addDependentCode(catchText.toString());
-
-        return new CompiledCode()
-                .withText(sb.toString())
-                .withSemicolon(false)
-                .withType(CompiledType.VOID);
+        return TryCatchCompiler.compileTryBlock(stmt, context);
     }
 
     public CompiledCode compileCatchBlock(CatchBlock stmt, CompileContext context) {
-        return null;
+        throw new UnsupportedOperationException("Catch compile should not be called directly!");
     }
 
     public CompiledCode compileFinallyBlock(FinallyBlock stmt, CompileContext context) {
@@ -279,8 +230,7 @@ public class ASTVisitor {
         sb.append(context.getIndent()).append("return ").append(code.getCompiledText());
         return new CompiledCode()
                 .withText(sb.toString())
-                .withSemicolon(true)
-                .withType(CompiledType.VOID);
+                .withSemicolon(true);
     }
 
     public CompiledCode compileNew(New stmt, CompileContext context) {
@@ -323,16 +273,14 @@ public class ASTVisitor {
         CompiledCode inner = stmt.value.compile(context);
 
         return new CompiledCode()
-                .withText("skiff_throw(" + inner.getCompiledText() + ")")
-                .withType(CompiledType.VOID);
+                .withText("skiff_throw(" + inner.getCompiledText() + ")");
     }
 
     public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
         String systemPath = new File("lib/" + stmt.value + ".skiff").getAbsolutePath();
         Optional<String> importCode = SkiffC.compile(systemPath, context.isDebug());
         if(importCode.isEmpty()) {
-            return new CompiledCode()
-                    .withText("");
+            return new CompiledCode();
         }
         String text = "// Import " + stmt.value + "\n" + importCode.get() +"\n";
         return new CompiledCode()
@@ -384,12 +332,12 @@ public class ASTVisitor {
 
     public CompiledCode compileCompare(Compare stmt, CompileContext context) {
         CompiledCode cc = VisitorUtils.compileBinary(stmt.left, stmt.right, stmt.op, context);
-        return cc.withType(CompiledType.BOOL);
+        return cc.withType(BuiltinTypes.BOOL);
     }
 
     public CompiledCode compileBoolCombine(BoolCombine stmt, CompileContext context) {
         CompiledCode cc = VisitorUtils.compileBinary(stmt.left, stmt.right, stmt.op, context);
-        return cc.withType(CompiledType.BOOL);
+        return cc.withType(BuiltinTypes.BOOL);
     }
 
     public CompiledCode compileAssign(Assign stmt, CompileContext context) {
@@ -437,8 +385,7 @@ public class ASTVisitor {
         String text = typeCode.getCompiledText() + (isRef ? "* " : " ") + stmt.name + (isRef ? " = skalloc_ref_stack()": "");
         return new CompiledCode()
                 .withBinding(binding)
-                .withText(text)
-                .withType(CompiledType.VOID);
+                .withText(text);
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
@@ -450,20 +397,19 @@ public class ASTVisitor {
         return new CompiledCode()
                 .withBinding(dec.getBinding())
                 .withText(text)
-                .withSemicolon(false)
-                .withType(CompiledType.VOID);
+                .withSemicolon(false);
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
         return new CompiledCode()
                 .withText(String.valueOf(stmt.value.intValue()))
-                .withType(CompiledType.INT);
+                .withType(BuiltinTypes.INT);
     }
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
         return new CompiledCode()
                 .withText("skiff_string_allocate_new(\"" + stmt.value + "\")")
-                .withType(CompiledType.STRING);
+                .withType(BuiltinTypes.STRING);
     }
 
     public CompiledCode compileSequenceLiteral(SequenceLiteral stmt, CompileContext context) {
@@ -473,7 +419,7 @@ public class ASTVisitor {
     public CompiledCode compileBooleanLiteral(BooleanLiteral stmt, CompileContext context) {
         return new CompiledCode()
                 .withText(stmt.value ? "1" : "0")
-                .withType(CompiledType.BOOL);
+                .withType(BuiltinTypes.BOOL);
     }
 
     public CompiledCode compileRegexLiteral(RegexLiteral stmt, CompileContext context) {
@@ -490,20 +436,20 @@ public class ASTVisitor {
                 CompiledVar cv = ((CompiledVar) compiledObject);
                 onStack = !cv.isParam();
             }
-        } catch (NoSuchObjectException ex) {
+        } catch (NoSuchElementException ex) {
             if(stmt.name.equals("null")) {
                 text = "0";
                 compiledObject = CompiledVar.NULL;
                 onStack = false;
-            } else  if(context.getParentClass() == null) {
+            } else  if(context.getContainingClass() == null) {
                 throw ex;
             } else {
-                compiledObject = context.getParentClass().getObject(stmt.name);
+                compiledObject = context.getContainingClass().getObject(stmt.name);
                 text = "this->" + stmt.name;
                 onStack = false;
             }
         }
-        CompiledType objType = CompiledType.CLASS;
+        CompiledType objType = BuiltinTypes.CLASS;
         if (compiledObject instanceof CompiledVar) {
             objType = ((CompiledVar) compiledObject).getType();
         }
