@@ -26,7 +26,12 @@ public class CompileScope {
     }
 
     public void declareObject(CompiledObject decVar) {
-        variableTable.put(decVar.getName(), decVar);
+        try {
+            getObject(decVar.getName());
+            throw new UnsupportedOperationException("Cannot redefine variable " + decVar.getName());
+        } catch(NoSuchElementException ex) {
+            variableTable.put(decVar.getName(), decVar);
+        }
     }
 
     public CompiledObject getObject(String name) throws NoSuchElementException {

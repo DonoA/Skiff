@@ -5,10 +5,12 @@
 
 #include "allocator.h"
 #include "skiff_string.h"
+#include "skiff_anyref.h"
 
 typedef struct skiff_exception_struct skiff_exception_t;
 struct skiff_exception_class_struct 
 { 
+    void * parent;
     skiff_string_t * (*getMessage)(skiff_exception_t *);
 };
 struct skiff_exception_class_struct skiff_exception_interface;
@@ -16,6 +18,7 @@ skiff_string_t * skiff_exception_get_message(skiff_exception_t *);
 typedef struct skiff_exception_class_struct skiff_exception_class_t; 
 void skiff_exception_static()
 {
+    skiff_exception_interface.parent = &skiff_any_ref_interface;
     skiff_exception_interface.getMessage = skiff_exception_get_message;
 }
 struct skiff_exception_struct 

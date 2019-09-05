@@ -30,6 +30,7 @@ class ClassDefCompiler {
                         dec.name,
                         false,
                         (CompiledType) dec.type.compile(innerContext).getBinding()),
+                true,
                 isPrivate
         );
     }
@@ -46,21 +47,32 @@ class ClassDefCompiler {
         }
     }
 
-    private static void collectDecs(AST.Statement s, Map<String, CompiledField> declaredVars,
+    private static void collectDataClassDecs(AST.Statement s, Map<String, CompiledField> declaredVars,
+                                    List<CompiledField> declaredVarOrder, CompiledType cls,
+                                    CompileContext context, CompileContext innerContext) {
+        if(s instanceof AST.Declare) {
+            AST.Declare dec = (AST.Declare) s;
+            CompiledField field = createCompiledField(dec, false, innerContext);
+            declaredVars.put(dec.name, field);
+            declaredVarOrder.add(field);
+            checkCollision(cls, dec, context);
+        } else {
+            context.throwError("Data classes have no methods", s);
+
+        }
+    }
+
+    private static void collectDecs(AST.Statement s, Map<String, CompiledField> declaredVars, List<CompiledField> declaredVarOrder,
                                     Map<String, CompiledMethod> declaredMethods, CompiledType cls,
                                     CompileContext context, CompileContext innerContext) {
 
         if(s instanceof AST.Declare) {
-            // TODO: These decs must be ordered if this is a data class, maybe refactor this methods to be a
-            // different method for data classes
             AST.Declare dec = (AST.Declare) s;
-            declaredVars.put(dec.name, createCompiledField(dec, false, innerContext));
+            CompiledField field = createCompiledField(dec, false, innerContext);
+            declaredVars.put(dec.name, field);
+            declaredVarOrder.add(field);
             checkCollision(cls, dec, context);
-
         } else if(s instanceof AST.FunctionDef) {
-            if(cls.isDataClass()) {
-                context.throwError("Data classes have no methods", s);
-            }
             AST.FunctionDef dec = (AST.FunctionDef) s;
             boolean isConstructor = dec.name.equals(cls.getName());
             CompiledMethod func = createCompiledFunc(dec, isConstructor, false, false, innerContext);
@@ -70,9 +82,6 @@ class ClassDefCompiler {
                 declaredMethods.put(dec.name, func);
             }
         } else if(s instanceof AST.FunctionDefModifier) {
-            if(cls.isDataClass()) {
-                context.throwError("Data classes have no methods", s);
-            }
             AST.FunctionDefModifier mod = (AST.FunctionDefModifier) s;
             boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
             boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
@@ -85,9 +94,6 @@ class ClassDefCompiler {
                 declaredMethods.put(mod.on.name, func);
             }
         } else if(s instanceof AST.FieldModifier) {
-            if(cls.isDataClass()) {
-                context.throwError("Data classes cannot have static or private fields", s);
-            }
             AST.FieldModifier mod = (AST.FieldModifier) s;
             boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
             boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
@@ -97,6 +103,7 @@ class ClassDefCompiler {
                 cls.addStaticField(field);
             } else {
                 declaredVars.put(mod.on.name, field);
+                declaredVarOrder.add(field);
                 checkCollision(cls, mod.on, context);
             }
         } else {
@@ -124,6 +131,10 @@ class ClassDefCompiler {
 
         cls.getAllFields().forEach(f -> {
             String fName = capNameFor(f.getName());
+            if(cls.getParent().getField(f.getName()) != null) {
+                return;
+            }
+
             cls.addMethod(new CompiledMethod(new CompiledFunction(
                 "get" + fName,
                     VisitorUtils.underscoreJoin("skiff", cls.getName(), "get", f.getName()),
@@ -151,7 +162,8 @@ class ClassDefCompiler {
             cls.addGeneric(generic.name);
             innerContext.declareObject(new CompiledType(generic.name, true, false)
                     .setCompiledName("void *")
-                    .isGenericPlaceholder(true));
+                    .isGenericPlaceholder(true)
+                    .isGeneric(true));
         });
 
         // Set parent class or default if none found
@@ -163,17 +175,26 @@ class ClassDefCompiler {
         context.declareObject(cls);
 
         Map<String, CompiledField> declaredVars = new HashMap<>();
+        List<CompiledField> declaredVarOrder = new ArrayList<>();
         Map<String, CompiledMethod> declaredMethods = new HashMap<>();
 
         // Collect fields and methods declared in this class
         for(AST.Statement s : stmt.body) {
-            collectDecs(s, declaredVars, declaredMethods, cls, context, innerContext);
+            if(cls.isDataClass()) {
+                collectDataClassDecs(s, declaredVars, declaredVarOrder, cls, context, innerContext);
+            } else {
+                collectDecs(s, declaredVars, declaredVarOrder, declaredMethods, cls, context, innerContext);
+            }
         }
 
         // Copy in parent fields to ensure order is maintained
-        cls.getParent().getAllFields().forEach(cls::addField);
+        cls.getParent().getAllFields().forEach(f -> {
+            if(cls.getField(f.getName()) == null) {
+                cls.addField(new CompiledField(f, false, f.isPrivate()));
+            }
+        });
         // Copy in declared fields
-        declaredVars.values().forEach(cls::addField);
+        declaredVarOrder.forEach(cls::addField);
 
         // Copy in parent methods that are no overridden
         cls.getParent().getAllMethods()
@@ -225,11 +246,11 @@ class ClassDefCompiler {
 
         String classStructName = VisitorUtils.underscoreJoin("skiff", cls.getName(), "class", "struct");
 
-        String classStruct = generateClassStruct(cls, classStructName);
+        String classStruct = generateClassStruct(cls);
 
-        String interfaceDec = "struct " + classStructName + " " + cls.getInterfaceName() + ";\n";
+        String interfaceDec = "struct " + cls.getInterfaceStruct() + " " + cls.getInterfaceName() + ";\n";
 
-        String staticInitFunc = generateStaticInit(cls, cls.getInterfaceName());
+        String staticInitFunc = generateStaticInit(cls);
 
         String dataStruct = generateDataStruct(cls, classStructName);
 
@@ -284,7 +305,11 @@ class ClassDefCompiler {
         text.append(ctrContext.getIndent()).append("return this;\n");
         text.append("}\n");
 
-        cls.getAllFields().forEach(f -> {
+        cls.getAllFields()
+                .stream()
+                .filter(CompiledField::isMine)
+                .forEach(f -> {
+
             String fName = capNameFor(f.getName());
             CompiledMethod getter = cls.getMethod("get" + fName);
             text.append(getter.getReturns().getCompiledName()).append(" ")
@@ -338,33 +363,39 @@ class ClassDefCompiler {
         );
     }
 
-    private static String generateClassStruct(CompiledType cls, String classStructName) {
-        List<VisitorUtils.StructEntry> structEntries = cls.getAllMethods()
+    private static String generateClassStruct(CompiledType cls) {
+        List<VisitorUtils.StructEntry> structEntries = new ArrayList<>();
+        structEntries.add(new VisitorUtils.StructEntry("void *", "parent"));
+        cls.getAllMethods()
                 .stream()
                 .map(method -> new VisitorUtils.StructEntry(
                         method.getReturns().getCompiledName(),
                         "(*" + method.getName() + ")()"
                 ))
-                .collect(Collectors.toList());
+                .forEach(structEntries::add);
 
         cls.getAllStaticFields()
                 .stream()
                 .map(f -> new VisitorUtils.StructEntry(
                     f.getType().getCompiledName(), f.getName()
-                )).forEach(structEntries::add);
+                ))
+                .forEach(structEntries::add);
 
-        return VisitorUtils.compileStruct(classStructName, structEntries);
+        return VisitorUtils.compileStruct(cls.getInterfaceStruct(), structEntries);
     }
 
-    private static String generateStaticInit(CompiledType cls, String interfaceName) {
+    private static String generateStaticInit(CompiledType cls) {
         StringBuilder text = new StringBuilder();
 
         text.append("void ").append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "static"))
                 .append("()").append("\n{\n");
 
+        text.append(CompileContext.INDENT).append(cls.getInterfaceName()).append(".parent = &")
+                .append(cls.getParent().getInterfaceName()).append(";\n");
+
         cls.getAllMethods()
                 .forEach(method ->
-                    text.append(CompileContext.INDENT).append(interfaceName).append(".").append(method.getName())
+                    text.append(CompileContext.INDENT).append(cls.getInterfaceName()).append(".").append(method.getName())
                             .append(" = ").append(method.getCompiledName()).append(";\n"));
 
         text.append("}\n");

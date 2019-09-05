@@ -38,7 +38,9 @@ class DottedCompiler {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("(").append(func.getReturns().getCompiledName()).append(")");
+        if(func.getReturns().isGeneric()) {
+            sb.append("(").append(func.getReturns().getCompiledName()).append(")");
+        }
         if(isStatic) {
             sb.append(func.getCompiledName()).append("(");
         } else {

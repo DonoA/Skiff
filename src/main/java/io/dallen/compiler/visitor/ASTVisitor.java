@@ -137,7 +137,90 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMatchBlock(MatchBlock stmt, CompileContext context) {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        CompiledCode onCode = stmt.on.compile(context);
+        String deref = (onCode.onStack() ? "*" : "");
+        for (int i = 0; i < stmt.body.size(); i++) {
+            if(!(stmt.body.get(i) instanceof AST.CaseMatchStatement)) {
+                continue;
+            }
+            AST.CaseMatchStatement caseStatement = (AST.CaseMatchStatement) stmt.body.get(i);
+            if(i != 0) {
+                sb.append(context.getIndent()).append("else ");
+            }
+
+            CompileContext innerContext = new CompileContext(context).addIndent();
+            sb.append("if(instance_of((skiff_any_ref_t *)").append(deref).append(onCode.getCompiledText()).append(", &");
+            if(caseStatement.on instanceof FunctionCall) {
+                FunctionCall func = (FunctionCall) caseStatement.on;
+                CompiledObject intoObj = context.getObject(func.name);
+                if(!(intoObj instanceof CompiledType)) {
+                    context.throwError("Match type is not a type", func);
+                    return new CompiledCode();
+                }
+                CompiledType into = (CompiledType) intoObj;
+                if(!into.isDataClass()) {
+                    context.throwError("Cannot deconstruct non data class", func);
+                    return new CompiledCode();
+                }
+                sb.append(into.getInterfaceName()).append("))\n")
+                        .append(context.getIndent()).append("{\n");
+                func.args.forEach(stmtArg -> {
+                    if(!(stmtArg instanceof Variable)) {
+                        context.throwError("Args of type deconstruction must be Variables", stmtArg);
+                        return;
+                    }
+                    Variable v = (Variable) stmtArg;
+                    CompiledField field = into.getField(v.name);
+                    sb.append(innerContext.getIndent()).append(field.getType().getCompiledName());
+                    if(field.getType().isRef()) {
+                        sb.append("*");
+                    }
+                    sb.append(" ").append(v.name);
+                    if(field.getType().isRef()) {
+                        sb.append(" = skalloc_ref_stack()");
+                    }
+                    sb.append(";\n");
+                    sb.append(innerContext.getIndent());
+                    if(field.getType().isRef()) {
+                        sb.append("*");
+                    }
+                    sb.append(v.name).append(" = ((").append(into.getCompiledName()).append(") ").append(deref)
+                            .append(onCode.getCompiledText()).append(")->").append(field.getName()).append(";\n");
+
+                    innerContext.declareObject(new CompiledVar(v.name, false, field.getType()));
+                });
+
+            } else if(caseStatement.on instanceof Declare) {
+                Declare dec  = (Declare) caseStatement.on;
+                CompiledType type = (CompiledType) dec.type.compile(context).getBinding();
+                sb.append(type.getInterfaceName()).append("))\n")
+                        .append(context.getIndent()).append("{\n")
+                        .append(innerContext.getIndent()).append(dec.compile(innerContext).getCompiledText()).append(";\n")
+                        .append(innerContext.getIndent()).append("*").append(dec.name).append(" = (")
+                        .append(type.getCompiledName()).append(") *").append(onCode.getCompiledText()).append(";\n");
+            } else {
+                context.throwError("Invalid statement type", caseStatement.on);
+            }
+            for (int j = i + 1; j < stmt.body.size(); j++) {
+                if(stmt.body.get(j) instanceof AST.BreakStatement) {
+                    break;
+                }
+                if(stmt.body.get(j) instanceof AST.CaseMatchStatement) {
+                    continue;
+                }
+                CompiledCode innerCode = stmt.body.get(j).compile(innerContext);
+                sb.append(innerContext.getIndent()).append(innerCode.getCompiledText());
+                if(innerCode.isRequiresSemicolon()) {
+                    sb.append(";");
+                }
+                sb.append("\n");
+            }
+            sb.append(context.getIndent()).append("}\n");
+        }
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withSemicolon(false);
     }
 
     public CompiledCode compileSwitchBlock(SwitchBlock stmt, CompileContext context) {
@@ -343,8 +426,47 @@ public class ASTVisitor {
     public CompiledCode compileAssign(Assign stmt, CompileContext context) {
         // Vars with different names must have different stack locations
         // Each stack location should represent exactly one named var
-        CompiledCode name = stmt.name.compile(context);
         CompiledCode value = stmt.value.compile(context);
+
+        if(stmt.name instanceof FunctionCall) {
+            FunctionCall func = (FunctionCall) stmt.name;
+            CompiledType intoType = (CompiledType) context.getObject(func.name);
+
+            StringBuilder sb = new StringBuilder();
+
+            String deref = (value.onStack() ? "*" : "");
+
+            func.args.forEach(stmtArg -> {
+                if(!(stmtArg instanceof Variable)) {
+                    context.throwError("Args of type deconstruction must be Variables", stmtArg);
+                    return;
+                }
+                Variable v = (Variable) stmtArg;
+                CompiledField field = intoType.getField(v.name);
+                sb.append(context.getIndent()).append(field.getType().getCompiledName());
+                if(field.getType().isRef()) {
+                    sb.append("*");
+                }
+                sb.append(" ").append(v.name);
+                if(field.getType().isRef()) {
+                    sb.append(" = skalloc_ref_stack()");
+                }
+                sb.append(";\n");
+                sb.append(context.getIndent());
+                if(field.getType().isRef()) {
+                    sb.append("*");
+                }
+                sb.append(v.name).append(" = ((").append(intoType.getCompiledName()).append(") ").append(deref)
+                        .append(value.getCompiledText()).append(")->").append(field.getName()).append(";\n");
+
+                context.declareObject(new CompiledVar(v.name, false, field.getType()));
+            });
+
+            return new CompiledCode()
+                    .withText(sb.toString())
+                    .withSemicolon(false);
+        }
+        CompiledCode name = stmt.name.compile(context);
 
         boolean lhsDeRef = name.onStack();
         if(name.getBinding() instanceof CompiledVar) {
@@ -392,7 +514,7 @@ public class ASTVisitor {
         CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name, stmt.tokens), context);
         CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name, stmt.tokens), stmt.value, stmt.tokens), context);
 
-        String text = dec.getCompiledText() + "; " + value.getCompiledText() + ";";
+        String text = dec.getCompiledText() + ";\n" + context.getIndent() + value.getCompiledText() + ";";
 
         return new CompiledCode()
                 .withBinding(dec.getBinding())

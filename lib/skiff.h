@@ -10,6 +10,7 @@
 #include "skiff_string.h"
 #include "skiff_list.h"
 #include "skiff_exception.h"
+#include "skiff_anyref.h"
 #include "try_catch.h"
 
 void skiff_print(skiff_string_t *);
@@ -91,4 +92,23 @@ void skiff_print(skiff_string_t * string)
     {
         putchar(string->data[i]);
     }
+}
+
+bool _instance_of(struct skiff_any_ref_class_struct * type1, 
+                    struct skiff_any_ref_class_struct * type2)
+{
+    if(type1 == type2)
+    {
+        return true;
+    }
+    if(type1->parent == NULL)
+    {
+        return false;
+    }
+    return _instance_of(type1->parent, type2);
+}
+
+bool instance_of(skiff_any_ref_t * obj, void * type) 
+{
+    return _instance_of(obj->class_ptr, type);
 }

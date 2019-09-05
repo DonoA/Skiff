@@ -22,14 +22,17 @@ public class CompiledType extends CompiledObject {
     private CompiledType parent = null;
     private String structName;
     private String compiledName;
-    private String interfaceName;
+    private final String interfaceName;
+    private final String interfaceStruct;
     private boolean genericPlaceholder = false;
+    private boolean generic = false;
     private final boolean dataClass;
 
     public CompiledType(String className, boolean ref, boolean dataClass) {
         super(className);
         this.structName = VisitorUtils.underscoreJoin("skiff", className, "t");
         this.interfaceName = VisitorUtils.underscoreJoin("skiff", className, "interface");
+        this.interfaceStruct = VisitorUtils.underscoreJoin("skiff", className, "class", "struct");
         this.compiledName = this.structName + (ref ? " *" : "");
         this.isRef = ref;
         this.dataClass = dataClass;
@@ -143,6 +146,15 @@ public class CompiledType extends CompiledObject {
         return this.genericPlaceholder;
     }
 
+    public CompiledType isGeneric(boolean v) {
+        this.generic = v;
+        return this;
+    }
+
+    public boolean isGeneric() {
+        return this.generic;
+    }
+
     public CompiledType fillGenericTypes(List<CompiledType> genericList) {
         Map<String, CompiledType> generics = new HashMap<>();
 
@@ -152,13 +164,14 @@ public class CompiledType extends CompiledObject {
             generics.put(genericNameItr.next(), g);
         });
 
-        CompiledType filledType = new CompiledType(getName(), isRef, dataClass);
+        CompiledType filledType = new CompiledType(getName(), isRef, dataClass)
+                .isGeneric(true);
 
         this.declaredVars.forEach(f -> {
             CompiledField post = f;
             if(f.getType().genericPlaceholder) {
                 CompiledType comp = generics.get(f.getType().getName());
-                post = new CompiledField(new CompiledVar(f.getName(), f.isParam(), comp), f.isPrivate());
+                post = new CompiledField(new CompiledVar(f.getName(), f.isParam(), comp), f.isPrivate(), f.isMine());
             }
             filledType.addField(post);
         });
@@ -181,10 +194,11 @@ public class CompiledType extends CompiledObject {
         if(func.getReturns().genericPlaceholder) {
             returns = generics.get(func.getReturns().getName());
             newTypeNeeded = true;
+            returns.isGeneric(true);
         }
         List<CompiledType> argTypes = func.getArgs().stream().map(arg -> {
             if(arg.genericPlaceholder) {
-                return generics.get(arg.getName());
+                return generics.get(arg.getName()).isGeneric(true);
             } else {
                 return arg;
             }
@@ -217,5 +231,9 @@ public class CompiledType extends CompiledObject {
 
     public boolean isDataClass() {
         return dataClass;
+    }
+
+    public String getInterfaceStruct() {
+        return interfaceStruct;
     }
 }
