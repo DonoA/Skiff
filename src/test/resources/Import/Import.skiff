@@ -1,0 +1,10 @@
+import Optional;
+
+def main(args: List<String>): Int {
+    op: Optional<Int> = Optional.of<Int>(5);
+    if(op.isPresent()) {
+        return op.get();
+    } else {
+        return 0;
+    }
+}

@@ -1,0 +1,29 @@
+struct Person {
+    age: Int;
+    name: String;
+}
+
+struct Teacher : Person {
+    grade: String;
+}
+
+def main(args: List<String>): Int {
+    data: Teacher = new Teacher(15, "James", "10th");
+
+    Person(pAge, pName) = data;
+
+    print("Name:")
+    println(pName);
+
+    match(data) {
+        case Teacher(age, name, grade) =>
+            println(name);
+            println(grade);
+            break;
+        case Person(age, name) =>
+            println(name);
+            break;
+    }
+    
+    return pAge;
+}

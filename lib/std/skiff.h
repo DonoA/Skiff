@@ -80,6 +80,13 @@ int main(int argc, char * argv[])
     return 1;
 }
 
+// skiff_string_t * skiff_int_to_string(int32_t this) 
+// {
+//     char snum[12];
+//     itoa(this, snum, 10);
+//     return skiff_string_allocate_new(snum);
+// }
+
 void skiff_println(skiff_string_t * string)
 {
     skiff_print(string);

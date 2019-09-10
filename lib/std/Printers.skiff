@@ -1,0 +1,2 @@
+native def println(str: String);
+native def print(str: String);

@@ -28,7 +28,7 @@ class IntegrationTestHarness {
                 throw new RuntimeException("SkiffC failed!");
             }
 
-            TestResult gccResult = exec("gcc -Wall -Wno-pointer-to-int-cast " +
+            TestResult gccResult = exec("gcc -Wall -Wno-pointer-to-int-cast -Wno-unused-but-set-variable " +
                     "-o working/" + testName + "/" + testName +
                     " working/" + testName + "/" + testName + ".c");
             if(gccResult.returnCode != 0 || !gccResult.stdOut.isEmpty() || !gccResult.stdErr.isEmpty()) {

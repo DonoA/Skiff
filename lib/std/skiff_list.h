@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include "skiff_anyref.h"
 
 typedef struct skiff_list_struct skiff_list_t;
 void * skiff_list_get_sub_int(skiff_list_t *, int32_t);
@@ -9,6 +10,7 @@ void skiff_list_append(skiff_list_t *, void *);
 int32_t skiff_list_get_size(skiff_list_t *);
 struct skiff_list_class_struct 
 {
+    void * parent;
     void * (*getSub)(skiff_list_t *, int32_t);
     void (*append)(skiff_list_t *, void *);
     int32_t (*getSize)(skiff_list_t *);
@@ -16,6 +18,7 @@ struct skiff_list_class_struct
 struct skiff_list_class_struct skiff_list_interface;
 void skiff_list_static()
 {
+    skiff_list_interface.parent = &skiff_any_ref_interface;
     skiff_list_interface.getSub = skiff_list_get_sub_int;
     skiff_list_interface.append = skiff_list_append;
     skiff_list_interface.getSize = skiff_list_get_size;

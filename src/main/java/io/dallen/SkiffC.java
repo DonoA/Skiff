@@ -21,13 +21,14 @@ import java.util.stream.Collectors;
 public class SkiffC {
 
     public final static int MAX_COL = 120;
+    public final static String stdFolder = "lib/std";
 
     private static void printTokenStream(List<Token> tokens) {
         tokens.forEach(e -> System.out.print(" " + e.toString()));
         System.out.println();
     }
 
-    private static String readFile(String path) throws IOException {
+    public static String readFile(String path) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         return new String(encoded, StandardCharsets.UTF_8);
     }
@@ -47,10 +48,6 @@ public class SkiffC {
     }
 
     public static Optional<String> compile(String infile, boolean debug) {
-        String preamble = "#include \"" + new File("lib/skiff.h").getAbsolutePath() + "\"\n\n";
-
-        boolean passed = true;
-
         String programText;
         try {
             programText = readFile(infile);
@@ -58,6 +55,40 @@ public class SkiffC {
             System.err.println("Bad file");
             return Optional.empty();
         }
+
+        StringBuilder preamble = new StringBuilder();
+
+        preamble.append("#include \"" + new File(stdFolder + "/skiff.h").getAbsolutePath() + "\"\n\n");
+
+        CompileContext context = new CompileContext(programText, infile, debug);
+        context.getScope().loadBuiltins();
+        try {
+            for(File f : new File(stdFolder).listFiles()) {
+                if(f.getName().endsWith(".skiff")) {
+                    String importText = readFile(f.getPath());
+                    context.setFilename(f.getName());
+                    Optional<String> importCode = compile(importText, context);
+                    if(importCode.isEmpty()) {
+                        System.err.println("Issue with compile std lib file");
+                    } else {
+                        preamble.append(importCode.get());
+                    }
+                }
+            }
+        } catch(IOException err) {
+            System.err.println("Failed to get std lib skiff file");
+            err.printStackTrace();
+            return Optional.empty();
+        }
+
+        context.setFilename(infile);
+        Optional<String> code = compile(programText, context);
+        return code.map(c -> preamble + c);
+    }
+
+    public static Optional<String> compile(String programText, CompileContext context) {
+        boolean passed = true;
+
         Lexer lexer = new Lexer(programText);
         List<Token> tokenStream = null;
         try {
@@ -76,8 +107,8 @@ public class SkiffC {
             return Optional.empty();
         }
 
-        if(debug) {
-            System.out.println(" ======== PARSE " + infile + " =========== ");
+        if(context.isDebug()) {
+            System.out.println(" ======== PARSE " + context.getFilename() + " =========== ");
         }
 
         Parser parser = new Parser(tokenStream, programText);
@@ -97,11 +128,10 @@ public class SkiffC {
         if(statements == null || statements.isEmpty()) {
             return Optional.empty();
         }
-        if(debug) {
-            System.out.println(" ======== COMPILE " + infile + " =========== ");
+        if(context.isDebug()) {
+            System.out.println(" ======== COMPILE " + context.getFilename() + " =========== ");
         }
 
-        CompileContext context = new CompileContext(programText, debug);
         List<String> compiledText = null;
         try {
             compiledText = statements
@@ -123,11 +153,11 @@ public class SkiffC {
         if(compiledText == null || compiledText.isEmpty()) {
             return Optional.empty();
         }
-        String code = preamble + String.join("\n", compiledText);
+        String code = String.join("\n", compiledText);
 
 //        System.out.println(code);
 
-        if(!passed && !debug) {
+        if(!passed && !context.isDebug()) {
             return Optional.empty();
         } else {
             return Optional.of(code);

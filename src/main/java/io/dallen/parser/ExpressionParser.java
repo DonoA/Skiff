@@ -153,7 +153,7 @@ class ExpressionParser {
             Token name = parser.consume();
             parser.consumeExpected(Token.Symbol.COLON);
             AST.Type type = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON), parser).getCommon().parseType();
-            return new AST.Declare(type, name.literal, workingTokens);
+            return new AST.Declare(type, name.literal, new ArrayList<>(), workingTokens);
         } else if(parser.containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
             return parseFunctionCall();
         } else if(parser.containsBefore(Token.Symbol.DOUBLE_MINUS, Token.Symbol.SEMICOLON)) {

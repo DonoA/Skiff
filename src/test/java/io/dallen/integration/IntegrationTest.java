@@ -69,4 +69,26 @@ public class IntegrationTest {
         );
         assertEquals(expected, actual);
     }
+
+    @org.junit.Test
+    public void imports() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Import");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                5, "", ""
+        );
+        assertEquals(expected, actual);
+    }
+
+    @org.junit.Test
+    public void deconstruction() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Deconstruction");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                15, "Name:James\nJames\n10th\n", ""
+        );
+        assertEquals(expected, actual);
+    }
 }

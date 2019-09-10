@@ -16,13 +16,6 @@ public class CompileScope {
         declareObject(BuiltinTypes.STRING);
         declareObject(BuiltinTypes.INT);
         declareObject(BuiltinTypes.BOOL);
-        declareObject(BuiltinTypes.LIST);
-        declareObject(BuiltinTypes.EXCEPTION);
-
-        declareObject(new CompiledFunction(
-            "println",
-            "skiff_println",
-              Collections.singletonList(BuiltinTypes.STRING)));
     }
 
     public void declareObject(CompiledObject decVar) {

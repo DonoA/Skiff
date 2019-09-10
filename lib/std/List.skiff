@@ -1,0 +1,6 @@
+native class List<T> {
+    native def List();
+    native def getSize(): Int;
+    native def getSub(i: Int): T;
+    native def append(i: T);
+}

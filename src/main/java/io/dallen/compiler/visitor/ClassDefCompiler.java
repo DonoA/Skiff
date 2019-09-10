@@ -15,7 +15,7 @@ class ClassDefCompiler {
 
     private static CompiledMethod createCompiledFunc(AST.FunctionDef dec, boolean isConstructor, boolean isStatic,
                                                      boolean isPrivate, CompileContext innerContext) {
-        String compiledName = VisitorUtils.generateFuncName(isConstructor, isStatic, innerContext, dec.name);
+        String compiledName = FunctionDefCompiler.generateFuncName(isConstructor, isStatic, dec.name, innerContext);
         CompiledType returns = (CompiledType) dec.returns.compile(innerContext).getBinding();
         List<CompiledType> argTypes = dec.args.stream().map(arg -> arg.type.compile(innerContext).getBinding())
                 .map(obj -> (CompiledType) obj).collect(Collectors.toList());
@@ -68,43 +68,28 @@ class ClassDefCompiler {
 
         if(s instanceof AST.Declare) {
             AST.Declare dec = (AST.Declare) s;
-            CompiledField field = createCompiledField(dec, false, innerContext);
-            declaredVars.put(dec.name, field);
-            declaredVarOrder.add(field);
-            checkCollision(cls, dec, context);
-        } else if(s instanceof AST.FunctionDef) {
-            AST.FunctionDef dec = (AST.FunctionDef) s;
-            boolean isConstructor = dec.name.equals(cls.getName());
-            CompiledMethod func = createCompiledFunc(dec, isConstructor, false, false, innerContext);
-            if(isConstructor) {
-                cls.addConstructor(func);
-            } else {
-                declaredMethods.put(dec.name, func);
-            }
-        } else if(s instanceof AST.FunctionDefModifier) {
-            AST.FunctionDefModifier mod = (AST.FunctionDefModifier) s;
-            boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
-            boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
-
-            CompiledMethod func = createCompiledFunc(mod.on, false, isStatic, isPrivate, innerContext);
-
-            if(isStatic) {
-                cls.addStaticMethod(func);
-            } else {
-                declaredMethods.put(mod.on.name, func);
-            }
-        } else if(s instanceof AST.FieldModifier) {
-            AST.FieldModifier mod = (AST.FieldModifier) s;
-            boolean isStatic = mod.type == ASTEnums.DecModType.STATIC;
-            boolean isPrivate = mod.type == ASTEnums.DecModType.PRIVATE;
-
-            CompiledField field = createCompiledField(mod.on, isPrivate, innerContext);
+            boolean isStatic = dec.modifiers.contains(ASTEnums.DecModType.STATIC);
+            boolean isPrivate = dec.modifiers.contains(ASTEnums.DecModType.PRIVATE);
+            CompiledField field = createCompiledField(dec, isPrivate, innerContext);
             if(isStatic) {
                 cls.addStaticField(field);
             } else {
-                declaredVars.put(mod.on.name, field);
+                declaredVars.put(dec.name, field);
                 declaredVarOrder.add(field);
-                checkCollision(cls, mod.on, context);
+                checkCollision(cls, dec, context);
+            }
+        } else if(s instanceof AST.FunctionDef) {
+            AST.FunctionDef dec = (AST.FunctionDef) s;
+            boolean isStatic = dec.modifiers.contains(ASTEnums.DecModType.STATIC);
+            boolean isPrivate = dec.modifiers.contains(ASTEnums.DecModType.PRIVATE);
+            boolean isConstructor = dec.name.equals(cls.getName());
+            CompiledMethod func = createCompiledFunc(dec, isConstructor, isStatic, isPrivate, innerContext);
+            if(isStatic) {
+                cls.addStaticMethod(func);
+            } else if(isConstructor) {
+                cls.addConstructor(func);
+            } else {
+                declaredMethods.put(dec.name, func);
             }
         } else {
             context.throwError("Class and Struct statements must be method or field declarations", s);
@@ -235,6 +220,10 @@ class ClassDefCompiler {
 
         CompiledType cls = compileClass(stmt, context, innerContext);
 
+        if(stmt.modifiers.contains(ASTEnums.DecModType.NATIVE)) {
+            return new CompiledCode();
+        }
+
         innerContext.setContainingClass(cls);
 
         String headerComment = "\n\n///////////////////// Start Class " + cls.getName() + " /////////////////////////\n\n";
@@ -338,13 +327,14 @@ class ClassDefCompiler {
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.joining("\n\n"));
 
-        String modified = body.stream()
-                .filter(f -> f instanceof AST.FunctionDefModifier)
-                .map(f -> (AST.FunctionDefModifier) f)
-                .map(f-> FunctionDefCompiler.compileFunctionDef(f.on, f.type == ASTEnums.DecModType.STATIC,
-                        innerContext))
-                .map(CompiledCode::getCompiledText)
-                .collect(Collectors.joining("\n\n"));
+        String modified = "";
+//        String modified = body.stream()
+//                .filter(f -> f instanceof AST.FunctionDefModifier)
+//                .map(f -> (AST.FunctionDefModifier) f)
+//                .map(f-> FunctionDefCompiler.compileFunctionDef(f.on, f.type == ASTEnums.DecModType.STATIC,
+//                        innerContext))
+//                .map(CompiledCode::getCompiledText)
+//                .collect(Collectors.joining("\n\n"));
 
         return simple + "\n\n" + modified;
     }

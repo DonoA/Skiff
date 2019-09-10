@@ -33,32 +33,16 @@
             }
         }
     },
-    "FunctionDefModifier": {
-        "extends": "Statement",
-        "fields": {
-            "type": {
-                "type": "ASTEnums.DecModType",
-                "noFlatString": true
-            },
-            "on": "FunctionDef"
-        }
-    },
-    "FieldModifier": {
-        "extends": "Statement",
-        "fields": {
-            "type": {
-                "type": "ASTEnums.DecModType",
-                "noFlatString": true
-            },
-            "on": "Declare"
-        }
-    },
     "FunctionDef": {
         "extends": "BlockStatement",
         "fields": {
             "genericTypes": "List<GenericType>",
             "returns": "Type",
             "name": "String",
+            "modifiers": {
+                "type": "List<ASTEnums.DecModType>",
+                "noFlatString": true
+            },
             "args": "List<FunctionParam>"
         }
     },
@@ -76,6 +60,10 @@
             "genericTypes": "List<GenericType>",
             "isStruct": {
                 "type": "Boolean",
+                "noFlatString": true
+            },
+            "modifiers": {
+                "type": "List<ASTEnums.DecModType>",
                 "noFlatString": true
             },
             "extendClass": {
@@ -329,7 +317,11 @@
         "extends": "Statement",
         "fields": {
             "type": "Type",
-            "name": "String"
+            "name": "String",
+            "modifiers": {
+                "type": "List<ASTEnums.DecModType>",
+                "noFlatString": true
+            }
         }
     },
     "DeclareAssign": {

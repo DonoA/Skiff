@@ -7,6 +7,7 @@ import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -51,16 +52,8 @@ public class ASTVisitor {
         throw new UnsupportedOperationException("Cannot compile statement type Block");
     }
 
-    public CompiledCode compileFunctionDefModifier(FunctionDefModifier stmt, CompileContext context) {
-        return null;
-    }
-
-    public CompiledCode compileFieldModifier(FieldModifier stmt, CompileContext context) {
-        return null;
-    }
-
     public CompiledCode compileFunctionDef(FunctionDef stmt, CompileContext context) {
-        return FunctionDefCompiler.compileFunctionDef(stmt, false, context);
+        return FunctionDefCompiler.compileFunctionDef(stmt, context);
     }
 
     public CompiledCode compileAnonFunctionDef(AnonFunctionDef stmt, CompileContext context) {
@@ -360,8 +353,19 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
-        String systemPath = new File("lib/" + stmt.value + ".skiff").getAbsolutePath();
-        Optional<String> importCode = SkiffC.compile(systemPath, context.isDebug());
+        String importText;
+        try {
+            importText = SkiffC.readFile("lib/" + stmt.value + ".skiff");
+        } catch (IOException e) {
+            context.throwError("Cannot find import file", stmt);
+            return new CompiledCode();
+        }
+
+        String currentFile = context.getFilename();
+        context.setFilename(stmt.value);
+        Optional<String> importCode = SkiffC.compile(importText, context);
+        context.setFilename(currentFile);
+
         if(importCode.isEmpty()) {
             return new CompiledCode();
         }
@@ -436,13 +440,13 @@ public class ASTVisitor {
 
             String deref = (value.onStack() ? "*" : "");
 
-            func.args.forEach(stmtArg -> {
-                if(!(stmtArg instanceof Variable)) {
-                    context.throwError("Args of type deconstruction must be Variables", stmtArg);
-                    return;
+            for (int i = 0; i < func.args.size(); i++) {
+                if(!(func.args.get(i) instanceof Variable)) {
+                    context.throwError("Args of type deconstruction must be Variables", func.args.get(i));
+                    continue;
                 }
-                Variable v = (Variable) stmtArg;
-                CompiledField field = intoType.getField(v.name);
+                Variable v = (Variable) func.args.get(i);
+                CompiledField field = intoType.getAllFields().get(i);
                 sb.append(context.getIndent()).append(field.getType().getCompiledName());
                 if(field.getType().isRef()) {
                     sb.append("*");
@@ -460,7 +464,7 @@ public class ASTVisitor {
                         .append(value.getCompiledText()).append(")->").append(field.getName()).append(";\n");
 
                 context.declareObject(new CompiledVar(v.name, false, field.getType()));
-            });
+            }
 
             return new CompiledCode()
                     .withText(sb.toString())
@@ -511,7 +515,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
-        CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name, stmt.tokens), context);
+        CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name, List.of(), stmt.tokens), context);
         CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name, stmt.tokens), stmt.value, stmt.tokens), context);
 
         String text = dec.getCompiledText() + ";\n" + context.getIndent() + value.getCompiledText() + ";";

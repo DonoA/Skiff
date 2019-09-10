@@ -5,6 +5,7 @@ import io.dallen.ast.ASTEnums;
 import io.dallen.parser.splitter.*;
 import io.dallen.tokenizer.Token;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class ExpressionSplitParser {
@@ -59,7 +60,7 @@ class ExpressionSplitParser {
             }
             String name = res.get(0).get(0).literal;
             Statement secondS = new Parser(second, parser).parseExpression();
-            return new DeclareAssign(secondS, typ, name, allTokens);
+            return new DeclareAssign(secondS, typ, name, new ArrayList<>(), allTokens);
         }
         parser.throwError("Assign name had many colons", res.get(0).get(0));
         return null;

@@ -22,19 +22,20 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     private CompiledType containingClass = null;
     private int globalCounter = 1;
     private final boolean debug;
+    private String fileName;
 
     private int refStackSize = 0;
 
     private boolean onStack = true;
 
-    public CompileContext(String code, boolean debug) {
+    public CompileContext(String code, String fileName, boolean debug) {
         this.parent = null;
         this.errors = new ArrayList<>();
         this.code = code;
+        this.fileName = fileName;
         this.dependents = new ArrayList<>();
         this.debug = debug;
         this.scope = new CompileScope(null);
-        this.scope.loadBuiltins();
     }
 
     public CompileContext(CompileContext parent) {
@@ -56,6 +57,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         this.containingClass = parent.containingClass;
         this.onStack = parent.onStack;
         this.debug = parent.debug;
+        this.fileName = null;
     }
 
     public CompileContext addIndent() {
@@ -129,6 +131,22 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
 
     public CompileScope getScope() {
         return scope;
+    }
+
+    public String getFilename() {
+        if(parent == null) {
+            return this.fileName;
+        } else {
+            return this.parent.getFilename();
+        }
+    }
+
+    public void setFilename(String v) {
+        if(parent == null) {
+            this.fileName = v;
+        } else {
+            this.parent.setFilename(v);
+        }
     }
 
     public int getGlobalCounter() {

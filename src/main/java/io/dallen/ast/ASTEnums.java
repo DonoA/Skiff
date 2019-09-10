@@ -82,7 +82,7 @@ public class ASTEnums {
     }
 
     public enum DecModType implements HasRaw {
-        PRIVATE("private"), STATIC("static");
+        PRIVATE("private"), STATIC("static"), NATIVE("native");
 
         private final String rawOp;
 

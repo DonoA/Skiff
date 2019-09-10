@@ -39,8 +39,9 @@ class BlockParser {
             .addCase(Keyword.DEF::equals, BlockParser::parseFunctionDef)
             .addCase(Keyword.CLASS::equals, BlockParser::parseClassDef)
             .addCase(Keyword.STRUCT::equals, BlockParser::parseClassDef)
-            .addCase(Keyword.PRIVATE::equals, BlockParser::parsePrivate)
-            .addCase(Keyword.STATIC::equals, BlockParser::parseStatic)
+            .addCase(Keyword.PRIVATE::equals, declarationModifierFor(Keyword.PRIVATE, ASTEnums.DecModType.PRIVATE))
+            .addCase(Keyword.STATIC::equals, declarationModifierFor(Keyword.STATIC, ASTEnums.DecModType.STATIC))
+            .addCase(Keyword.NATIVE::equals, declarationModifierFor(Keyword.NATIVE, ASTEnums.DecModType.NATIVE))
             .addCase(Keyword.RETURN::equals, BlockParser::parseReturn)
             .addCase(Keyword.IMPORT::equals, BlockParser::parseImport)
             .addCase(Keyword.THROW::equals, BlockParser::parseThrow)
@@ -50,7 +51,6 @@ class BlockParser {
                 return null;
             })
             .setDefault(context -> context.parser.parseExpression());
-
 
     BlockParser(Parser parser) {
         this.parser = parser;
@@ -99,7 +99,7 @@ class BlockParser {
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
 
-        return new AST.ClassDef(name.literal, genericTypes, isStruct, extended, body, allTokens);
+        return new AST.ClassDef(name.literal, genericTypes, isStruct, new ArrayList<>(), extended, body, allTokens);
     }
 
     private void attachCatchBlock(ArrayList<AST.Statement> statements) {
@@ -281,31 +281,27 @@ class BlockParser {
         return new AST.LoopBlock(body, allTokens);
     }
 
-    private AST.Statement parsePrivate() {
-        Token t = parser.consumeExpected(Keyword.PRIVATE);
-        AST.Statement on = parser.parseBlock();
-        if(on instanceof AST.Declare) {
-            return new AST.FieldModifier(ASTEnums.DecModType.PRIVATE, (AST.Declare) on, on.tokens);
-        } else if(on instanceof AST.FunctionDef) {
-            return new AST.FunctionDefModifier(ASTEnums.DecModType.PRIVATE, (AST.FunctionDef) on, on.tokens);
-        }
-        parser.throwError("Private used on bad thing", t);
-        return null;
-    }
-
-    private AST.Statement parseStatic() {
-        Token t = parser.consumeExpected(Keyword.STATIC);
-        AST.Statement on = parser.parseBlock();
-        if(on instanceof AST.Declare) {
-            return new AST.FieldModifier(ASTEnums.DecModType.STATIC, (AST.Declare) on, on.tokens);
-        } else if(on instanceof AST.FunctionDef){
-            return new AST.FunctionDefModifier(ASTEnums.DecModType.STATIC, (AST.FunctionDef) on, on.tokens);
-        }
-        parser.throwError("Private used on bad thing", t);
-        return null;
+    private static AdvancedSwitch.CaseHandler<BlockParser, AST.Statement> declarationModifierFor(Token.TokenType expected,
+                                                                                          ASTEnums.DecModType type) {
+        return (blockParser) -> {
+            Token t = blockParser.parser.consumeExpected(expected);
+            AST.Statement on = blockParser.parser.parseBlock();
+            if(on instanceof AST.Declare) {
+                ((AST.Declare) on).modifiers.add(type);
+            } else if(on instanceof AST.FunctionDef) {
+                ((AST.FunctionDef) on).modifiers.add(type);
+            } else if(on instanceof AST.ClassDef) {
+                ((AST.ClassDef) on).modifiers.add(type);
+            } else {
+                blockParser.parser.throwError("Modifier " + type.getRawOp() + " used on bad thing", t);
+                return null;
+            }
+            return on;
+        };
     }
 
     private AST.FunctionDef parseFunctionDef() {
+        boolean isAbstract = parser.containsBefore(Token.Symbol.SEMICOLON, Token.Symbol.LEFT_BRACE);
         List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.DEF);
 
@@ -328,18 +324,25 @@ class BlockParser {
 
         AST.Type returnType = CommonParsing.voidFor(parser.current());
 
+        Token.TokenType endToken = isAbstract ? Token.Symbol.SEMICOLON : Token.Symbol.LEFT_BRACE;
+
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
-            List<Token> returnTypeTokens = parser.consumeTo(Token.Symbol.LEFT_BRACE);
+            List<Token> returnTypeTokens = parser.consumeTo(endToken);
             returnType = new Parser(returnTypeTokens, parser).getCommon().parseType();
         } else {
-            parser.consumeExpected(Token.Symbol.LEFT_BRACE);
+            parser.consumeExpected(endToken);
         }
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
+        List<AST.Statement> body;
+        if (isAbstract) {
+            body = List.of();
+        } else {
+            List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
+            body = new Parser(bodyTokens, parser).parseAll();
+        }
 
-        return new AST.FunctionDef(genericTypes, returnType, funcName, params, body, allTokens);
+        return new AST.FunctionDef(genericTypes, returnType, funcName, new ArrayList<>(), params, body, allTokens);
     }
 
     private AST.Return parseReturn() {

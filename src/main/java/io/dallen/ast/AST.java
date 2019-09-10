@@ -125,68 +125,18 @@ public class AST {
         }
     }
     
-    public static class FunctionDefModifier extends Statement {
-        public final ASTEnums.DecModType type;
-        public final FunctionDef on;
-        public FunctionDefModifier(ASTEnums.DecModType type, FunctionDef on, List<Token> tokens) {
-            super(tokens);
-            this.type = type;
-            this.on = on;
-        }
-
-        public String toString() {
-            return "FunctionDefModifier(type = " + this.type.toString() + ", " + 
-                "on = " + this.on.toString() + ", " + 
-                "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
-        }
-
-        public String toFlatString() {
-            return "FunctionDefModifier(type = " + this.type.toString() + ", " + 
-                "on = " + this.on.toFlatString() + ", " + 
-                "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
-        }
-
-        public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileFunctionDefModifier(this, context);
-        }
-    }
-    
-    public static class FieldModifier extends Statement {
-        public final ASTEnums.DecModType type;
-        public final Declare on;
-        public FieldModifier(ASTEnums.DecModType type, Declare on, List<Token> tokens) {
-            super(tokens);
-            this.type = type;
-            this.on = on;
-        }
-
-        public String toString() {
-            return "FieldModifier(type = " + this.type.toString() + ", " + 
-                "on = " + this.on.toString() + ", " + 
-                "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
-        }
-
-        public String toFlatString() {
-            return "FieldModifier(type = " + this.type.toString() + ", " + 
-                "on = " + this.on.toFlatString() + ", " + 
-                "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
-        }
-
-        public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileFieldModifier(this, context);
-        }
-    }
-    
     public static class FunctionDef extends BlockStatement {
         public final List<GenericType> genericTypes;
         public final Type returns;
         public final String name;
+        public final List<ASTEnums.DecModType> modifiers;
         public final List<FunctionParam> args;
-        public FunctionDef(List<GenericType> genericTypes, Type returns, String name, List<FunctionParam> args, List<Statement> body, List<Token> tokens) {
+        public FunctionDef(List<GenericType> genericTypes, Type returns, String name, List<ASTEnums.DecModType> modifiers, List<FunctionParam> args, List<Statement> body, List<Token> tokens) {
             super(body, tokens);
             this.genericTypes = genericTypes;
             this.returns = returns;
             this.name = name;
+            this.modifiers = modifiers;
             this.args = args;
         }
 
@@ -194,6 +144,7 @@ public class AST {
             return "FunctionDef(genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "returns = " + this.returns.toString() + ", " + 
                 "name = " + this.name.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "args = " + "[" + this.args.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
@@ -203,6 +154,7 @@ public class AST {
             return "FunctionDef(genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "returns = " + this.returns.toFlatString() + ", " + 
                 "name = " + this.name.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "args = " + "[" + this.args.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
@@ -245,12 +197,14 @@ public class AST {
         public final String name;
         public final List<GenericType> genericTypes;
         public final Boolean isStruct;
+        public final List<ASTEnums.DecModType> modifiers;
         public final Optional<Type> extendClass;
-        public ClassDef(String name, List<GenericType> genericTypes, Boolean isStruct, Optional<Type> extendClass, List<Statement> body, List<Token> tokens) {
+        public ClassDef(String name, List<GenericType> genericTypes, Boolean isStruct, List<ASTEnums.DecModType> modifiers, Optional<Type> extendClass, List<Statement> body, List<Token> tokens) {
             super(body, tokens);
             this.name = name;
             this.genericTypes = genericTypes;
             this.isStruct = isStruct;
+            this.modifiers = modifiers;
             this.extendClass = extendClass;
         }
 
@@ -258,6 +212,7 @@ public class AST {
             return "ClassDef(name = " + this.name.toString() + ", " + 
                 "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "isStruct = " + this.isStruct.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "extendClass = " + this.extendClass.toString() + ", " + 
                 "body = " + "[\n" + this.body.stream().map(e -> e.toString()).collect(Collectors.joining(", \n")) + " \n]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
@@ -267,6 +222,7 @@ public class AST {
             return "ClassDef(name = " + this.name.toString() + ", " + 
                 "genericTypes = " + "[" + this.genericTypes.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "isStruct = " + this.isStruct.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "extendClass = " + this.extendClass.toString() + ", " + 
                 "body = " + "[" + this.body.stream().map(e -> e.toFlatString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
@@ -1084,21 +1040,25 @@ public class AST {
     public static class Declare extends Statement {
         public final Type type;
         public final String name;
-        public Declare(Type type, String name, List<Token> tokens) {
+        public final List<ASTEnums.DecModType> modifiers;
+        public Declare(Type type, String name, List<ASTEnums.DecModType> modifiers, List<Token> tokens) {
             super(tokens);
             this.type = type;
             this.name = name;
+            this.modifiers = modifiers;
         }
 
         public String toString() {
             return "Declare(type = " + this.type.toString() + ", " + 
                 "name = " + this.name.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
         public String toFlatString() {
             return "Declare(type = " + this.type.toFlatString() + ", " + 
                 "name = " + this.name.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
@@ -1109,8 +1069,8 @@ public class AST {
     
     public static class DeclareAssign extends Declare {
         public final Statement value;
-        public DeclareAssign(Statement value, Type type, String name, List<Token> tokens) {
-            super(type, name, tokens);
+        public DeclareAssign(Statement value, Type type, String name, List<ASTEnums.DecModType> modifiers, List<Token> tokens) {
+            super(type, name, modifiers, tokens);
             this.value = value;
         }
 
@@ -1118,6 +1078,7 @@ public class AST {
             return "DeclareAssign(value = " + this.value.toString() + ", " + 
                 "type = " + this.type.toString() + ", " + 
                 "name = " + this.name.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
@@ -1125,6 +1086,7 @@ public class AST {
             return "DeclareAssign(value = " + this.value.toFlatString() + ", " + 
                 "type = " + this.type.toFlatString() + ", " + 
                 "name = " + this.name.toString() + ", " + 
+                "modifiers = " + "[" + this.modifiers.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ", " + 
                 "tokens = " + "[" + this.tokens.stream().map(e -> e.toString()).collect(Collectors.joining(", ")) + " ]" + ")";
         }
 
