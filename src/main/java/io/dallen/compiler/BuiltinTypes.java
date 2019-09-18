@@ -1,7 +1,6 @@
 package io.dallen.compiler;
 
 public class BuiltinTypes {
-
     public static final CompiledType VOID = new CompiledType("Void", false, true)
             .setCompiledName("void");
     public static final CompiledType ANY = new CompiledType("Any", false, false);
@@ -9,6 +8,7 @@ public class BuiltinTypes {
     public static final CompiledType INT = new CompiledType("Int", false, false)
             .setParent(BuiltinTypes.ANY)
             .setCompiledName("int32_t");
+
     public static final CompiledType BOOL = new CompiledType("Bool" ,false, false)
             .setCompiledName("uint8_t")
             .setParent(BuiltinTypes.ANY);

@@ -6,7 +6,6 @@ import io.dallen.compiler.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -45,20 +44,19 @@ class FunctionDefCompiler {
 
         String compiledName = generateFuncName(isConstructor, isStatic, stmt.name, context);
 
-        List<CompiledCode> compiledArgs = stmt.args
+        List<CompiledVar> compiledArgs = stmt.args
                 .stream()
-                .map(e -> e.compile(context))
+                .map(e -> {
+                    CompiledCode arg = e.compile(context);
+                    return new CompiledVar(e.name, false, arg.getType());
+                })
                 .collect(Collectors.toList());
 
-        ListIterator<AST.FunctionParam> paramItr = stmt.args.listIterator();
 
-        compiledArgs.forEach(arg -> {
-            CompiledVar argVar = new CompiledVar(paramItr.next().name, true, arg.getType());
-            innerContext.declareObject(argVar);
-        });
+        compiledArgs.forEach(innerContext::declareObject);
 
         return new CompiledFunction(stmt.name, compiledName, isConstructor, (CompiledType) returns.getBinding(),
-                compiledArgs.stream().map(CompiledCode::getType).collect(Collectors.toList()));
+                compiledArgs);
     }
 
     private static String generateSig(AST.FunctionDef stmt, CompiledFunction func, CompileContext context) {
@@ -116,9 +114,15 @@ class FunctionDefCompiler {
         functionCode.append("\n")
                 .append(context.getIndent()).append("{\n");
 
+        if(func.getName().equals("main")) {
+            injectSetup(functionCode, stmt, func, innerContext);
+        }
+
         if(isConstructor) {
             functionCode.append(initiateInstance(context.getContainingClass(), innerContext));
         }
+
+        injectFormalCopy(functionCode, func, innerContext);
 
         stmt.body.forEach(VisitorUtils.compileToStringBuilder(functionCode, innerContext));
 
@@ -145,6 +149,32 @@ class FunctionDefCompiler {
                 .withType(BuiltinTypes.VOID)
                 .withBinding(func)
                 .withSemicolon(false);
+    }
+
+    private static void injectFormalCopy(StringBuilder functionCode, CompiledFunction func, CompileContext innerContext) {
+        func.getArgs().stream()
+                .filter(arg -> arg.getType().isRef())
+                .forEach(arg -> {
+                    innerContext.addRefStackSize(1);
+                    functionCode.append(innerContext.getIndent()).append(arg.getType().getCompiledName()).append("* ")
+                            .append(arg.getName()).append(" = skalloc_ref_stack();\n");
+                    functionCode.append(innerContext.getIndent()).append("*").append(arg.getName()).append(" = formal_")
+                            .append(arg.getName()).append(";\n");
+        });
+    }
+
+    private static void injectSetup(StringBuilder functionCode, AST.FunctionDef stmt, CompiledFunction func,
+                                   CompileContext context) {
+        if(func.getReturns() != BuiltinTypes.INT) {
+            context.throwError("Main must return int", stmt.returns);
+        }
+
+        context.getScope().getAllVars()
+                .stream()
+                .filter(o->o instanceof CompiledType)
+                .map(o -> (CompiledType) o)
+                .filter(CompiledType::isRef)
+                .forEach(t -> functionCode.append(context.getIndent()).append(t.getStaticInitName()).append("();\n"));
     }
 
     static String initiateInstance(CompiledType cls, CompileContext innerContext) {

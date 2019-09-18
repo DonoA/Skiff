@@ -5,11 +5,11 @@ import java.util.List;
 public class CompiledFunction extends CompiledVar {
     private final String compiledName;
     private final CompiledType returns;
-    private final List<CompiledType> args;
+    private final List<CompiledVar> args;
     private final boolean isConstructor;
 
     public CompiledFunction(String name, String compiledName, boolean isConstructor, CompiledType returns,
-                            List<CompiledType> args) {
+                            List<CompiledVar> args) {
         super(name, false, BuiltinTypes.FUNCTION);
         this.isConstructor = isConstructor;
         this.compiledName = compiledName;
@@ -17,7 +17,7 @@ public class CompiledFunction extends CompiledVar {
         this.args = args;
     }
 
-    public CompiledFunction(String name, String compiledName, List<CompiledType> args) {
+    public CompiledFunction(String name, String compiledName, List<CompiledVar> args) {
         this(name, compiledName, false, BuiltinTypes.VOID, args);
     }
 
@@ -25,7 +25,7 @@ public class CompiledFunction extends CompiledVar {
         return returns;
     }
 
-    public List<CompiledType> getArgs() {
+    public List<CompiledVar> getArgs() {
         return args;
     }
 

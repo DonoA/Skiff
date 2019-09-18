@@ -61,11 +61,18 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileFunctionParam(FunctionParam stmt, CompileContext context) {
-        CompiledCode type = stmt.type.compile(context);
-        String sb = type.getCompiledText() + " " + stmt.name;
+        CompiledCode typeCode = stmt.type.compile(context);
+        CompiledType type = (CompiledType) typeCode.getBinding();
+        String prefix = "";
+        if(type.isRef()) {
+            prefix = "formal_";
+        }
+        String sb = typeCode.getCompiledText() + " " + prefix + stmt.name;
+        CompiledVar v = new CompiledVar(stmt.name, false, type);
         return new CompiledCode()
                 .withText(sb)
-                .withType((CompiledType) type.getBinding());
+                .withType(type)
+                .withBinding(v);
     }
 
     public CompiledCode compileClassDef(ClassDef stmt, CompileContext context) {
@@ -328,8 +335,12 @@ public class ASTVisitor {
         }
         for (int i = 0; i < stmt.argz.size(); i++) {
             String argType = "";
-            String argText = stmt.argz.get(i).compile(context).getCompiledText();
-            if(typeCode.getConstructors().get(0).getArgs().get(0).isGenericPlaceholder()) {
+            CompiledCode argCode = stmt.argz.get(i).compile(context);
+            String argText = argCode.getCompiledText();
+            if(argCode.onStack()) {
+                argText = "*" + argText;
+            }
+            if(typeCode.getConstructors().get(0).getArgs().get(0).getType().isGenericPlaceholder()) {
                 argType = "(void *)";
             }
             argz.add(argType + argText);
@@ -432,6 +443,7 @@ public class ASTVisitor {
         // Each stack location should represent exactly one named var
         CompiledCode value = stmt.value.compile(context);
 
+        // TODO: break this out
         if(stmt.name instanceof FunctionCall) {
             FunctionCall func = (FunctionCall) stmt.name;
             CompiledType intoType = (CompiledType) context.getObject(func.name);
@@ -477,7 +489,7 @@ public class ASTVisitor {
             lhsDeRef = lhsDeRef && ((CompiledVar) name.getBinding()).getType().isRef();
         }
 
-        boolean rhsDeRef = value.onStack();
+        boolean rhsDeRef = value.onStack() && value.getType().isRef();
 
         String cast = "";
         if(!name.getType().getName().equals(value.getType().getName())) {

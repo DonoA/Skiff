@@ -27,7 +27,7 @@ class FunctionCallCompiler {
         }
 
         for (int i = 0; i < func.getArgs().size(); i++) {
-            CompiledType expected = func.getArgs().get(i);
+            CompiledType expected = func.getArgs().get(i).getType();
             CompiledType found = compArgs.get(i).getType();
             if (!expected.equals(found)) {
                 context.throwError("Differing param types", stmt.args.get(i));

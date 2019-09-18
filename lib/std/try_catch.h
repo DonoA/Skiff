@@ -1,3 +1,5 @@
+#pragma once
+
 #include <setjmp.h>
 #include <stdlib.h>
 #include "skiff_exception.h"

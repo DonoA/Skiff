@@ -24,6 +24,7 @@ public class CompiledType extends CompiledObject {
     private String compiledName;
     private final String interfaceName;
     private final String interfaceStruct;
+    private final String staticInitName;
     private boolean genericPlaceholder = false;
     private boolean generic = false;
     private final boolean dataClass;
@@ -33,6 +34,7 @@ public class CompiledType extends CompiledObject {
         this.structName = VisitorUtils.underscoreJoin("skiff", className, "t");
         this.interfaceName = VisitorUtils.underscoreJoin("skiff", className, "interface");
         this.interfaceStruct = VisitorUtils.underscoreJoin("skiff", className, "class", "struct");
+        this.staticInitName = VisitorUtils.underscoreJoin("skiff", className, "static");
         this.compiledName = this.structName + (ref ? " *" : "");
         this.isRef = ref;
         this.dataClass = dataClass;
@@ -196,13 +198,14 @@ public class CompiledType extends CompiledObject {
             newTypeNeeded = true;
             returns.isGeneric(true);
         }
-        List<CompiledType> argTypes = func.getArgs().stream().map(arg -> {
-            if(arg.genericPlaceholder) {
-                return generics.get(arg.getName()).isGeneric(true);
+        List<CompiledVar> argTypes = func.getArgs().stream().map(arg -> {
+            if(arg.getType().genericPlaceholder) {
+                return new CompiledVar(arg.getName(), false, generics.get(arg.getName()).isGeneric(true));
             } else {
                 return arg;
             }
         }).collect(Collectors.toList());
+
         if(newTypeNeeded) {
             return new CompiledFunction(func.getName(), func.getCompiledName(), false, returns, argTypes);
         } else {
@@ -235,5 +238,9 @@ public class CompiledType extends CompiledObject {
 
     public String getInterfaceStruct() {
         return interfaceStruct;
+    }
+
+    public String getStaticInitName() {
+        return staticInitName;
     }
 }

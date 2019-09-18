@@ -17,8 +17,10 @@ class ClassDefCompiler {
                                                      boolean isPrivate, CompileContext innerContext) {
         String compiledName = FunctionDefCompiler.generateFuncName(isConstructor, isStatic, dec.name, innerContext);
         CompiledType returns = (CompiledType) dec.returns.compile(innerContext).getBinding();
-        List<CompiledType> argTypes = dec.args.stream().map(arg -> arg.type.compile(innerContext).getBinding())
-                .map(obj -> (CompiledType) obj).collect(Collectors.toList());
+
+        List<CompiledVar> argTypes = dec.args.stream().map(arg -> arg.compile(innerContext).getBinding())
+                .map(obj -> (CompiledVar) obj).collect(Collectors.toList());
+
         return new CompiledMethod(
                 new CompiledFunction(dec.name, compiledName, isConstructor, returns, argTypes),
                 true, isPrivate);
@@ -105,14 +107,12 @@ class ClassDefCompiler {
     }
 
     private static void generateDataClassMethods(CompiledType cls) {
-        List<CompiledType> args = cls.getAllFields().stream().map(CompiledVar::getType).collect(Collectors.toList());
-
         cls.addConstructor(new CompiledFunction(
                 cls.getName(),
                 VisitorUtils.underscoreJoin("skiff", cls.getName(), "new"),
                 true,
                 BuiltinTypes.VOID,
-                args));
+                (List) cls.getAllFields()));
 
         cls.getAllFields().forEach(f -> {
             String fName = capNameFor(f.getName());
@@ -133,7 +133,7 @@ class ClassDefCompiler {
                     VisitorUtils.underscoreJoin("skiff", cls.getName(), "set", f.getName()),
                     false,
                     BuiltinTypes.VOID,
-                    List.of(f.getType())
+                    List.of(f)
             ), true, false));
         });
     }
@@ -152,8 +152,8 @@ class ClassDefCompiler {
         });
 
         // Set parent class or default if none found
-        stmt.extendClass.ifPresentOrElse(ext ->
-                cls.setParent((CompiledType) ext.compile(context).getBinding()),
+        stmt.extendClass.ifPresentOrElse(
+                ext -> cls.setParent((CompiledType) ext.compile(context).getBinding()),
                 () -> cls.setParent(BuiltinTypes.ANYREF)
         );
 
@@ -173,13 +173,14 @@ class ClassDefCompiler {
         }
 
         // Copy in parent fields to ensure order is maintained
-        cls.getParent().getAllFields().forEach(f -> {
-            if(cls.getField(f.getName()) == null) {
-                cls.addField(new CompiledField(f, false, f.isPrivate()));
-            }
-        });
+        cls.getParent().getAllFields()
+                .stream()
+                .filter(f->cls.getField(f.getName()) == null)
+                .forEach(f -> cls.addField(new CompiledField(f, false, f.isPrivate())));
+
         // Copy in declared fields
-        declaredVarOrder.forEach(cls::addField);
+        declaredVarOrder.stream().filter(f->f.getType().isRef()).forEach(cls::addField);
+        declaredVarOrder.stream().filter(f->!f.getType().isRef()).forEach(cls::addField);
 
         // Copy in parent methods that are no overridden
         cls.getParent().getAllMethods()
@@ -195,11 +196,10 @@ class ClassDefCompiler {
                 });
 
         // Copy in declared methods if they were not already copied in above
-        declaredMethods.values().forEach(v -> {
-            if(cls.getMethod(v.getName()) == null) {
-                cls.addMethod(new CompiledMethod(v, true, v.isPrivate()));
-            }
-        });
+        declaredMethods.values()
+                .stream()
+                .filter(v->cls.getMethod(v.getName()) == null)
+                .forEach(v -> cls.addMethod(new CompiledMethod(v, true, v.isPrivate())));
 
         // Declare special class keywords
         innerContext.declareObject(new CompiledVar("this", true, cls));
@@ -257,8 +257,8 @@ class ClassDefCompiler {
                 functionForwardDecs +
                 classStruct +
                 interfaceDec +
-                staticInitFunc +
                 dataStruct +
+                staticInitFunc +
                 methodCode +
                 dataClassCode +
                 footerComment;
@@ -321,28 +321,17 @@ class ClassDefCompiler {
     }
 
     private static String generateMethodCode(List<AST.Statement> body, CompileContext innerContext) {
-        String simple = body.stream()
+        return body.stream()
                 .filter(f -> f instanceof AST.FunctionDef)
                 .map(f->f.compile(innerContext))
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.joining("\n\n"));
-
-        String modified = "";
-//        String modified = body.stream()
-//                .filter(f -> f instanceof AST.FunctionDefModifier)
-//                .map(f -> (AST.FunctionDefModifier) f)
-//                .map(f-> FunctionDefCompiler.compileFunctionDef(f.on, f.type == ASTEnums.DecModType.STATIC,
-//                        innerContext))
-//                .map(CompiledCode::getCompiledText)
-//                .collect(Collectors.joining("\n\n"));
-
-        return simple + "\n\n" + modified;
     }
 
     private static String generateDataStruct(CompiledType cls, String classStructName) {
         List<VisitorUtils.StructEntry> entries = new ArrayList<>();
-        entries.add(new VisitorUtils.StructEntry("struct " + classStructName,  "* class_ptr"));
-
+        entries.add(new VisitorUtils.StructEntry("struct " + classStructName + " *",  "class_ptr"));
+        entries.add(new VisitorUtils.StructEntry("uint8_t",  "mark"));
         entries.addAll(cls.getAllFields().stream()
                 .map(field -> new VisitorUtils.StructEntry(field.getType().getCompiledName(), field.getName()))
                 .collect(Collectors.toList()));
@@ -355,7 +344,10 @@ class ClassDefCompiler {
 
     private static String generateClassStruct(CompiledType cls) {
         List<VisitorUtils.StructEntry> structEntries = new ArrayList<>();
+        structEntries.add(new VisitorUtils.StructEntry("int32_t", "class_refs"));
+        structEntries.add(new VisitorUtils.StructEntry("int32_t", "struct_size"));
         structEntries.add(new VisitorUtils.StructEntry("void *", "parent"));
+        structEntries.add(new VisitorUtils.StructEntry("char *", "simple_name"));
         cls.getAllMethods()
                 .stream()
                 .map(method -> new VisitorUtils.StructEntry(
@@ -377,11 +369,25 @@ class ClassDefCompiler {
     private static String generateStaticInit(CompiledType cls) {
         StringBuilder text = new StringBuilder();
 
-        text.append("void ").append(VisitorUtils.underscoreJoin("skiff", cls.getName(), "static"))
-                .append("()").append("\n{\n");
+        text.append("void ").append(cls.getStaticInitName()).append("()").append("\n{\n");
+
+        long refCount = cls.getAllFields()
+                .stream()
+                .filter(CompiledField::isMine)
+                .filter(f->f.getType().isRef())
+                .count();
+
+        text.append(CompileContext.INDENT).append(cls.getInterfaceName()).append(".class_refs = ").append(refCount)
+                .append(";\n");
+
+        text.append(CompileContext.INDENT).append(cls.getInterfaceName()).append(".struct_size = sizeof(")
+                .append(cls.getStructName()).append(");\n");
 
         text.append(CompileContext.INDENT).append(cls.getInterfaceName()).append(".parent = &")
                 .append(cls.getParent().getInterfaceName()).append(";\n");
+
+        text.append(CompileContext.INDENT).append(cls.getInterfaceName()).append(".simple_name = \"")
+                .append(cls.getName()).append("\";\n");
 
         cls.getAllMethods()
                 .forEach(method ->
@@ -407,7 +413,8 @@ class ClassDefCompiler {
         text.append(method.getReturns().getCompiledName()).append(" ").append(method.getCompiledName()).append("(");
         List<String> argList = new ArrayList<>();
         argList.add(cls.getCompiledName());
-        argList.addAll(method.getArgs().stream().map(CompiledType::getCompiledName)
+        argList.addAll(method.getArgs().stream().map(CompiledVar::getType)
+                .map(CompiledType::getCompiledName)
                 .collect(Collectors.toList()));
         text.append(String.join(", ", argList)).append(");");
 

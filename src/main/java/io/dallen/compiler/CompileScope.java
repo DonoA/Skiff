@@ -16,6 +16,8 @@ public class CompileScope {
         declareObject(BuiltinTypes.STRING);
         declareObject(BuiltinTypes.INT);
         declareObject(BuiltinTypes.BOOL);
+        declareObject(BuiltinTypes.ANYREF);
+//        declareObject(BuiltinTypes.CLASS);
     }
 
     public void declareObject(CompiledObject decVar) {
@@ -51,5 +53,13 @@ public class CompileScope {
 
     public List<CompiledObject> getLocals() {
         return new ArrayList<>(variableTable.values());
+    }
+
+    public List<CompiledObject> getAllVars() {
+        List<CompiledObject> all = new ArrayList<>(variableTable.values());
+        if(this.parent != null) {
+            all.addAll(this.parent.getAllVars());
+        }
+        return all;
     }
 }

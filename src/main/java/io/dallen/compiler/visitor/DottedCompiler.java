@@ -63,8 +63,8 @@ class DottedCompiler {
                 text = arg.getCompiledText();
             }
 
-            if(func.getArgs().get(i).isGenericPlaceholder()) {
-                cast = "(" + func.getArgs().get(i).getCompiledName() + ")";
+            if(func.getArgs().get(i).getType().isGenericPlaceholder()) {
+                cast = "(" + func.getArgs().get(i).getType().getCompiledName() + ")";
             }
 
             sb.append(cast).append(text);

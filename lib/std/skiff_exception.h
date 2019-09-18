@@ -10,22 +10,31 @@
 typedef struct skiff_exception_struct skiff_exception_t;
 struct skiff_exception_class_struct 
 { 
+    int32_t class_refs;
+    int32_t struct_size;
     void * parent;
+    char * simple_name;
     skiff_string_t * (*getMessage)(skiff_exception_t *);
 };
 struct skiff_exception_class_struct skiff_exception_interface;
 skiff_string_t * skiff_exception_get_message(skiff_exception_t *);
 typedef struct skiff_exception_class_struct skiff_exception_class_t; 
-void skiff_exception_static()
-{
-    skiff_exception_interface.parent = &skiff_any_ref_interface;
-    skiff_exception_interface.getMessage = skiff_exception_get_message;
-}
+
 struct skiff_exception_struct 
 {
     struct skiff_exception_class_struct * class_ptr;
+    uint8_t mark;
     skiff_string_t * message;
 };
+
+void skiff_exception_static()
+{
+    skiff_exception_interface.struct_size = sizeof(skiff_exception_t);
+    skiff_exception_interface.class_refs = 1;
+    skiff_exception_interface.simple_name = "Exception";
+    skiff_exception_interface.parent = &skiff_any_ref_interface;
+    skiff_exception_interface.getMessage = skiff_exception_get_message;
+}
 
 skiff_exception_t * skiff_exception_new(skiff_exception_t * this, int new_inst, skiff_string_t * message)
 {

@@ -23,7 +23,7 @@ void skiff_catch_0(skiff_catch_layer_t * layer, skiff_exception_t * ex)
 {
     printf("Top Level Error Caught! Message: ");
     skiff_println(ex->message);
-    longjmp(layer->current_catch_state, 0);
+    longjmp(layer->current_catch_state, 1);
 }
 
 static void sigHandler(int sig, siginfo_t *dont_care, void *dont_care_either)
@@ -51,6 +51,8 @@ static void sigHandler(int sig, siginfo_t *dont_care, void *dont_care_either)
 
 int main(int argc, char * argv[])
 {
+    skiff_allocator_init();
+
     catch_layer_tail = catch_layer_head = calloc(1, sizeof(skiff_catch_layer_t));
     catch_layer_head->catch_class_ptr = &skiff_exception_interface;
     catch_layer_head->current_catch = skiff_catch_0;
@@ -62,14 +64,14 @@ int main(int argc, char * argv[])
     sigemptyset(&sa.sa_mask);
     sa.sa_flags     = SA_NODEFER;
     sa.sa_sigaction = sigHandler;
-    sigaction(SIGSEGV, &sa, NULL);
-    sigaction(SIGFPE, &sa, NULL);
-    sigaction(SIGABRT, &sa, NULL);
+    // sigaction(SIGSEGV, &sa, NULL);
+    // sigaction(SIGFPE, &sa, NULL);
+    // sigaction(SIGABRT, &sa, NULL);
 
     int skiff_continue_exec_0 = setjmp(catch_layer_tail->current_catch_state);
     if(skiff_continue_exec_0 == 0)
     {
-        skiff_list_t * argz = skiff_list_allocate_new();
+        skiff_list_t * argz = skiff_list_allocate_new(argc);
         for(size_t i = 0; i < argc; i++)
         {
             skiff_list_append(argz, skiff_string_allocate_new(argv[i]));
