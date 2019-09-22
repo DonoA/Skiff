@@ -68,18 +68,20 @@ int main(int argc, char * argv[])
     // sigaction(SIGFPE, &sa, NULL);
     // sigaction(SIGABRT, &sa, NULL);
 
+    int32_t rtn = 1;
     int skiff_continue_exec_0 = setjmp(catch_layer_tail->current_catch_state);
     if(skiff_continue_exec_0 == 0)
     {
-        skiff_list_t * argz = skiff_list_allocate_new(argc);
+        skiff_list_t ** argz = skalloc_ref_stack();
+        *argz = skiff_list_allocate_new(argc);
         for(size_t i = 0; i < argc; i++)
         {
-            skiff_list_append(argz, skiff_string_allocate_new(argv[i]));
+            skiff_list_append(*argz, skiff_string_allocate_new(argv[i]));
         }
-        int32_t rtn = skiff_main(argz);
-        return rtn;
+        rtn = skiff_main(*argz);
     }
-    return 1;
+    run_gc();
+    return rtn;
 }
 
 // skiff_string_t * skiff_int_to_string(int32_t this) 
