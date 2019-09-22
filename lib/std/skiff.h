@@ -7,6 +7,9 @@
 #include <setjmp.h>
 #include <signal.h>
 
+#define GC_DEBUG 0
+#define TRY_CATCH 1
+
 #include "skiff_string.h"
 #include "skiff_list.h"
 #include "skiff_exception.h"
@@ -26,7 +29,7 @@ void skiff_catch_0(skiff_catch_layer_t * layer, skiff_exception_t * ex)
     longjmp(layer->current_catch_state, 1);
 }
 
-static void sigHandler(int sig, siginfo_t *dont_care, void *dont_care_either)
+static void sig_handler(int sig, siginfo_t *dont_care, void *dont_care_either)
 {
     skiff_exception_t * ex = (skiff_exception_t *) skalloc(1, sizeof(skiff_exception_t));
     if(sig == SIGSEGV) 
@@ -63,10 +66,13 @@ int main(int argc, char * argv[])
     memset(&sa, 0, sizeof(struct sigaction));
     sigemptyset(&sa.sa_mask);
     sa.sa_flags     = SA_NODEFER;
-    sa.sa_sigaction = sigHandler;
-    // sigaction(SIGSEGV, &sa, NULL);
-    // sigaction(SIGFPE, &sa, NULL);
-    // sigaction(SIGABRT, &sa, NULL);
+    sa.sa_sigaction = sig_handler;
+    if(TRY_CATCH)
+    {
+        sigaction(SIGSEGV, &sa, NULL);
+        sigaction(SIGFPE, &sa, NULL);
+        sigaction(SIGABRT, &sa, NULL);
+    }
 
     int32_t rtn = 1;
     int skiff_continue_exec_0 = setjmp(catch_layer_tail->current_catch_state);
@@ -80,7 +86,16 @@ int main(int argc, char * argv[])
         }
         rtn = skiff_main(*argz);
     }
+    skfree_ref_stack(1);
     run_gc();
+    if(eden_ref != 0 && GC_DEBUG)
+    {
+        printf("Eden space not emptied!\n");
+    }
+    if(survivor_ref != 0 && GC_DEBUG)
+    {
+        printf("Survivor space not emptied!\n");
+    }
     return rtn;
 }
 

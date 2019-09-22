@@ -173,14 +173,27 @@ class ClassDefCompiler {
         }
 
         // Copy in parent fields to ensure order is maintained
+        cls.getParent().getDeclaredVarStructOrder()
+                .stream()
+                .filter(f->cls.getField(f.getName()) == null)
+                .forEach(f -> cls.addToDeclaredVarStructOrder(new CompiledField(f, false, f.isPrivate())));
+
         cls.getParent().getAllFields()
                 .stream()
                 .filter(f->cls.getField(f.getName()) == null)
                 .forEach(f -> cls.addField(new CompiledField(f, false, f.isPrivate())));
 
         // Copy in declared fields
-        declaredVarOrder.stream().filter(f->f.getType().isRef()).forEach(cls::addField);
-        declaredVarOrder.stream().filter(f->!f.getType().isRef()).forEach(cls::addField);
+        declaredVarOrder.forEach(cls::addField);
+
+        declaredVarOrder.stream()
+                .filter(f -> f.getType().isRef())
+                .forEach(cls::addToDeclaredVarStructOrder);
+
+        declaredVarOrder.stream()
+                .filter(f -> !f.getType().isRef())
+                .forEach(cls::addToDeclaredVarStructOrder);
+
 
         // Copy in parent methods that are no overridden
         cls.getParent().getAllMethods()
@@ -332,7 +345,7 @@ class ClassDefCompiler {
         List<VisitorUtils.StructEntry> entries = new ArrayList<>();
         entries.add(new VisitorUtils.StructEntry("struct " + classStructName + " *",  "class_ptr"));
         entries.add(new VisitorUtils.StructEntry("uint8_t",  "mark"));
-        entries.addAll(cls.getAllFields().stream()
+        entries.addAll(cls.getDeclaredVarStructOrder().stream()
                 .map(field -> new VisitorUtils.StructEntry(field.getType().getCompiledName(), field.getName()))
                 .collect(Collectors.toList()));
 

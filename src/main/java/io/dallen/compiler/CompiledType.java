@@ -10,6 +10,7 @@ public class CompiledType extends CompiledObject {
     private final boolean isRef;
     // order is vital for both declared vars and declared functions
     private List<CompiledField> declaredVars = new ArrayList<>();
+    private List<CompiledField> declaredVarStructOrder = new ArrayList<>();
     private List<CompiledMethod> declaredMethods = new ArrayList<>();
     private List<CompiledFunction> constructors = new ArrayList<>();
 
@@ -200,7 +201,7 @@ public class CompiledType extends CompiledObject {
         }
         List<CompiledVar> argTypes = func.getArgs().stream().map(arg -> {
             if(arg.getType().genericPlaceholder) {
-                return new CompiledVar(arg.getName(), false, generics.get(arg.getName()).isGeneric(true));
+                return new CompiledVar(arg.getName(), false, generics.get(arg.getType().getName()).isGeneric(true));
             } else {
                 return arg;
             }
@@ -242,5 +243,13 @@ public class CompiledType extends CompiledObject {
 
     public String getStaticInitName() {
         return staticInitName;
+    }
+
+    public List<CompiledField> getDeclaredVarStructOrder() {
+        return declaredVarStructOrder;
+    }
+
+    public void addToDeclaredVarStructOrder(CompiledField f) {
+        this.declaredVarStructOrder.add(f);
     }
 }

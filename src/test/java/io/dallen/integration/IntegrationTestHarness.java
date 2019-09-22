@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 class IntegrationTestHarness {
-    private static final String workingDir = "working";
-
     private final String testName;
 
     IntegrationTestHarness(String testName) {
@@ -28,7 +26,7 @@ class IntegrationTestHarness {
                 throw new RuntimeException("SkiffC failed!");
             }
 
-            TestResult gccResult = exec("gcc -Wall -Wno-pointer-to-int-cast -Wno-unused-but-set-variable " +
+            TestResult gccResult = exec("gcc -g -Wall -Wno-pointer-to-int-cast -Wno-unused-but-set-variable " +
                     "-o working/" + testName + "/" + testName +
                     " working/" + testName + "/" + testName + ".c");
             if(gccResult.returnCode != 0 || !gccResult.stdOut.isEmpty() || !gccResult.stdErr.isEmpty()) {

@@ -189,6 +189,9 @@ public class ASTVisitor {
                             .append(onCode.getCompiledText()).append(")->").append(field.getName()).append(";\n");
 
                     innerContext.declareObject(new CompiledVar(v.name, false, field.getType()));
+                    if(field.getType().isRef()) {
+                        innerContext.addRefStackSize(1);
+                    }
                 });
 
             } else if(caseStatement.on instanceof Declare) {
@@ -216,6 +219,7 @@ public class ASTVisitor {
                 }
                 sb.append("\n");
             }
+            VisitorUtils.cleanupScope(sb, innerContext, true);
             sb.append(context.getIndent()).append("}\n");
         }
         return new CompiledCode()
@@ -476,6 +480,9 @@ public class ASTVisitor {
                         .append(value.getCompiledText()).append(")->").append(field.getName()).append(";\n");
 
                 context.declareObject(new CompiledVar(v.name, false, field.getType()));
+                if(field.getType().isRef()) {
+                    context.addRefStackSize(1);
+                }
             }
 
             return new CompiledCode()
