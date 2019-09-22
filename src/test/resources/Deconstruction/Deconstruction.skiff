@@ -20,8 +20,8 @@ def main(args: List<String>): Int {
             println(name);
             println(grade);
             break;
-        case Person(age, name) =>
-            println(name);
+        case p: Person =>
+            println(p.getName());
             break;
     }
     

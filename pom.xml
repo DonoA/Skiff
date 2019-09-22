@@ -15,7 +15,7 @@
                 <version>0.8.4</version>
                 <configuration>
                     <excludes>
-                        <exclude>**/AST**</exclude>
+                        <exclude>io/dallen/ast/AST**</exclude>
                     </excludes>
                 </configuration>
                 <executions>

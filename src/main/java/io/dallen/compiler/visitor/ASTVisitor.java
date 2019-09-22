@@ -88,9 +88,18 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileElseIfBlock(ElseIfBlock stmt, CompileContext context) {
+        StringBuilder text = new StringBuilder();
         CompiledCode code = stmt.on.compile(context);
+        text.append("else ").append(code.getCompiledText());
+
+        if (stmt.elseBlock.isPresent()) {
+            text.append("\n");
+            text.append(context.getIndent());
+            text.append(stmt.elseBlock.get().compile(context).getCompiledText());
+        }
+
         return new CompiledCode()
-                .withText("else " + code.getCompiledText())
+                .withText(text.toString())
                 .withType(code.getType())
                 .withSemicolon(false);
     }

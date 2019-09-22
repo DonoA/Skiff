@@ -91,4 +91,15 @@ public class IntegrationTest {
         );
         assertEquals(expected, actual);
     }
+
+    @org.junit.Test
+    public void flowControl() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("FlowControl");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                0, "i is gt 5!\ni is lt 5!\ni is 10!\ni is 15 or 14\n", ""
+        );
+        assertEquals(expected, actual);
+    }
 }

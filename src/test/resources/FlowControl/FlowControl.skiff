@@ -1,0 +1,29 @@
+def testMe(i: Int) {
+    if(i == 10) {
+        println("i is 10!");
+    } else if(i > 5) {
+        println("i is gt 5!");
+    } else {
+        println("i is lt 5!");
+    }
+}
+
+def main(args: List<String>): Int {
+    testMe(20);
+    testMe(0);
+    testMe(10);
+
+    i: Int = 15;
+
+    switch(i) {
+        case 15 =>
+        case 14 =>
+            println("i is 15 or 14");
+            break;
+        case 10 =>
+            println("i is 10");
+            break;
+    }
+
+    return 0;
+}

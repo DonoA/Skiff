@@ -129,6 +129,27 @@ class BlockParser {
         }
     }
 
+    private void attachToLastBlock(AST.Statement parentStmt, AST.ElseBlock toAttach, List<Token> allTokens) {
+        if(parentStmt instanceof AST.IfBlock) {
+            AST.IfBlock ifBlock = (AST.IfBlock) parentStmt;
+            if(ifBlock.elseBlock.isPresent()) {
+                attachToLastBlock(ifBlock.elseBlock.get(), toAttach, allTokens);
+            } else {
+                ifBlock.elseBlock = ASTOptional.of(toAttach);
+            }
+        } else if(parentStmt instanceof AST.ElseIfBlock) {
+            AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
+            if(elseIfBlock.elseBlock.isPresent()) {
+                attachToLastBlock(elseIfBlock.elseBlock.get(), toAttach, allTokens);
+            } else {
+                elseIfBlock.elseBlock = ASTOptional.of(toAttach);
+            }
+        } else {
+            parser.throwError("Else statement requires If, " + parentStmt.getClass().getName() + " found",
+                    allTokens.get(0));
+        }
+    }
+
     private void attachElseBlock(ArrayList<AST.Statement> statements) {
         List<Token> allTokens = parser.selectToBlockEnd();
         if(statements.size() < 1) {
@@ -149,16 +170,7 @@ class BlockParser {
             toAttach = new AST.ElseAlwaysBlock(body, allTokens);
         }
 
-        if(parentStmt instanceof AST.IfBlock) {
-            AST.IfBlock ifBlock = (AST.IfBlock) parentStmt;
-            ifBlock.elseBlock = ASTOptional.of(toAttach);
-        } else if(parentStmt instanceof AST.ElseIfBlock) {
-            AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
-            elseIfBlock.elseBlock = ASTOptional.of(toAttach);
-        } else {
-            parser.throwError("Else statement requires If, " + parentStmt.getClass().getName() + " found",
-                    allTokens.get(0));
-        }
+        attachToLastBlock(parentStmt, toAttach, allTokens);
     }
 
     private AST.Statement consumeAndParseParens() {
