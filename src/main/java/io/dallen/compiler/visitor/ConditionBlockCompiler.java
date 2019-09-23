@@ -8,7 +8,8 @@ import java.util.List;
 
 class ConditionBlockCompiler {
 
-    private static StringBuilder compileGenericLoop(String blockName, List<AST.Statement> body, AST.Statement condition, CompileContext context) {
+    private static StringBuilder compileGenericLoop(String blockName, List<AST.Statement> body, AST.Statement condition,
+                                                    AST.Statement tick, CompileContext context) {
         StringBuilder sb = new StringBuilder();
         sb.append(blockName);
         sb.append("(");
@@ -19,13 +20,32 @@ class ConditionBlockCompiler {
         CompileContext innerContext = new CompileContext(context).addIndent();
         body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
         VisitorUtils.cleanupScope(sb, innerContext, true);
+
+        if(tick != null) {
+            sb.append(innerContext.getIndent());
+            CompiledCode tickCode = tick.compile(context);
+            sb.append(tickCode.getCompiledText());
+            sb.append(";\n");
+        }
+
         sb.append(context.getIndent());
         sb.append("}");
         return sb;
     }
 
+    static CompiledCode compileFor(AST.ForBlock stmt, CompileContext context) {
+        CompiledCode start = stmt.start.compile(context);
+
+        String text = start.getCompiledText() + "\n" + context.getIndent() +
+                compileGenericLoop("while", stmt.body, stmt.condition, stmt.step, context);
+
+        return new CompiledCode()
+                .withText(text)
+                .withSemicolon(false);
+    }
+
     static CompiledCode compileWhile(AST.WhileBlock stmt, CompileContext context) {
-        StringBuilder text = compileGenericLoop("while", stmt.body, stmt.condition, context);
+        StringBuilder text = compileGenericLoop("while", stmt.body, stmt.condition, null, context);
 
         return new CompiledCode()
                 .withText(text.toString())
@@ -33,7 +53,7 @@ class ConditionBlockCompiler {
     }
 
     static CompiledCode compileIfBlock(AST.IfBlock stmt, CompileContext context) {
-        StringBuilder text = compileGenericLoop("if", stmt.body, stmt.condition, context);
+        StringBuilder text = compileGenericLoop("if", stmt.body, stmt.condition, null, context);
 
         if (stmt.elseBlock.isPresent()) {
             text.append("\n");

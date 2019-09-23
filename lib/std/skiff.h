@@ -32,21 +32,22 @@ void skiff_catch_0(skiff_catch_layer_t * layer, skiff_exception_t * ex)
 static void sig_handler(int sig, siginfo_t *dont_care, void *dont_care_either)
 {
     skiff_exception_t * ex = (skiff_exception_t *) skalloc(1, sizeof(skiff_exception_t));
+    ex->class_ptr = &skiff_exception_interface;
     if(sig == SIGSEGV) 
     {
-        skiff_exception_new(ex, 1, skiff_string_allocate_new("Invalid access to storage!"));
+        skiff_exception_new(ex, skiff_string_new(0, "Invalid access to storage!"));
     }
     else if(sig == SIGFPE)
     {
-        skiff_exception_new(ex, 1, skiff_string_allocate_new("Erroneous arithmetic operation!"));
+        skiff_exception_new(ex, skiff_string_new(0, "Erroneous arithmetic operation!"));
     }
     else if(sig == SIGABRT)
     {
-        skiff_exception_new(ex, 1, skiff_string_allocate_new("Abnormal termination!"));
+        skiff_exception_new(ex, skiff_string_new(0, "Abnormal termination!"));
     }
     else
     {
-        skiff_exception_new(ex, 1, skiff_string_allocate_new("Error code unknown!"));
+        skiff_exception_new(ex, skiff_string_new(0, "Error code unknown!"));
         printf("signal %i\n", sig);
     }
     skiff_throw(ex);
@@ -79,15 +80,15 @@ int main(int argc, char * argv[])
     if(skiff_continue_exec_0 == 0)
     {
         skiff_list_t ** argz = skalloc_ref_stack();
-        *argz = skiff_list_allocate_new(argc);
+        *argz = skiff_list_new(0, argc);
         for(size_t i = 0; i < argc; i++)
         {
-            skiff_list_append(*argz, skiff_string_allocate_new(argv[i]));
+            skiff_list_assign_sub_int(*argz, skiff_string_new(0, argv[i]), i);
         }
         rtn = skiff_main(*argz);
     }
     skfree_ref_stack(1);
-    run_gc();
+    // run_gc();
     if(eden_ref != 0 && GC_DEBUG)
     {
         printf("Eden space not emptied!\n");

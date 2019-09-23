@@ -1,0 +1,52 @@
+class Array<T> {
+    data: List<T>;
+    cap: Int;
+    size: Int;
+
+    def Array() {
+        cap = 10;
+        size = 0; 
+        data = new List<T>(cap);
+    }
+
+    def append(elt: T) {
+        if(size + 1 > cap) {
+            expand(cap * 2);
+        }
+        data[size] = elt;
+        size++;
+    }
+
+    private def expand(newCap: Int) {
+        println("Expanding!");
+        oldData: List<T> = data;
+        data = new List<T>(newCap);
+        for(i: Int = 0; i < cap; i++) {
+            data[i] = oldData[i];
+        }
+        cap = newCap;
+    }
+
+    def removeAt(index: Int) {
+        size--;
+        for(i: Int = index; i < size; i++) {
+            data[i] = data[i + 1];
+        }
+    }
+
+    def remove() {
+        removeAt(size - 1);
+    }
+
+    def getSub(i: Int): T {
+        return data[i];
+    }
+
+    def assignSub(elt: T, i: Int) {
+        data[i] = elt;
+    }
+
+    def getSize(): Int {
+        return size;
+    }
+}

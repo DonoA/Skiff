@@ -170,6 +170,9 @@ public class CompiledType extends CompiledObject {
         CompiledType filledType = new CompiledType(getName(), isRef, dataClass)
                 .isGeneric(true);
 
+        filledType.compiledName = compiledName;
+        filledType.structName = structName;
+
         this.declaredVars.forEach(f -> {
             CompiledField post = f;
             if(f.getType().genericPlaceholder) {

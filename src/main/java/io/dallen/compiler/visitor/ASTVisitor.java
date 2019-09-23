@@ -6,7 +6,6 @@ import io.dallen.ast.AST.*;
 import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +28,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileType(Type stmt, CompileContext context) {
+
         CompiledCode typeName = stmt.name.compile(context);
         CompiledType typ = ((CompiledType) typeName.getBinding());
         if(typ == null) {
@@ -138,7 +138,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileForBlock(ForBlock stmt, CompileContext context) {
-        return null;
+        return ConditionBlockCompiler.compileFor(stmt, context);
     }
 
     public CompiledCode compileForIterBlock(ForIterBlock stmt, CompileContext context) {
@@ -273,11 +273,11 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileCaseStatement(CaseStatement stmt, CompileContext context) {
-        return null;
+        throw new UnsupportedOperationException("Case statement should not be compiled directly");
     }
 
     public CompiledCode compileCaseMatchStatement(CaseMatchStatement stmt, CompileContext context) {
-        return null;
+        throw new UnsupportedOperationException("Match case statement should not be compiled directly");
     }
 
     public CompiledCode compileBreakStatement(BreakStatement stmt, CompileContext context) {
@@ -336,13 +336,11 @@ public class ASTVisitor {
                 .map(type -> (CompiledType) type.compile(context).getBinding())
                 .collect(Collectors.toList());
         String functionName = VisitorUtils.underscoreJoin("skiff", typeCode.getName(), "new");
-        String allocateNewInstace = "(" + typeCode.getCompiledName() +
-                ") skalloc(1, sizeof(" + typeCode.getStructName() + "))";
+
         StringBuilder sb = new StringBuilder();
         sb.append(functionName).append("(");
         List<String> argz = new ArrayList<>();
-        argz.add(allocateNewInstace);
-        argz.add("1");
+        argz.add("0");
         if(stmt.argz.size() != typeCode.getConstructors().get(0).getArgs().size()) {
             context.throwError("Arg count does not match constructor!", stmt);
         }
@@ -350,7 +348,7 @@ public class ASTVisitor {
             String argType = "";
             CompiledCode argCode = stmt.argz.get(i).compile(context);
             String argText = argCode.getCompiledText();
-            if(argCode.onStack()) {
+            if(argCode.onStack() && argCode.getType().isRef()) {
                 argText = "*" + argText;
             }
             if(typeCode.getConstructors().get(0).getArgs().get(0).getType().isGenericPlaceholder()) {
@@ -410,7 +408,14 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMathAssign(MathAssign stmt, CompileContext context) {
-        return null;
+        CompiledCode lhs = stmt.left.compile(context);
+        CompiledCode rhs = stmt.right.compile(context);
+
+        String text = lhs.getCompiledText() + " = " + lhs.getCompiledText() + " " + stmt.op.getSymbol() + " " +
+                rhs.getCompiledText();
+        return new CompiledCode()
+                .withText(text)
+                .withType(lhs.getType());
     }
 
     public CompiledCode compileMathSelfMod(MathSelfMod stmt, CompileContext context) {
@@ -452,72 +457,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileAssign(Assign stmt, CompileContext context) {
-        // Vars with different names must have different stack locations
-        // Each stack location should represent exactly one named var
-        CompiledCode value = stmt.value.compile(context);
-
-        // TODO: break this out
-        if(stmt.name instanceof FunctionCall) {
-            FunctionCall func = (FunctionCall) stmt.name;
-            CompiledType intoType = (CompiledType) context.getObject(func.name);
-
-            StringBuilder sb = new StringBuilder();
-
-            String deref = (value.onStack() ? "*" : "");
-
-            for (int i = 0; i < func.args.size(); i++) {
-                if(!(func.args.get(i) instanceof Variable)) {
-                    context.throwError("Args of type deconstruction must be Variables", func.args.get(i));
-                    continue;
-                }
-                Variable v = (Variable) func.args.get(i);
-                CompiledField field = intoType.getAllFields().get(i);
-                sb.append(context.getIndent()).append(field.getType().getCompiledName());
-                if(field.getType().isRef()) {
-                    sb.append("*");
-                }
-                sb.append(" ").append(v.name);
-                if(field.getType().isRef()) {
-                    sb.append(" = skalloc_ref_stack()");
-                }
-                sb.append(";\n");
-                sb.append(context.getIndent());
-                if(field.getType().isRef()) {
-                    sb.append("*");
-                }
-                sb.append(v.name).append(" = ((").append(intoType.getCompiledName()).append(") ").append(deref)
-                        .append(value.getCompiledText()).append(")->").append(field.getName()).append(";\n");
-
-                context.declareObject(new CompiledVar(v.name, false, field.getType()));
-                if(field.getType().isRef()) {
-                    context.addRefStackSize(1);
-                }
-            }
-
-            return new CompiledCode()
-                    .withText(sb.toString())
-                    .withSemicolon(false);
-        }
-        CompiledCode name = stmt.name.compile(context);
-
-        boolean lhsDeRef = name.onStack();
-        if(name.getBinding() instanceof CompiledVar) {
-            lhsDeRef = lhsDeRef && ((CompiledVar) name.getBinding()).getType().isRef();
-        }
-
-        boolean rhsDeRef = value.onStack() && value.getType().isRef();
-
-        String cast = "";
-        if(!name.getType().getName().equals(value.getType().getName())) {
-            cast = "(" + name.getType().getCompiledName() + ")";
-        }
-
-        String text = (lhsDeRef ? "*" : "") + "(" + name.getCompiledText() + ") = " + cast +
-                (rhsDeRef ? "*" : "") + "(" + value.getCompiledText() + ")";
-        return new CompiledCode()
-            .withText(text)
-            .withBinding(name.getBinding())
-            .withType(name.getType());
+        return AssignmentCompiler.compileAssign(stmt, context);
     }
 
     public CompiledCode compileDeclare(Declare stmt, CompileContext context) {
@@ -562,7 +502,7 @@ public class ASTVisitor {
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
         return new CompiledCode()
-                .withText("skiff_string_allocate_new(\"" + stmt.value + "\")")
+                .withText("skiff_string_new(0, \"" + stmt.value + "\")")
                 .withType(BuiltinTypes.STRING);
     }
 
@@ -596,7 +536,8 @@ public class ASTVisitor {
                 compiledObject = CompiledVar.NULL;
                 onStack = false;
             } else  if(context.getContainingClass() == null) {
-                throw ex;
+                context.throwError("Undefined variable", stmt);
+                return new CompiledCode();
             } else {
                 compiledObject = context.getContainingClass().getObject(stmt.name);
                 text = "this->" + stmt.name;

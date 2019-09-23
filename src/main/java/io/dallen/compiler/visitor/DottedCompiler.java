@@ -17,7 +17,7 @@ class DottedCompiler {
         return new CompiledCode();
     }
 
-    private static CompiledCode compileFunctionDot(CompiledCode lhs, AST.FunctionCall call, CompileContext context) {
+    static CompiledCode compileFunctionDot(CompiledCode lhs, AST.FunctionCall call, CompileContext context) {
         CompiledMethod func;
 
         boolean isStatic = lhs.getBinding() instanceof CompiledType;
@@ -57,7 +57,7 @@ class DottedCompiler {
 
             String cast = "";
             String text;
-            if(arg.onStack()) {
+            if(arg.onStack() && arg.getType().isRef()) {
                 text = "*(" + arg.getCompiledText() + ")";
             } else {
                 text = arg.getCompiledText();

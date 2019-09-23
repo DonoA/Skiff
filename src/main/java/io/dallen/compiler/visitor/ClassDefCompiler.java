@@ -288,7 +288,7 @@ class ClassDefCompiler {
         CompileContext ctrContext = new CompileContext(context).addIndent();
         CompiledFunction ctr = cls.getConstructors().get(0);
         text.append(cls.getCompiledName()).append(" ").append(ctr.getCompiledName())
-                .append("(").append(cls.getCompiledName()).append(" this, int new_inst");
+                .append("(").append(cls.getCompiledName()).append(" this");
 
         cls.getAllFields()
                 .stream()

@@ -46,7 +46,7 @@ public class EnrichLexer {
                 int index = i + 2;
                 while(true) {
                     table.defineIdent(tokens.get(index + 1).literal, Token.IdentifierType.TYPE);
-                    int nextIndex = indexOfNext(index, Token.Symbol.COMMA);
+                    int nextIndex = indexOfNext(index, Token.Symbol.COMMA, Token.Symbol.RIGHT_ANGLE);
                     if(nextIndex == -1) {
                         i = index;
                         break;
@@ -90,10 +90,13 @@ public class EnrichLexer {
                 .collect(Collectors.toList());
     }
 
-    private int indexOfNext(int start, Token.TokenType typ) {
+    private int indexOfNext(int start, Token.TokenType search, Token.TokenType blockEnd) {
         for (int i = start; i < tokens.size(); i++) {
-            if(tokens.get(i).type == typ) {
+            if(tokens.get(i).type == search) {
                 return i;
+            }
+            if(tokens.get(i).type == blockEnd) {
+                return -1;
             }
         }
         return -1;

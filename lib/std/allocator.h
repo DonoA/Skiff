@@ -144,7 +144,7 @@ size_t skiff_size(skiff_any_ref_t * item)
     }
     if(item->class_ptr == (skiff_any_ref_class_t *) &skiff_list_interface)
     {
-        size += sizeof(void *) * (((skiff_list_t *) item)->_cap);
+        size += sizeof(void *) * (((skiff_list_t *) item)->size);
     }
     return size;
 }

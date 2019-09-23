@@ -36,22 +36,18 @@ void skiff_string_static()
     skiff_string_interface.equals = skiff_string_equals;
 }
 
-skiff_string_t * skiff_string_new(skiff_string_t * this, int new_inst, char * cstr)
+skiff_string_t * skiff_string_new(skiff_string_t * this, char * cstr)
 {
     skiff_string_static();
-    if(new_inst) { 
+    size_t len = strlen(cstr);
+    if(this == 0) {
+        this = skalloc(1, sizeof(skiff_string_t) + sizeof(char) * (len + 1));
         this->class_ptr = &skiff_string_interface;
     }
     this->len = strlen(cstr);
     this->data = (char *) (this + 1);
     strcpy(this->data, cstr);
     return this;
-}
-
-skiff_string_t * skiff_string_allocate_new(char * cstr)
-{
-    size_t len = strlen(cstr);
-    return skiff_string_new((skiff_string_t *) skalloc(1, sizeof(skiff_string_t) + sizeof(char) * (len + 1)), 1, cstr);
 }
 
 bool skiff_string_equals(skiff_string_t * s1, skiff_string_t * s2) 

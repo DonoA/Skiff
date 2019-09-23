@@ -15,8 +15,13 @@ class FunctionCallCompiler {
         try {
             func = context.getScope().getFunction(stmt.name);
         } catch(CompileException | NoSuchElementException ex) {
-            context.throwError(ex.getMessage(), stmt);
-            return new CompiledCode();
+            if(context.getContainingClass() == null) {
+                context.throwError(ex.getMessage(), stmt);
+                return new CompiledCode();
+            }
+
+            AST.Variable self = new AST.Variable("this", stmt.tokens);
+            return DottedCompiler.compileFunctionDot(self.compile(context), stmt, context);
         }
 
         List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(context))

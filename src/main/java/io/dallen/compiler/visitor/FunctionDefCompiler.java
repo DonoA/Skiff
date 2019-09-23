@@ -48,7 +48,14 @@ class FunctionDefCompiler {
                 .stream()
                 .map(e -> {
                     CompiledCode arg = e.compile(context);
-                    return new CompiledVar(e.name, false, arg.getType());
+                    List<CompiledType> genericType = e.type.genericTypes
+                            .stream()
+                            .map(gt -> gt.compile(context).getBinding())
+                            .map(gt -> (CompiledType) gt)
+                            .collect(Collectors.toList());
+
+                    CompiledType filledType = arg.getType().fillGenericTypes(genericType);
+                    return new CompiledVar(e.name, false, filledType);
                 })
                 .collect(Collectors.toList());
 
@@ -72,10 +79,6 @@ class FunctionDefCompiler {
 
         if(context.getContainingClass() != null && !isStatic) {
             stringArgs.add(context.getContainingClass().getCompiledName() + " this");
-        }
-
-        if(func.isConstructor()) {
-            stringArgs.add("int new_inst");
         }
 
         stringArgs.addAll(stmt.args
@@ -102,7 +105,7 @@ class FunctionDefCompiler {
 
         CompiledFunction func = createCompiledFunc(isConstructor, stmt, context, innerContext);
 
-        if(!isConstructor) {
+        if(context.getContainingClass() == null) {
             context.declareObject(func);
         }
 
@@ -179,12 +182,19 @@ class FunctionDefCompiler {
 
     static String initiateInstance(CompiledType cls, CompileContext innerContext) {
         String className = cls.getName();
+        String innerIndent = innerContext.getIndent() + CompileContext.INDENT;
 
         return innerContext.getIndent() +
                 VisitorUtils.underscoreJoin("skiff", className, "static") +
                 "();\n" +
                 innerContext.getIndent() +
-                "if(new_inst) { \n" +
+                "if(this == 0) \n" +
+                 innerContext.getIndent() +
+                "{ \n" +
+                innerIndent +
+                "this = skalloc(1, sizeof(" +
+                cls.getStructName() +
+                "));\n" +
                 innerContext.getIndent() + CompileContext.INDENT +
                 "this->class_ptr = &" +
                 cls.getInterfaceName()
