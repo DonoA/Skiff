@@ -385,8 +385,11 @@ public class ASTVisitor {
 
         String currentFile = context.getFilename();
         context.setFilename(stmt.value);
+        String currentText = context.getCode();
+        context.setCode(importText);
         Optional<String> importCode = SkiffC.compile(importText, context);
         context.setFilename(currentFile);
+        context.setCode(currentText);
 
         if(importCode.isEmpty()) {
             return new CompiledCode();

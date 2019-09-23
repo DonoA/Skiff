@@ -17,7 +17,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     private final CompileContext parent;
     private final List<String> errors;
     private final List<String> dependents;
-    private final String code;
+    private String code;
     private String scopePrefix = "";
     private CompiledType containingClass = null;
     private int globalCounter = 1;
@@ -177,6 +177,10 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         return debug;
     }
 
+    public void setCode(String code) {
+        this.code = code;
+    }
+
     @Override
     public void throwError(String msg, AST.Statement stmt) {
         if(parent == null) {
@@ -192,5 +196,9 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
             return errors;
         }
         return parent.getErrors();
+    }
+
+    public String getCode() {
+        return code;
     }
 }
