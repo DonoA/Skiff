@@ -458,7 +458,7 @@ public class ASTVisitor {
 
     public CompiledCode compileSubscript(Subscript stmt, CompileContext context) {
         CompiledCode left = stmt.left.compile(context);
-        CompiledFunction subscrCall = left.getType().getMethod("getSub");
+        CompiledFunction subscrCall = left.getType().getMethod("getSub", List.of(BuiltinTypes.INT));
         CompiledCode sub = stmt.sub.compile(context);
         String name = (left.onStack() ? "(*" : "(") + left.getCompiledText() + ")";
 
@@ -543,9 +543,10 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileVariable(Variable stmt, CompileContext context) {
-        CompiledObject compiledObject;
+        CompiledObject compiledObject = null;
         String text = stmt.name;
         boolean onStack = true;
+        CompiledType objType = null;
         try {
             compiledObject = context.getObject(stmt.name);
             if(compiledObject instanceof CompiledVar) {
@@ -561,15 +562,21 @@ public class ASTVisitor {
                 context.throwError("Undefined variable", stmt);
                 return new CompiledCode();
             } else {
-                compiledObject = context.getContainingClass().getObject(stmt.name);
+                try {
+                    compiledObject = context.getContainingClass().getField(stmt.name);
+                } catch (NoSuchElementException ex2) {
+                    context.throwError("Undefined variable", stmt);
+                    return new CompiledCode();
+                }
                 text = "this->" + stmt.name;
                 onStack = false;
             }
         }
-        CompiledType objType = BuiltinTypes.CLASS;
+        objType = BuiltinTypes.CLASS;
         if (compiledObject instanceof CompiledVar) {
             objType = ((CompiledVar) compiledObject).getType();
         }
+
         return new CompiledCode()
                 .withText(text)
                 .withBinding(compiledObject)

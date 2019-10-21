@@ -9,15 +9,13 @@ public class CompiledType extends CompiledObject {
 
     private final boolean isRef;
     // order is vital for both declared vars and declared functions
-    private List<CompiledField> declaredVars = new ArrayList<>();
-    private List<CompiledField> declaredVarStructOrder = new ArrayList<>();
-    private List<CompiledMethod> declaredMethods = new ArrayList<>();
-    private List<CompiledFunction> constructors = new ArrayList<>();
+    private final List<CompiledField> declaredVars = new ArrayList<>();
+    private final List<CompiledField> declaredVarStructOrder = new ArrayList<>();
+    private final List<CompiledMethod> declaredMethods = new ArrayList<>();
+    private final List<CompiledFunction> constructors = new ArrayList<>();
 
-    private Map<String, CompiledField> declaredVarMap = new HashMap<>();
-    private Map<String, CompiledMethod> declaredMethodMap = new HashMap<>();
-    private Map<String, CompiledMethod> staticMethodMap = new HashMap<>();
-    private Map<String, CompiledField> staticFieldMap = new HashMap<>();
+    private final CompileScope declaredScope = new CompileScope(null);
+    private CompileScope staticScope = new CompileScope(null);
 
     private List<String> genericOrder = new ArrayList<>();
     private CompiledType parent = null;
@@ -45,54 +43,73 @@ public class CompiledType extends CompiledObject {
         return this.structName;
     }
 
-    public CompiledObject getObject(String name) {
-        CompiledMethod method = getMethod(name);
-        if(method != null) {
-            return method;
-        }
-        return getField(name);
-    }
-
     public CompiledType addField(CompiledField obj) {
         declaredVars.add(obj);
-        declaredVarMap.put(obj.getName(), obj);
+        declaredScope.declareObject(obj);
         return this;
     }
 
+    public boolean hasField(String name) {
+        try {
+            declaredScope.getObject(name);
+        } catch(NoSuchElementException ex) {
+            return false;
+        }
+        return true;
+    }
+
     public CompiledField getField(String name) {
-        return declaredVarMap.get(name);
+        return (CompiledField) declaredScope.getObject(name);
     }
 
     public CompiledType addMethod(CompiledMethod obj) {
         declaredMethods.add(obj);
-        declaredMethodMap.put(obj.getName(), obj);
+        declaredScope.declareFunction(obj);
         return this;
     }
 
-    public CompiledMethod getMethod(String name) {
-        return declaredMethodMap.get(name);
+    public CompiledMethod getMethod(String name, List<CompiledType> args) {
+        return (CompiledMethod) declaredScope.getFunction(name, args);
+    }
+
+    public boolean hasMethod(String name, List<CompiledType> args) {
+        try {
+            declaredScope.getFunction(name, args);
+        } catch(NoSuchElementException ex) {
+            return false;
+        }
+        return true;
     }
 
     public CompiledType addStaticMethod(CompiledMethod obj) {
-        staticMethodMap.put(obj.getName(), obj);
+        staticScope.declareFunction(obj);
         return this;
     }
 
-    public CompiledMethod getStaticMethod(String name) {
-        return staticMethodMap.get(name);
+    public CompiledMethod getStaticMethod(String name, List<CompiledType> args) {
+        return (CompiledMethod) staticScope.getFunction(name, args);
     }
 
-    public Collection<CompiledMethod> getAllStaticMethods() {
-        return staticMethodMap.values();
+    public boolean hasStaticMethod(String name, List<CompiledType> args) {
+        try {
+            staticScope.getFunction(name, args);
+        } catch(NoSuchElementException ex) {
+            return false;
+        }
+        return true;
+    }
+
+    public List<CompiledMethod> getAllStaticMethods() {
+        return (List) staticScope.getAllFuncs();
     }
 
     public CompiledType addStaticField(CompiledField obj) {
-        staticFieldMap.put(obj.getName(), obj);
+        staticScope.declareObject(obj);
         return this;
     }
 
     public CompiledField getStaticField(String name) {
-        return staticFieldMap.get(name);
+        return (CompiledField) staticScope.getObject(name);
     }
 
     public CompiledType addConstructor(CompiledFunction func) {
@@ -108,8 +125,8 @@ public class CompiledType extends CompiledObject {
         return this.declaredVars;
     }
 
-    public Collection<CompiledField> getAllStaticFields() {
-        return this.staticFieldMap.values();
+    public List<CompiledField> getAllStaticFields() {
+        return (List) staticScope.getAllVars();
     }
 
     public List<CompiledMethod> getAllMethods() {

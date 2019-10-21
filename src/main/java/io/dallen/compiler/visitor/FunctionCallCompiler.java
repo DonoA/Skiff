@@ -6,14 +6,19 @@ import io.dallen.compiler.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 class FunctionCallCompiler {
 
     static CompiledCode compileFunctionCall(AST.FunctionCall stmt, CompileContext context) {
+        List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(context))
+                .collect(Collectors.toList());
+
         CompiledFunction func;
         try {
-            func = context.getScope().getFunction(stmt.name);
+            func = context.getScope().getFunction(stmt.name,
+                    compArgs.stream().map(CompiledCode::getType).collect(Collectors.toList()));
         } catch(CompileException | NoSuchElementException ex) {
             if(context.getContainingClass() == null) {
                 context.throwError(ex.getMessage(), stmt);
@@ -22,21 +27,6 @@ class FunctionCallCompiler {
 
             AST.Variable self = new AST.Variable("this", stmt.tokens);
             return DottedCompiler.compileFunctionDot(self.compile(context), stmt, context);
-        }
-
-        List<CompiledCode> compArgs = stmt.args.stream().map(e -> e.compile(context))
-                .collect(Collectors.toList());
-
-        if (func.getArgs().size() != compArgs.size()) {
-            context.throwError("Differing param count", stmt);
-        }
-
-        for (int i = 0; i < func.getArgs().size(); i++) {
-            CompiledType expected = func.getArgs().get(i).getType();
-            CompiledType found = compArgs.get(i).getType();
-            if (!expected.equals(found)) {
-                context.throwError("Differing param types", stmt.args.get(i));
-            }
         }
 
         boolean isSuper = stmt.name.equals("super");

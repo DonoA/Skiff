@@ -3,6 +3,9 @@ package io.dallen.compiler.visitor;
 import io.dallen.ast.AST;
 import io.dallen.compiler.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 class DottedCompiler {
 
     static CompiledCode compileDotted(AST.Dotted stmt, CompileContext context) {
@@ -20,12 +23,19 @@ class DottedCompiler {
     static CompiledCode compileFunctionDot(CompiledCode lhs, AST.FunctionCall call, CompileContext context) {
         CompiledMethod func;
 
+        List<CompiledCode> compiledArgs = call.args
+                .stream()
+                .map(arg->arg.compile(context))
+                .collect(Collectors.toList());
+
+        List<CompiledType> compArgTypes = compiledArgs.stream().map(CompiledCode::getType).collect(Collectors.toList());
+
         boolean isStatic = lhs.getBinding() instanceof CompiledType;
         if(isStatic) {
             CompiledType clazz = (CompiledType) lhs.getBinding();
-            func = clazz.getStaticMethod(call.name);
+            func = clazz.getStaticMethod(call.name, compArgTypes);
         } else {
-            func = lhs.getType().getMethod(call.name);
+            func = lhs.getType().getMethod(call.name, compArgTypes);
         }
 
         if(func == null) {
@@ -53,8 +63,7 @@ class DottedCompiler {
         }
 
         for (int i = 0; i < call.args.size(); i++) {
-            CompiledCode arg = call.args.get(i).compile(context);
-
+            CompiledCode arg = compiledArgs.get(i);
             String cast = "";
             String text;
             if(arg.onStack() && arg.getType().isRef()) {

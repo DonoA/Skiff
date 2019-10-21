@@ -4,10 +4,7 @@ import io.dallen.ast.AST;
 import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 class ClassDefCompiler {
@@ -122,7 +119,7 @@ class ClassDefCompiler {
 
         cls.getAllFields().forEach(f -> {
             String fName = capNameFor(f.getName());
-            if(cls.getParent().getField(f.getName()) != null) {
+            if(cls.getParent().hasField(f.getName())) {
                 return;
             }
 
@@ -190,12 +187,12 @@ class ClassDefCompiler {
         // Copy in parent fields to ensure order is maintained
         cls.getParent().getDeclaredVarStructOrder()
                 .stream()
-                .filter(f->cls.getField(f.getName()) == null)
+                .filter(f -> !cls.hasField(f.getName()))
                 .forEach(f -> cls.addToDeclaredVarStructOrder(new CompiledField(f, false, f.isPrivate())));
 
         cls.getParent().getAllFields()
                 .stream()
-                .filter(f->cls.getField(f.getName()) == null)
+                .filter(f->!cls.hasField(f.getName()))
                 .forEach(f -> cls.addField(new CompiledField(f, false, f.isPrivate())));
 
         // Copy in declared fields
@@ -226,7 +223,8 @@ class ClassDefCompiler {
         // Copy in declared methods if they were not already copied in above
         declaredMethods.values()
                 .stream()
-                .filter(v->cls.getMethod(v.getName()) == null)
+                .filter(v -> !cls.hasMethod(v.getName(),
+                        v.getArgs().stream().map(CompiledVar::getType).collect(Collectors.toList())))
                 .forEach(v -> cls.addMethod(new CompiledMethod(v, true, v.isPrivate())));
 
         if(cls.isDataClass()) {
@@ -327,7 +325,7 @@ class ClassDefCompiler {
                 .forEach(f -> {
 
             String fName = capNameFor(f.getName());
-            CompiledMethod getter = cls.getMethod("get" + fName);
+            CompiledMethod getter = cls.getMethod("get" + fName, List.of());
             text.append(getter.getReturns().getCompiledName()).append(" ")
                     .append(getter.getCompiledName())
                     .append("(").append(cls.getCompiledName()).append("this)\n")
@@ -335,7 +333,7 @@ class ClassDefCompiler {
                     .append(CompileContext.INDENT).append("return (this)->").append(f.getName()).append(";\n")
                     .append("}\n");
 
-            CompiledMethod setter = cls.getMethod("set" + fName);
+            CompiledMethod setter = cls.getMethod("set" + fName, List.of(f.getType()));
             text.append("void").append(" ")
                     .append(setter.getCompiledName())
                     .append("(").append(cls.getCompiledName()).append("this, ")
@@ -352,17 +350,30 @@ class ClassDefCompiler {
                 .filter(f -> f instanceof AST.FunctionDef)
                 .map(f -> (AST.FunctionDef) f)
                 .map(f -> {
-                    CompiledMethod m = cls.getMethod(f.name);
+                    // TODO: refactor out this double computation
+                    CompileContext genericContext = new CompileContext(context);
+                    f.genericTypes.forEach(generic -> {
+                        genericContext.declareObject(new CompiledType(generic.name, true, false)
+                                .setCompiledName("void *")
+                                .isGenericPlaceholder(true)
+                                .isGeneric(true));
+                    });
+                    List<CompiledType> args = f.args.stream()
+                            .map(a -> a.compile(genericContext))
+                            .map(CompiledCode::getType)
+                            .collect(Collectors.toList());
 
-                    if(m == null) {
-                        m = cls.getStaticMethod(f.name);
+                    CompiledMethod m;
+                    if(cls.hasMethod(f.name, args)) {
+                        m = cls.getMethod(f.name, args);
+                    } else if(cls.hasStaticMethod(f.name, args)) {
+                        m = cls.getStaticMethod(f.name, args);
+                    } else {
+                        return FunctionDefCompiler.compileFunctionDef(cls.getConstructors().get(0), f, context);
                     }
 
-                    if(m != null) {
-                        return FunctionDefCompiler.compileFunctionDef(m, f, context);
-                    }
+                    return FunctionDefCompiler.compileFunctionDef(m, f, context);
 
-                    return FunctionDefCompiler.compileFunctionDef(cls.getConstructors().get(0), f, context);
                 })
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.joining("\n\n"));

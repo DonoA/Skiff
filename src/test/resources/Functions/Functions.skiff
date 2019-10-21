@@ -1,0 +1,8 @@
+def myFunc(arg: Int, arg2: String): Int {
+    println(arg2);
+    return arg;
+}
+
+def main(args: List<String>): Int {
+    return myFunc(2, "Hello World!");
+}

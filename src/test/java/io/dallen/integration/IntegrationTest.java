@@ -102,4 +102,15 @@ public class IntegrationTest {
         );
         assertEquals(expected, actual);
     }
+
+    @org.junit.Test
+    public void functions() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Functions");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                2, "Hello World!\n", ""
+        );
+        assertEquals(expected, actual);
+    }
 }

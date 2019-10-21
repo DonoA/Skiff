@@ -3,6 +3,8 @@ package io.dallen.compiler.visitor;
 import io.dallen.ast.AST;
 import io.dallen.compiler.*;
 
+import java.util.List;
+
 public class AssignmentCompiler {
     static CompiledCode compileAssign(AST.Assign stmt, CompileContext context) {
         // Vars with different names must have different stack locations
@@ -66,7 +68,8 @@ public class AssignmentCompiler {
     private static CompiledCode compileSubscript(CompiledCode value, AST.Subscript stmt, CompileContext context) {
         CompiledCode left = stmt.left.compile(context);
 
-        CompiledFunction subscrCall = left.getType().getMethod("assignSub");
+        CompiledFunction subscrCall = left.getType().getMethod("assignSub",
+                List.of(value.getType(), BuiltinTypes.INT));
         CompiledCode sub = stmt.sub.compile(context);
         String name = (left.onStack() ? "(*" : "(") + left.getCompiledText() + ")";
 

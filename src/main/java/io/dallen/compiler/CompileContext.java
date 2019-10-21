@@ -66,6 +66,10 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public void declareObject(CompiledObject decVar) {
+        if(decVar instanceof CompiledFunction) {
+            scope.declareFunction((CompiledFunction) decVar);
+            return;
+        }
         scope.declareObject(decVar);
     }
 
