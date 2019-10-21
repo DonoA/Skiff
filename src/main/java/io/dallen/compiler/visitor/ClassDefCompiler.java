@@ -84,7 +84,14 @@ class ClassDefCompiler {
             boolean isStatic = dec.modifiers.contains(ASTEnums.DecModType.STATIC);
             boolean isPrivate = dec.modifiers.contains(ASTEnums.DecModType.PRIVATE);
             boolean isConstructor = dec.name.equals(cls.getName());
-            CompiledMethod func = createCompiledFunc(dec, isConstructor, isStatic, isPrivate, innerContext);
+            CompileContext genericContext = new CompileContext(innerContext);
+            dec.genericTypes.forEach(generic -> {
+                genericContext.declareObject(new CompiledType(generic.name, true, false)
+                        .setCompiledName("void *")
+                        .isGenericPlaceholder(true)
+                        .isGeneric(true));
+            });
+            CompiledMethod func = createCompiledFunc(dec, isConstructor, isStatic, isPrivate, genericContext);
             if(isStatic) {
                 cls.addStaticMethod(func);
             } else if(isConstructor) {
@@ -141,7 +148,7 @@ class ClassDefCompiler {
         // Declare generic order
         stmt.genericTypes.forEach(generic -> {
             cls.addGeneric(generic.name);
-            innerContext.declareObject(new CompiledType(generic.name, null, true, false)
+            innerContext.declareObject(new CompiledType(generic.name, true, false)
                     .setCompiledName("void *")
                     .isGenericPlaceholder(true)
                     .isGeneric(true));
@@ -156,7 +163,7 @@ class ClassDefCompiler {
 
     private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext)
             throws CompileException {
-        CompiledType cls = new CompiledType(stmt.name, stmt, true, stmt.isStruct);
+        CompiledType cls = new CompiledType(stmt.name, true, stmt.isStruct);
 
         // Set parent class or default if none found
         stmt.extendClass.ifPresentOrElse(
@@ -229,9 +236,7 @@ class ClassDefCompiler {
         return cls;
     }
 
-    static CompiledCode compileClassInstance(CompiledType cls, CompileContext context) {
-
-        AST.ClassDef stmt = cls.getOriginalDef();
+    static CompiledCode compileClassInstance(AST.ClassDef stmt, CompiledType cls, CompileContext context) {
 
         String headerComment = "\n\n///////////////////// Start Class " + cls.getName() + " /////////////////////////\n\n";
 
@@ -288,7 +293,7 @@ class ClassDefCompiler {
 
         innerContext.setContainingClass(cls);
 
-        return compileClassInstance(cls, innerContext);
+        return compileClassInstance(stmt, cls, innerContext);
     }
 
     private static String getDataClassCode(CompiledType cls, CompileContext context) {
@@ -354,11 +359,10 @@ class ClassDefCompiler {
                     }
 
                     if(m != null) {
-                        return FunctionDefCompiler.compileFunctionDef(m, f.modifiers, f.body, f.returns, context);
+                        return FunctionDefCompiler.compileFunctionDef(m, f, context);
                     }
 
-                    return FunctionDefCompiler.compileFunctionDef(cls.getConstructors().get(0), f.modifiers, f.body,
-                            f.returns, context);
+                    return FunctionDefCompiler.compileFunctionDef(cls.getConstructors().get(0), f, context);
                 })
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.joining("\n\n"));

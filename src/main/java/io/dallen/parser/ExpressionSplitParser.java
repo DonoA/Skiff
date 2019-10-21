@@ -72,7 +72,8 @@ class ExpressionSplitParser {
 
     private static SplitAction compareAction(ASTEnums.CompareOp op) {
         return (parser, first, second, tokens) -> {
-            if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE) {
+            if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE ||
+                    first.stream().anyMatch(t -> t.type == Token.Symbol.LEFT_ANGLE)) {
                 return null;
             }
 

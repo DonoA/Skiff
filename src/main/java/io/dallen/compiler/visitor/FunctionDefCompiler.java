@@ -33,23 +33,32 @@ class FunctionDefCompiler {
 
     private static CompiledFunction createCompiledFunc(boolean isConstructor, AST.FunctionDef stmt, CompileContext context) {
 
-        CompiledCode returns = stmt.returns.compile(context);
+        CompileContext innerContext = new CompileContext(context);
+
+        stmt.genericTypes.forEach(generic -> {
+            innerContext.declareObject(new CompiledType(generic.name, true, false)
+                    .setCompiledName("void *")
+                    .isGenericPlaceholder(true)
+                    .isGeneric(true));
+        });
+
+        CompiledCode returns = stmt.returns.compile(innerContext);
 
         if(!returns.getBinding().equals(BuiltinTypes.VOID) && isConstructor) {
-            context.throwError("Constructor must return void", stmt);
+            innerContext.throwError("Constructor must return void", stmt);
         }
 
         boolean isStatic = stmt.modifiers.contains(ASTEnums.DecModType.STATIC);
 
-        String compiledName = generateFuncName(isConstructor, isStatic, stmt.name, context);
+        String compiledName = generateFuncName(isConstructor, isStatic, stmt.name, innerContext);
 
         List<CompiledVar> compiledArgs = stmt.args
                 .stream()
                 .map(e -> {
-                    CompiledCode arg = e.compile(context);
+                    CompiledCode arg = e.compile(innerContext);
                     List<CompiledType> genericType = e.type.genericTypes
                             .stream()
-                            .map(gt -> gt.compile(context).getBinding())
+                            .map(gt -> gt.compile(innerContext).getBinding())
                             .map(gt -> (CompiledType) gt)
                             .collect(Collectors.toList());
 
@@ -95,21 +104,27 @@ class FunctionDefCompiler {
         return sb.toString();
     }
 
-    static CompiledCode compileFunctionDef(CompiledFunction func, List<ASTEnums.DecModType> modifiers,
-                                           List<AST.Statement> body, AST.Statement returns, CompileContext context) {
+    static CompiledCode compileFunctionDef(CompiledFunction func, AST.FunctionDef dec, CompileContext context) {
         CompileContext innerContext = new CompileContext(context, true)
                 .addIndent();
+
+        dec.genericTypes.forEach(generic -> {
+            innerContext.declareObject(new CompiledType(generic.name, true, false)
+                    .setCompiledName("void *")
+                    .isGenericPlaceholder(true)
+                    .isGeneric(true));
+        });
 
         func.getArgs().forEach(innerContext::declareObject);
 
         StringBuilder functionCode = new StringBuilder();
 
-        functionCode.append(generateSig(modifiers, func, context));
+        functionCode.append(generateSig(dec.modifiers, func, context));
         functionCode.append("\n")
                 .append(context.getIndent()).append("{\n");
 
         if(func.getName().equals("main")) {
-            injectSetup(functionCode, func, returns, innerContext);
+            injectSetup(functionCode, func, dec.returns, innerContext);
         }
 
         if(func.isConstructor()) {
@@ -118,12 +133,12 @@ class FunctionDefCompiler {
 
         injectFormalCopy(functionCode, func, innerContext);
 
-        body.forEach(VisitorUtils.compileToStringBuilder(functionCode, innerContext));
+        dec.body.forEach(VisitorUtils.compileToStringBuilder(functionCode, innerContext));
 
         Optional<AST.Return> returnOptional = Optional.empty();
 
-        if(body.size() > 0 && body.get(body.size() - 1) instanceof AST.Return) {
-            returnOptional = Optional.of((AST.Return) body.get(body.size() - 1));
+        if(dec.body.size() > 0 && dec.body.get(dec.body.size() - 1) instanceof AST.Return) {
+            returnOptional = Optional.of((AST.Return) dec.body.get(dec.body.size() - 1));
         }
 
         if(returnOptional.isEmpty() && !func.getReturns().equals(BuiltinTypes.VOID)) {
@@ -160,7 +175,7 @@ class FunctionDefCompiler {
             return new CompiledCode();
         }
 
-        return compileFunctionDef(func, stmt.modifiers, stmt.body, stmt.returns, context);
+        return compileFunctionDef(func, stmt, context);
     }
 
     private static void injectFormalCopy(StringBuilder functionCode, CompiledFunction func, CompileContext innerContext) {

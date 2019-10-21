@@ -1,6 +1,5 @@
 package io.dallen.compiler;
 
-import io.dallen.ast.AST;
 import io.dallen.compiler.visitor.VisitorUtils;
 
 import java.util.*;
@@ -31,9 +30,7 @@ public class CompiledType extends CompiledObject {
     private boolean generic = false;
     private final boolean dataClass;
 
-    private final AST.ClassDef originalDef;
-
-    public CompiledType(String className, AST.ClassDef stmt, boolean ref, boolean dataClass) {
+    public CompiledType(String className, boolean ref, boolean dataClass) {
         super(className);
         this.structName = VisitorUtils.underscoreJoin("skiff", className, "t");
         this.interfaceName = VisitorUtils.underscoreJoin("skiff", className, "interface");
@@ -42,7 +39,6 @@ public class CompiledType extends CompiledObject {
         this.compiledName = this.structName + (ref ? " *" : "");
         this.isRef = ref;
         this.dataClass = dataClass;
-        this.originalDef = stmt;
     }
 
     public String getStructName() {
@@ -181,7 +177,7 @@ public class CompiledType extends CompiledObject {
             name = name + appends;
         }
 
-        CompiledType filledType = new CompiledType(name, originalDef, isRef, dataClass)
+        CompiledType filledType = new CompiledType(name, isRef, dataClass)
                 .isGeneric(true)
                 .setParent(parent);
 
@@ -278,9 +274,5 @@ public class CompiledType extends CompiledObject {
 
     public void addToDeclaredVarStructOrder(CompiledField f) {
         this.declaredVarStructOrder.add(f);
-    }
-
-    public AST.ClassDef getOriginalDef() {
-        return originalDef;
     }
 }
