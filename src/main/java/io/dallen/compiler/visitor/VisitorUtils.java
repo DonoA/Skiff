@@ -43,10 +43,13 @@ public class VisitorUtils {
 
     static void cleanupScope(StringBuilder sb, CompileContext context, boolean indent) {
         if(context.isDebug()) {
+            if(indent) {
+                sb.append(context.getIndent());
+            }
             sb.append("// Cleanup scope\n");
         }
 
-        if(indent) {
+        if(indent || context.isDebug()) {
             sb.append(context.getIndent());
         }
         sb.append("skfree_ref_stack(").append(context.getRefStackSize()).append(");\n");

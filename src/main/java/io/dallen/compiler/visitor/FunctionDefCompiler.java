@@ -25,14 +25,13 @@ class FunctionDefCompiler {
         }
 
         if(isStatic) {
-            return VisitorUtils.underscoreJoin("skiff", "static", stmtName);
+            return VisitorUtils.underscoreJoin("skiff", "static", context.getScopePrefix(), stmtName);
         }
 
         return VisitorUtils.underscoreJoin("skiff", context.getScopePrefix(), stmtName);
     }
 
-    private static CompiledFunction createCompiledFunc(boolean isConstructor, AST.FunctionDef stmt, CompileContext context,
-                                                       CompileContext innerContext) {
+    private static CompiledFunction createCompiledFunc(boolean isConstructor, AST.FunctionDef stmt, CompileContext context) {
 
         CompiledCode returns = stmt.returns.compile(context);
 
@@ -54,19 +53,16 @@ class FunctionDefCompiler {
                             .map(gt -> (CompiledType) gt)
                             .collect(Collectors.toList());
 
-                    CompiledType filledType = arg.getType().fillGenericTypes(genericType);
+                    CompiledType filledType = arg.getType().fillGenericTypes(genericType, false);
                     return new CompiledVar(e.name, false, filledType);
                 })
                 .collect(Collectors.toList());
-
-
-        compiledArgs.forEach(innerContext::declareObject);
 
         return new CompiledFunction(stmt.name, compiledName, isConstructor, (CompiledType) returns.getBinding(),
                 compiledArgs);
     }
 
-    private static String generateSig(AST.FunctionDef stmt, CompiledFunction func, CompileContext context) {
+    private static String generateSig(List<ASTEnums.DecModType> modTypes, CompiledFunction func, CompileContext context) {
         StringBuilder sb = new StringBuilder();
         sb.append(generateReturnType(func.isConstructor(), context, func.getReturns()));
         sb.append(" ");
@@ -75,16 +71,21 @@ class FunctionDefCompiler {
 
         List<String> stringArgs = new ArrayList<>();
 
-        boolean isStatic = stmt.modifiers.contains(ASTEnums.DecModType.STATIC);
+        boolean isStatic = modTypes.contains(ASTEnums.DecModType.STATIC);
 
         if(context.getContainingClass() != null && !isStatic) {
             stringArgs.add(context.getContainingClass().getCompiledName() + " this");
         }
 
-        stringArgs.addAll(stmt.args
+        stringArgs.addAll(func.getArgs()
                 .stream()
-                .map(e -> e.compile(context))
-                .map(CompiledCode::getCompiledText)
+                .map(arg -> {
+                    String prefix = "";
+                    if(arg.getType().isRef()) {
+                        prefix = "formal_";
+                    }
+                    return arg.getType().getCompiledName() + " " + prefix + arg.getName();
+                })
                 .collect(Collectors.toList()));
 
         sb.append(String.join(", ", stringArgs));
@@ -94,45 +95,35 @@ class FunctionDefCompiler {
         return sb.toString();
     }
 
-    static CompiledCode compileFunctionDef(AST.FunctionDef stmt, CompileContext context) {
-        StringBuilder functionCode = new StringBuilder();
-
-        boolean isConstructor = context.getContainingClass() != null &&
-                stmt.name.equals(context.getContainingClass().getName());
-
+    static CompiledCode compileFunctionDef(CompiledFunction func, List<ASTEnums.DecModType> modifiers,
+                                           List<AST.Statement> body, AST.Statement returns, CompileContext context) {
         CompileContext innerContext = new CompileContext(context, true)
                 .addIndent();
 
-        CompiledFunction func = createCompiledFunc(isConstructor, stmt, context, innerContext);
+        func.getArgs().forEach(innerContext::declareObject);
 
-        if(context.getContainingClass() == null) {
-            context.declareObject(func);
-        }
+        StringBuilder functionCode = new StringBuilder();
 
-        if(stmt.modifiers.contains(ASTEnums.DecModType.NATIVE)) {
-            return new CompiledCode();
-        }
-
-        functionCode.append(generateSig(stmt, func, context));
+        functionCode.append(generateSig(modifiers, func, context));
         functionCode.append("\n")
                 .append(context.getIndent()).append("{\n");
 
         if(func.getName().equals("main")) {
-            injectSetup(functionCode, stmt, func, innerContext);
+            injectSetup(functionCode, func, returns, innerContext);
         }
 
-        if(isConstructor) {
+        if(func.isConstructor()) {
             functionCode.append(initiateInstance(context.getContainingClass(), innerContext));
         }
 
         injectFormalCopy(functionCode, func, innerContext);
 
-        stmt.body.forEach(VisitorUtils.compileToStringBuilder(functionCode, innerContext));
+        body.forEach(VisitorUtils.compileToStringBuilder(functionCode, innerContext));
 
         Optional<AST.Return> returnOptional = Optional.empty();
 
-        if(stmt.body.size() > 0 && stmt.body.get(stmt.body.size() - 1) instanceof AST.Return) {
-            returnOptional = Optional.of((AST.Return) stmt.body.get(stmt.body.size() - 1));
+        if(body.size() > 0 && body.get(body.size() - 1) instanceof AST.Return) {
+            returnOptional = Optional.of((AST.Return) body.get(body.size() - 1));
         }
 
         if(returnOptional.isEmpty() && !func.getReturns().equals(BuiltinTypes.VOID)) {
@@ -140,7 +131,7 @@ class FunctionDefCompiler {
 //            context.throwError("Function with non void return type must end with a return statement", stmt);
         }
 
-        functionCode.append(generateReturns(returnOptional, isConstructor, context, innerContext));
+        functionCode.append(generateReturns(returnOptional, func.isConstructor(), context, innerContext));
 
         StringBuilder text = new StringBuilder();
 
@@ -152,6 +143,24 @@ class FunctionDefCompiler {
                 .withType(BuiltinTypes.VOID)
                 .withBinding(func)
                 .withSemicolon(false);
+    }
+
+    static CompiledCode compileFunctionDef(AST.FunctionDef stmt, CompileContext context) {
+
+        boolean isConstructor = context.getContainingClass() != null &&
+                stmt.name.equals(context.getContainingClass().getName());
+
+        CompiledFunction func = createCompiledFunc(isConstructor, stmt, context);
+
+        if(context.getContainingClass() == null) {
+            context.declareObject(func);
+        }
+
+        if(stmt.modifiers.contains(ASTEnums.DecModType.NATIVE)) {
+            return new CompiledCode();
+        }
+
+        return compileFunctionDef(func, stmt.modifiers, stmt.body, stmt.returns, context);
     }
 
     private static void injectFormalCopy(StringBuilder functionCode, CompiledFunction func, CompileContext innerContext) {
@@ -166,10 +175,10 @@ class FunctionDefCompiler {
         });
     }
 
-    private static void injectSetup(StringBuilder functionCode, AST.FunctionDef stmt, CompiledFunction func,
-                                   CompileContext context) {
+    private static void injectSetup(StringBuilder functionCode, CompiledFunction func, AST.Statement returns,
+                                    CompileContext context) {
         if(func.getReturns() != BuiltinTypes.INT) {
-            context.throwError("Main must return int", stmt.returns);
+            context.throwError("Main must return int", returns);
         }
 
         context.getScope().getAllVars()

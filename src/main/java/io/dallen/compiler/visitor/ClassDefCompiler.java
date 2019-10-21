@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 class ClassDefCompiler {
@@ -138,18 +137,26 @@ class ClassDefCompiler {
         });
     }
 
-    private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext)
-            throws CompileException {
-        CompiledType cls = new CompiledType(stmt.name, true, stmt.isStruct);
-
+    static void prepareContext(CompiledType cls, AST.ClassDef stmt, CompileContext innerContext) {
         // Declare generic order
         stmt.genericTypes.forEach(generic -> {
             cls.addGeneric(generic.name);
-            innerContext.declareObject(new CompiledType(generic.name, true, false)
+            innerContext.declareObject(new CompiledType(generic.name, null, true, false)
                     .setCompiledName("void *")
                     .isGenericPlaceholder(true)
                     .isGeneric(true));
         });
+
+        // Declare special class keywords
+        innerContext.declareObject(new CompiledVar("this", true, cls));
+        cls.getParent().getConstructors().forEach(ctr ->
+                innerContext.declareObject(new CompiledFunction("super", "super", ctr.getArgs()))
+        );
+    }
+
+    private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext)
+            throws CompileException {
+        CompiledType cls = new CompiledType(stmt.name, stmt, true, stmt.isStruct);
 
         // Set parent class or default if none found
         stmt.extendClass.ifPresentOrElse(
@@ -157,6 +164,7 @@ class ClassDefCompiler {
                 () -> cls.setParent(BuiltinTypes.ANYREF)
         );
 
+        prepareContext(cls, stmt, innerContext);
         context.declareObject(cls);
 
         Map<String, CompiledField> declaredVars = new HashMap<>();
@@ -214,12 +222,6 @@ class ClassDefCompiler {
                 .filter(v->cls.getMethod(v.getName()) == null)
                 .forEach(v -> cls.addMethod(new CompiledMethod(v, true, v.isPrivate())));
 
-        // Declare special class keywords
-        innerContext.declareObject(new CompiledVar("this", true, cls));
-        cls.getParent().getConstructors().forEach(ctr ->
-                innerContext.declareObject(new CompiledFunction("super", "super", ctr.getArgs()))
-        );
-
         if(cls.isDataClass()) {
             generateDataClassMethods(cls);
         }
@@ -227,17 +229,9 @@ class ClassDefCompiler {
         return cls;
     }
 
-    static CompiledCode compileClassDef(AST.ClassDef stmt, CompileContext context) {
-        CompileContext innerContext = new CompileContext(context)
-                .setScopePrefix(stmt.name);
+    static CompiledCode compileClassInstance(CompiledType cls, CompileContext context) {
 
-        CompiledType cls = compileClass(stmt, context, innerContext);
-
-        if(stmt.modifiers.contains(ASTEnums.DecModType.NATIVE)) {
-            return new CompiledCode();
-        }
-
-        innerContext.setContainingClass(cls);
+        AST.ClassDef stmt = cls.getOriginalDef();
 
         String headerComment = "\n\n///////////////////// Start Class " + cls.getName() + " /////////////////////////\n\n";
 
@@ -256,7 +250,7 @@ class ClassDefCompiler {
 
         String dataStruct = generateDataStruct(cls, classStructName);
 
-        String methodCode = generateMethodCode(stmt.body, innerContext);
+        String methodCode = generateMethodCode(stmt.body, cls, context);
 
         String dataClassCode = "";
         if(cls.isDataClass()) {
@@ -280,6 +274,21 @@ class ClassDefCompiler {
                 .withText(text)
                 .withBinding(cls)
                 .withSemicolon(false);
+    }
+
+    static CompiledCode compileClassDef(AST.ClassDef stmt, CompileContext context) {
+        CompileContext innerContext = new CompileContext(context)
+                .setScopePrefix(stmt.name);
+
+        CompiledType cls = compileClass(stmt, context, innerContext);
+
+        if(stmt.modifiers.contains(ASTEnums.DecModType.NATIVE)) {
+            return new CompiledCode();
+        }
+
+        innerContext.setContainingClass(cls);
+
+        return compileClassInstance(cls, innerContext);
     }
 
     private static String getDataClassCode(CompiledType cls, CompileContext context) {
@@ -333,10 +342,24 @@ class ClassDefCompiler {
         return text.toString();
     }
 
-    private static String generateMethodCode(List<AST.Statement> body, CompileContext innerContext) {
+    private static String generateMethodCode(List<AST.Statement> body, CompiledType cls, CompileContext context) {
         return body.stream()
                 .filter(f -> f instanceof AST.FunctionDef)
-                .map(f->f.compile(innerContext))
+                .map(f -> (AST.FunctionDef) f)
+                .map(f -> {
+                    CompiledMethod m = cls.getMethod(f.name);
+
+                    if(m == null) {
+                        m = cls.getStaticMethod(f.name);
+                    }
+
+                    if(m != null) {
+                        return FunctionDefCompiler.compileFunctionDef(m, f.modifiers, f.body, f.returns, context);
+                    }
+
+                    return FunctionDefCompiler.compileFunctionDef(cls.getConstructors().get(0), f.modifiers, f.body,
+                            f.returns, context);
+                })
                 .map(CompiledCode::getCompiledText)
                 .collect(Collectors.joining("\n\n"));
     }

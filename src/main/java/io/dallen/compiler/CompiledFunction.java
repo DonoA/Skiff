@@ -1,6 +1,9 @@
 package io.dallen.compiler;
 
+import io.dallen.ast.AST;
+
 import java.util.List;
+import java.util.Optional;
 
 public class CompiledFunction extends CompiledVar {
     private final String compiledName;
@@ -16,6 +19,8 @@ public class CompiledFunction extends CompiledVar {
         this.returns = returns;
         this.args = args;
     }
+
+
 
     public CompiledFunction(String name, String compiledName, List<CompiledVar> args) {
         this(name, compiledName, false, BuiltinTypes.VOID, args);

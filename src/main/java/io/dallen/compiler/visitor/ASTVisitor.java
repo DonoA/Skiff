@@ -333,7 +333,13 @@ public class ASTVisitor {
         CompiledType typeCode = (CompiledType) stmt.type.compile(context).getBinding();
         List<CompiledType> genericTypes = stmt.type.genericTypes
                 .stream()
-                .map(type -> (CompiledType) type.compile(context).getBinding())
+                .map(type -> {
+                    CompiledType typ = (CompiledType) type.compile(context).getBinding();
+                    if(typ == null) {
+
+                    }
+                    return typ;
+                })
                 .collect(Collectors.toList());
         String functionName = VisitorUtils.underscoreJoin("skiff", typeCode.getName(), "new");
 
@@ -360,7 +366,20 @@ public class ASTVisitor {
         sb.append(String.join(", ", argz))
             .append(")");
 
-        CompiledType exactType = typeCode.fillGenericTypes(genericTypes);
+        CompiledType exactType = typeCode.fillGenericTypes(genericTypes, true);
+
+        boolean requiresCopy = !genericTypes.stream().allMatch(CompiledType::isRef);
+
+        if(requiresCopy) { // TODO: enable class duplication to support native types
+//            CompileContext newClassContext = new CompileContext(context)
+//                    .setContainingClass(exactType).setIndent("")
+//                    .setScopePrefix(exactType.getName());
+//
+//            ClassDefCompiler.prepareContext(exactType, exactType.getOriginalDef(), newClassContext);
+//
+//            CompiledCode newClass = ClassDefCompiler.compileClassInstance(exactType, newClassContext);
+//            context.addDependentCode(newClass.getCompiledText());
+        }
 
         return new CompiledCode()
             .withType(exactType)
@@ -469,7 +488,7 @@ public class ASTVisitor {
                 .stream()
                 .map(type -> (CompiledType) type.compile(context).getBinding())
                 .collect(Collectors.toList());
-        CompiledType type = ((CompiledType) typeCode.getBinding()).fillGenericTypes(genericTypes);
+        CompiledType type = ((CompiledType) typeCode.getBinding()).fillGenericTypes(genericTypes, false);
         CompiledVar binding = new CompiledVar(stmt.name, false, type);
         context.declareObject(binding);
 

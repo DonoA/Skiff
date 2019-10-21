@@ -54,7 +54,6 @@ class FunctionCallCompiler {
 
         if(isSuper) {
             argList.add("(" + context.getContainingClass().getParent().getCompiledName() + ") this");
-            argList.add("0");
         }
 
         argList.addAll(compArgs

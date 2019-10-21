@@ -1,5 +1,6 @@
 package io.dallen.compiler;
 
+import io.dallen.ast.AST;
 import io.dallen.compiler.visitor.VisitorUtils;
 
 import java.util.*;
@@ -30,7 +31,9 @@ public class CompiledType extends CompiledObject {
     private boolean generic = false;
     private final boolean dataClass;
 
-    public CompiledType(String className, boolean ref, boolean dataClass) {
+    private final AST.ClassDef originalDef;
+
+    public CompiledType(String className, AST.ClassDef stmt, boolean ref, boolean dataClass) {
         super(className);
         this.structName = VisitorUtils.underscoreJoin("skiff", className, "t");
         this.interfaceName = VisitorUtils.underscoreJoin("skiff", className, "interface");
@@ -39,6 +42,7 @@ public class CompiledType extends CompiledObject {
         this.compiledName = this.structName + (ref ? " *" : "");
         this.isRef = ref;
         this.dataClass = dataClass;
+        this.originalDef = stmt;
     }
 
     public String getStructName() {
@@ -80,6 +84,10 @@ public class CompiledType extends CompiledObject {
 
     public CompiledMethod getStaticMethod(String name) {
         return staticMethodMap.get(name);
+    }
+
+    public Collection<CompiledMethod> getAllStaticMethods() {
+        return staticMethodMap.values();
     }
 
     public CompiledType addStaticField(CompiledField obj) {
@@ -158,7 +166,7 @@ public class CompiledType extends CompiledObject {
         return this.generic;
     }
 
-    public CompiledType fillGenericTypes(List<CompiledType> genericList) {
+    public CompiledType fillGenericTypes(List<CompiledType> genericList, boolean modifiyName) {
         Map<String, CompiledType> generics = new HashMap<>();
 
         ListIterator<String> genericNameItr = genericOrder.listIterator();
@@ -167,11 +175,19 @@ public class CompiledType extends CompiledObject {
             generics.put(genericNameItr.next(), g);
         });
 
-        CompiledType filledType = new CompiledType(getName(), isRef, dataClass)
-                .isGeneric(true);
+        String name = getName();
+        if(modifiyName) {
+            String appends = genericList.stream().map(CompiledObject::getName).collect(Collectors.joining(""));
+            name = name + appends;
+        }
+
+        CompiledType filledType = new CompiledType(name, originalDef, isRef, dataClass)
+                .isGeneric(true)
+                .setParent(parent);
 
         filledType.compiledName = compiledName;
         filledType.structName = structName;
+        filledType.genericOrder = genericOrder;
 
         this.declaredVars.forEach(f -> {
             CompiledField post = f;
@@ -180,6 +196,10 @@ public class CompiledType extends CompiledObject {
                 post = new CompiledField(new CompiledVar(f.getName(), f.isParam(), comp), f.isPrivate(), f.isMine());
             }
             filledType.addField(post);
+        });
+
+        this.declaredVarStructOrder.forEach(f -> {
+            filledType.declaredVarStructOrder.add(this.getField(f.getName()));
         });
 
         this.declaredMethods.forEach(m -> {
@@ -202,13 +222,17 @@ public class CompiledType extends CompiledObject {
             newTypeNeeded = true;
             returns.isGeneric(true);
         }
-        List<CompiledVar> argTypes = func.getArgs().stream().map(arg -> {
-            if(arg.getType().genericPlaceholder) {
-                return new CompiledVar(arg.getName(), false, generics.get(arg.getType().getName()).isGeneric(true));
-            } else {
-                return arg;
-            }
-        }).collect(Collectors.toList());
+        List<CompiledVar> argTypes = func.getArgs();
+        if(func.getArgs().stream().anyMatch(arg -> arg.getType().genericPlaceholder)) {
+            newTypeNeeded = true;
+            argTypes = func.getArgs().stream().map(arg -> {
+                if(arg.getType().genericPlaceholder) {
+                    return new CompiledVar(arg.getName(), false, generics.get(arg.getType().getName()).isGeneric(true));
+                } else {
+                    return arg;
+                }
+            }).collect(Collectors.toList());
+        }
 
         if(newTypeNeeded) {
             return new CompiledFunction(func.getName(), func.getCompiledName(), false, returns, argTypes);
@@ -254,5 +278,9 @@ public class CompiledType extends CompiledObject {
 
     public void addToDeclaredVarStructOrder(CompiledField f) {
         this.declaredVarStructOrder.add(f);
+    }
+
+    public AST.ClassDef getOriginalDef() {
+        return originalDef;
     }
 }
