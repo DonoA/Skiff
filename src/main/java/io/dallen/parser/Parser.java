@@ -95,12 +95,12 @@ public class Parser implements ErrorCollector<Token> {
         return t;
     }
 
-    Token tryConsumeExpected(Token.TokenType type) {
+    Token tryConsumeOrEOF(Token.TokenType type) {
         Token t = current();
-        if (current().type == type) {
+        if (current().type == type || current().type == Textless.EOF) {
             consume();
         } else {
-            return null;
+            throwError("Unexpected token", current());
         }
         return t;
     }

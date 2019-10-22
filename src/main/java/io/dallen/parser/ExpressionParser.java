@@ -45,7 +45,7 @@ class ExpressionParser {
                 Token t = context.parser.consume();
                 String[] seg = t.literal.split("\0");
                 AST.RegexLiteral lit = new AST.RegexLiteral(seg[0], seg[1], List.of(t));
-                context.parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+                context.parser.tryConsumeOrEOF(Token.Symbol.SEMICOLON);
                 return lit;
             })
             .addCase(Textless.SEQUENCE_LITERAL::equals, context -> context.parseLiteral(AST.SequenceLiteral::new))
@@ -91,7 +91,7 @@ class ExpressionParser {
                 .stream()
                 .map(e -> new Parser(e, parser).parseExpression())
                 .collect(Collectors.toList());
-        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        parser.tryConsumeOrEOF(Token.Symbol.SEMICOLON);
         return new AST.New(typeStmt, params, tokens);
     }
 
@@ -126,14 +126,14 @@ class ExpressionParser {
         List<Token> tokens = parser.selectToEOF();
         Token t = parser.consumeExpected(consume);
         AST.Statement sub = new Parser(parser.consumeTo(Token.Symbol.SEMICOLON), parser).parseExpression();
-        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        parser.tryConsumeOrEOF(Token.Symbol.SEMICOLON);
         return new AST.MathSelfMod(sub, type, ASTEnums.SelfModTime.PRE, tokens);
     }
 
     private AST.Statement parseLiteral(LiteralTokenConstructor constructor) {
         Token t = parser.consume();
         AST.Statement lit = constructor.construct(t.literal, List.of(t));
-        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        parser.tryConsumeOrEOF(Token.Symbol.SEMICOLON);
         return lit;
     }
 
@@ -169,7 +169,7 @@ class ExpressionParser {
             return new AST.Subscript(left, inner, tokens);
         } else {
             Token name = parser.consume();
-            parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+            parser.tryConsumeOrEOF(Token.Symbol.SEMICOLON);
             return new AST.Variable(name.literal, workingTokens);
         }
     }
@@ -201,7 +201,7 @@ class ExpressionParser {
             return null;
         }
         List<AST.Statement> funcParams = consumeFunctionParams();
-        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        parser.tryConsumeOrEOF(Token.Symbol.SEMICOLON);
         return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics, tokens);
     }
 
@@ -209,7 +209,7 @@ class ExpressionParser {
         List<Token> tokens = parser.selectToEOF();
         List<Token> name = parser.consumeTo(consume);
         AST.Statement left = new Parser(name, parser).parseExpression();
-        parser.tryConsumeExpected(Token.Symbol.SEMICOLON);
+        parser.tryConsumeOrEOF(Token.Symbol.SEMICOLON);
         return new AST.MathSelfMod(left, type, ASTEnums.SelfModTime.POST, tokens);
     }
 

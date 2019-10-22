@@ -12,7 +12,7 @@ def main(args: List<String>): Int {
 
     Person(pAge, pName) = data;
 
-    print("Name:")
+    print("Name:");
     println(pName);
 
     match(data) {

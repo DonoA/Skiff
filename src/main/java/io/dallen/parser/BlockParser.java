@@ -93,9 +93,10 @@ class BlockParser {
             parser.consumeExpected(Token.Symbol.COLON);
             List<Token> extendsTokens = parser.consumeTo(Token.Symbol.LEFT_BRACE);
             extended = Optional.of(new Parser(extendsTokens, parser).getCommon().parseType());
+        } else {
+            parser.consumeExpected(Token.Symbol.LEFT_BRACE);
         }
 
-        parser.tryConsumeExpected(Token.Symbol.LEFT_BRACE);
         List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
         List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
 
