@@ -2,6 +2,7 @@ package io.dallen.compiler.visitor;
 
 import io.dallen.ast.AST;
 import io.dallen.ast.ASTEnums;
+import io.dallen.ast.ASTOptional;
 import io.dallen.compiler.*;
 
 import java.util.ArrayList;
@@ -141,9 +142,12 @@ class FunctionDefCompiler {
             returnOptional = Optional.of((AST.Return) dec.body.get(dec.body.size() - 1));
         }
 
-        if(returnOptional.isEmpty() && !func.getReturns().equals(BuiltinTypes.VOID)) {
-            // TODO: Branch checking to ensure that there is a way nothing can be returned
-//            context.throwError("Function with non void return type must end with a return statement", stmt);
+
+        if(!func.getReturns().equals(BuiltinTypes.VOID)) {
+            boolean hasReturn = checkReturns(dec.body);
+            if(!hasReturn) {
+                context.throwError("Function with non void return type must end with a return statement", dec);
+            }
         }
 
         functionCode.append(generateReturns(returnOptional, func.isConstructor(), context, innerContext));
@@ -158,6 +162,47 @@ class FunctionDefCompiler {
                 .withType(BuiltinTypes.VOID)
                 .withBinding(func)
                 .withSemicolon(false);
+    }
+
+    private static boolean checkReturns(List<AST.Statement> body) {
+        AST.Statement last;
+        if(body.size() != 0) {
+            last = body.get(body.size() - 1);
+        } else {
+            return false;
+        }
+
+        if(last instanceof AST.Return) {
+            return true;
+        }
+
+        if(last instanceof AST.IfBlock) {
+            AST.IfBlock blk = (AST.IfBlock) last;
+            if(blk.body.size() == 0 || !(blk.body.get(blk.body.size() - 1) instanceof AST.Return)) {
+                return false;
+            }
+            ASTOptional<AST.ElseBlock> currElse = blk.elseBlock;
+            while(currElse.isPresent()) {
+                if(currElse.get() instanceof AST.ElseIfBlock) {
+                    AST.ElseIfBlock elseBlock = (AST.ElseIfBlock) currElse.get();
+                    if (elseBlock.on.body.size() == 0 ||
+                            !(elseBlock.on.body.get(elseBlock.on.body.size() - 1) instanceof AST.Return)) {
+                        return false;
+                    }
+                    currElse = elseBlock.on.elseBlock;
+                } else {
+                    AST.ElseAlwaysBlock elseBlock = (AST.ElseAlwaysBlock) currElse.get();
+                    if (elseBlock.body.size() == 0 ||
+                            !(elseBlock.body.get(elseBlock.body.size() - 1) instanceof AST.Return)) {
+                        return false;
+                    }
+                    currElse = ASTOptional.empty();
+                }
+            }
+            return true;
+        }
+
+        return false;
     }
 
     static CompiledCode compileFunctionDef(AST.FunctionDef stmt, CompileContext context) {

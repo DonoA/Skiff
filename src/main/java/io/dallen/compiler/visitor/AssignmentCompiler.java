@@ -11,7 +11,6 @@ public class AssignmentCompiler {
         // Each stack location should represent exactly one named var
         CompiledCode value = stmt.value.compile(context);
 
-        // TODO: break this out
         if(stmt.name instanceof AST.FunctionCall) {
             AST.FunctionCall func = (AST.FunctionCall) stmt.name;
             return compileDeconstructionAssign(value, func, context);
