@@ -6,6 +6,7 @@ import io.dallen.ast.AST.*;
 import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -395,20 +396,35 @@ public class ASTVisitor {
 
     public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
         String importText;
+
+        String location;
+        if(stmt.type == ASTEnums.ImportType.NATIVE) {
+            location = new File(context.getFilename()).getParent() + "/" + stmt.value;
+        } else if(stmt.value.startsWith(".")) {
+            location = new File(context.getFilename()).getParent() + "/" + stmt.value + ".skiff";
+        } else {
+            location = "lib/" + stmt.value + ".skiff";
+        }
+
         try {
-            importText = SkiffC.readFile("lib/" + stmt.value + ".skiff");
+            importText = SkiffC.readFile(location);
         } catch (IOException e) {
             context.throwError("Cannot find import file", stmt);
             return new CompiledCode();
         }
 
-        String currentFile = context.getFilename();
-        context.setFilename(stmt.value);
-        String currentText = context.getCode();
-        context.setCode(importText);
-        Optional<String> importCode = SkiffC.compile(importText, context);
-        context.setFilename(currentFile);
-        context.setCode(currentText);
+        Optional<String> importCode;
+        if(stmt.type == ASTEnums.ImportType.NATIVE) {
+            importCode = Optional.of(importText);
+        } else {
+            String currentFile = context.getFilename();
+            context.setFilename(location);
+            String currentText = context.getCode();
+            context.setCode(importText);
+            importCode = SkiffC.compile(importText, context);
+            context.setFilename(currentFile);
+            context.setCode(currentText);
+        }
 
         if(importCode.isEmpty()) {
             return new CompiledCode();

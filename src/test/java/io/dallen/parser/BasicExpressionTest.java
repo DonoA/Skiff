@@ -888,7 +888,7 @@ public class BasicExpressionTest {
         assertEquals(1, statements.size());
 
         String expected = new ImportStatement(
-                ASTEnums.ImportType.SYSTEM,
+                ASTEnums.ImportType.NORMAL,
                 "MyPackage",
                 List.of(
                         new Token(Token.Keyword.IMPORT, 0),

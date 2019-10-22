@@ -57,7 +57,7 @@ public class ASTEnums {
     }
 
     public enum ImportType implements HasRaw {
-        LOCAL("local"), SYSTEM("system");
+        NORMAL("normal"), NATIVE("native");
 
         private final String rawOp;
 

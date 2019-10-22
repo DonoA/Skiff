@@ -298,6 +298,9 @@ class BlockParser {
                                                                                           ASTEnums.DecModType type) {
         return (blockParser) -> {
             Token t = blockParser.parser.consumeExpected(expected);
+            if(blockParser.parser.current().type == Keyword.IMPORT) {
+                return parseNativeImport(blockParser.parser, true);
+            }
             AST.Statement on = blockParser.parser.parseBlock();
             if(on instanceof AST.Declare) {
                 ((AST.Declare) on).modifiers.add(type);
@@ -367,21 +370,17 @@ class BlockParser {
         return new AST.Return(value, tokens);
     }
 
-    private AST.ImportStatement parseImport() {
+    private static AST.ImportStatement parseNativeImport(Parser parser, boolean ntv) {
         List<Token> tokens = parser.selectToEOF();
         parser.consumeExpected(Token.Keyword.IMPORT);
 
-        ASTEnums.ImportType typ;
-        String location;
-        if(parser.current().type == Token.Textless.STRING_LITERAL) {
-            location = parser.consume().literal;
-            typ = ASTEnums.ImportType.LOCAL;
-        } else {
-            location = parser.consumeExpected(Token.Textless.NAME).literal;
-            typ = ASTEnums.ImportType.SYSTEM;
-        }
+        String location = parser.consumeExpected(Token.Textless.STRING_LITERAL).literal;
         parser.consumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.ImportStatement(typ, location, tokens);
+        return new AST.ImportStatement(ntv ? ASTEnums.ImportType.NATIVE : ASTEnums.ImportType.NORMAL, location, tokens);
+    }
+
+    private AST.ImportStatement parseImport() {
+        return parseNativeImport(parser, false);
     }
 
     private AST.ThrowStatement parseThrow() {

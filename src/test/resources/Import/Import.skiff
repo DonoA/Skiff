@@ -1,4 +1,7 @@
-import Optional;
+import "Optional";
+import "Collections/Array";
+import "./SimpleFile";
+native import "./c_header.h";
 
 def main(args: List<String>): Int {
     op: Optional<Int> = Optional.of<Int>(5);
