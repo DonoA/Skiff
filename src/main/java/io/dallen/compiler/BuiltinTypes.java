@@ -2,6 +2,9 @@ package io.dallen.compiler;
 
 import java.util.List;
 
+/**
+ * Types too integral to the operation of Skiff to be defined naturally. Also used for quick reference to common types.
+ */
 public class BuiltinTypes {
     public static final CompiledType VOID = new CompiledType("Void", false, true)
             .setCompiledName("void");

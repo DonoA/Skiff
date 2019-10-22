@@ -6,6 +6,9 @@ import java.util.ArrayDeque;
 
 import static io.dallen.tokenizer.Token.Symbol.*;
 
+/**
+ * Tracks braces to allow for operations to easily deal with many scope levels. Used heavily in splitting
+ */
 @SuppressWarnings("Duplicates")
 public class BraceManager {
 

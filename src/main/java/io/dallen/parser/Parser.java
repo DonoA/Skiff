@@ -10,6 +10,9 @@ import io.dallen.tokenizer.Token.Textless;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Parses a token stream into an AST
+ */
 public class Parser implements ErrorCollector<Token> {
 
     private List<Token> tokens;
@@ -25,23 +28,43 @@ public class Parser implements ErrorCollector<Token> {
     private final List<String> errorMsg;
     private final String code;
 
+    /**
+     * A simple parser, no error handling provided
+     * @param tokens to token stream to parse
+     */
     public Parser(List<Token> tokens) {
         this(tokens, null, false, null);
     }
 
+    /**
+     * A parser with the code being parsed for error pointing, generally a top level parser
+     * @param tokens to token stream to parse
+     * @param code The code string used to generate the tokens
+     */
     public Parser(List<Token> tokens, String code) {
         this(tokens, null, false, code);
     }
 
+    /**
+     * Creates a subparser, passes thrown errors to parent
+     * @param tokens to token stream to parse
+     * @param parent parent parser for errors to be passed to
+     */
     public Parser(List<Token> tokens, Parser parent) {
         this(tokens, parent, false, null);
     }
 
+    /**
+     * Subparser in match block, treats case statements differently
+     * @param tokens to token stream to parse
+     * @param parent parent parser for errors to be passed to
+     * @param inMatch define if parser is in match block
+     */
     Parser(List<Token> tokens, Parser parent, boolean inMatch) {
         this(tokens, parent, inMatch, null);
     }
 
-    Parser(List<Token> tokens, Parser parent, boolean inMatch, String code) {
+    private Parser(List<Token> tokens, Parser parent, boolean inMatch, String code) {
         this.tokens = tokens;
         this.inMatch = inMatch;
         this.parent = parent;
@@ -117,10 +140,12 @@ public class Parser implements ErrorCollector<Token> {
         return tokens.get(pos + 1);
     }
 
+    // Consume tokens up to the provided type, will not end inside brace block, uses left to right braces
     List<Token> consumeTo(Token.TokenType type) {
         return consumeTo(type, BraceManager.leftToRight);
     }
 
+    // Consume tokens up to the provided type, will not end inside brace block
     List<Token> consumeTo(Token.TokenType type, BraceManager.BraceProfile braces) {
         List<Token> tokens = new ArrayList<>();
         BraceManager braceManager = new BraceManager(braces);
@@ -198,6 +223,8 @@ public class Parser implements ErrorCollector<Token> {
         return selectTo(List.of(Textless.EOF, Token.Symbol.SEMICOLON), false);
     }
 
+    // Select tokens up to the next close brace. Brace aware using left to right braces. Ideal for selecting
+    // blocks for if, for, while, class decs, etc.
     List<Token> selectToBlockEnd() {
         List<Token> tkns = new ArrayList<>();
         int loc = pos;

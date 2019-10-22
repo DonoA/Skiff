@@ -2,6 +2,9 @@ package io.dallen.tokenizer;
 
 import java.util.Objects;
 
+/**
+ * A single quantum of information for consumption by the parser
+ */
 public class Token {
 
     public interface TokenType {
@@ -133,9 +136,24 @@ public class Token {
         TYPE, VARIABLE
     }
 
+    /**
+     * The type of information segment this token represents
+     */
     public final TokenType type;
+
+    /**
+     * The string value of the token before wrapping
+     */
     public final String literal;
+
+    /**
+     * The type of identifier this token represents. Used to determine classes from other variable types
+     */
     public final IdentifierType ident;
+
+    /**
+     * The location where this token was found so it can be pointed out later in error messages
+     */
     public final int pos;
 
     public static final Token EOF = new Token(Textless.EOF, 0);

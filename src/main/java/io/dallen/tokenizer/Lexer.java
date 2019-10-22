@@ -15,6 +15,10 @@ public class Lexer implements ErrorCollector<Token> {
         this.data = data;
     }
 
+    /**
+     * Tokenize the string given to this Lexer
+     * @return A list of tokens representing the string
+     */
     public List<Token> lex() {
         ArrayList<Token> tokens = new ArrayList<>();
         while (pos < data.length()) {
@@ -57,6 +61,7 @@ public class Lexer implements ErrorCollector<Token> {
         return new EnrichLexer(tokens, this).enrich();
     }
 
+    // Locates the longest token that matches the stream. Only searches tokens that have text.
     private Token.TokenType selectBestToken() {
         int searchPos = pos;
         Token.TokenType longestType = Token.Textless.EOF;
@@ -91,6 +96,7 @@ public class Lexer implements ErrorCollector<Token> {
         return longestType;
     }
 
+    // Select a string or number literal of unknown length
     private Token selectLiteral() {
         int startPos = pos;
         char c = data.charAt(pos);

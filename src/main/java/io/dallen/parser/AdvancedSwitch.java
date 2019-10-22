@@ -3,6 +3,13 @@ package io.dallen.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Acts like a switch statement where .equals is used instead of the normal '=='. Cases from the switch do not cause
+ * side effects but rather return a result to be returned by the whole operation.
+ * @param <InputType> The types that will be compared against
+ * @param <OutputType> The type of the switch statement result
+ * @param <ContextClass> The class of the context object passed to each case statement when executed
+ */
 public class AdvancedSwitch<InputType, OutputType, ContextClass> {
 
     private List<SwitchCase<InputType, OutputType, ContextClass>> cases = new ArrayList<>();

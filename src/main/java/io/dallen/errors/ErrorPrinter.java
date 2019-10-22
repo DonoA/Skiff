@@ -1,7 +1,13 @@
 package io.dallen.errors;
 
 public class ErrorPrinter {
-
+    /**
+     * Prints message pointing to char in code for user.
+     * @param code The whole input code where pos references.
+     * @param pos The index where the error occurred
+     * @param message The message to be printed along with the offending point in the code
+     * @return
+     */
     public static String pointToPos(String code, int pos, String message) {
         int lineNum = 1;
         for(int i = 0; i < pos; i++) {

@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+/**
+ * Splitter helper class for splitting streams of tokens on a given token type. All splits are brace aware.
+ */
 public class BraceSplitter {
 
     public static List<List<Token>> splitAll(List<Token> tokens, Token.TokenType on) throws ParserError {

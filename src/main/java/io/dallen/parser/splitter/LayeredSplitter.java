@@ -8,6 +8,11 @@ import io.dallen.tokenizer.Token;
 
 import java.util.List;
 
+/**
+ * Allows for splitting with precedence. Each layer in the settings is checked in order. Within each layer, the cases
+ * are checked in order. The first hit recorded while parsing will be executed and have its result passed back to the
+ * original caller.
+ */
 public class LayeredSplitter {
 
     private final SplitSettings settings;

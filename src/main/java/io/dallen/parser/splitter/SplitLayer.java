@@ -4,6 +4,9 @@ import io.dallen.tokenizer.Token;
 
 import java.util.HashMap;
 
+/**
+ * Defines the type for the leaf nodes of the mulileveled split.
+ */
 public class SplitLayer {
 
     private HashMap<Token.TokenType, SplitAction> entries = new HashMap<>();

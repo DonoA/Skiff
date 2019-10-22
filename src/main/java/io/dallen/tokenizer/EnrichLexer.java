@@ -5,6 +5,10 @@ import io.dallen.errors.ErrorCollector;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Used to add identifier information to a token stream. Picks up on class defs and generic types to tag all class
+ * names.
+ */
 public class EnrichLexer {
 
     private final List<Token> tokens;
@@ -20,6 +24,10 @@ public class EnrichLexer {
         this.errors = errors;
     }
 
+    /**
+     * Run through tokens to add needed identifier information
+     * @return The enriched list
+     */
     public List<Token> enrich() {
         for (int i = 0; i < tokens.size(); i++) {
             Token token = tokens.get(i);

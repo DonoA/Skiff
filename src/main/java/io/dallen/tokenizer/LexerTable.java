@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A tree structure used to represent scopes within a piece of code. Each node contains classes defined in that scope.
+ * Each node can have a variable number of children representing the subscopes defined inside it.
+ */
 public class LexerTable {
     private Node root;
 
@@ -56,6 +60,11 @@ public class LexerTable {
             this.children = new ArrayList<>();
         }
 
+        /**
+         * Searches up the tree for the identifier.
+         * @param symbol The token name to search for
+         * @return if the symbol was found, returns the identifier, otherwise returns null
+         */
         private Token.IdentifierType getIdent(String symbol) {
             Token.IdentifierType typ = symbolMap.get(symbol);
             if(typ != null) {

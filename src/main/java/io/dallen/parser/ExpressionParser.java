@@ -18,7 +18,7 @@ class ExpressionParser {
 
     private List<Token> workingTokens;
 
-
+    // Switch statement for enums from many classes.
     private static final AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser> expressionSwitch =
         new AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser>()
             .addCase(Keyword.NEW::equals, ExpressionParser::parseNew)
@@ -62,6 +62,8 @@ class ExpressionParser {
         this.parser = parser;
     }
 
+    // Parse a series of tokens that can be used at any point in the code. They can standalone or be part of larger
+    // block statements or other expressions
     AST.Statement parseExpression() {
         workingTokens = parser.selectTo(Token.Symbol.SEMICOLON);
 
@@ -141,14 +143,8 @@ class ExpressionParser {
         AST.Statement construct(String lit, List<Token> tokens);
     }
 
-    private static final AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser> nameTokenSwitch =
-            new AdvancedSwitch<Token.TokenType, AST.Statement, ExpressionParser>()
-                    .addCase(Textless.NAME::equals, context -> context.handleNameToken(context.workingTokens))
-                    .addCase(Symbol.DOUBLE_MINUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_MINUS, ASTEnums.MathOp.MINUS))
-                    .addCase(Symbol.DOUBLE_PLUS::equals, context -> context.parseIncDec(Symbol.DOUBLE_PLUS, ASTEnums.MathOp.MINUS));
-
+    // Deal with the many possible options when encountering a name token
     private AST.Statement handleNameToken(List<Token> workingTokens) {
-
         if(parser.containsBefore(Token.Symbol.COLON, Token.Symbol.SEMICOLON)) {
             Token name = parser.consume();
             parser.consumeExpected(Token.Symbol.COLON);

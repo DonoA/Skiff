@@ -3,6 +3,9 @@ package io.dallen.parser.splitter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Define the cases which the multileveled split will operate on.
+ */
 public class SplitSettings {
     private final List<SplitLayer> splitLayers = new ArrayList<>();
 

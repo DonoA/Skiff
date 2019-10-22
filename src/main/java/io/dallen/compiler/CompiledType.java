@@ -5,6 +5,10 @@ import io.dallen.compiler.visitor.VisitorUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * A type that can be referenced when compiling. Includes all needed information on how to interact with a skiff class
+ * at compile time.
+ */
 public class CompiledType extends CompiledObject {
 
     private final boolean isRef;
@@ -179,6 +183,14 @@ public class CompiledType extends CompiledObject {
         return this.generic;
     }
 
+    /**
+     * Rebuilds compiled class with all filled generic types. This includes all fields, method parameters and return
+     * types, and other uses of the generic within the class definition.
+     * @param genericList List of classes replacing the generic placeholders
+     * @param modifiyName Denotes if the new compiled class should have an updated name to represent its generic
+     *                    subtypes
+     * @return The new compiled class
+     */
     public CompiledType fillGenericTypes(List<CompiledType> genericList, boolean modifiyName) {
         Map<String, CompiledType> generics = new HashMap<>();
 
@@ -227,6 +239,12 @@ public class CompiledType extends CompiledObject {
         return filledType;
     }
 
+    /**
+     * Replaces generic placeholders in the return type and parameters types of the function.
+     * @param generics A mapping of the placeholder names to the filled compiled types for replacement
+     * @param func The function to fill
+     * @return The new compile function
+     */
     private CompiledFunction fillFunction(Map<String, CompiledType> generics, CompiledFunction func) {
         boolean newTypeNeeded = false;
         CompiledType returns = func.getReturns();

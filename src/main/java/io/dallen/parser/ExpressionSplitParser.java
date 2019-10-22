@@ -40,6 +40,7 @@ class ExpressionSplitParser {
         return new LayeredSplitter(splitSettings, parser).execute(workingTokens);
     }
 
+    // Handle equal signs, picks up assign and declare assign.
     private static Statement parseAssignment(Parser parser, List<Token> first, List<Token> second, List<Token> allTokens) {
         List<List<Token>> res;
         try {
@@ -66,10 +67,13 @@ class ExpressionSplitParser {
         return null;
     }
 
+    // handles '&&' and '||'
     private static SplitAction boolCombineAction(ASTEnums.BoolOp op) {
         return statementAction((first, second, tokens) -> new BoolCombine(first, op, second, tokens));
     }
 
+    // handles number comparisons including '==' and '!='. Check if ident after '<' is class to defer generic function
+    // calls.
     private static SplitAction compareAction(ASTEnums.CompareOp op) {
         return (parser, first, second, tokens) -> {
             if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE ||
@@ -92,14 +96,17 @@ class ExpressionSplitParser {
         };
     }
 
+    // handles simple math ops '+' '-' '*' '/' '**' '%'
     private static SplitAction mathAction(ASTEnums.MathOp op) {
         return statementAction((first, second, tokens) -> new MathStatement(first, op, second, tokens));
     }
 
+    // same as above with assignment, '+=', '-='
     private static SplitAction mathAssignAction(ASTEnums.MathOp op) {
         return statementAction((first, second, tokens) -> new MathAssign(first, op, second, tokens));
     }
 
+    // takes split result, parses both sides, and call action on the result
     private static SplitAction statementAction(StatementAction action) {
         return (parser, first, second, token) -> {
             Statement firstS = new Parser(first, parser).parseExpression();
@@ -114,6 +121,7 @@ class ExpressionSplitParser {
         };
     }
 
+    // Functional interface for passing to statementAction
     private interface StatementAction {
         Statement handle(Statement first, Statement second, List<Token> tokens);
     }

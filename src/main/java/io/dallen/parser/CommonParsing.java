@@ -9,14 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 class CommonParsing {
-
-    static <T> List<T> joinLists(List<T> l1, List<T> l2) {
-        List<T> l = new ArrayList<>();
-        l.addAll(l1);
-        l.addAll(l2);
-        return l;
-    }
-
+    // Used for generating void tokens when they are needed for error handling
     static AST.Type voidFor(Token t) {
         return new AST.Type(
                 new AST.Variable(

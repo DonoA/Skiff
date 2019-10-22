@@ -1,5 +1,8 @@
 package io.dallen.compiler;
 
+/**
+ * An instance of a variable with a name
+ */
 public class CompiledVar extends CompiledObject {
 
     public static final CompiledVar NULL = new CompiledVar("null", true, BuiltinTypes.ANYREF);

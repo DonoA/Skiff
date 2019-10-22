@@ -1,5 +1,9 @@
 package io.dallen.compiler;
 
+/**
+ * Data class passed to and from most compile methods for tracking additional information on the context in which the
+ * statement is being compiled
+ */
 public class CompiledCode {
     private String compiledText;
     private CompiledObject binding;

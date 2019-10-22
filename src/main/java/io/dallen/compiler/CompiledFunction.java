@@ -1,10 +1,11 @@
 package io.dallen.compiler;
 
-import io.dallen.ast.AST;
 
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * Data class for a compiled skiff function
+ */
 public class CompiledFunction extends CompiledVar {
     private final String compiledName;
     private final CompiledType returns;

@@ -1,5 +1,8 @@
 package io.dallen.ast;
 
+/**
+ * A collection of enums referenced by AST.java
+ */
 public class ASTEnums {
     public interface HasRaw {
         String getRawOp();

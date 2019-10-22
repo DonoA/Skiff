@@ -2,6 +2,9 @@ package io.dallen.compiler;
 
 import java.util.List;
 
+/**
+ * A compiled function that belongs to a compiled type
+ */
 public class CompiledMethod extends CompiledFunction {
     private final boolean mine;
     private final boolean priv;

@@ -3,6 +3,9 @@ package io.dallen.compiler;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Tracks function and variable declarations. Used to locate instances of functions and variables by name.
+ */
 public class CompileScope {
     private Map<String, CompiledObject> variableTable = new HashMap<>();
     private Map<String, List<CompiledFunction>> functionTable = new HashMap<>();

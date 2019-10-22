@@ -2,6 +2,9 @@ package io.dallen.parser;
 
 import io.dallen.tokenizer.Token;
 
+/**
+ * Errors from the parser on a token
+ */
 public class ParserError extends Exception {
     public final String msg;
     public final Token on;
@@ -11,6 +14,9 @@ public class ParserError extends Exception {
         this.on = t;
     }
 
+    /**
+     * An unchecked version of the parser error
+     */
     public static class NoCatchParseError extends RuntimeException {
         public final String msg;
         public final Token on;
