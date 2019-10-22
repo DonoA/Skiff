@@ -14,9 +14,12 @@ public class CompileScope {
     }
 
     public void loadBuiltins() {
+        BuiltinTypes.finishSetup();
+
         declareObject(BuiltinTypes.VOID);
         declareObject(BuiltinTypes.STRING);
         declareObject(BuiltinTypes.INT);
+        declareObject(BuiltinTypes.FLOAT);
         declareObject(BuiltinTypes.BOOL);
         declareObject(BuiltinTypes.ANYREF);
 //        declareObject(BuiltinTypes.CLASS);

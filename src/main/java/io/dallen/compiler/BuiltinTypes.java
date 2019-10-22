@@ -1,5 +1,7 @@
 package io.dallen.compiler;
 
+import java.util.List;
+
 public class BuiltinTypes {
     public static final CompiledType VOID = new CompiledType("Void", false, true)
             .setCompiledName("void");
@@ -8,6 +10,10 @@ public class BuiltinTypes {
     public static final CompiledType INT = new CompiledType("Int", false, false)
             .setParent(BuiltinTypes.ANY)
             .setCompiledName("int32_t");
+
+    public static final CompiledType FLOAT = new CompiledType("Float", false, false)
+            .setParent(BuiltinTypes.ANY)
+            .setCompiledName("float");
 
     public static final CompiledType BOOL = new CompiledType("Bool" ,false, false)
             .setCompiledName("uint8_t")
@@ -22,5 +28,21 @@ public class BuiltinTypes {
 
     public static final CompiledType STRING = new CompiledType("String", true, false)
             .setParent(BuiltinTypes.ANYREF);
+
+    private static boolean setup = false;
+
+    public static void finishSetup() {
+        if(setup) {
+            return;
+        }
+
+        BuiltinTypes.INT.addMethod(new CompiledMethod("toString", "skiff_int_to_string",
+                false, BuiltinTypes.STRING, List.of(), true, false));
+
+        BuiltinTypes.FLOAT.addMethod(new CompiledMethod("toString", "skiff_float_to_string",
+                false, BuiltinTypes.STRING, List.of(), true, false));
+
+        setup = true;
+    }
 
 }

@@ -366,7 +366,7 @@ public class ASTVisitor {
         sb.append(String.join(", ", argz))
             .append(")");
 
-        CompiledType exactType = typeCode.fillGenericTypes(genericTypes, true);
+        CompiledType exactType = typeCode.fillGenericTypes(genericTypes, false);
 
         boolean requiresCopy = !genericTypes.stream().allMatch(CompiledType::isRef);
 
@@ -517,9 +517,17 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
+        boolean decimal = stmt.value.intValue() != stmt.value.floatValue();
+        String strVal;
+        if(decimal) {
+            strVal = String.valueOf(stmt.value.doubleValue());
+        } else {
+            strVal = String.valueOf(stmt.value.intValue());
+        }
+        CompiledType typ = decimal ? BuiltinTypes.FLOAT : BuiltinTypes.INT;
         return new CompiledCode()
-                .withText(String.valueOf(stmt.value.intValue()))
-                .withType(BuiltinTypes.INT);
+                .withText(strVal)
+                .withType(typ);
     }
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {

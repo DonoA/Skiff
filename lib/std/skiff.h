@@ -14,6 +14,8 @@
 #include "skiff_list.h"
 #include "skiff_exception.h"
 #include "skiff_anyref.h"
+#include "skiff_int.h"
+#include "skiff_float.h"
 #include "try_catch.h"
 
 void skiff_print(skiff_string_t *);

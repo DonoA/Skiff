@@ -1,0 +1,11 @@
+def main(args: List<String>): Int {
+    i: Int = 10;
+    println(i.toString());
+    println((15).toString());
+
+    f: Float = 10.65;
+    println(f.toString());
+    println((42.42).toString());
+
+    return 0;
+}

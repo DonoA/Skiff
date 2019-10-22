@@ -31,6 +31,8 @@ class DottedCompiler {
         List<CompiledType> compArgTypes = compiledArgs.stream().map(CompiledCode::getType).collect(Collectors.toList());
 
         boolean isStatic = lhs.getBinding() instanceof CompiledType;
+        boolean isPrimitive = !lhs.getType().isRef();
+
         if(isStatic) {
             CompiledType clazz = (CompiledType) lhs.getBinding();
             func = clazz.getStaticMethod(call.name, compArgTypes);
@@ -53,6 +55,13 @@ class DottedCompiler {
         }
         if(isStatic) {
             sb.append(func.getCompiledName()).append("(");
+        } else if(isPrimitive) {
+            sb.append(func.getCompiledName())
+                    .append("(")
+                    .append(lhs.getCompiledText());
+            if(!call.args.isEmpty()) {
+                sb.append(", ");
+            }
         } else {
             String deref = (lhs.onStack() ? "*" : "");
             sb.append("(").append(deref).append(lhs.getCompiledText()).append(")->class_ptr->").append(func.getName())

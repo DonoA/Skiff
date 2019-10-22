@@ -113,4 +113,38 @@ public class IntegrationTest {
         );
         assertEquals(expected, actual);
     }
+
+    @org.junit.Test
+    public void math() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Math");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                15, "", ""
+        );
+        assertEquals(expected, actual);
+    }
+
+    @org.junit.Test
+    public void objectPrimitives() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("ObjectPrimitives");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                0, "10\n15\n10.650000\n42.419998\n", ""
+        );
+        assertEquals(expected, actual);
+    }
+
+    @org.junit.Test
+    public void Subscript() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Subscript");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                1, "./working/Subscript/Subscript\nNew String\nPlacing 15 at index 5\n" +
+                "Getting item at 1\n", ""
+        );
+        assertEquals(expected, actual);
+    }
 }
