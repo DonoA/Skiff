@@ -22,6 +22,7 @@ public class CompileScope {
         declareObject(BuiltinTypes.VOID);
         declareObject(BuiltinTypes.STRING);
         declareObject(BuiltinTypes.INT);
+        declareObject(BuiltinTypes.BYTE);
         declareObject(BuiltinTypes.FLOAT);
         declareObject(BuiltinTypes.BOOL);
         declareObject(BuiltinTypes.ANYREF);

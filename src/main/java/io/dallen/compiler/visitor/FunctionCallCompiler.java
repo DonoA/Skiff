@@ -33,8 +33,9 @@ class FunctionCallCompiler {
 
         StringBuilder sb = new StringBuilder();
         if(isSuper) {
-            String superName = context.getContainingClass().getParent().getName();
-            sb.append(VisitorUtils.underscoreJoin("skiff", superName, "new"));
+            CompiledFunction ctr = context.getContainingClass().getParent().getConstructor(compArgs.stream().map(CompiledCode::getType)
+                    .collect(Collectors.toList()));
+            sb.append(ctr.getCompiledName());
         } else {
             sb.append(func.getCompiledName());
         }

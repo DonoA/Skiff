@@ -215,7 +215,7 @@
     "Return": {
         "extends": "Expression",
         "fields": {
-            "value": "Statement"
+            "value": "ASTOptional<Statement>"
         }
     },
     "New": {

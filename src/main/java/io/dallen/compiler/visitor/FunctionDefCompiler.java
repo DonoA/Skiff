@@ -12,17 +12,18 @@ import java.util.stream.Collectors;
 
 class FunctionDefCompiler {
 
-    private static String generateReturnType(boolean isConstructor, CompileContext context, CompiledType returnType) {
-        if(isConstructor) {
+    private static String generateReturnType(CompiledFunction func, CompileContext context) {
+        if(func instanceof CompiledMethod && ((CompiledMethod) func).isConstructor()) {
             return context.getContainingClass().getCompiledName();
         }
 
-        return returnType.getCompiledName();
+        return func.getReturns().getCompiledName();
     }
 
     static String generateFuncName(boolean isConstructor, boolean isStatic, String stmtName, CompileContext context) {
         if(isConstructor) {
-            return VisitorUtils.underscoreJoin("skiff", stmtName, "new");
+            String ctrId = String.valueOf(context.getContainingClass().getConstructors().size());
+            return VisitorUtils.underscoreJoin("skiff", stmtName, "new", ctrId);
         }
 
         if(isStatic) {
@@ -68,13 +69,12 @@ class FunctionDefCompiler {
                 })
                 .collect(Collectors.toList());
 
-        return new CompiledFunction(stmt.name, compiledName, isConstructor, (CompiledType) returns.getBinding(),
-                compiledArgs);
+        return new CompiledFunction(stmt.name, compiledName, compiledArgs, (CompiledType) returns.getBinding());
     }
 
     private static String generateSig(List<ASTEnums.DecModType> modTypes, CompiledFunction func, CompileContext context) {
         StringBuilder sb = new StringBuilder();
-        sb.append(generateReturnType(func.isConstructor(), context, func.getReturns()));
+        sb.append(generateReturnType(func, context));
         sb.append(" ");
         sb.append(func.getCompiledName());
         sb.append("(");
@@ -128,7 +128,8 @@ class FunctionDefCompiler {
             injectSetup(functionCode, func, dec.returns, innerContext);
         }
 
-        if(func.isConstructor()) {
+        boolean isConstructor = func instanceof CompiledMethod && ((CompiledMethod) func).isConstructor();
+        if(isConstructor) {
             functionCode.append(initiateInstance(context.getContainingClass(), innerContext));
         }
 
@@ -150,7 +151,7 @@ class FunctionDefCompiler {
             }
         }
 
-        functionCode.append(generateReturns(returnOptional, func.isConstructor(), context, innerContext));
+        functionCode.append(generateReturns(returnOptional, isConstructor, context, innerContext));
 
         StringBuilder text = new StringBuilder();
 

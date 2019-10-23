@@ -30,7 +30,7 @@ public class Lexer implements ErrorCollector<Token> {
 
             // Skip comments
             if(data.charAt(pos) == '/' && pos + 1 < data.length() && data.charAt(pos+1) == '/') {
-                while(data.charAt(pos) != '\n') {
+                while(pos < data.length() && data.charAt(pos) != '\n') {
                     pos++;
                 }
                 continue;

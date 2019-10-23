@@ -366,7 +366,10 @@ class BlockParser {
         parser.consumeExpected(Token.Keyword.RETURN);
 
         List<Token> valueTokens = parser.consumeTo(Token.Symbol.SEMICOLON);
-        AST.Statement value = new Parser(valueTokens, parser).parseExpression();
+        ASTOptional<AST.Statement> value = ASTOptional.empty();
+        if(!valueTokens.isEmpty()) {
+            value = ASTOptional.of(new Parser(valueTokens, parser).parseExpression());
+        }
         return new AST.Return(value, tokens);
     }
 

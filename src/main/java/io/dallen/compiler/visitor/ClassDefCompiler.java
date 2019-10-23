@@ -17,9 +17,7 @@ class ClassDefCompiler {
         List<CompiledVar> argTypes = dec.args.stream().map(arg -> arg.compile(innerContext).getBinding())
                 .map(obj -> (CompiledVar) obj).collect(Collectors.toList());
 
-        return new CompiledMethod(
-                new CompiledFunction(dec.name, compiledName, isConstructor, returns, argTypes),
-                true, isPrivate);
+        return new CompiledMethod(dec.name, compiledName, argTypes, returns,true, isPrivate, isConstructor, dec);
     }
 
     private static CompiledField createCompiledField(AST.Declare dec, boolean isPrivate, CompileContext innerContext) {
@@ -110,12 +108,15 @@ class ClassDefCompiler {
     }
 
     private static void generateDataClassMethods(CompiledType cls) {
-        cls.addConstructor(new CompiledFunction(
+        cls.addConstructor(new CompiledMethod(
                 cls.getName(),
-                VisitorUtils.underscoreJoin("skiff", cls.getName(), "new"),
-                true,
+                VisitorUtils.underscoreJoin("skiff", cls.getName(), "new", "0"),
+                (List) cls.getAllFields(),
                 BuiltinTypes.VOID,
-                (List) cls.getAllFields()));
+                true,
+                false,
+                true,
+                null));
 
         cls.getAllFields().forEach(f -> {
             String fName = capNameFor(f.getName());
@@ -123,21 +124,20 @@ class ClassDefCompiler {
                 return;
             }
 
-            cls.addMethod(new CompiledMethod(new CompiledFunction(
-                "get" + fName,
+            cls.addMethod(new CompiledMethod(
+                    "get" + fName,
                     VisitorUtils.underscoreJoin("skiff", cls.getName(), "get", f.getName()),
-                    false,
+                    List.of(),
                     f.getType(),
-                    List.of()
-            ), true, false));
+                    true, false));
 
-            cls.addMethod(new CompiledMethod(new CompiledFunction(
+            cls.addMethod(new CompiledMethod(
                     "set" + fName,
                     VisitorUtils.underscoreJoin("skiff", cls.getName(), "set", f.getName()),
-                    false,
+                    List.of(f),
                     BuiltinTypes.VOID,
-                    List.of(f)
-            ), true, false));
+                    true,
+                    false));
         });
     }
 
@@ -154,13 +154,19 @@ class ClassDefCompiler {
         // Declare special class keywords
         innerContext.declareObject(new CompiledVar("this", true, cls));
         cls.getParent().getConstructors().forEach(ctr ->
-                innerContext.declareObject(new CompiledFunction("super", "super", ctr.getArgs()))
+                innerContext.declareObject(new CompiledFunction(
+                        "super",
+                        "super",
+                        ctr.getArgs(),
+                        BuiltinTypes.VOID))
         );
+
+        innerContext.setContainingClass(cls);
     }
 
     private static CompiledType compileClass(AST.ClassDef stmt, CompileContext context, CompileContext innerContext)
             throws CompileException {
-        CompiledType cls = new CompiledType(stmt.name, true, stmt.isStruct);
+        CompiledType cls = new CompiledType(stmt.name, true, stmt.isStruct, stmt);
 
         // Set parent class or default if none found
         stmt.extendClass.ifPresentOrElse(
@@ -212,11 +218,11 @@ class ClassDefCompiler {
                 .stream()
                 .filter(f -> !f.isConstructor())
                 .forEach(f -> {
-                    CompiledFunction override = declaredMethods.get(f.getName());
+                    CompiledMethod override = declaredMethods.get(f.getName());
                     if(override != null) {
-                        cls.addMethod(new CompiledMethod(override, true, f.isPrivate()));
+                        cls.addMethod(new CompiledMethod(override, true, f.isPrivate(), false));
                     } else {
-                        cls.addMethod(new CompiledMethod(f, false, f.isPrivate()));
+                        cls.addMethod(new CompiledMethod(f, false, f.isPrivate(), false));
                     }
                 });
 
@@ -225,7 +231,7 @@ class ClassDefCompiler {
                 .stream()
                 .filter(v -> !cls.hasMethod(v.getName(),
                         v.getArgs().stream().map(CompiledVar::getType).collect(Collectors.toList())))
-                .forEach(v -> cls.addMethod(new CompiledMethod(v, true, v.isPrivate())));
+                .forEach(v -> cls.addMethod(new CompiledMethod(v, true, v.isPrivate(), false)));
 
         if(cls.isDataClass()) {
             generateDataClassMethods(cls);
@@ -369,7 +375,7 @@ class ClassDefCompiler {
                     } else if(cls.hasStaticMethod(f.name, args)) {
                         m = cls.getStaticMethod(f.name, args);
                     } else {
-                        return FunctionDefCompiler.compileFunctionDef(cls.getConstructors().get(0), f, context);
+                        return FunctionDefCompiler.compileFunctionDef(cls.getConstructor(args), f, context);
                     }
 
                     return FunctionDefCompiler.compileFunctionDef(m, f, context);

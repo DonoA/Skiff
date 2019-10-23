@@ -36,7 +36,7 @@ void skiff_exception_static()
     skiff_exception_interface.getMessage = skiff_exception_get_message;
 }
 
-skiff_exception_t * skiff_exception_new(skiff_exception_t * this, skiff_string_t * message)
+skiff_exception_t * skiff_exception_new_0(skiff_exception_t * this, skiff_string_t * message)
 {
     skiff_exception_static();
     if(this == 0) {

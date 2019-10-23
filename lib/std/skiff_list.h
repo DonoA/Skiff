@@ -41,7 +41,7 @@ void skiff_list_static()
     skiff_list_interface.getSize = skiff_list_get_size;
 }
 
-skiff_list_t * skiff_list_new(skiff_list_t * this, int32_t size)
+skiff_list_t * skiff_list_new_0(skiff_list_t * this, int32_t size)
 {
     skiff_list_static();
     if(this == 0) {

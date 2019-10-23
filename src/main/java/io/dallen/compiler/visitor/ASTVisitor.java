@@ -319,12 +319,15 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileReturn(Return stmt, CompileContext context) {
-        CompiledCode code = stmt.value.compile(context);
+        String valueText = "";
+        if(stmt.value.isPresent()) {
+            valueText = " " + stmt.value.get().compile(context).getCompiledText();
+        }
         StringBuilder sb = new StringBuilder();
 
         // Calculate how much needs to be deleted from the last function
         VisitorUtils.cleanupScope(sb, context, false);
-        sb.append(context.getIndent()).append("return ").append(code.getCompiledText());
+        sb.append(context.getIndent()).append("return").append(valueText);
         return new CompiledCode()
                 .withText(sb.toString())
                 .withSemicolon(true);
@@ -342,23 +345,24 @@ public class ASTVisitor {
                     return typ;
                 })
                 .collect(Collectors.toList());
-        String functionName = VisitorUtils.underscoreJoin("skiff", typeCode.getName(), "new");
+        List<CompiledCode> compiledArgs = stmt.argz.stream().map(arg -> arg.compile(context))
+                .collect(Collectors.toList());
+
+        CompiledFunction ctr = typeCode.getConstructor(compiledArgs.stream().map(CompiledCode::getType)
+                .collect(Collectors.toList()));
 
         StringBuilder sb = new StringBuilder();
-        sb.append(functionName).append("(");
+        sb.append(ctr.getCompiledName()).append("(");
         List<String> argz = new ArrayList<>();
         argz.add("0");
-        if(stmt.argz.size() != typeCode.getConstructors().get(0).getArgs().size()) {
-            context.throwError("Arg count does not match constructor!", stmt);
-        }
         for (int i = 0; i < stmt.argz.size(); i++) {
             String argType = "";
-            CompiledCode argCode = stmt.argz.get(i).compile(context);
+            CompiledCode argCode = compiledArgs.get(i);
             String argText = argCode.getCompiledText();
             if(argCode.onStack() && argCode.getType().isRef()) {
                 argText = "*" + argText;
             }
-            if(typeCode.getConstructors().get(0).getArgs().get(0).getType().isGenericPlaceholder()) {
+            if(ctr.getArgs().get(i).getType().isGenericPlaceholder()) {
                 argType = "(void *)";
             }
             argz.add(argType + argText);
@@ -397,10 +401,21 @@ public class ASTVisitor {
     public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
         String importText;
 
-        String location;
         if(stmt.type == ASTEnums.ImportType.NATIVE) {
-            location = new File(context.getFilename()).getParent() + "/" + stmt.value;
-        } else if(stmt.value.startsWith(".")) {
+            String location = new File(context.getFilename()).getParent() + "/" + stmt.value;
+            StringBuilder importLocation = new StringBuilder();
+            importLocation.append("#include \"");
+            for(int i = 0; i < context.getDestFileName().length(); i++) {
+                if(context.getDestFileName().charAt(i) == '/') {
+                    importLocation.append("../");
+                }
+            }
+            importLocation.append(location).append("\"\n");
+            return new CompiledCode().withText(importLocation.toString());
+        }
+
+        String location;
+        if(stmt.value.startsWith(".")) {
             location = new File(context.getFilename()).getParent() + "/" + stmt.value + ".skiff";
         } else {
             location = "lib/" + stmt.value + ".skiff";
@@ -413,18 +428,13 @@ public class ASTVisitor {
             return new CompiledCode();
         }
 
-        Optional<String> importCode;
-        if(stmt.type == ASTEnums.ImportType.NATIVE) {
-            importCode = Optional.of(importText);
-        } else {
-            String currentFile = context.getFilename();
-            context.setFilename(location);
-            String currentText = context.getCode();
-            context.setCode(importText);
-            importCode = SkiffC.compile(importText, context);
-            context.setFilename(currentFile);
-            context.setCode(currentText);
-        }
+        String currentFile = context.getFilename();
+        context.setFilename(location);
+        String currentText = context.getCode();
+        context.setCode(importText);
+        Optional<String> importCode = SkiffC.compile(importText, context);
+        context.setFilename(currentFile);
+        context.setCode(currentText);
 
         if(importCode.isEmpty()) {
             return new CompiledCode();
@@ -548,7 +558,7 @@ public class ASTVisitor {
 
     public CompiledCode compileStringLiteral(StringLiteral stmt, CompileContext context) {
         return new CompiledCode()
-                .withText("skiff_string_new(0, \"" + stmt.value + "\")")
+                .withText("skiff_string_new_0(0, \"" + stmt.value + "\")")
                 .withType(BuiltinTypes.STRING);
     }
 

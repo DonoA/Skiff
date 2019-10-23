@@ -23,12 +23,13 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     private int globalCounter = 1;
     private final boolean debug;
     private String fileName;
+    private final String destFileName;
 
     private int refStackSize = 0;
 
     private boolean onStack = true;
 
-    public CompileContext(String code, String fileName, boolean debug) {
+    public CompileContext(String code, String fileName, String destFileName, boolean debug) {
         this.parent = null;
         this.errors = new ArrayList<>();
         this.code = code;
@@ -36,6 +37,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         this.dependents = new ArrayList<>();
         this.debug = debug;
         this.scope = new CompileScope(null);
+        this.destFileName = destFileName;
     }
 
     public CompileContext(CompileContext parent) {
@@ -57,7 +59,8 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         this.containingClass = parent.containingClass;
         this.onStack = parent.onStack;
         this.debug = parent.debug;
-        this.fileName = null;
+        this.fileName = parent.fileName;
+        this.destFileName = parent.destFileName;
     }
 
     public CompileContext addIndent() {
@@ -204,5 +207,9 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
 
     public String getCode() {
         return code;
+    }
+
+    public String getDestFileName() {
+        return destFileName;
     }
 }

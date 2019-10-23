@@ -740,8 +740,8 @@ public class AST {
     }
     
     public static class Return extends Expression {
-        public final Statement value;
-        public Return(Statement value, List<Token> tokens) {
+        public final ASTOptional<Statement> value;
+        public Return(ASTOptional<Statement> value, List<Token> tokens) {
             super(tokens);
             this.value = value;
         }

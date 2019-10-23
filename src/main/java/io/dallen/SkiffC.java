@@ -38,7 +38,7 @@ public class SkiffC {
     }
 
     public static boolean compile(String infile, String outfile, boolean debug) {
-        Optional<String> code = compile(infile, debug);
+        Optional<String> code = compileText(infile, outfile, debug);
         try (PrintWriter out = new PrintWriter(outfile)) {
             code.ifPresent(out::println);
         } catch (FileNotFoundException e) {
@@ -47,7 +47,7 @@ public class SkiffC {
         return code.isPresent();
     }
 
-    public static Optional<String> compile(String infile, boolean debug) {
+    private static Optional<String> compileText(String infile, String outfile, boolean debug) {
         String programText;
         try {
             programText = readFile(infile);
@@ -60,7 +60,7 @@ public class SkiffC {
 
         preamble.append("#include \"" + new File(stdFolder + "/skiff.h").getAbsolutePath() + "\"\n\n");
 
-        CompileContext context = new CompileContext(programText, infile, debug);
+        CompileContext context = new CompileContext(programText, infile, outfile, debug);
         context.getScope().loadBuiltins();
         try {
             for(File f : new File(stdFolder).listFiles()) {
@@ -91,10 +91,12 @@ public class SkiffC {
 
         Lexer lexer = new Lexer(programText);
         List<Token> tokenStream = null;
+        boolean lexFail = false;
         try {
             tokenStream = lexer.lex();
         } catch(Exception ex) {
             ex.printStackTrace();
+            lexFail = true;
         } finally {
 //        printTokenStream(tokenStream);
             if(!lexer.getErrors().isEmpty()) {
@@ -103,7 +105,7 @@ public class SkiffC {
             }
         }
 
-        if(tokenStream == null || tokenStream.isEmpty()) {
+        if(lexFail) {
             return Optional.empty();
         }
 
@@ -113,10 +115,12 @@ public class SkiffC {
 
         Parser parser = new Parser(tokenStream, programText);
         List<AST.Statement> statements = null;
+        boolean parseFail = false;
         try {
             statements = parser.parseAll();
         } catch(Exception ex) {
             ex.printStackTrace();
+            parseFail = true;
         } finally {
 //        statements.forEach(System.out::println);
             if(!parser.getErrors().isEmpty()) {
@@ -125,7 +129,7 @@ public class SkiffC {
             }
         }
 
-        if(statements == null || statements.isEmpty()) {
+        if(parseFail) {
             return Optional.empty();
         }
         if(context.isDebug()) {
@@ -133,6 +137,7 @@ public class SkiffC {
         }
 
         List<String> compiledText = null;
+        boolean compileFail = false;
         try {
             compiledText = statements
                     .stream()
@@ -142,6 +147,7 @@ public class SkiffC {
 
         } catch(Exception ex) {
             ex.printStackTrace();
+            compileFail = true;
         } finally {
             if(!context.getErrors().isEmpty()) {
                 System.out.println(String.join("\n", context.getErrors()));
@@ -150,7 +156,7 @@ public class SkiffC {
             // print errors from context
         }
 
-        if(compiledText == null || compiledText.isEmpty()) {
+        if(compileFail) {
             return Optional.empty();
         }
         String code = String.join("\n", compiledText);

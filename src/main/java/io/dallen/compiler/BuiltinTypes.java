@@ -22,6 +22,10 @@ public class BuiltinTypes {
             .setCompiledName("uint8_t")
             .setParent(BuiltinTypes.ANY);
 
+    public static final CompiledType BYTE = new CompiledType("Byte" ,false, false)
+            .setCompiledName("int8_t")
+            .setParent(BuiltinTypes.ANY);
+
     public static final CompiledType ANYREF = new CompiledType("AnyRef", true, false)
             .setParent(BuiltinTypes.ANY);
     public static final CompiledType CLASS = new CompiledType("Class", true, false)
@@ -40,10 +44,10 @@ public class BuiltinTypes {
         }
 
         BuiltinTypes.INT.addMethod(new CompiledMethod("toString", "skiff_int_to_string",
-                false, BuiltinTypes.STRING, List.of(), true, false));
+                List.of(), BuiltinTypes.STRING, true, false));
 
         BuiltinTypes.FLOAT.addMethod(new CompiledMethod("toString", "skiff_float_to_string",
-                false, BuiltinTypes.STRING, List.of(), true, false));
+                List.of(), BuiltinTypes.STRING, true, false));
 
         setup = true;
     }

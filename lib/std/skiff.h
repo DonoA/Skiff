@@ -10,6 +10,9 @@
 #define GC_DEBUG 0
 #define TRY_CATCH 1
 
+#define SKIFF_INT int32_t
+#define SKIFF_BOOL uint8_t
+
 #include "skiff_string.h"
 #include "skiff_list.h"
 #include "skiff_exception.h"
@@ -37,19 +40,19 @@ static void sig_handler(int sig, siginfo_t *dont_care, void *dont_care_either)
     ex->class_ptr = &skiff_exception_interface;
     if(sig == SIGSEGV) 
     {
-        skiff_exception_new(ex, skiff_string_new(0, "Invalid access to storage!"));
+        skiff_exception_new_0(ex, skiff_string_new_0(0, "Invalid access to storage!"));
     }
     else if(sig == SIGFPE)
     {
-        skiff_exception_new(ex, skiff_string_new(0, "Erroneous arithmetic operation!"));
+        skiff_exception_new_0(ex, skiff_string_new_0(0, "Erroneous arithmetic operation!"));
     }
     else if(sig == SIGABRT)
     {
-        skiff_exception_new(ex, skiff_string_new(0, "Abnormal termination!"));
+        skiff_exception_new_0(ex, skiff_string_new_0(0, "Abnormal termination!"));
     }
     else
     {
-        skiff_exception_new(ex, skiff_string_new(0, "Error code unknown!"));
+        skiff_exception_new_0(ex, skiff_string_new_0(0, "Error code unknown!"));
         printf("signal %i\n", sig);
     }
     skiff_throw(ex);
@@ -82,10 +85,10 @@ int main(int argc, char * argv[])
     if(skiff_continue_exec_0 == 0)
     {
         skiff_list_t ** argz = skalloc_ref_stack();
-        *argz = skiff_list_new(0, argc);
+        *argz = skiff_list_new_0(0, argc);
         for(size_t i = 0; i < argc; i++)
         {
-            skiff_list_assign_sub_int(*argz, skiff_string_new(0, argv[i]), i);
+            skiff_list_assign_sub_int(*argz, skiff_string_new_0(0, argv[i]), i);
         }
         rtn = skiff_main(*argz);
     }
@@ -101,13 +104,6 @@ int main(int argc, char * argv[])
     }
     return rtn;
 }
-
-// skiff_string_t * skiff_int_to_string(int32_t this) 
-// {
-//     char snum[12];
-//     itoa(this, snum, 10);
-//     return skiff_string_allocate_new(snum);
-// }
 
 void skiff_println(skiff_string_t * string)
 {

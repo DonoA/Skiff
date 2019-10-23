@@ -1,5 +1,6 @@
 package io.dallen.compiler;
 
+import io.dallen.ast.AST;
 import io.dallen.compiler.visitor.VisitorUtils;
 
 import java.util.*;
@@ -16,7 +17,8 @@ public class CompiledType extends CompiledObject {
     private final List<CompiledField> declaredVars = new ArrayList<>();
     private final List<CompiledField> declaredVarStructOrder = new ArrayList<>();
     private final List<CompiledMethod> declaredMethods = new ArrayList<>();
-    private final List<CompiledFunction> constructors = new ArrayList<>();
+
+    private final CompileScope constructors = new CompileScope(null);
 
     private final CompileScope declaredScope = new CompileScope(null);
     private CompileScope staticScope = new CompileScope(null);
@@ -31,8 +33,9 @@ public class CompiledType extends CompiledObject {
     private boolean genericPlaceholder = false;
     private boolean generic = false;
     private final boolean dataClass;
+    private final AST.ClassDef originalDec;
 
-    public CompiledType(String className, boolean ref, boolean dataClass) {
+    public CompiledType(String className, boolean ref, boolean dataClass, AST.ClassDef originalDec) {
         super(className);
         this.structName = VisitorUtils.underscoreJoin("skiff", className, "t");
         this.interfaceName = VisitorUtils.underscoreJoin("skiff", className, "interface");
@@ -41,6 +44,11 @@ public class CompiledType extends CompiledObject {
         this.compiledName = this.structName + (ref ? " *" : "");
         this.isRef = ref;
         this.dataClass = dataClass;
+        this.originalDec = originalDec;
+    }
+
+    public CompiledType(String className, boolean ref, boolean dataClass) {
+        this(className, ref, dataClass, null);
     }
 
     public String getStructName() {
@@ -116,13 +124,17 @@ public class CompiledType extends CompiledObject {
         return (CompiledField) staticScope.getObject(name);
     }
 
-    public CompiledType addConstructor(CompiledFunction func) {
-        constructors.add(func);
+    public CompiledType addConstructor(CompiledMethod func) {
+        constructors.declareFunction(func);
         return this;
     }
 
-    public List<CompiledFunction> getConstructors() {
-        return constructors;
+    public List<CompiledMethod> getConstructors() {
+        return (List) constructors.getAllFuncs();
+    }
+
+    public CompiledMethod getConstructor(List<CompiledType> args) {
+        return (CompiledMethod) constructors.getFunction(this.getName(), args);
     }
 
     public List<CompiledField> getAllFields() {
@@ -187,11 +199,11 @@ public class CompiledType extends CompiledObject {
      * Rebuilds compiled class with all filled generic types. This includes all fields, method parameters and return
      * types, and other uses of the generic within the class definition.
      * @param genericList List of classes replacing the generic placeholders
-     * @param modifiyName Denotes if the new compiled class should have an updated name to represent its generic
+     * @param modifyName Denotes if the new compiled class should have an updated name to represent its generic
      *                    subtypes
      * @return The new compiled class
      */
-    public CompiledType fillGenericTypes(List<CompiledType> genericList, boolean modifiyName) {
+    public CompiledType fillGenericTypes(List<CompiledType> genericList, boolean modifyName) {
         Map<String, CompiledType> generics = new HashMap<>();
 
         ListIterator<String> genericNameItr = genericOrder.listIterator();
@@ -201,12 +213,12 @@ public class CompiledType extends CompiledObject {
         });
 
         String name = getName();
-        if(modifiyName) {
+        if(modifyName) {
             String appends = genericList.stream().map(CompiledObject::getName).collect(Collectors.joining(""));
             name = name + appends;
         }
 
-        CompiledType filledType = new CompiledType(name, isRef, dataClass)
+        CompiledType filledType = new CompiledType(name, isRef, dataClass, originalDec)
                 .isGeneric(true)
                 .setParent(parent);
 
@@ -228,12 +240,13 @@ public class CompiledType extends CompiledObject {
         });
 
         this.declaredMethods.forEach(m -> {
-            CompiledFunction modFunc = fillFunction(generics, m);
-            filledType.addMethod(new CompiledMethod(modFunc, m.isMine(), m.isPrivate()));
+            CompiledFunction modFunc = fillMethod(generics, m);
+            filledType.addMethod(new CompiledMethod(modFunc, m.isMine(), m.isPrivate(), false));
         });
 
-        this.constructors.forEach(ctor -> {
-            filledType.addConstructor(fillFunction(generics, ctor));
+        this.constructors.getAllFuncs().forEach(ctor -> {
+            CompiledMethod m = (CompiledMethod) ctor;
+            filledType.addConstructor(fillMethod(generics, m));
         });
 
         return filledType;
@@ -245,7 +258,7 @@ public class CompiledType extends CompiledObject {
      * @param func The function to fill
      * @return The new compile function
      */
-    private CompiledFunction fillFunction(Map<String, CompiledType> generics, CompiledFunction func) {
+    private CompiledMethod fillMethod(Map<String, CompiledType> generics, CompiledMethod func) {
         boolean newTypeNeeded = false;
         CompiledType returns = func.getReturns();
         if(func.getReturns().genericPlaceholder) {
@@ -266,7 +279,8 @@ public class CompiledType extends CompiledObject {
         }
 
         if(newTypeNeeded) {
-            return new CompiledFunction(func.getName(), func.getCompiledName(), false, returns, argTypes);
+            return new CompiledMethod(func.getName(), func.getCompiledName(), argTypes, returns, func.isMine(),
+                    func.isPrivate(), func.isConstructor(), func.getOriginalDef());
         } else {
             return func;
         }
@@ -309,5 +323,9 @@ public class CompiledType extends CompiledObject {
 
     public void addToDeclaredVarStructOrder(CompiledField f) {
         this.declaredVarStructOrder.add(f);
+    }
+
+    public AST.ClassDef getOriginalDec() {
+        return originalDec;
     }
 }
