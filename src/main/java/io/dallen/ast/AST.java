@@ -29,7 +29,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -49,7 +55,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileExpression(this, context);
+            try {
+                return ASTVisitor.instance.compileExpression(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -75,7 +87,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileType(this, context);
+            try {
+                return ASTVisitor.instance.compileType(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -99,7 +117,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileGenericType(this, context);
+            try {
+                return ASTVisitor.instance.compileGenericType(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), null);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -121,7 +145,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileBlockStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileBlockStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -161,7 +191,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileFunctionDef(this, context);
+            try {
+                return ASTVisitor.instance.compileFunctionDef(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -189,7 +225,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileAnonFunctionDef(this, context);
+            try {
+                return ASTVisitor.instance.compileAnonFunctionDef(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -229,7 +271,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileClassDef(this, context);
+            try {
+                return ASTVisitor.instance.compileClassDef(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -253,7 +301,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileFunctionParam(this, context);
+            try {
+                return ASTVisitor.instance.compileFunctionParam(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), null);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -281,7 +335,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileIfBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileIfBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -301,7 +361,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileElseBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileElseBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -327,7 +393,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileElseIfBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileElseIfBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -349,7 +421,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileElseAlwaysBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileElseAlwaysBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -373,7 +451,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileWhileBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileWhileBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -395,7 +479,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileLoopBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileLoopBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -427,7 +517,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileForBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileForBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -455,7 +551,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileForIterBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileForIterBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -479,7 +581,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileMatchBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileMatchBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -503,7 +611,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileSwitchBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileSwitchBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -525,7 +639,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileCaseStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileCaseStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -547,7 +667,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileCaseMatchStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileCaseMatchStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -567,7 +693,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileBreakStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileBreakStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -587,7 +719,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileContinueStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileContinueStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -611,7 +749,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileTryBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileTryBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -635,7 +779,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileCatchBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileCatchBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -657,7 +807,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileFinallyBlock(this, context);
+            try {
+                return ASTVisitor.instance.compileFinallyBlock(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -687,7 +843,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileFunctionCall(this, context);
+            try {
+                return ASTVisitor.instance.compileFunctionCall(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -709,7 +871,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileParened(this, context);
+            try {
+                return ASTVisitor.instance.compileParened(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -735,7 +903,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileDotted(this, context);
+            try {
+                return ASTVisitor.instance.compileDotted(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -757,7 +931,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileReturn(this, context);
+            try {
+                return ASTVisitor.instance.compileReturn(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -783,7 +963,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileNew(this, context);
+            try {
+                return ASTVisitor.instance.compileNew(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -805,7 +991,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileThrowStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileThrowStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -831,7 +1023,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileImportStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileImportStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -861,7 +1059,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileMathStatement(this, context);
+            try {
+                return ASTVisitor.instance.compileMathStatement(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -891,7 +1095,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileMathAssign(this, context);
+            try {
+                return ASTVisitor.instance.compileMathAssign(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -921,7 +1131,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileMathSelfMod(this, context);
+            try {
+                return ASTVisitor.instance.compileMathSelfMod(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -947,7 +1163,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileSubscript(this, context);
+            try {
+                return ASTVisitor.instance.compileSubscript(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -977,7 +1199,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileCompare(this, context);
+            try {
+                return ASTVisitor.instance.compileCompare(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1007,7 +1235,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileBoolCombine(this, context);
+            try {
+                return ASTVisitor.instance.compileBoolCombine(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1033,7 +1267,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileAssign(this, context);
+            try {
+                return ASTVisitor.instance.compileAssign(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1063,7 +1303,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileDeclare(this, context);
+            try {
+                return ASTVisitor.instance.compileDeclare(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1091,7 +1337,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileDeclareAssign(this, context);
+            try {
+                return ASTVisitor.instance.compileDeclareAssign(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1113,7 +1365,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileNumberLiteral(this, context);
+            try {
+                return ASTVisitor.instance.compileNumberLiteral(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1135,7 +1393,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileStringLiteral(this, context);
+            try {
+                return ASTVisitor.instance.compileStringLiteral(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1157,7 +1421,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileSequenceLiteral(this, context);
+            try {
+                return ASTVisitor.instance.compileSequenceLiteral(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1179,7 +1449,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileBooleanLiteral(this, context);
+            try {
+                return ASTVisitor.instance.compileBooleanLiteral(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1205,7 +1481,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileRegexLiteral(this, context);
+            try {
+                return ASTVisitor.instance.compileRegexLiteral(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     
@@ -1227,7 +1509,13 @@ public class AST {
         }
 
         public CompiledCode compile(CompileContext context) {
-            return ASTVisitor.instance.compileVariable(this, context);
+            try {
+                return ASTVisitor.instance.compileVariable(this, context);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                context.throwError(ex.toString(), this);
+            }
+            return new CompiledCode();
         }
     }
     

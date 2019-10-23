@@ -191,7 +191,11 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     @Override
     public void throwError(String msg, AST.Statement stmt) {
         if(parent == null) {
-            errors.add(ErrorPrinter.pointToPos(code, stmt.tokens.get(0).pos, msg));
+            int pos = 0;
+            if(stmt != null) {
+                pos = stmt.tokens.get(0).pos;
+            }
+            errors.add(ErrorPrinter.pointToPos(code, pos, msg));
         } else {
             parent.throwError(msg, stmt);
         }

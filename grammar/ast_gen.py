@@ -138,6 +138,11 @@ def generate_def(class_name, clazz):
         generate_toFlatString(f, clazz) for f in all_class_fields
     ])
 
+    hasTokens = any([f.name == "tokens" for f in all_class_fields])
+    tokenArray = "null"
+    if hasTokens:
+        tokenArray = "this"
+
     return f"""
     public static class {class_name} {extends} {cbo}
 {java_fields}
@@ -155,7 +160,13 @@ def generate_def(class_name, clazz):
         {cbc}
 
         public CompiledCode compile(CompileContext context) {cbo}
-            return ASTVisitor.instance.compile{class_name}(this, context);
+            try {cbo}
+                return ASTVisitor.instance.compile{class_name}(this, context);
+            {cbc} catch(Exception ex) {cbo}
+                ex.printStackTrace();
+                context.throwError(ex.toString(), {tokenArray});
+            {cbc}
+            return new CompiledCode();
         {cbc}
     {cbc}
     """
