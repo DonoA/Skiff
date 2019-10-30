@@ -16,5 +16,9 @@ def main(args: List<String>): Int {
         j--;
     }
 
+    for(i: Int = 0; i < 2; i++) {
+        println("bonk");
+    }
+
     return i + j;
 }
