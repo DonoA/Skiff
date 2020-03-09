@@ -16,7 +16,7 @@ def main(args: List<String>): Int {
         j--;
     }
 
-    for(i: Int = 0; i < 2; i++) {
+    for(k: Int = 0; k < 2; k++) {
         println("bonk");
     }
 

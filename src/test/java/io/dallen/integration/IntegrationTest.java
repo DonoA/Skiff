@@ -21,7 +21,7 @@ public class IntegrationTest {
 
         IntegrationTestHarness.TestResult actual = harness.run();
         IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
-                2, "while\nwhile\nloop\nloop\nloop\nloop\nloop\n", ""
+                2, "while\nwhile\nloop\nloop\nloop\nloop\nloop\nbonk\nbonk\n", ""
         );
         assertEquals(expected, actual);
     }
