@@ -1,0 +1,1 @@
+// native def decodeBytes(bytes: List<Byte>): String;

@@ -137,8 +137,20 @@ public class IntegrationTest {
     }
 
     @org.junit.Test
-    public void Subscript() {
+    public void subscript() {
         IntegrationTestHarness harness = new IntegrationTestHarness("Subscript");
+
+        IntegrationTestHarness.TestResult actual = harness.run();
+        IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(
+                1, "./working/Subscript/Subscript\nNew String\nPlacing 15 at index 5\n" +
+                "Getting item at 1\n", ""
+        );
+        assertEquals(expected, actual);
+    }
+
+    @org.junit.Test
+    public void files() {
+        IntegrationTestHarness harness = new IntegrationTestHarness("Files");
 
         IntegrationTestHarness.TestResult actual = harness.run();
         IntegrationTestHarness.TestResult expected = new IntegrationTestHarness.TestResult(

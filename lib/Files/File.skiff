@@ -1,0 +1,46 @@
+native import "./skiff_file.h";
+
+native def openFd(filename: String): Int;
+native def closeFd(desc: Int);
+// native def readToBuffer(buffer: List<Byte>): Int;
+
+class File {
+    fileName: String;
+    private fileDesc: Int;
+    private isOpen: Bool;
+    private buffer: List<Byte>;
+    
+    def File(fileName: String) {
+        this.fileName = fileName;
+        this.isOpen = false;
+        this.buffer = new List<Byte>(4096);
+    }
+
+    def File(fd: Int) {
+        this.fileName = "";
+        this.fileDesc = fd;
+        this.isOpen = true;
+        this.buffer = new List<Byte>(4096);
+    }
+
+    def readAll(): String {
+        this.open();
+        read: Int = 0;
+        loop {
+            // read = readToBuffer(buffer);
+            if(read < 4096) {
+                break;
+            }
+        }
+        return "";
+    }
+
+    private def open() {
+        if(this.isOpen) {
+            return;
+        }
+
+        this.fileDesc = openFd(this.fileName);
+        this.isOpen = true;
+    }
+}

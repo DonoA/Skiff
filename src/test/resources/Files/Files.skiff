@@ -1,0 +1,8 @@
+import "Files/File";
+
+def main(args: List<String>): Int {
+    myFile: File = new File("./testFile.txt");
+    myText: String = myFile.readAll();
+    print(myText);
+    return 0;
+}
