@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -26,21 +27,51 @@ class IntegrationTestHarness {
                 throw new RuntimeException("SkiffC failed!");
             }
 
-            TestResult gccResult = exec("gcc -g -Wall -Wno-pointer-to-int-cast -Wno-unused-but-set-variable " +
+            copyDataFiles(new File("src/test/resources/" + testName), "");
+
+            TestResult gccResult = exec(null, "gcc -g -Wall -Wno-pointer-to-int-cast -Wno-unused-but-set-variable " +
                     "-o working/" + testName + "/" + testName +
                     " working/" + testName + "/" + testName + ".c");
             if(gccResult.returnCode != 0 || !gccResult.stdOut.isEmpty() || !gccResult.stdErr.isEmpty()) {
                 throw new RuntimeException("Gcc failed " + gccResult.toString());
             }
 
-            return exec("./working/" + testName + "/" + testName);
+            return exec(new File("working/" + testName), new File(getBinaryPath()).getAbsolutePath());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private TestResult exec(String command) throws IOException, InterruptedException {
-        Process p = Runtime.getRuntime().exec(command);
+    String getBinaryPath() {
+        return "working/" + testName + "/" + testName;
+    }
+
+    private void copyDataFiles(File folder, String folderName) {
+        for(File f : folder.listFiles()){
+            if(f.isDirectory()) {
+                copyDataFiles(f, folderName + "/" + f.getName());
+                continue;
+            }
+
+            if(f.getName().endsWith(".skiff")) {
+                continue;
+            }
+
+            Path dest = Path.of("working", testName, folderName, f.getName());
+            if(dest.toFile().exists()) {
+                continue;
+            }
+
+            try {
+                Files.copy(f.toPath(), dest);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private TestResult exec(File workingDir, String command) throws IOException, InterruptedException {
+        Process p = Runtime.getRuntime().exec(command, null, workingDir);
 
         p.waitFor(600, TimeUnit.SECONDS);
 

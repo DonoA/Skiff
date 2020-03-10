@@ -50,7 +50,7 @@ class FunctionCallCompiler {
         argList.addAll(compArgs
                 .stream()
                 .map(arg -> {
-                    if(arg.onStack()) {
+                    if(arg.onStack() && arg.getType().isRef()) {
                         return  "*(" + arg.getCompiledText() + ")";
                     }
                     return  "(" + arg.getCompiledText() + ")";

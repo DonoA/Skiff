@@ -7,9 +7,9 @@
 #include "skiff_string.h"
 
 #define STACK_SIZE 4096
-#define EDEN_SIZE 4096
-#define SURVIVOR_SIZE 4096
-#define OLD_GEN_SIZE 4096
+#define EDEN_SIZE 1024 * 1024 * 10 // 10 mb
+#define SURVIVOR_SIZE 1024 * 1024 * 10 // 10 mb
+#define OLD_GEN_SIZE 1024 * 1024 * 10 // 10 mb
 #define REF_SIZE 8
 
 #define CLEAN 0

@@ -55,8 +55,3 @@ uint8_t skiff_string_equals(skiff_string_t * s1, skiff_string_t * s2)
     return strcmp(s1->data, s2->data) == 0;
 }
 
-// skiff_string_t * skiff_decode_bytes(skiff_list_t * bytes)
-// {
-//     // char * decoded  = skalloc(1, sizeof(char) * (bytes->size + 1));
-//     // bytes->
-// }
