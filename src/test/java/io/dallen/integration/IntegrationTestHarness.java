@@ -21,8 +21,13 @@ class IntegrationTestHarness {
     TestResult run() {
         try {
             Files.createDirectories(new File("working/" + testName).toPath());
+            long startTime = System.nanoTime();
             boolean passed = SkiffC.compile("src/test/resources/" + testName + "/" + testName + ".skiff",
                     "working/" + testName + "/" + testName + ".c", false);
+            long endTime = System.nanoTime();
+
+            System.out.println((endTime - startTime)/(1000*1000f) + " ms " + testName + " Time");
+
             if(!passed) {
                 throw new RuntimeException("SkiffC failed!");
             }
