@@ -531,8 +531,10 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
-        CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name, List.of(), stmt.tokens), context);
-        CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name, stmt.tokens), stmt.value, stmt.tokens), context);
+        CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name, List.of(), stmt.token_start,
+                stmt.token_end), context);
+        CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name, stmt.token_start, stmt.token_end),
+                stmt.value, stmt.token_start, stmt.token_end), context);
 
         String text = dec.getCompiledText() + ";\n" + context.getIndent() + value.getCompiledText() + ";";
 
@@ -543,12 +545,12 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
-        boolean decimal = stmt.value.intValue() != stmt.value.floatValue();
+        boolean decimal = (int) stmt.value != stmt.value;
         String strVal;
         if(decimal) {
-            strVal = String.valueOf(stmt.value.doubleValue());
+            strVal = String.valueOf(stmt.value);
         } else {
-            strVal = String.valueOf(stmt.value.intValue());
+            strVal = String.valueOf((int) stmt.value);
         }
         CompiledType typ = decimal ? BuiltinTypes.FLOAT : BuiltinTypes.INT;
         return new CompiledCode()
@@ -618,4 +620,15 @@ public class ASTVisitor {
                 .withType(objType);
     }
 
+    public CompiledCode compileProgram(Program program, CompileContext context) {
+        context.setTokenStream(program.tokens);
+
+        String text = program.body
+                .stream()
+                .map(stmt -> stmt.compile(context))
+                .map(CompiledCode::getCompiledText)
+                .collect(Collectors.joining("\n"));
+
+        return new CompiledCode().withText(text);
+    }
 }

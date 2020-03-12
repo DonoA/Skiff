@@ -91,17 +91,17 @@ def _generate_to_string(field, clazz, flat):
         sep = '\\n'
 
     to_string = 'toString()'
+    string_construction = f'String.valueOf(this.{name})'
     if flat and not field.no_flat_string:
         to_string = 'toFlatString()'
-
-    string_construction = f"this.{name}.{to_string}"
+        string_construction = f'this.{name}.toFlatString()'
 
     if field.is_list:
-        string_construction = f"\"[{sep}\" + this.{name}.stream().map(e -> e.{to_string}).collect(Collectors.joining(\", {sep}\")) + \" {sep}]\""
+        string_construction = f'\"[{sep}\" + this.{name}.stream().map(e -> e.{to_string}).collect(Collectors.joining(\", {sep}\")) + \" {sep}]\"'
     elif clazz.literal:
-        string_construction = f"\"\\\"\" + this.{name}.toString() + \"\\\"\""
+        string_construction = f'\"\\\"\" + String.valueOf(this.{name}) + \"\\\"\"'
     
-    return f"{name} = \" + {string_construction} + \""
+    return f'{name} = \" + {string_construction} + \"'
 
 def generate_def(class_name, clazz):
     all_class_fields = clazz.fields + clazz.super_fields

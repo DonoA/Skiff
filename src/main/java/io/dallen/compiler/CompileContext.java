@@ -3,6 +3,7 @@ package io.dallen.compiler;
 import io.dallen.ast.AST;
 import io.dallen.errors.ErrorCollector;
 import io.dallen.errors.ErrorPrinter;
+import io.dallen.tokenizer.Token;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.NoSuchElementException;
 public class CompileContext implements ErrorCollector<AST.Statement> {
 
     public final static String INDENT = "    ";
+
+    private List<Token> tokenStream;
 
     private final CompileScope scope;
     private String indent = "";
@@ -193,7 +196,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         if(parent == null) {
             int pos = 0;
             if(stmt != null) {
-                pos = stmt.tokens.get(0).pos;
+                pos = tokenStream.get(stmt.token_start).pos;
             }
             errors.add(ErrorPrinter.pointToPos(code, pos, msg));
         } else {
@@ -215,5 +218,9 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
 
     public String getDestFileName() {
         return destFileName;
+    }
+
+    public void setTokenStream(List<Token> tokenStream) {
+        this.tokenStream = tokenStream;
     }
 }

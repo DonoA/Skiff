@@ -25,7 +25,7 @@ class FunctionCallCompiler {
                 return new CompiledCode();
             }
 
-            AST.Variable self = new AST.Variable("this", stmt.tokens);
+            AST.Variable self = new AST.Variable("this", stmt.token_start, stmt.token_start);
             return DottedCompiler.compileFunctionDot(self.compile(context), stmt, context);
         }
 

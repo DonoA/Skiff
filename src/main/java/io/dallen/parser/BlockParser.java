@@ -13,29 +13,18 @@ import java.util.Optional;
 
 class BlockParser {
 
-    private Parser parser;
+//    private ArrayList<AST.Statement> statements = new ArrayList<>();
 
-    private ArrayList<AST.Statement> statements = new ArrayList<>();
-
-    private static final AdvancedSwitch<Token.TokenType, AST.Statement, BlockParser> blockSwitcher =
-            new AdvancedSwitch<Token.TokenType, AST.Statement, BlockParser>()
+    private static final AdvancedSwitch<Token.TokenType, AST.Statement, Parser> blockSwitcher =
+            new AdvancedSwitch<Token.TokenType, AST.Statement, Parser>()
             .addCase(Keyword.WHILE::equals, BlockParser::parseWhileBlock)
             .addCase(Keyword.SWITCH::equals, BlockParser::parseSwitchBlock)
             .addCase(Keyword.MATCH::equals, BlockParser::parseMatchBlock)
-            .addCase(Keyword.CASE::equals, context -> {
-                if(context.parser.isInMatch()) {
-                    return context.parseMatchCase();
-                } else {
-                    return context.parseCase();
-                }
-            })
+            .addCase(Keyword.CASE::equals, BlockParser::parseCases)
             .addCase(Keyword.LOOP::equals, BlockParser::parseLoopBlock)
             .addCase(Keyword.FOR::equals, BlockParser::parseForBlock)
             .addCase(Keyword.IF::equals, BlockParser::parseIfBlock)
-            .addCase(Keyword.ELSE::equals, context -> {
-                context.attachElseBlock(context.statements);
-                return null;
-            })
+            .addCase(Keyword.ELSE::equals, BlockParser::parseElse)
             .addCase(Keyword.DEF::equals, BlockParser::parseFunctionDef)
             .addCase(Keyword.CLASS::equals, BlockParser::parseClassDef)
             .addCase(Keyword.STRUCT::equals, BlockParser::parseClassDef)
@@ -46,20 +35,15 @@ class BlockParser {
             .addCase(Keyword.IMPORT::equals, BlockParser::parseImport)
             .addCase(Keyword.THROW::equals, BlockParser::parseThrow)
             .addCase(Keyword.TRY::equals, BlockParser::parseTryBlock)
-            .addCase(Keyword.CATCH::equals, context -> {
-                context.attachCatchBlock(context.statements);
-                return null;
-            })
-            .setDefault(context -> context.parser.parseExpression());
+            .addCase(Keyword.CATCH::equals, BlockParser::parseCatch)
+            .setDefault(Parser::parseExpression);
 
-    BlockParser(Parser parser) {
-        this.parser = parser;
-    }
+    static List<AST.Statement> parseAll(Parser parser) {
+        List<AST.Statement> statements = new ArrayList<>();
 
-    List<AST.Statement> parseAll() {
-        while (!parser.current().type.equals(Token.Textless.EOF)) {
+        while (parser.current().type != Token.Textless.EOF) {
             Token.TokenType i = parser.current().type;
-            AST.Statement result = blockSwitcher.execute(i, this);
+            AST.Statement result = blockSwitcher.execute(i, parser);
             if(result != null) {
                 statements.add(result);
             }
@@ -67,14 +51,13 @@ class BlockParser {
         return statements;
     }
 
-    AST.Statement parseBlock() {
+    static AST.Statement parseBlock(Parser parser) {
         Token.TokenType i = parser.current().type;
-        return blockSwitcher.execute(i, this);
+        return blockSwitcher.execute(i, parser);
     }
 
-    private AST.ClassDef parseClassDef() {
-        List<Token> allTokens = parser.selectToBlockEnd();
-
+    private static AST.ClassDef parseClassDef(Parser parser) {
+        int startPos = parser.absolutePos();
         boolean isStruct = parser.current().type == Keyword.STRUCT;
         if(isStruct) {
             parser.consumeExpected(Keyword.STRUCT);
@@ -86,222 +69,217 @@ class BlockParser {
         List<AST.GenericType> genericTypes = new ArrayList<>();
         Optional<AST.Type> extended = Optional.empty();
         if(parser.current().type == Token.Symbol.LEFT_ANGLE) {
-            genericTypes = parser.getCommon().consumeGenericList();
+            genericTypes = CommonParsing.consumeGenericList(parser);
         }
 
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
-            List<Token> extendsTokens = parser.consumeTo(Token.Symbol.LEFT_BRACE);
-            extended = Optional.of(new Parser(extendsTokens, parser).getCommon().parseType());
+            Parser typeParser = parser.subParserTo(Token.Symbol.LEFT_BRACE);
+            extended = Optional.ofNullable(CommonParsing.parseType(typeParser));
         } else {
             parser.consumeExpected(Token.Symbol.LEFT_BRACE);
         }
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
 
-        return new AST.ClassDef(name.literal, genericTypes, isStruct, new ArrayList<>(), extended, body, allTokens);
+        return new AST.ClassDef(name.literal, genericTypes, isStruct, new ArrayList<>(), extended, body, startPos,
+                parser.absolutePos());
     }
 
-    private void attachCatchBlock(ArrayList<AST.Statement> statements) {
-        List<Token> allTokens = parser.selectToBlockEnd();
-        if(statements.size() < 1) {
-            parser.throwError("Catch statement requires Try, none found", allTokens.get(0));
-            return;
-        }
-        AST.Statement parentStmt = statements.get(statements.size() - 1);
-
+    private static AST.CatchBlock parseCatch(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.CATCH);
 
-        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
+        AST.FunctionParam cond = CommonParsing.parseFunctionDecArgs(parser.subParserParens()).get(0);
+
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
-        AST.FunctionParam cond = parser.getCommon().parseFunctionDecArgs(condTokens).get(0);
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
-
-        if(parentStmt instanceof AST.TryBlock) {
-            ((AST.TryBlock) parentStmt).catchBlock = new AST.CatchBlock(cond, body, allTokens);
-        } else {
-            parser.throwError("Catch statement requires Try, " + parentStmt.getClass().getName() + " found",
-                    allTokens.get(0));
-        }
+        return new AST.CatchBlock(cond, body, startPos, parser.absolutePos());
     }
 
-    private void attachToLastBlock(AST.Statement parentStmt, AST.ElseBlock toAttach, List<Token> allTokens) {
-        if(parentStmt instanceof AST.IfBlock) {
-            AST.IfBlock ifBlock = (AST.IfBlock) parentStmt;
-            if(ifBlock.elseBlock.isPresent()) {
-                attachToLastBlock(ifBlock.elseBlock.get(), toAttach, allTokens);
-            } else {
-                ifBlock.elseBlock = ASTOptional.of(toAttach);
-            }
-        } else if(parentStmt instanceof AST.ElseIfBlock) {
-            AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
-            if(elseIfBlock.elseBlock.isPresent()) {
-                attachToLastBlock(elseIfBlock.elseBlock.get(), toAttach, allTokens);
-            } else {
-                elseIfBlock.elseBlock = ASTOptional.of(toAttach);
-            }
-        } else {
-            parser.throwError("Else statement requires If, " + parentStmt.getClass().getName() + " found",
-                    allTokens.get(0));
-        }
-    }
+//    private void attachToLastBlock(AST.Statement parentStmt, AST.ElseBlock toAttach, List<Token> allTokens) {
+//        if(parentStmt instanceof AST.IfBlock) {
+//            AST.IfBlock ifBlock = (AST.IfBlock) parentStmt;
+//            if(ifBlock.elseBlock.isPresent()) {
+//                attachToLastBlock(ifBlock.elseBlock.get(), toAttach, allTokens);
+//            } else {
+//                ifBlock.elseBlock = ASTOptional.of(toAttach);
+//            }
+//        } else if(parentStmt instanceof AST.ElseIfBlock) {
+//            AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
+//            if(elseIfBlock.elseBlock.isPresent()) {
+//                attachToLastBlock(elseIfBlock.elseBlock.get(), toAttach, allTokens);
+//            } else {
+//                elseIfBlock.elseBlock = ASTOptional.of(toAttach);
+//            }
+//        } else {
+//            parser.throwError("Else statement requires If, " + parentStmt.getClass().getName() + " found",
+//                    allTokens.get(0));
+//        }
+//    }
 
-    private void attachElseBlock(ArrayList<AST.Statement> statements) {
-        List<Token> allTokens = parser.selectToBlockEnd();
-        if(statements.size() < 1) {
-            parser.throwError("Else statement requires If, none found", allTokens.get(0));
-            return;
-        }
-        AST.Statement parentStmt = statements.get(statements.size() - 1);
+    private static AST.ElseBlock parseElse(Parser parser) {
+        int startPos = parser.absolutePos();
 
-        Token t = parser.consumeExpected(Token.Keyword.ELSE);
-        AST.ElseBlock toAttach;
+        parser.consumeExpected(Token.Keyword.ELSE);
         if(parser.current().type == Token.Keyword.IF) {
-            AST.IfBlock on = parseIfBlock();
-            toAttach = new AST.ElseIfBlock(on, allTokens);
+            AST.IfBlock on = BlockParser.parseIfBlock(parser);
+            int stopPos = parser.absolutePos();
+            ASTOptional<AST.ElseBlock> elseBlock = ASTOptional.empty();
+            if(parser.current().type == Keyword.ELSE) {
+                elseBlock = ASTOptional.of(parseElse(parser));
+            }
+            return new AST.ElseIfBlock(on, elseBlock, startPos, stopPos);
         } else {
             parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-            List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-            List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
-            toAttach = new AST.ElseAlwaysBlock(body, allTokens);
+            List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+            return new AST.ElseAlwaysBlock(body, startPos, parser.absolutePos());
         }
-
-        attachToLastBlock(parentStmt, toAttach, allTokens);
     }
 
-    private AST.Statement consumeAndParseParens() {
-        return new Parser(consumeParens(), parser).parseExpression();
-    }
-
-    private List<Token> consumeParens() {
-        parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> condTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
-        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
-        return condTokens;
-    }
-
-    private AST.ForBlock parseForBlock() {
-        List<Token> allTokens = parser.selectToBlockEnd();
+    private static AST.ForBlock parseForBlock(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.FOR);
 
-        List<List<Token>> seg;
+        List<Parser> seg;
         try {
-            seg = BraceSplitter.splitAll(consumeParens(), Token.Symbol.SEMICOLON);
+            seg = BraceSplitter.splitAll(parser.subParserParens(), Token.Symbol.SEMICOLON);
         } catch (ParserError parserError) {
             parser.throwError(parserError.msg, parserError.on);
             return null;
         }
 
-        AST.Statement initStmt = new Parser(seg.get(0), parser).parseExpression();
-        AST.Statement condStmt = new Parser(seg.get(1), parser).parseExpression();
-        AST.Statement stepStmt = new Parser(seg.get(2), parser).parseExpression();
+        AST.Statement initStmt = seg.get(0).parseExpression();
+        AST.Statement condStmt = seg.get(1).parseExpression();
+        AST.Statement stepStmt = seg.get(2).parseExpression();
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
+        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
-        return new AST.ForBlock(initStmt, condStmt, stepStmt, body, allTokens);
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+
+        return new AST.ForBlock(initStmt, condStmt, stepStmt, body, startPos, parser.absolutePos());
     }
 
-    private AST.SwitchBlock parseSwitchBlock() {
-        List<Token> allTokens = parser.selectToBlockEnd();
+    private static AST.SwitchBlock parseSwitchBlock(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.SWITCH);
 
-        AST.Statement cond = consumeAndParseParens();
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
+        AST.Statement cond = parser.subParserParens().parseExpression();
 
-        return new AST.SwitchBlock(cond, body, allTokens);
+        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
+
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+
+        return new AST.SwitchBlock(cond, body, startPos, parser.absolutePos());
     }
 
-    private AST.MatchBlock parseMatchBlock() {
-        List<Token> allTokens = parser.selectToBlockEnd();
+    private static AST.MatchBlock parseMatchBlock(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.MATCH);
 
-        AST.Statement cond = consumeAndParseParens();
+        AST.Statement cond = parser.subParserParens().parseExpression();
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser, true).parseAll();
+        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
-        return new AST.MatchBlock(cond, body, allTokens);
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE).inMatch());
+
+        return new AST.MatchBlock(cond, body, startPos, parser.absolutePos());
     }
 
-    private AST.CaseStatement parseCase() {
-        List<Token> allTokens = parser.selectToEOF();
+    private static AST.Statement parseCases(Parser parser) {
+        if(parser.isInMatch()) {
+            return BlockParser.parseMatchCase(parser);
+        } else {
+            return BlockParser.parseCase(parser);
+        }
+    }
+
+    private static AST.CaseStatement parseCase(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.CASE);
 
-        List<Token> onTokens = parser.consumeTo(Token.Symbol.ARROW);
-        AST.Statement on = new Parser(onTokens, parser).parseExpression();
+        AST.Statement on = parser.subParserTo(Token.Symbol.FAT_ARROW).parseExpression();
 
-        return new AST.CaseStatement(on, allTokens);
+        return new AST.CaseStatement(on, startPos, parser.absolutePos());
     }
 
-    private AST.CaseMatchStatement parseMatchCase() {
-        List<Token> allTokens = parser.selectToEOF();
+    private static AST.CaseMatchStatement parseMatchCase(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.CASE);
 
-        List<Token> onTokens = parser.consumeTo(Token.Symbol.ARROW);
-        AST.Statement on = new Parser(onTokens, parser).parseExpression();
+        AST.Statement on = parser.subParserTo(Token.Symbol.FAT_ARROW).parseExpression();
 
-        return new AST.CaseMatchStatement(on, allTokens);
+        return new AST.CaseMatchStatement(on, startPos, parser.absolutePos());
     }
 
-    private AST.IfBlock parseIfBlock() {
-        List<Token> allTokens = parser.selectToBlockEnd();
+    private static AST.IfBlock parseIfBlock(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.IF);
 
-        AST.Statement cond = consumeAndParseParens();
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
+        AST.Statement cond = parser.subParserParens().parseExpression();
 
-        return new AST.IfBlock(cond, body, allTokens);
+        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
+
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+
+        int stopPos = parser.absolutePos();
+        ASTOptional<AST.ElseBlock> elseBlock = ASTOptional.empty();
+        if(parser.current().type == Keyword.ELSE) {
+            elseBlock = ASTOptional.of(parseElse(parser));
+        }
+
+        return new AST.IfBlock(cond, elseBlock, body, startPos, stopPos);
     }
 
-    private AST.WhileBlock parseWhileBlock() {
-        List<Token> allTokens = parser.selectToBlockEnd();
+    private static AST.WhileBlock parseWhileBlock(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Keyword.WHILE);
 
-        AST.Statement cond = consumeAndParseParens();
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
+        AST.Statement cond = parser.subParserParens().parseExpression();
 
-
-        return new AST.WhileBlock(cond, body, allTokens);
-    }
-
-    private AST.TryBlock parseTryBlock() {
-        List<Token> allTokens = parser.selectToBlockEnd();
-        parser.next();
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
-        return new AST.TryBlock(body, allTokens);
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+
+        return new AST.WhileBlock(cond, body, startPos, parser.absolutePos());
     }
 
-    private AST.LoopBlock parseLoopBlock() {
-        List<Token> allTokens = parser.selectToBlockEnd();
+    private static AST.TryBlock parseTryBlock(Parser parser) {
+        int startPos = parser.absolutePos();
 
-        parser.next();
+        parser.consumeExpected(Keyword.TRY);
         parser.consumeExpected(Token.Symbol.LEFT_BRACE);
 
-        List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-        List<AST.Statement> body = new Parser(bodyTokens, parser).parseAll();
-        return new AST.LoopBlock(body, allTokens);
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+        int stopPos = parser.absolutePos();
+        AST.CatchBlock catchBlock = BlockParser.parseCatch(parser);
+
+        return new AST.TryBlock(catchBlock, body, startPos, stopPos);
     }
 
-    private static AdvancedSwitch.CaseHandler<BlockParser, AST.Statement> declarationModifierFor(Token.TokenType expected,
+    private static AST.LoopBlock parseLoopBlock(Parser parser) {
+        int startPos = parser.absolutePos();
+        parser.consumeExpected(Keyword.LOOP);
+        parser.consumeExpected(Token.Symbol.LEFT_BRACE);
+
+        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+
+        return new AST.LoopBlock(body, startPos, parser.absolutePos());
+    }
+
+    private static AdvancedSwitch.CaseHandler<Parser, AST.Statement> declarationModifierFor(Token.TokenType expected,
                                                                                           ASTEnums.DecModType type) {
-        return (blockParser) -> {
-            Token t = blockParser.parser.consumeExpected(expected);
-            if(blockParser.parser.current().type == Keyword.IMPORT) {
-                return parseNativeImport(blockParser.parser, true);
+        return (parser) -> {
+            Token t = parser.consumeExpected(expected);
+            if(parser.current().type == Keyword.IMPORT) {
+                return BlockParser.parseNativeImport(parser, true);
             }
-            AST.Statement on = blockParser.parser.parseBlock();
+            if(t.type == Keyword.PRIVATE) {
+                int i = 0;
+            }
+            AST.Statement on = BlockParser.parseBlock(parser);
             if(on instanceof AST.Declare) {
                 ((AST.Declare) on).modifiers.add(type);
             } else if(on instanceof AST.FunctionDef) {
@@ -309,32 +287,32 @@ class BlockParser {
             } else if(on instanceof AST.ClassDef) {
                 ((AST.ClassDef) on).modifiers.add(type);
             } else {
-                blockParser.parser.throwError("Modifier " + type.getRawOp() + " used on bad thing", t);
+                parser.throwError("Modifier " + type.getRawOp() + " used on bad thing", t);
                 return null;
             }
             return on;
         };
     }
 
-    private AST.FunctionDef parseFunctionDef() {
+    private static AST.FunctionDef parseFunctionDef(Parser parser) {
+        int startPos = parser.absolutePos();
+
         boolean isAbstract = parser.containsBefore(Token.Symbol.SEMICOLON, Token.Symbol.LEFT_BRACE);
-        List<Token> allTokens = parser.selectToBlockEnd();
         parser.consumeExpected(Token.Keyword.DEF);
 
         List<AST.GenericType> genericTypes = new ArrayList<>();
-        String funcName = parser.consume().literal;
+        String funcName = parser.consumeExpected(Token.Textless.NAME).literal;
         if(parser.current().type == Token.Symbol.LEFT_ANGLE) {
-            genericTypes = parser.getCommon().consumeGenericList();
+            genericTypes = CommonParsing.consumeGenericList(parser);
         }
 
         parser.consumeExpected(Token.Symbol.LEFT_PAREN);
-        List<Token> paramTokens = parser.consumeTo(Token.Symbol.RIGHT_PAREN);
 
         List<AST.FunctionParam> params;
         try {
-            params = parser.getCommon().parseFunctionDecArgs(paramTokens);
+            params = CommonParsing.parseFunctionDecArgs(parser.subParserTo(Token.Symbol.RIGHT_PAREN));
         } catch (IndexOutOfBoundsException ex) {
-            parser.throwError("Catch statement requires Try, none found", allTokens.get(0));
+            parser.throwError("Catch statement requires Try, none found", parser.current());
             return null;
         }
 
@@ -344,8 +322,7 @@ class BlockParser {
 
         if(parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
-            List<Token> returnTypeTokens = parser.consumeTo(endToken);
-            returnType = new Parser(returnTypeTokens, parser).getCommon().parseType();
+            returnType = CommonParsing.parseType(parser.subParserTo(endToken));
         } else {
             parser.consumeExpected(endToken);
         }
@@ -354,44 +331,43 @@ class BlockParser {
         if (isAbstract) {
             body = List.of();
         } else {
-            List<Token> bodyTokens = parser.consumeTo(Token.Symbol.RIGHT_BRACE);
-            body = new Parser(bodyTokens, parser).parseAll();
+            body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
         }
 
-        return new AST.FunctionDef(genericTypes, returnType, funcName, new ArrayList<>(), params, body, allTokens);
+        return new AST.FunctionDef(genericTypes, returnType, funcName, new ArrayList<>(), params, body, startPos,
+                parser.absolutePos());
     }
 
-    private AST.Return parseReturn() {
-        List<Token> tokens = parser.selectTo(Token.Symbol.SEMICOLON);
+    private static AST.Return parseReturn(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.RETURN);
 
-        List<Token> valueTokens = parser.consumeTo(Token.Symbol.SEMICOLON);
         ASTOptional<AST.Statement> value = ASTOptional.empty();
-        if(!valueTokens.isEmpty()) {
-            value = ASTOptional.of(new Parser(valueTokens, parser).parseExpression());
+        if(parser.current().type != Token.Symbol.SEMICOLON) {
+            value = ASTOptional.of(parser.subParserTo(Token.Symbol.SEMICOLON).parseExpression());
         }
-        return new AST.Return(value, tokens);
+        return new AST.Return(value, startPos, parser.absolutePos());
     }
 
     private static AST.ImportStatement parseNativeImport(Parser parser, boolean ntv) {
-        List<Token> tokens = parser.selectToEOF();
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.IMPORT);
 
         String location = parser.consumeExpected(Token.Textless.STRING_LITERAL).literal;
         parser.consumeExpected(Token.Symbol.SEMICOLON);
-        return new AST.ImportStatement(ntv ? ASTEnums.ImportType.NATIVE : ASTEnums.ImportType.NORMAL, location, tokens);
+        return new AST.ImportStatement(ntv ? ASTEnums.ImportType.NATIVE : ASTEnums.ImportType.NORMAL, location,
+                startPos, parser.absolutePos());
     }
 
-    private AST.ImportStatement parseImport() {
+    private static AST.ImportStatement parseImport(Parser parser) {
         return parseNativeImport(parser, false);
     }
 
-    private AST.ThrowStatement parseThrow() {
-        List<Token> allTokens = parser.selectToEOF();
+    private static AST.ThrowStatement parseThrow(Parser parser) {
+        int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.THROW);
 
-        List<Token> tokens = parser.consumeTo(Token.Symbol.SEMICOLON);
-        AST.Statement value = new Parser(tokens, parser).parseExpression();
-        return new AST.ThrowStatement(value, allTokens);
+        AST.Statement value = parser.subParserTo(Token.Symbol.SEMICOLON).parseExpression();
+        return new AST.ThrowStatement(value, startPos, parser.absolutePos());
     }
 }

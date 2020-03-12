@@ -20,16 +20,19 @@ public class LayeredSplitter {
 
     public LayeredSplitter(SplitSettings settings, Parser parser) {
         this.parser = parser;
+        if(parser == null) {
+            int i = 0;
+        }
         this.settings = settings;
     }
 
-    public AST.Statement execute(List<Token> tokens) {
+    public AST.Statement execute() {
         for (SplitLayer layer : settings.getSplitLayers()) {
             AST.Statement rtn;
             if(layer.isLeftToRight()) {
-                rtn = executeLayerLeftToRight(tokens, layer);
+                rtn = executeLayerLeftToRight(layer);
             } else {
-                rtn = executeLayerRightToLeft(tokens, layer);
+                rtn = executeLayerRightToLeft(layer);
             }
             if (rtn != null) {
                 return rtn;
@@ -38,13 +41,13 @@ public class LayeredSplitter {
         return null;
     }
 
-    private AST.Statement executeLayerRightToLeft(List<Token> tokens, SplitLayer layer) {
-        int loc = tokens.size() - 1;
+    private AST.Statement executeLayerRightToLeft(SplitLayer layer) {
+        int loc = parser.tokenCount() - 1;
 
         BraceManager braceManager = new BraceManager(BraceManager.rightToLeft);
         while (loc >= 0) {
 
-            AST.Statement result = handleToken(tokens, braceManager, layer, loc);
+            AST.Statement result = handleToken(braceManager, layer, loc);
             if(result != null) {
                 return result;
             }
@@ -54,13 +57,13 @@ public class LayeredSplitter {
         return null;
     }
 
-    private AST.Statement executeLayerLeftToRight(List<Token> tokens, SplitLayer layer) {
+    private AST.Statement executeLayerLeftToRight(SplitLayer layer) {
         int loc = 0;
 
         BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
-        while (loc < tokens.size()) {
+        while (loc < parser.tokenCount()) {
 
-            AST.Statement result = handleToken(tokens, braceManager, layer, loc);
+            AST.Statement result = handleToken(braceManager, layer, loc);
             if(result != null) {
                 return result;
             }
@@ -70,8 +73,8 @@ public class LayeredSplitter {
         return null;
     }
 
-    private AST.Statement handleToken(List<Token> tokens, BraceManager braceManager, SplitLayer layer, int loc) {
-        Token t = tokens.get(loc);
+    private AST.Statement handleToken(BraceManager braceManager, SplitLayer layer, int loc) {
+        Token t = parser.get(loc);
 
         try {
             braceManager.check(t);
@@ -82,9 +85,9 @@ public class LayeredSplitter {
         SplitAction action;
 
         if (braceManager.isEmpty() && (action = layer.actionFor(t.type)) != null) {
-            List<Token> first = tokens.subList(0, loc);
-            List<Token> second = tokens.subList(loc + 1, tokens.size());
-            return action.handle(parser, first, second, tokens);
+            Parser first = new Parser(parser, parser.absoluteStart(), parser.absoluteStart() + loc);
+            Parser second = new Parser(parser, parser.absoluteStart() + loc + 1, parser.absoluteStop());
+            return action.handle(parser, first, second);
         }
         return null;
     }

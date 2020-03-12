@@ -15,139 +15,43 @@ import java.util.List;
  */
 public class Parser implements ErrorCollector<Token> {
 
-    private List<Token> tokens;
-
+    List<Token> tokens;
+    int start;
     int pos;
+    int stop;
+    Parser parent;
 
-    private final boolean inMatch;
+    boolean inMatch = false;
 
-    private final BlockParser blockParser;
-    private final ExpressionParser expressionParser;
-    private final CommonParsing common;
-    private final Parser parent;
-    private final List<String> errorMsg;
-    private final String code;
+//    final BlockParser blockParser;
+//    final ExpressionParser expressionParser;
+//    final CommonParsing common;
+    final List<String> errorMsg = new ArrayList<>();;
+    final String code;
 
-    /**
-     * A simple parser, no error handling provided
-     * @param tokens to token stream to parse
-     */
-    public Parser(List<Token> tokens) {
-        this(tokens, null, false, null);
-    }
-
-    /**
-     * A parser with the code being parsed for error pointing, generally a top level parser
-     * @param tokens to token stream to parse
-     * @param code The code string used to generate the tokens
-     */
-    public Parser(List<Token> tokens, String code) {
-        this(tokens, null, false, code);
-    }
-
-    /**
-     * Creates a subparser, passes thrown errors to parent
-     * @param tokens to token stream to parse
-     * @param parent parent parser for errors to be passed to
-     */
-    public Parser(List<Token> tokens, Parser parent) {
-        this(tokens, parent, false, null);
-    }
-
-    /**
-     * Subparser in match block, treats case statements differently
-     * @param tokens to token stream to parse
-     * @param parent parent parser for errors to be passed to
-     * @param inMatch define if parser is in match block
-     */
-    Parser(List<Token> tokens, Parser parent, boolean inMatch) {
-        this(tokens, parent, inMatch, null);
-    }
-
-    private Parser(List<Token> tokens, Parser parent, boolean inMatch, String code) {
+    public Parser(String code, List<Token> tokens) {
         this.tokens = tokens;
-        this.inMatch = inMatch;
+        start = 0;
+        stop = tokens.size() - 1;
+        parent = null;
+        this.code = code;
+    }
+
+    public Parser(Parser parent, int start, int stop) {
+        this.start = start;
+        this.stop = stop;
         this.parent = parent;
-
-        if(this.parent == null) {
-            this.errorMsg = new ArrayList<>();
-            this.code = code;
-        } else {
-            this.errorMsg = null;
-            this.code = null;
-        }
-
-        this.blockParser = new BlockParser(this);
-        this.expressionParser = new ExpressionParser(this);
-        this.common = new CommonParsing(this);
+        this.tokens = parent.tokens;
+        this.pos = 0;
+        this.code = parent.code;
     }
 
-    public void throwError(String msg, Token on) {
-        if (parent == null) {
-            errorMsg.add(ErrorPrinter.pointToPos(code, on.pos, msg));
-        } else {
-            parent.throwError(msg, on);
-        }
+    public Parser subParserTo(Token.TokenType endToken) {
+        return subParserTo(endToken, BraceManager.leftToRight);
     }
 
-    public List<String> getErrors() {
-        return errorMsg;
-    }
-
-    Token current() {
-        if (pos >= tokens.size()) {
-            return Token.EOF;
-        }
-
-        return tokens.get(pos);
-    }
-
-    Token consume() {
-        Token tok = current();
-        next();
-        return tok;
-    }
-
-    Token consumeExpected(Token.TokenType type) {
-        Token t;
-        if ((t = consume()).type != type) {
-            throwError("Parse error Expected: " + type.toString(), t);
-            // TODO: make sure parser can recover from this
-            return null;
-        }
-        return t;
-    }
-
-    Token tryConsumeOrEOF(Token.TokenType type) {
-        Token t = current();
-        if (current().type == type || current().type == Textless.EOF) {
-            consume();
-        } else {
-            throwError("Unexpected token", current());
-        }
-        return t;
-    }
-
-    void next() {
-        pos++;
-    }
-
-    Token peek() {
-        if (pos + 1 >= tokens.size()) {
-            return Token.EOF;
-        }
-
-        return tokens.get(pos + 1);
-    }
-
-    // Consume tokens up to the provided type, will not end inside brace block, uses left to right braces
-    List<Token> consumeTo(Token.TokenType type) {
-        return consumeTo(type, BraceManager.leftToRight);
-    }
-
-    // Consume tokens up to the provided type, will not end inside brace block
-    List<Token> consumeTo(Token.TokenType type, BraceManager.BraceProfile braces) {
-        List<Token> tokens = new ArrayList<>();
+    public Parser subParserTo(Token.TokenType end_token, BraceManager.BraceProfile braces) {
+        int start = pos;
         BraceManager braceManager = new BraceManager(braces);
         while (true) {
             if (current().type == Textless.EOF) {
@@ -158,7 +62,7 @@ public class Parser implements ErrorCollector<Token> {
                 throwError("Parse error", current());
                 return null;
             }
-            if (current().type == type && braceManager.isEmpty()) {
+            if (current().type == end_token && braceManager.isEmpty()) {
                 break;
             }
             try {
@@ -168,99 +72,132 @@ public class Parser implements ErrorCollector<Token> {
                 throwError(ex.msg, ex.on);
                 return null;
             }
-            tokens.add(current());
-            next();
+
+            pos++;
         }
-        next();
-        return tokens;
+
+        pos++;
+        return new Parser(this, this.start + start, this.start + pos - 1);
     }
 
-    // Just selects the tokens, does not advance the current location
-    List<Token> selectTo(List<Token.TokenType> types, boolean includeEnd) {
-        List<Token> tkns = new ArrayList<>();
-        int loc = pos;
-        BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
-        while (loc < tokens.size()) {
-            if (tokens.get(loc).type == Textless.EOF) {
-                if (braceManager.isEmpty()) {
-                    break;
-                }
-                // TODO: allow parser to recover from this
-                throwError("Parse error", tokens.get(loc));
-                return null;
-            }
+    public int absoluteStart() {
+        return start;
+    }
 
-            if (types.contains(tokens.get(loc).type) && braceManager.isEmpty()) {
+    public int absoluteStop() {
+        return stop;
+    }
+
+    public int absolutePos() {
+        return start + pos;
+    }
+
+    public int tokenCount() {
+        return stop - absolutePos();
+    }
+
+    public Token get(int i) {
+        int offset = absolutePos() + i;
+        if(offset >= stop) {
+            int best_guess_pos = tokens.get(stop).pos;
+            return Token.EOF(best_guess_pos);
+        }
+        return this.tokens.get(start + pos + i);
+    }
+
+    public Token current() {
+        return get(0);
+    }
+
+    public Token consumeExpected(Token.TokenType typ) {
+        Token rtn = get(0);
+        if(rtn.type != typ) {
+            throw new ParserError.NoCatchParseError("Expected token " + typ.getName() + " got " + rtn.type.getName(), rtn);
+        }
+        pos++;
+        return rtn;
+    }
+
+    public Parser subParserParens() {
+        consumeExpected(Token.Symbol.LEFT_PAREN);
+        Parser subParser = subParserTo(Token.Symbol.RIGHT_PAREN);
+//        consumeExpected(Token.Symbol.LEFT_BRACE);
+        return subParser;
+    }
+
+    public AST.Statement parseStatement() {
+        return BlockParser.parseBlock(this);
+    }
+
+    public AST.Statement parseExpression() {
+        return ExpressionParser.parseExpression(this);
+    }
+
+    public AST.Statement parse() {
+        int startPos = absolutePos();
+        List<AST.Statement> body = new ArrayList<>();
+
+        while(true) {
+            AST.Statement stmt = parseStatement();
+
+            if(stmt == null) {
                 break;
             }
 
-            try {
-                braceManager.check(tokens.get(loc));
-            } catch(ParserError ex) {
-                // TODO: allow parser to recover from this
-                throwError(ex.msg, ex.on);
-                return null;
-            }
-            tkns.add(tokens.get(loc));
-            loc++;
+            body.add(stmt);
         }
-        if(includeEnd && loc < tokens.size()) {
-            tkns.add(tokens.get(loc));
+
+        return new AST.Program(body, tokens, startPos, absolutePos());
+    }
+
+    public int indexOf(Token.TokenType type) {
+        for(int i = 0; get(i).type != Textless.EOF; i++) {
+            if(get(i).type == type) {
+                return i;
+            }
         }
-        return tkns;
+        return -1;
     }
 
-    List<Token> selectTo(Token.TokenType typ) {
-        return selectTo(List.of(typ), false);
+    public Token getBack(int i) {
+        return tokens.get(absoluteStop() - i);
     }
 
-    List<Token> selectToWithEnd(Token.TokenType typ) {
-        return selectTo(List.of(typ), true);
-    }
 
-    // Just selects the tokens, does not advance the current location
-    List<Token> selectToEOF() {
-        return selectTo(List.of(Textless.EOF, Token.Symbol.SEMICOLON), false);
-    }
 
-    // Select tokens up to the next close brace. Brace aware using left to right braces. Ideal for selecting
-    // blocks for if, for, while, class decs, etc.
-    List<Token> selectToBlockEnd() {
-        List<Token> tkns = new ArrayList<>();
-        int loc = pos;
-        BraceManager braceManager = new BraceManager(BraceManager.leftToRight);
-        while (loc < tokens.size()) {
-            if (tokens.get(loc).type == Textless.EOF) {
-                if (braceManager.isEmpty()) {
-                    break;
-                }
-                // TODO: allow parser to recover from this
-                throwError("Parse error", tokens.get(loc));
-                return null;
-            }
 
-            if ((tokens.get(loc).type == Textless.EOF || tokens.get(loc).type == Token.Symbol.RIGHT_BRACE) &&
-                    (braceManager.isEmpty() || braceManager.stackDepth() == 1)) {
-                tkns.add(tokens.get(loc));
-                break;
-            }
 
-            try {
-                braceManager.check(tokens.get(loc));
-            } catch(ParserError ex) {
-                // TODO: allow parser to recover from this
-                throwError(ex.msg, ex.on);
-                return null;
-            }
-            tkns.add(tokens.get(loc));
-            loc++;
+
+
+
+
+    ////////////////////// OLD CODE
+
+
+
+
+
+
+
+
+
+
+    public void throwError(String msg, Token on) {
+        if (parent == null) {
+            String pointer = ErrorPrinter.pointToPos(code, on.pos, msg);
+            errorMsg.add(pointer);
+        } else {
+            parent.throwError(msg, on);
         }
-        return tkns;
+    }
+
+    public List<String> getErrors() {
+        return errorMsg;
     }
 
     // Check if one token comes before another
     boolean containsBefore(Token.TokenType what, Token.TokenType before) {
-        for (int lpos = pos; lpos < tokens.size(); lpos++) {
+        for (int lpos = absolutePos(); lpos < absoluteStop(); lpos++) {
             if (tokens.get(lpos).type == what) {
                 return true;
             }
@@ -268,27 +205,16 @@ public class Parser implements ErrorCollector<Token> {
                 return false;
             }
         }
-        return before == Textless.EOF;
-    }
-
-    public List<AST.Statement> parseAll() {
-        return blockParser.parseAll();
-    }
-
-    public AST.Statement parseBlock() {
-        return blockParser.parseBlock();
-    }
-
-    Statement parseExpression() {
-        return expressionParser.parseExpression();
+        return false;
     }
 
     boolean isInMatch() {
         return inMatch;
     }
 
-    CommonParsing getCommon() {
-        return common;
+    Parser inMatch() {
+        inMatch = true;
+        return this;
     }
 }
 

@@ -113,11 +113,11 @@ public class SkiffC {
             System.out.println(" ======== PARSE " + context.getFilename() + " =========== ");
         }
 
-        Parser parser = new Parser(tokenStream, programText);
-        List<AST.Statement> statements = null;
+        Parser parser = new Parser(programText, tokenStream);
+        AST.Statement statement = null;
         boolean parseFail = false;
         try {
-            statements = parser.parseAll();
+            statement = parser.parse();
         } catch(Exception ex) {
             ex.printStackTrace();
             parseFail = true;
@@ -132,18 +132,14 @@ public class SkiffC {
         if(parseFail) {
             return Optional.empty();
         }
+
         if(context.isDebug()) {
             System.out.println(" ======== COMPILE " + context.getFilename() + " =========== ");
         }
-
-        List<String> compiledText = null;
+        String compiledText = null;
         boolean compileFail = false;
         try {
-            compiledText = statements
-                    .stream()
-                    .map(e -> e.compile(context))
-                    .map(CompiledCode::getCompiledText)
-                    .collect(Collectors.toList());
+            compiledText = statement.compile(context).getCompiledText();
 
         } catch(Exception ex) {
             ex.printStackTrace();

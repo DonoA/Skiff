@@ -10,11 +10,11 @@ Skiff is designed to be translated into C but support many features that C does 
 ## Statements And Implementation:
 | Name | Example | Parse | Compile | Test |
 | ---- | ------- | ----- | ------- | ---- |
-| Declare Variable | `name: Type` | ✓ | ✓ | [Classes.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Classes/Classes.skiff) | 
+| Declare Variable | `let Type name` | ✓ | ✓ | [Classes.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Classes/Classes.skiff) | 
 | Assignment | `name = value` | ✓ | ✓ | [Math.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Math/Math.skiff) |
-| Declare and assign | `name: Type = value` | ✓ | ✓ | [Math.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Math/Math.skiff) |
+| Declare and assign | `let Type name = value` | ✓ | ✓ | [Math.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Math/Math.skiff) |
 | Function Call | `functionName(p1, p2)` | ✓ | ✓ | [HelloWorld.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/HelloWorld/HelloWorld.skiff) |
-| Function Def | `def functionName(p1: T1, p2: T2): Returns {...}` | ✓ | ✓ | [HelloWorld.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/HelloWorld/HelloWorld.skiff) |
+| Function Def | `def functionName(T1 p1, T2 p2) -> Returns {...}` | ✓ | ✓ | [HelloWorld.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/HelloWorld/HelloWorld.skiff) |
 | Class Def | `class ClassName {}` | ✓ | ✓ | [Classes.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Classes/Classes.skiff) |
 | Data Class | `struct ClassName {}` | ✓ | ✓ | [Deconstruction.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Deconstruction/Deconstruction.skiff) |
 | Create instance | `new ClassName()` | ✓ | ✓ | [Classes.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Classes/Classes.skiff) |
@@ -31,24 +31,24 @@ Skiff is designed to be translated into C but support many features that C does 
 | Generic Class Def | `class Cls<T, U> {}` | ✓ | ✓ | [Generics.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Generics/Generics.skiff) |
 | Generic Class Use | `new Cls<T>()` | ✓ | ✓ | [Generics.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Generics/Generics.skiff) |
 | Generic Extension | `class Cls<T : U> {}` | ✓ | ⅹ | ⅹ |
-| Generic Func Def | `def func<T>(p: T): Returns {}` | ✓ | ✓ | [Optional.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Optional/Optional.skiff) |
+| Generic Func Def | `def func<T>(T p) -> Returns {}` | ✓ | ✓ | [Optional.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Optional/Optional.skiff) |
 | Inheritance | `class Child : Parent` | ✓ | ✓ | [Classes.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Classes/Classes.skiff) |
 | List Index | `list[index]` | ✓ | ✓ | [Subscript.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Subscript/Subscript.skiff) |
 | Import Source | `import <file>` | ✓ | ✓ | [Import.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Import/Import.skiff) |
 | Dec Mods | `static private` | ✓ | ✓ | [Optional.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Optional/Optional.skiff) |
-| Anon Func Def | `(p: T): Returns => {}` | ✓ | ⅹ | ⅹ |
-| Anon Func Type | `funcVar: (T) => Returns` | ✓ | ⅹ | ⅹ |
+| Anon Func Def | `(p) => {}` | ✓ | ⅹ | ⅹ |
+| Anon Func Type | `(T) -> Returns` | ✓ | ⅹ | ⅹ |
 | If | `if(cond) {}` | ✓ | ✓ | [FlowControl.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/FlowControl/FlowControl.skiff) |
 | Else | `{} else if() {}` | ✓ | ✓ | [FlowControl.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/FlowControl/FlowControl.skiff) |
 | While | `while(cond) {}` | ✓ | ✓ | [Loops.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Loops/Loops.skiff) |
 | Loop | `loop {}` | ✓ | ✓ | [Loops.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Loops/Loops.skiff) |
-| For | `for(i: Int = v; i < max; i++) {}` | ✓ | ✓ | [Loops.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Loops/Loops.skiff) |
-| For Iter | `for(v: Int in intList) {}` | ⅹ | ⅹ | ⅹ |
+| For | `for(let i = v; i < max; i++) {}` | ✓ | ✓ | [Loops.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Loops/Loops.skiff) |
+| For Iter | `for(v : intList) {}` | ⅹ | ⅹ | ⅹ |
 | Loop flow | `next break` | ✓ | ✓ | [FlowControl.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/FlowControl/FlowControl.skiff) |
 | Switch | `switch(v){case val => ...}` | ✓ | ✓ | [FlowControl.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/FlowControl/FlowControl.skiff) |
-| Match | `match(v) {case v:T => ` | ✓ | ✓ | [Deconstruction.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Deconstruction/Deconstruction.skiff) |
+| Match | `match(v) {case T v => ` | ✓ | ✓ | [Deconstruction.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Deconstruction/Deconstruction.skiff) |
 | Deconstruction | `Struct(v1, v2) = myStruct` | ✓ | ✓ | [Deconstruction.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/Deconstruction/Deconstruction.skiff) |
-| Try/Catch | `try {} catch(e: MyException) {}` | ✓ | ✓ | [TryCatch.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/TryCatch/TryCatch.skiff) |
+| Try/Catch | `try {} catch(MyException e) {}` | ✓ | ✓ | [TryCatch.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/TryCatch/TryCatch.skiff) |
 | Throw | `throw new MyException()` | ✓ | ✓ | [TryCatch.skiff](https://github.com/DonoA/Skiff/tree/master/src/test/resources/TryCatch/TryCatch.skiff) |
 
 ## Language Structure:

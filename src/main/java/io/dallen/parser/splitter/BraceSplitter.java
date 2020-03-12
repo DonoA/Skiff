@@ -1,6 +1,7 @@
 package io.dallen.parser.splitter;
 
 import io.dallen.parser.BraceManager;
+import io.dallen.parser.Parser;
 import io.dallen.parser.ParserError;
 import io.dallen.tokenizer.Token;
 
@@ -13,66 +14,66 @@ import java.util.ListIterator;
  */
 public class BraceSplitter {
 
-    public static List<List<Token>> splitAll(List<Token> tokens, Token.TokenType on) throws ParserError {
-        return braceSplitLeftToRight(tokens, on, Integer.MAX_VALUE);
+    public static List<Parser> splitAll(Parser parser, Token.TokenType on) throws ParserError {
+        return braceSplitLeftToRight(parser, on, Integer.MAX_VALUE);
     }
 
-    public static List<List<Token>> customSplitAll(BraceManager.BraceProfile braces, List<Token> tokens,
+    public static List<Parser> customSplitAll(BraceManager.BraceProfile braces, Parser parser,
                                                    Token.TokenType on) throws ParserError {
-        return customBraceSplitLeftToRight(braces, tokens, on, Integer.MAX_VALUE);
+        return customBraceSplitLeftToRight(braces, parser, on, Integer.MAX_VALUE);
     }
 
-    public static List<List<Token>> braceSplitLeftToRight(List<Token> tokens, Token.TokenType on,
+    public static List<Parser> braceSplitLeftToRight(Parser parser, Token.TokenType on,
                                                           int limit) throws ParserError {
-        return customBraceSplitLeftToRight(BraceManager.leftToRight, tokens, on, limit);
+        return customBraceSplitLeftToRight(BraceManager.leftToRight, parser, on, limit);
     }
 
-    public static List<List<Token>> customBraceSplitLeftToRight(BraceManager.BraceProfile braces, List<Token> tokens,
+    public static List<Parser> customBraceSplitLeftToRight(BraceManager.BraceProfile braces, Parser parser,
                                                                 Token.TokenType on, int limit) throws ParserError {
         BraceManager braceManager = new BraceManager(braces);
 
-        List<List<Token>> segments = new ArrayList<>();
-        List<Token> workingSeg = new ArrayList<>();
-        for (Token t : tokens) {
+        List<Parser> segments = new ArrayList<>();
+        int j = 0;
+        for(int i = 0; i < parser.tokenCount(); i++) {
+            Token t = parser.get(i);
             braceManager.check(t);
 
             if (braceManager.isEmpty() && segments.size() < limit && t.type == on) {
-                segments.add(workingSeg);
-                workingSeg = new ArrayList<>();
-            } else { // just add to results
-                workingSeg.add(t);
+                segments.add(new Parser(parser, parser.absoluteStart() + j, parser.absoluteStart() + i));
+                j = i + 1;
             }
         }
 
-        if(!workingSeg.isEmpty()) {
-            segments.add(workingSeg);
+        if(parser.absoluteStop() - (parser.absoluteStart() + j) != 0) {
+            segments.add(new Parser(parser, parser.absoluteStart() + j, parser.absoluteStop()));
         }
+
         return segments;
     }
 
-    public static List<List<Token>> braceSplitRightToLeft(List<Token> tokens, Token.TokenType on,
-                                                          int limit) throws ParserError {
-        BraceManager braceManager = new BraceManager(BraceManager.rightToLeft);
-
-        List<List<Token>> segments = new ArrayList<>();
-        List<Token> workingSeg = new ArrayList<>();
-        segments.add(0, workingSeg);
-        ListIterator<Token> itr = tokens.listIterator();
-        while (itr.hasPrevious()) {
-            Token t = itr.previous();
-
-            braceManager.check(t);
-
-            if (braceManager.isEmpty() && segments.size() < limit && t.type == on) {
-                segments.add(0, workingSeg);
-                workingSeg = new ArrayList<>();
-            } else { // just add to results
-                workingSeg.add(t);
-            }
-        }
-        if(!workingSeg.isEmpty()) {
-            segments.add(0, workingSeg);
-        }
-        return segments;
-    }
+//    public static List<List<Token>> braceSplitRightToLeft(Parser parser, Token.TokenType on,
+//                                                          int limit) throws ParserError {
+//        BraceManager braceManager = new BraceManager(BraceManager.rightToLeft);
+//
+//        List<List<Token>> segments = new ArrayList<>();
+//        List<Token> workingSeg = new ArrayList<>();
+//        segments.add(0, workingSeg);
+//        ListIterator<Token> itr = tokens.listIterator();
+//        while (itr.hasPrevious()) {
+//            Token t = itr.previous();
+//
+//            braceManager.check(t);
+//
+//            if (braceManager.isEmpty() && segments.size() < limit && t.type == on) {
+//                segments.add(0, workingSeg);
+//                workingSeg = new ArrayList<>();
+//            } else { // just add to results
+//                workingSeg.add(t);
+//            }
+//        }
+//        if(!workingSeg.isEmpty()) {
+//            segments.add(0, workingSeg);
+//        }
+//        return segments;
+//    }
 }

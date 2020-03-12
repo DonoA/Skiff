@@ -15,7 +15,8 @@ public class Token {
     public enum Symbol implements TokenType {
 
         DOT("."),
-        ARROW("=>"),
+        FAT_ARROW("=>"),
+        THIN_ARROW("->"),
         COLON(":"),
 
         LEFT_PAREN("("),
@@ -156,7 +157,9 @@ public class Token {
      */
     public final int pos;
 
-    public static final Token EOF = new Token(Textless.EOF, 0);
+    public static Token EOF(int pos) {
+        return new Token(Textless.EOF, pos);
+    }
 
     public Token(TokenType type, int pos) {
         this(type, "", pos);

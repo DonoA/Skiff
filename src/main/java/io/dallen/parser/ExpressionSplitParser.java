@@ -34,95 +34,100 @@ class ExpressionSplitParser {
                     .addSplitRule(Token.Symbol.PLUS, ExpressionSplitParser.mathAction(ASTEnums.MathOp.PLUS))
                     .addSplitRule(Token.Symbol.MINUS, ExpressionSplitParser.mathAction(ASTEnums.MathOp.MINUS)))
             .addLayer(new SplitLayer()
-                    .addSplitRule(Token.Symbol.DOT, ExpressionSplitParser.statementAction(Dotted::new))).leftToRight(false);
+                    .addSplitRule(Token.Symbol.DOT,
+                            ExpressionSplitParser.statementAction(ExpressionSplitParser::parseNew)
+                    )).leftToRight(false);
 
-    static Statement split(Parser parser, List<Token> workingTokens) {
-        return new LayeredSplitter(splitSettings, parser).execute(workingTokens);
+    static Statement split(Parser parser) {
+        return new LayeredSplitter(splitSettings, parser).execute();
     }
 
     // Handle equal signs, picks up assign and declare assign.
-    private static Statement parseAssignment(Parser parser, List<Token> first, List<Token> second, List<Token> allTokens) {
-        List<List<Token>> res;
+    private static Statement parseAssignment(Parser parent, Parser first, Parser second) {
+        List<Parser> res;
         try {
             res = BraceSplitter.splitAll(first, Token.Symbol.COLON);
         } catch (ParserError parserError) {
-            parser.throwError(parserError.msg, parserError.on);
+            parent.throwError(parserError.msg, parserError.on);
             return null;
         }
         if(res.size() == 1) {
-            Statement firstS = new Parser(first, parser).parseExpression();
-            Statement secondS = new Parser(second, parser).parseExpression();
-            return new Assign(firstS, secondS, allTokens);
+            Statement firstS = first.parseExpression();
+            Statement secondS = second.parseExpression();
+            return new Assign(firstS, secondS, first.absoluteStart(), second.absoluteStop());
         } else if(res.size() == 2) {
-            Type typ = new Parser(res.get(1), parser).getCommon().parseType();
-            if(res.get(0).size() != 1) {
-                parser.throwError("Declare assign name had multiple parts", res.get(0).get(0));
+            Type typ = CommonParsing.parseType(res.get(1));
+            if(res.get(0).tokenCount() != 1) {
+                parent.throwError("Declare assign name had multiple parts", res.get(0).get(0));
                 return null;
             }
             String name = res.get(0).get(0).literal;
-            Statement secondS = new Parser(second, parser).parseExpression();
-            return new DeclareAssign(secondS, typ, name, new ArrayList<>(), allTokens);
+            Statement secondS = second.parseExpression();
+            return new DeclareAssign(secondS, typ, name, new ArrayList<>(), first.absoluteStart(), second.absoluteStop());
         }
-        parser.throwError("Assign name had many colons", res.get(0).get(0));
+        parent.throwError("Assign name had many colons", res.get(0).get(0));
         return null;
     }
 
     // handles '&&' and '||'
     private static SplitAction boolCombineAction(ASTEnums.BoolOp op) {
-        return statementAction((first, second, tokens) -> new BoolCombine(first, op, second, tokens));
+        return statementAction((first, second) -> new BoolCombine(first, op, second, first.token_start, second.token_end));
     }
 
     // handles number comparisons including '==' and '!='. Check if ident after '<' is class to defer generic function
     // calls.
     private static SplitAction compareAction(ASTEnums.CompareOp op) {
-        return (parser, first, second, tokens) -> {
-            if(first.get(first.size() - 1).ident == Token.IdentifierType.TYPE ||
-                    first.stream().anyMatch(t -> t.type == Token.Symbol.LEFT_ANGLE)) {
+        return (parser, first, second) -> {
+            if(parser.current().type == Token.Keyword.NEW) {
                 return null;
             }
 
-            Parser rhsParser = new Parser(second, parser);
-
-            if(rhsParser.containsBefore(Token.Symbol.RIGHT_ANGLE, Token.Symbol.SEMICOLON)) {
-                List<Token> rhs = rhsParser.selectTo(Token.Symbol.RIGHT_ANGLE);
-                if(rhs.get(rhs.size() - 1).ident == Token.IdentifierType.TYPE) {
-                    return null;
-                }
+            // As in the List in List<String>
+            if(first.getBack(1).ident == Token.IdentifierType.TYPE) {
+                return null;
             }
 
-            Statement firstS = new Parser(first, parser).parseExpression();
-            Statement secondS = new Parser(second, parser).parseExpression();
-            return new Compare(firstS, op, secondS, tokens);
+            // no:  s(  func<List,String>(x)   )
+            // no:  s(  func<List , String>(x) )
+            // yes: s( x<List.y , String.y>(x) )
+            int braceLoc = parser.indexOf(Token.Symbol.RIGHT_ANGLE);
+            if(braceLoc != -1 && parser.get(braceLoc - 1).ident == Token.IdentifierType.TYPE) {
+                return null;
+            }
+
+            Statement firstS = first.parseExpression();
+            Statement secondS = second.parseExpression();
+            return new Compare(firstS, op, secondS, first.absoluteStart(), second.absoluteStop());
         };
+    }
+
+    private static Statement parseNew(Statement left, Statement right) {
+        return new Dotted(left, right, left.token_start, right.token_end);
     }
 
     // handles simple math ops '+' '-' '*' '/' '**' '%'
     private static SplitAction mathAction(ASTEnums.MathOp op) {
-        return statementAction((first, second, tokens) -> new MathStatement(first, op, second, tokens));
+        return statementAction((first, second) -> new MathStatement(first, op, second, first.token_start,
+                second.token_end));
     }
 
     // same as above with assignment, '+=', '-='
     private static SplitAction mathAssignAction(ASTEnums.MathOp op) {
-        return statementAction((first, second, tokens) -> new MathAssign(first, op, second, tokens));
+        return statementAction((first, second) -> new MathAssign(first, op, second, first.token_start,
+                second.token_end));
     }
 
     // takes split result, parses both sides, and call action on the result
     private static SplitAction statementAction(StatementAction action) {
-        return (parser, first, second, token) -> {
-            Statement firstS = new Parser(first, parser).parseExpression();
-            Statement secondS = new Parser(second, parser).parseExpression();
-            List<Token> workingTokens;
-            if(token.get(token.size() - 1).type == Token.Textless.EOF) {
-                workingTokens = token.subList(0, token.size()-1);
-            } else {
-                workingTokens = token;
-            }
-            return action.handle(firstS, secondS, workingTokens);
+        return (parser, first, second) -> {
+            Statement firstS = first.parseExpression();
+            Statement secondS = second.parseExpression();
+            return action.handle(firstS, secondS);
         };
     }
 
     // Functional interface for passing to statementAction
     private interface StatementAction {
-        Statement handle(Statement first, Statement second, List<Token> tokens);
+        Statement handle(Statement first, Statement second);
     }
 }

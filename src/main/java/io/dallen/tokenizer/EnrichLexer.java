@@ -14,7 +14,7 @@ public class EnrichLexer {
     private final List<Token> tokens;
 
     private LexerTable table = new LexerTable(
-            "String", "Int", "List"
+            "String", "Int", "Byte"
     );
 
     private final ErrorCollector<Token> errors;

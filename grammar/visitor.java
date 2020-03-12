@@ -7,6 +7,10 @@
         return null;
     }
     
+    public CompiledCode compileProgram(Program stmt, CompileContext context) { 
+        return null;
+    }
+    
     public CompiledCode compileType(Type stmt, CompileContext context) { 
         return null;
     }

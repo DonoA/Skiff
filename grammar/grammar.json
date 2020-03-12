@@ -1,8 +1,12 @@
 {
     "Statement": {
         "fields": {
-            "tokens": {
-                "type": "List<Token>",
+            "token_start": {
+                "type": "int",
+                "noFlatString": true
+            },
+            "token_end": {
+                "type": "int",
                 "noFlatString": true
             }
         }
@@ -10,6 +14,19 @@
     "Expression": {
         "extends": "Statement",
         "fields": {}
+    },
+    "Program": {
+        "extends": "Statement",
+        "fields": {
+            "body": {
+                "type": "List<Statement>",
+                "bigPrint": true
+            },
+            "tokens": {
+                "type": "List<Token>",
+                "noFlatString": true
+            }
+        }
     },
     "Type": {
         "extends": "Statement",
@@ -59,7 +76,7 @@
             "name": "String",
             "genericTypes": "List<GenericType>",
             "isStruct": {
-                "type": "Boolean",
+                "type": "boolean",
                 "noFlatString": true
             },
             "modifiers": {
@@ -83,9 +100,7 @@
         "fields": {
             "condition": "Statement",
             "elseBlock": {
-                "type": "ASTOptional<ElseBlock>",
-                "lazy": true,
-                "default": "ASTOptional.empty()"
+                "type": "ASTOptional<ElseBlock>"
             }
         }
     },
@@ -98,9 +113,7 @@
         "fields": {
             "on": "IfBlock",
             "elseBlock": {
-                "type": "ASTOptional<ElseBlock>",
-                "lazy": true,
-                "default": "ASTOptional.empty()"
+                "type": "ASTOptional<ElseBlock>"
             }
         }
     },
@@ -175,8 +188,7 @@
         "extends": "BlockStatement",
         "fields": {
             "catchBlock": {
-                "type": "CatchBlock",
-                "lazy": true
+                "type": "CatchBlock"
             }
         }
     },
@@ -334,7 +346,7 @@
         "extends": "Expression",
         "fields": {
             "value": {
-                "type": "Double",
+                "type": "double",
                 "noFlatString": true
             }
         }
@@ -356,7 +368,7 @@
     "BooleanLiteral": {
         "extends": "Expression",
         "fields": {
-            "value": "Boolean"
+            "value": "boolean"
         },
         "literal": true
     },

@@ -7,5 +7,5 @@ import io.dallen.tokenizer.Token;
 import java.util.List;
 
 public interface SplitAction {
-    AST.Statement handle(Parser parser, List<Token> first, List<Token> second, List<Token> allTokens);
+    AST.Statement handle(Parser parser, Parser first, Parser second);
 }
