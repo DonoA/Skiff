@@ -99,27 +99,6 @@ class BlockParser {
         return new AST.CatchBlock(cond, body, startPos, parser.absolutePos());
     }
 
-//    private void attachToLastBlock(AST.Statement parentStmt, AST.ElseBlock toAttach, List<Token> allTokens) {
-//        if(parentStmt instanceof AST.IfBlock) {
-//            AST.IfBlock ifBlock = (AST.IfBlock) parentStmt;
-//            if(ifBlock.elseBlock.isPresent()) {
-//                attachToLastBlock(ifBlock.elseBlock.get(), toAttach, allTokens);
-//            } else {
-//                ifBlock.elseBlock = ASTOptional.of(toAttach);
-//            }
-//        } else if(parentStmt instanceof AST.ElseIfBlock) {
-//            AST.ElseIfBlock elseIfBlock = (AST.ElseIfBlock) parentStmt;
-//            if(elseIfBlock.elseBlock.isPresent()) {
-//                attachToLastBlock(elseIfBlock.elseBlock.get(), toAttach, allTokens);
-//            } else {
-//                elseIfBlock.elseBlock = ASTOptional.of(toAttach);
-//            }
-//        } else {
-//            parser.throwError("Else statement requires If, " + parentStmt.getClass().getName() + " found",
-//                    allTokens.get(0));
-//        }
-//    }
-
     private static AST.ElseBlock parseElse(Parser parser) {
         int startPos = parser.absolutePos();
 

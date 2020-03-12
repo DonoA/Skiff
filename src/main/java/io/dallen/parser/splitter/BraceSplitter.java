@@ -50,30 +50,4 @@ public class BraceSplitter {
 
         return segments;
     }
-
-//    public static List<List<Token>> braceSplitRightToLeft(Parser parser, Token.TokenType on,
-//                                                          int limit) throws ParserError {
-//        BraceManager braceManager = new BraceManager(BraceManager.rightToLeft);
-//
-//        List<List<Token>> segments = new ArrayList<>();
-//        List<Token> workingSeg = new ArrayList<>();
-//        segments.add(0, workingSeg);
-//        ListIterator<Token> itr = tokens.listIterator();
-//        while (itr.hasPrevious()) {
-//            Token t = itr.previous();
-//
-//            braceManager.check(t);
-//
-//            if (braceManager.isEmpty() && segments.size() < limit && t.type == on) {
-//                segments.add(0, workingSeg);
-//                workingSeg = new ArrayList<>();
-//            } else { // just add to results
-//                workingSeg.add(t);
-//            }
-//        }
-//        if(!workingSeg.isEmpty()) {
-//            segments.add(0, workingSeg);
-//        }
-//        return segments;
-//    }
 }

@@ -20,13 +20,8 @@ public class Parser implements ErrorCollector<Token> {
     int pos;
     int stop;
     Parser parent;
-
     boolean inMatch = false;
-
-//    final BlockParser blockParser;
-//    final ExpressionParser expressionParser;
-//    final CommonParsing common;
-    final List<String> errorMsg = new ArrayList<>();;
+    final List<String> errorMsg = new ArrayList<>();
     final String code;
 
     public Parser(String code, List<Token> tokens) {
@@ -121,7 +116,6 @@ public class Parser implements ErrorCollector<Token> {
     public Parser subParserParens() {
         consumeExpected(Token.Symbol.LEFT_PAREN);
         Parser subParser = subParserTo(Token.Symbol.RIGHT_PAREN);
-//        consumeExpected(Token.Symbol.LEFT_BRACE);
         return subParser;
     }
 
@@ -162,25 +156,6 @@ public class Parser implements ErrorCollector<Token> {
     public Token getBack(int i) {
         return tokens.get(absoluteStop() - i);
     }
-
-
-
-
-
-
-
-
-
-    ////////////////////// OLD CODE
-
-
-
-
-
-
-
-
-
 
     public void throwError(String msg, Token on) {
         if (parent == null) {
