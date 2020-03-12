@@ -52,7 +52,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
         this.parent = parent;
         this.errors = null;
         this.code = null;
-        if(funcContext) {
+        if (funcContext) {
             this.dependents = new ArrayList<>();
         } else {
             this.dependents = null;
@@ -72,7 +72,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public void declareObject(CompiledObject decVar) {
-        if(decVar instanceof CompiledFunction) {
+        if (decVar instanceof CompiledFunction) {
             scope.declareFunction((CompiledFunction) decVar);
             return;
         }
@@ -101,7 +101,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public int getFullRefStackSize() {
-        if(this.parent != null) {
+        if (this.parent != null) {
             return refStackSize + this.parent.getFullRefStackSize();
         } else {
             return refStackSize;
@@ -131,12 +131,12 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public boolean isOnStack() {
-    return onStack;
+        return onStack;
     }
 
     public CompileContext setOnStack(boolean onStack) {
-    this.onStack = onStack;
-    return this;
+        this.onStack = onStack;
+        return this;
     }
 
     public CompileScope getScope() {
@@ -144,7 +144,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public String getFilename() {
-        if(parent == null) {
+        if (parent == null) {
             return this.fileName;
         } else {
             return this.parent.getFilename();
@@ -152,7 +152,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public void setFilename(String v) {
-        if(parent == null) {
+        if (parent == null) {
             this.fileName = v;
         } else {
             this.parent.setFilename(v);
@@ -160,7 +160,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public int getGlobalCounter() {
-        if(parent == null) {
+        if (parent == null) {
             return this.globalCounter++;
         } else {
             return this.parent.getGlobalCounter();
@@ -168,7 +168,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public void addDependentCode(String code) {
-        if(this.dependents == null) {
+        if (this.dependents == null) {
             this.parent.addDependentCode(code);
         } else {
             this.dependents.add(code);
@@ -176,7 +176,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
     }
 
     public List<String> getDependentCode() {
-        if(this.dependents == null) {
+        if (this.dependents == null) {
             return this.parent.getDependentCode();
         } else {
             return dependents;
@@ -193,9 +193,9 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
 
     @Override
     public void throwError(String msg, AST.Statement stmt) {
-        if(parent == null) {
+        if (parent == null) {
             int pos = 0;
-            if(stmt != null) {
+            if (stmt != null) {
                 pos = tokenStream.get(stmt.token_start).pos;
             }
             errors.add(ErrorPrinter.pointToPos(code, pos, msg));
@@ -206,7 +206,7 @@ public class CompileContext implements ErrorCollector<AST.Statement> {
 
     @Override
     public List<String> getErrors() {
-        if(parent == null) {
+        if (parent == null) {
             return errors;
         }
         return parent.getErrors();

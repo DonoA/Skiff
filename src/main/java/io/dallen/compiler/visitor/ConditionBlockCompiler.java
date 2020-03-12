@@ -21,7 +21,7 @@ class ConditionBlockCompiler {
         body.forEach(VisitorUtils.compileToStringBuilder(sb, innerContext));
         VisitorUtils.cleanupScope(sb, innerContext, true);
 
-        if(tick != null) {
+        if (tick != null) {
             sb.append(innerContext.getIndent());
             CompiledCode tickCode = tick.compile(context);
             sb.append(tickCode.getCompiledText());

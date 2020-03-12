@@ -64,7 +64,7 @@ public class CompiledType extends CompiledObject {
     public boolean hasField(String name) {
         try {
             declaredScope.getObject(name);
-        } catch(NoSuchElementException ex) {
+        } catch (NoSuchElementException ex) {
             return false;
         }
         return true;
@@ -87,7 +87,7 @@ public class CompiledType extends CompiledObject {
     public boolean hasMethod(String name, List<CompiledType> args) {
         try {
             declaredScope.getFunction(name, args);
-        } catch(NoSuchElementException ex) {
+        } catch (NoSuchElementException ex) {
             return false;
         }
         return true;
@@ -105,7 +105,7 @@ public class CompiledType extends CompiledObject {
     public boolean hasStaticMethod(String name, List<CompiledType> args) {
         try {
             staticScope.getFunction(name, args);
-        } catch(NoSuchElementException ex) {
+        } catch (NoSuchElementException ex) {
             return false;
         }
         return true;
@@ -198,8 +198,9 @@ public class CompiledType extends CompiledObject {
     /**
      * Rebuilds compiled class with all filled generic types. This includes all fields, method parameters and return
      * types, and other uses of the generic within the class definition.
+     *
      * @param genericList List of classes replacing the generic placeholders
-     * @param modifyName Denotes if the new compiled class should have an updated name to represent its generic
+     * @param modifyName  Denotes if the new compiled class should have an updated name to represent its generic
      *                    subtypes
      * @return The new compiled class
      */
@@ -213,7 +214,7 @@ public class CompiledType extends CompiledObject {
         });
 
         String name = getName();
-        if(modifyName) {
+        if (modifyName) {
             String appends = genericList.stream().map(CompiledObject::getName).collect(Collectors.joining(""));
             name = name + appends;
         }
@@ -228,7 +229,7 @@ public class CompiledType extends CompiledObject {
 
         this.declaredVars.forEach(f -> {
             CompiledField post = f;
-            if(f.getType().genericPlaceholder) {
+            if (f.getType().genericPlaceholder) {
                 CompiledType comp = generics.get(f.getType().getName());
                 post = new CompiledField(new CompiledVar(f.getName(), f.isParam(), comp), f.isPrivate(), f.isMine());
             }
@@ -254,23 +255,24 @@ public class CompiledType extends CompiledObject {
 
     /**
      * Replaces generic placeholders in the return type and parameters types of the function.
+     *
      * @param generics A mapping of the placeholder names to the filled compiled types for replacement
-     * @param func The function to fill
+     * @param func     The function to fill
      * @return The new compile function
      */
     private CompiledMethod fillMethod(Map<String, CompiledType> generics, CompiledMethod func) {
         boolean newTypeNeeded = false;
         CompiledType returns = func.getReturns();
-        if(func.getReturns().genericPlaceholder) {
+        if (func.getReturns().genericPlaceholder) {
             returns = generics.get(func.getReturns().getName());
             newTypeNeeded = true;
             returns.isGeneric(true);
         }
         List<CompiledVar> argTypes = func.getArgs();
-        if(func.getArgs().stream().anyMatch(arg -> arg.getType().genericPlaceholder)) {
+        if (func.getArgs().stream().anyMatch(arg -> arg.getType().genericPlaceholder)) {
             newTypeNeeded = true;
             argTypes = func.getArgs().stream().map(arg -> {
-                if(arg.getType().genericPlaceholder) {
+                if (arg.getType().genericPlaceholder) {
                     return new CompiledVar(arg.getName(), false, generics.get(arg.getType().getName()).isGeneric(true));
                 } else {
                     return arg;
@@ -278,7 +280,7 @@ public class CompiledType extends CompiledObject {
             }).collect(Collectors.toList());
         }
 
-        if(newTypeNeeded) {
+        if (newTypeNeeded) {
             return new CompiledMethod(func.getName(), func.getCompiledName(), argTypes, returns, func.isMine(),
                     func.isPrivate(), func.isConstructor(), func.getOriginalDef());
         } else {

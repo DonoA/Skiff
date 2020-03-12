@@ -16,29 +16,29 @@ class ExpressionParser {
 
     // Switch statement for enums from many classes.
     private static final AdvancedSwitch<Token.TokenType, AST.Statement, Parser> expressionSwitch =
-        new AdvancedSwitch<Token.TokenType, AST.Statement, Parser>()
-            .addCase(Keyword.NEW::equals, ExpressionParser::parseNew)
-            .addCase(Symbol.LEFT_PAREN::equals, ExpressionParser::leftParenHandler)
-            .addCase(Textless.NAME::equals, ExpressionParser::handleNameToken)
-            .addCase(Symbol.DOUBLE_MINUS::equals, ExpressionParser.handleIncDec(Symbol.DOUBLE_MINUS,
-                    ASTEnums.MathOp.MINUS))
-            .addCase(Symbol.DOUBLE_PLUS::equals, ExpressionParser.handleIncDec(Symbol.DOUBLE_PLUS,
-                    ASTEnums.MathOp.MINUS))
-            .addCase(Keyword.TRUE::equals, ExpressionParser.handleBoolLiteral(Keyword.TRUE))
-            .addCase(Keyword.FALSE::equals, ExpressionParser.handleBoolLiteral(Keyword.FALSE))
-            .addCase(Textless.NUMBER_LITERAL::equals, ExpressionParser::handleNumLiteral)
-            .addCase(Textless.REGEX_LITERAL::equals, ExpressionParser::handleRegex)
-            .addCase(Textless.SEQUENCE_LITERAL::equals, ExpressionParser.handleLiteral(Textless.SEQUENCE_LITERAL,
-                    AST.SequenceLiteral::new))
-            .addCase(Textless.STRING_LITERAL::equals, ExpressionParser.handleLiteral(Textless.STRING_LITERAL,
-                    AST.StringLiteral::new))
-            .addCase(Keyword.BREAK::equals, ExpressionParser::handleBreakLiteral)
-            .addCase(Keyword.NEXT::equals, ExpressionParser::handleContinueLiteral)
-            .addCase(Symbol.UNDERSCORE::equals, ExpressionParser::handleUnderscore)
-            .setDefault(parser -> {
-                parser.throwError("Token did not match any known patterns", parser.current());
-                return null;
-            });
+            new AdvancedSwitch<Token.TokenType, AST.Statement, Parser>()
+                    .addCase(Keyword.NEW::equals, ExpressionParser::parseNew)
+                    .addCase(Symbol.LEFT_PAREN::equals, ExpressionParser::leftParenHandler)
+                    .addCase(Textless.NAME::equals, ExpressionParser::handleNameToken)
+                    .addCase(Symbol.DOUBLE_MINUS::equals, ExpressionParser.handleIncDec(Symbol.DOUBLE_MINUS,
+                            ASTEnums.MathOp.MINUS))
+                    .addCase(Symbol.DOUBLE_PLUS::equals, ExpressionParser.handleIncDec(Symbol.DOUBLE_PLUS,
+                            ASTEnums.MathOp.MINUS))
+                    .addCase(Keyword.TRUE::equals, ExpressionParser.handleBoolLiteral(Keyword.TRUE))
+                    .addCase(Keyword.FALSE::equals, ExpressionParser.handleBoolLiteral(Keyword.FALSE))
+                    .addCase(Textless.NUMBER_LITERAL::equals, ExpressionParser::handleNumLiteral)
+                    .addCase(Textless.REGEX_LITERAL::equals, ExpressionParser::handleRegex)
+                    .addCase(Textless.SEQUENCE_LITERAL::equals, ExpressionParser.handleLiteral(Textless.SEQUENCE_LITERAL,
+                            AST.SequenceLiteral::new))
+                    .addCase(Textless.STRING_LITERAL::equals, ExpressionParser.handleLiteral(Textless.STRING_LITERAL,
+                            AST.StringLiteral::new))
+                    .addCase(Keyword.BREAK::equals, ExpressionParser::handleBreakLiteral)
+                    .addCase(Keyword.NEXT::equals, ExpressionParser::handleContinueLiteral)
+                    .addCase(Symbol.UNDERSCORE::equals, ExpressionParser::handleUnderscore)
+                    .setDefault(parser -> {
+                        parser.throwError("Token did not match any known patterns", parser.current());
+                        return null;
+                    });
 
     // Parse a series of tokens that can be used at any point in the code. They can standalone or be part of larger
     // block statements or other expressions
@@ -51,7 +51,7 @@ class ExpressionParser {
             return parsed;
         }
 
-        if(workingParser.current().type == Textless.EOF) {
+        if (workingParser.current().type == Textless.EOF) {
             return null;
         }
 
@@ -60,7 +60,7 @@ class ExpressionParser {
 
     private static AST.Statement leftParenHandler(Parser parser) {
         int startPos = parser.absolutePos();
-        if(!parser.containsBefore(Token.Symbol.FAT_ARROW, Token.Symbol.SEMICOLON)){
+        if (!parser.containsBefore(Token.Symbol.FAT_ARROW, Token.Symbol.SEMICOLON)) {
             parser.consumeExpected(Token.Symbol.LEFT_PAREN);
             AST.Statement sub = parser.subParserTo(Token.Symbol.RIGHT_PAREN).parseExpression();
             return new AST.Parened(sub, startPos, parser.absolutePos());
@@ -166,7 +166,7 @@ class ExpressionParser {
         }
 
         AST.Type returns = CommonParsing.voidFor(parser.current());
-        if(parser.current().type == Token.Symbol.COLON) {
+        if (parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
             returns = CommonParsing.parseType(parser.subParserTo(Token.Symbol.FAT_ARROW));
         }
@@ -181,18 +181,18 @@ class ExpressionParser {
     // Deal with the many possible options when encountering a name token
     private static AST.Statement handleNameToken(Parser parser) {
         int startPos = parser.absolutePos();
-        if(parser.containsBefore(Token.Symbol.COLON, Token.Textless.EOF)) {
+        if (parser.containsBefore(Token.Symbol.COLON, Token.Textless.EOF)) {
             Token name = parser.consumeExpected(Textless.NAME);
             parser.consumeExpected(Token.Symbol.COLON);
             AST.Type type = CommonParsing.parseType(parser.subParserTo(Token.Symbol.SEMICOLON));
             return new AST.Declare(type, name.literal, new ArrayList<>(), startPos, parser.absolutePos());
-        } else if(parser.containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
+        } else if (parser.containsBefore(Token.Symbol.LEFT_PAREN, Token.Symbol.SEMICOLON)) {
             return parseFunctionCall(parser);
-        } else if(parser.containsBefore(Token.Symbol.DOUBLE_MINUS, Token.Symbol.SEMICOLON)) {
+        } else if (parser.containsBefore(Token.Symbol.DOUBLE_MINUS, Token.Symbol.SEMICOLON)) {
             return parsePreIncDec(parser, Token.Symbol.DOUBLE_MINUS, ASTEnums.MathOp.MINUS);
-        } else if(parser.containsBefore(Token.Symbol.DOUBLE_PLUS, Token.Symbol.SEMICOLON)) {
+        } else if (parser.containsBefore(Token.Symbol.DOUBLE_PLUS, Token.Symbol.SEMICOLON)) {
             return parsePreIncDec(parser, Token.Symbol.DOUBLE_PLUS, ASTEnums.MathOp.PLUS);
-        } else if(parser.containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
+        } else if (parser.containsBefore(Token.Symbol.LEFT_BRACKET, Token.Symbol.SEMICOLON)) {
             AST.Statement left = parser.subParserTo(Token.Symbol.LEFT_BRACKET).parseExpression();
             AST.Statement inner = parser.subParserTo(Token.Symbol.RIGHT_BRACKET).parseExpression();
             return new AST.Subscript(left, inner, startPos, parser.absolutePos());
@@ -207,7 +207,7 @@ class ExpressionParser {
 
         Parser funcName;
         List<AST.Type> generics = new ArrayList<>();
-        if(parser.containsBefore(Token.Symbol.LEFT_ANGLE, Token.Symbol.LEFT_PAREN)) {
+        if (parser.containsBefore(Token.Symbol.LEFT_ANGLE, Token.Symbol.LEFT_PAREN)) {
             funcName = parser.subParserTo(Token.Symbol.LEFT_ANGLE);
             List<Parser> genericTokens;
             try {
@@ -228,7 +228,7 @@ class ExpressionParser {
             funcName = parser.subParserTo(Token.Symbol.LEFT_PAREN);
         }
 
-        if(funcName.tokenCount() > 1) {
+        if (funcName.tokenCount() > 1) {
             parser.throwError("Function call name was multi token", funcName.get(0));
             return null;
         }

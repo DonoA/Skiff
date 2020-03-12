@@ -51,13 +51,13 @@ class ExpressionSplitParser {
             parent.throwError(parserError.msg, parserError.on);
             return null;
         }
-        if(res.size() == 1) {
+        if (res.size() == 1) {
             Statement firstS = first.parseExpression();
             Statement secondS = second.parseExpression();
             return new Assign(firstS, secondS, first.absoluteStart(), second.absoluteStop());
-        } else if(res.size() == 2) {
+        } else if (res.size() == 2) {
             Type typ = CommonParsing.parseType(res.get(1));
-            if(res.get(0).tokenCount() != 1) {
+            if (res.get(0).tokenCount() != 1) {
                 parent.throwError("Declare assign name had multiple parts", res.get(0).get(0));
                 return null;
             }
@@ -78,12 +78,12 @@ class ExpressionSplitParser {
     // calls.
     private static SplitAction compareAction(ASTEnums.CompareOp op) {
         return (parser, first, second) -> {
-            if(parser.current().type == Token.Keyword.NEW) {
+            if (parser.current().type == Token.Keyword.NEW) {
                 return null;
             }
 
             // As in the List in List<String>
-            if(first.getBack(1).ident == Token.IdentifierType.TYPE) {
+            if (first.getBack(1).ident == Token.IdentifierType.TYPE) {
                 return null;
             }
 
@@ -91,7 +91,7 @@ class ExpressionSplitParser {
             // no:  s(  func<List , String>(x) )
             // yes: s( x<List.y , String.y>(x) )
             int braceLoc = parser.indexOf(Token.Symbol.RIGHT_ANGLE);
-            if(braceLoc != -1 && parser.get(braceLoc - 1).ident == Token.IdentifierType.TYPE) {
+            if (braceLoc != -1 && parser.get(braceLoc - 1).ident == Token.IdentifierType.TYPE) {
                 return null;
             }
 

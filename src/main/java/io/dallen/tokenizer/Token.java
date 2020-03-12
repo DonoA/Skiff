@@ -9,6 +9,7 @@ public class Token {
 
     public interface TokenType {
         String getText();
+
         String getName();
     }
 
@@ -194,7 +195,7 @@ public class Token {
     @Override
     public String toString() {
         String str = type.getName() + "(" + literal + ")";
-        if(ident != null) {
+        if (ident != null) {
             str += "(" + ident + ")";
         }
         return str;

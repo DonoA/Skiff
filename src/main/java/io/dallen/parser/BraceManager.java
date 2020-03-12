@@ -98,6 +98,7 @@ public class BraceManager {
 
     public interface BraceProfile {
         Token.TokenType openBraceFor(Token.Symbol tt);
+
         boolean isOpenBrace(Token.Symbol tt);
     }
 
@@ -110,7 +111,7 @@ public class BraceManager {
     }
 
     public void check(Token t) throws ParserError {
-        if(!(t.type instanceof Token.Symbol)) {
+        if (!(t.type instanceof Token.Symbol)) {
             return;
         }
 

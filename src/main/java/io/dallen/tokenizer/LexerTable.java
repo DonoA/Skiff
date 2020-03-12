@@ -17,7 +17,7 @@ public class LexerTable {
     public LexerTable(String... defaultTypes) {
         root = new Node(null);
         currentNode = root;
-        for(String typ : defaultTypes) {
+        for (String typ : defaultTypes) {
             root.defineIdent(typ, Token.IdentifierType.TYPE);
         }
     }
@@ -62,16 +62,17 @@ public class LexerTable {
 
         /**
          * Searches up the tree for the identifier.
+         *
          * @param symbol The token name to search for
          * @return if the symbol was found, returns the identifier, otherwise returns null
          */
         private Token.IdentifierType getIdent(String symbol) {
             Token.IdentifierType typ = symbolMap.get(symbol);
-            if(typ != null) {
+            if (typ != null) {
                 return typ;
             }
 
-            if(parent != null) {
+            if (parent != null) {
                 return parent.getIdent(symbol);
             }
 

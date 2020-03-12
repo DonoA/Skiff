@@ -4,8 +4,6 @@ package io.dallen.compiler;
 import io.dallen.ast.AST;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Data class for a compiled skiff function

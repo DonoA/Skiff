@@ -22,7 +22,7 @@ public class CompiledMethod extends CompiledFunction {
 
     public CompiledMethod(String name, String compiledName, List<CompiledVar> args, CompiledType returns,
                           boolean mine, boolean priv) {
-        this(name, compiledName, args,returns,  mine, priv, false, null);
+        this(name, compiledName, args, returns, mine, priv, false, null);
     }
 
     public CompiledMethod(CompiledFunction func, boolean mine, boolean priv, boolean isConstructor) {

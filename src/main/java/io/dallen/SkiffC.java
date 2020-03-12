@@ -2,7 +2,6 @@ package io.dallen;
 
 import io.dallen.ast.AST;
 import io.dallen.compiler.CompileContext;
-import io.dallen.compiler.CompiledCode;
 import io.dallen.parser.Parser;
 import io.dallen.tokenizer.Lexer;
 import io.dallen.tokenizer.Token;
@@ -16,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class SkiffC {
 
@@ -51,7 +49,7 @@ public class SkiffC {
         String programText;
         try {
             programText = readFile(infile);
-        } catch(IOException err) {
+        } catch (IOException err) {
             System.err.println("Bad file");
             return Optional.empty();
         }
@@ -63,19 +61,19 @@ public class SkiffC {
         CompileContext context = new CompileContext(programText, infile, outfile, debug);
         context.getScope().loadBuiltins();
         try {
-            for(File f : new File(stdFolder).listFiles()) {
-                if(f.getName().endsWith(".skiff")) {
+            for (File f : new File(stdFolder).listFiles()) {
+                if (f.getName().endsWith(".skiff")) {
                     String importText = readFile(f.getPath());
                     context.setFilename(f.getName());
                     Optional<String> importCode = compile(importText, context);
-                    if(importCode.isEmpty()) {
+                    if (importCode.isEmpty()) {
                         System.err.println("Issue with compile std lib file");
                     } else {
                         preamble.append(importCode.get());
                     }
                 }
             }
-        } catch(IOException err) {
+        } catch (IOException err) {
             System.err.println("Failed to get std lib skiff file");
             err.printStackTrace();
             return Optional.empty();
@@ -94,22 +92,22 @@ public class SkiffC {
         boolean lexFail = false;
         try {
             tokenStream = lexer.lex();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             lexFail = true;
         } finally {
 //        printTokenStream(tokenStream);
-            if(!lexer.getErrors().isEmpty()) {
+            if (!lexer.getErrors().isEmpty()) {
                 System.out.println(String.join("\n", lexer.getErrors()));
                 passed = false;
             }
         }
 
-        if(lexFail) {
+        if (lexFail) {
             return Optional.empty();
         }
 
-        if(context.isDebug()) {
+        if (context.isDebug()) {
             System.out.println(" ======== PARSE " + context.getFilename() + " =========== ");
         }
 
@@ -118,22 +116,22 @@ public class SkiffC {
         boolean parseFail = false;
         try {
             statement = parser.parse();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             parseFail = true;
         } finally {
 //        statements.forEach(System.out::println);
-            if(!parser.getErrors().isEmpty()) {
+            if (!parser.getErrors().isEmpty()) {
                 System.out.println(String.join("\n", parser.getErrors()));
                 passed = false;
             }
         }
 
-        if(parseFail) {
+        if (parseFail) {
             return Optional.empty();
         }
 
-        if(context.isDebug()) {
+        if (context.isDebug()) {
             System.out.println(" ======== COMPILE " + context.getFilename() + " =========== ");
         }
         String compiledText = null;
@@ -141,31 +139,30 @@ public class SkiffC {
         try {
             compiledText = statement.compile(context).getCompiledText();
 
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             compileFail = true;
         } finally {
-            if(!context.getErrors().isEmpty()) {
+            if (!context.getErrors().isEmpty()) {
                 System.out.println(String.join("\n", context.getErrors()));
                 passed = false;
             }
             // print errors from context
         }
 
-        if(compileFail) {
+        if (compileFail) {
             return Optional.empty();
         }
         String code = String.join("\n", compiledText);
 
 //        System.out.println(code);
 
-        if(!passed && !context.isDebug()) {
+        if (!passed && !context.isDebug()) {
             return Optional.empty();
         } else {
             return Optional.of(code);
         }
     }
-
 
 
 }

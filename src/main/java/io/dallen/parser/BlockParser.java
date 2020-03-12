@@ -17,26 +17,26 @@ class BlockParser {
 
     private static final AdvancedSwitch<Token.TokenType, AST.Statement, Parser> blockSwitcher =
             new AdvancedSwitch<Token.TokenType, AST.Statement, Parser>()
-            .addCase(Keyword.WHILE::equals, BlockParser::parseWhileBlock)
-            .addCase(Keyword.SWITCH::equals, BlockParser::parseSwitchBlock)
-            .addCase(Keyword.MATCH::equals, BlockParser::parseMatchBlock)
-            .addCase(Keyword.CASE::equals, BlockParser::parseCases)
-            .addCase(Keyword.LOOP::equals, BlockParser::parseLoopBlock)
-            .addCase(Keyword.FOR::equals, BlockParser::parseForBlock)
-            .addCase(Keyword.IF::equals, BlockParser::parseIfBlock)
-            .addCase(Keyword.ELSE::equals, BlockParser::parseElse)
-            .addCase(Keyword.DEF::equals, BlockParser::parseFunctionDef)
-            .addCase(Keyword.CLASS::equals, BlockParser::parseClassDef)
-            .addCase(Keyword.STRUCT::equals, BlockParser::parseClassDef)
-            .addCase(Keyword.PRIVATE::equals, declarationModifierFor(Keyword.PRIVATE, ASTEnums.DecModType.PRIVATE))
-            .addCase(Keyword.STATIC::equals, declarationModifierFor(Keyword.STATIC, ASTEnums.DecModType.STATIC))
-            .addCase(Keyword.NATIVE::equals, declarationModifierFor(Keyword.NATIVE, ASTEnums.DecModType.NATIVE))
-            .addCase(Keyword.RETURN::equals, BlockParser::parseReturn)
-            .addCase(Keyword.IMPORT::equals, BlockParser::parseImport)
-            .addCase(Keyword.THROW::equals, BlockParser::parseThrow)
-            .addCase(Keyword.TRY::equals, BlockParser::parseTryBlock)
-            .addCase(Keyword.CATCH::equals, BlockParser::parseCatch)
-            .setDefault(Parser::parseExpression);
+                    .addCase(Keyword.WHILE::equals, BlockParser::parseWhileBlock)
+                    .addCase(Keyword.SWITCH::equals, BlockParser::parseSwitchBlock)
+                    .addCase(Keyword.MATCH::equals, BlockParser::parseMatchBlock)
+                    .addCase(Keyword.CASE::equals, BlockParser::parseCases)
+                    .addCase(Keyword.LOOP::equals, BlockParser::parseLoopBlock)
+                    .addCase(Keyword.FOR::equals, BlockParser::parseForBlock)
+                    .addCase(Keyword.IF::equals, BlockParser::parseIfBlock)
+                    .addCase(Keyword.ELSE::equals, BlockParser::parseElse)
+                    .addCase(Keyword.DEF::equals, BlockParser::parseFunctionDef)
+                    .addCase(Keyword.CLASS::equals, BlockParser::parseClassDef)
+                    .addCase(Keyword.STRUCT::equals, BlockParser::parseClassDef)
+                    .addCase(Keyword.PRIVATE::equals, declarationModifierFor(Keyword.PRIVATE, ASTEnums.DecModType.PRIVATE))
+                    .addCase(Keyword.STATIC::equals, declarationModifierFor(Keyword.STATIC, ASTEnums.DecModType.STATIC))
+                    .addCase(Keyword.NATIVE::equals, declarationModifierFor(Keyword.NATIVE, ASTEnums.DecModType.NATIVE))
+                    .addCase(Keyword.RETURN::equals, BlockParser::parseReturn)
+                    .addCase(Keyword.IMPORT::equals, BlockParser::parseImport)
+                    .addCase(Keyword.THROW::equals, BlockParser::parseThrow)
+                    .addCase(Keyword.TRY::equals, BlockParser::parseTryBlock)
+                    .addCase(Keyword.CATCH::equals, BlockParser::parseCatch)
+                    .setDefault(Parser::parseExpression);
 
     static List<AST.Statement> parseAll(Parser parser) {
         List<AST.Statement> statements = new ArrayList<>();
@@ -44,7 +44,7 @@ class BlockParser {
         while (parser.current().type != Token.Textless.EOF) {
             Token.TokenType i = parser.current().type;
             AST.Statement result = blockSwitcher.execute(i, parser);
-            if(result != null) {
+            if (result != null) {
                 statements.add(result);
             }
         }
@@ -59,7 +59,7 @@ class BlockParser {
     private static AST.ClassDef parseClassDef(Parser parser) {
         int startPos = parser.absolutePos();
         boolean isStruct = parser.current().type == Keyword.STRUCT;
-        if(isStruct) {
+        if (isStruct) {
             parser.consumeExpected(Keyword.STRUCT);
         } else {
             parser.consumeExpected(Keyword.CLASS);
@@ -68,11 +68,11 @@ class BlockParser {
         Token name = parser.consumeExpected(Token.Textless.NAME);
         List<AST.GenericType> genericTypes = new ArrayList<>();
         Optional<AST.Type> extended = Optional.empty();
-        if(parser.current().type == Token.Symbol.LEFT_ANGLE) {
+        if (parser.current().type == Token.Symbol.LEFT_ANGLE) {
             genericTypes = CommonParsing.consumeGenericList(parser);
         }
 
-        if(parser.current().type == Token.Symbol.COLON) {
+        if (parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
             Parser typeParser = parser.subParserTo(Token.Symbol.LEFT_BRACE);
             extended = Optional.ofNullable(CommonParsing.parseType(typeParser));
@@ -103,11 +103,11 @@ class BlockParser {
         int startPos = parser.absolutePos();
 
         parser.consumeExpected(Token.Keyword.ELSE);
-        if(parser.current().type == Token.Keyword.IF) {
+        if (parser.current().type == Token.Keyword.IF) {
             AST.IfBlock on = BlockParser.parseIfBlock(parser);
             int stopPos = parser.absolutePos();
             ASTOptional<AST.ElseBlock> elseBlock = ASTOptional.empty();
-            if(parser.current().type == Keyword.ELSE) {
+            if (parser.current().type == Keyword.ELSE) {
                 elseBlock = ASTOptional.of(parseElse(parser));
             }
             return new AST.ElseIfBlock(on, elseBlock, startPos, stopPos);
@@ -168,7 +168,7 @@ class BlockParser {
     }
 
     private static AST.Statement parseCases(Parser parser) {
-        if(parser.isInMatch()) {
+        if (parser.isInMatch()) {
             return BlockParser.parseMatchCase(parser);
         } else {
             return BlockParser.parseCase(parser);
@@ -205,7 +205,7 @@ class BlockParser {
 
         int stopPos = parser.absolutePos();
         ASTOptional<AST.ElseBlock> elseBlock = ASTOptional.empty();
-        if(parser.current().type == Keyword.ELSE) {
+        if (parser.current().type == Keyword.ELSE) {
             elseBlock = ASTOptional.of(parseElse(parser));
         }
 
@@ -249,21 +249,21 @@ class BlockParser {
     }
 
     private static AdvancedSwitch.CaseHandler<Parser, AST.Statement> declarationModifierFor(Token.TokenType expected,
-                                                                                          ASTEnums.DecModType type) {
+                                                                                            ASTEnums.DecModType type) {
         return (parser) -> {
             Token t = parser.consumeExpected(expected);
-            if(parser.current().type == Keyword.IMPORT) {
+            if (parser.current().type == Keyword.IMPORT) {
                 return BlockParser.parseNativeImport(parser, true);
             }
-            if(t.type == Keyword.PRIVATE) {
+            if (t.type == Keyword.PRIVATE) {
                 int i = 0;
             }
             AST.Statement on = BlockParser.parseBlock(parser);
-            if(on instanceof AST.Declare) {
+            if (on instanceof AST.Declare) {
                 ((AST.Declare) on).modifiers.add(type);
-            } else if(on instanceof AST.FunctionDef) {
+            } else if (on instanceof AST.FunctionDef) {
                 ((AST.FunctionDef) on).modifiers.add(type);
-            } else if(on instanceof AST.ClassDef) {
+            } else if (on instanceof AST.ClassDef) {
                 ((AST.ClassDef) on).modifiers.add(type);
             } else {
                 parser.throwError("Modifier " + type.getRawOp() + " used on bad thing", t);
@@ -281,7 +281,7 @@ class BlockParser {
 
         List<AST.GenericType> genericTypes = new ArrayList<>();
         String funcName = parser.consumeExpected(Token.Textless.NAME).literal;
-        if(parser.current().type == Token.Symbol.LEFT_ANGLE) {
+        if (parser.current().type == Token.Symbol.LEFT_ANGLE) {
             genericTypes = CommonParsing.consumeGenericList(parser);
         }
 
@@ -299,7 +299,7 @@ class BlockParser {
 
         Token.TokenType endToken = isAbstract ? Token.Symbol.SEMICOLON : Token.Symbol.LEFT_BRACE;
 
-        if(parser.current().type == Token.Symbol.COLON) {
+        if (parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
             returnType = CommonParsing.parseType(parser.subParserTo(endToken));
         } else {
@@ -322,7 +322,7 @@ class BlockParser {
         parser.consumeExpected(Token.Keyword.RETURN);
 
         ASTOptional<AST.Statement> value = ASTOptional.empty();
-        if(parser.current().type != Token.Symbol.SEMICOLON) {
+        if (parser.current().type != Token.Symbol.SEMICOLON) {
             value = ASTOptional.of(parser.subParserTo(Token.Symbol.SEMICOLON).parseExpression());
         }
         return new AST.Return(value, startPos, parser.absolutePos());

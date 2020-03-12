@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 class FunctionDefCompiler {
 
     private static String generateReturnType(CompiledFunction func, CompileContext context) {
-        if(func instanceof CompiledMethod && ((CompiledMethod) func).isConstructor()) {
+        if (func instanceof CompiledMethod && ((CompiledMethod) func).isConstructor()) {
             return context.getContainingClass().getCompiledName();
         }
 
@@ -21,12 +21,12 @@ class FunctionDefCompiler {
     }
 
     static String generateFuncName(boolean isConstructor, boolean isStatic, String stmtName, CompileContext context) {
-        if(isConstructor) {
+        if (isConstructor) {
             String ctrId = String.valueOf(context.getContainingClass().getConstructors().size());
             return VisitorUtils.underscoreJoin("skiff", stmtName, "new", ctrId);
         }
 
-        if(isStatic) {
+        if (isStatic) {
             return VisitorUtils.underscoreJoin("skiff", "static", context.getScopePrefix(), stmtName);
         }
 
@@ -46,7 +46,7 @@ class FunctionDefCompiler {
 
         CompiledCode returns = stmt.returns.compile(innerContext);
 
-        if(!returns.getBinding().equals(BuiltinTypes.VOID) && isConstructor) {
+        if (!returns.getBinding().equals(BuiltinTypes.VOID) && isConstructor) {
             innerContext.throwError("Constructor must return void", stmt);
         }
 
@@ -83,7 +83,7 @@ class FunctionDefCompiler {
 
         boolean isStatic = modTypes.contains(ASTEnums.DecModType.STATIC);
 
-        if(context.getContainingClass() != null && !isStatic) {
+        if (context.getContainingClass() != null && !isStatic) {
             stringArgs.add(context.getContainingClass().getCompiledName() + " this");
         }
 
@@ -91,7 +91,7 @@ class FunctionDefCompiler {
                 .stream()
                 .map(arg -> {
                     String prefix = "";
-                    if(arg.getType().isRef()) {
+                    if (arg.getType().isRef()) {
                         prefix = "formal_";
                     }
                     return arg.getType().getCompiledName() + " " + prefix + arg.getName();
@@ -124,12 +124,12 @@ class FunctionDefCompiler {
         functionCode.append("\n")
                 .append(context.getIndent()).append("{\n");
 
-        if(func.getName().equals("main")) {
+        if (func.getName().equals("main")) {
             injectSetup(functionCode, func, dec.returns, innerContext);
         }
 
         boolean isConstructor = func instanceof CompiledMethod && ((CompiledMethod) func).isConstructor();
-        if(isConstructor) {
+        if (isConstructor) {
             functionCode.append(initiateInstance(context.getContainingClass(), innerContext));
         }
 
@@ -139,14 +139,14 @@ class FunctionDefCompiler {
 
         Optional<AST.Return> returnOptional = Optional.empty();
 
-        if(dec.body.size() > 0 && dec.body.get(dec.body.size() - 1) instanceof AST.Return) {
+        if (dec.body.size() > 0 && dec.body.get(dec.body.size() - 1) instanceof AST.Return) {
             returnOptional = Optional.of((AST.Return) dec.body.get(dec.body.size() - 1));
         }
 
 
-        if(!func.getReturns().equals(BuiltinTypes.VOID)) {
+        if (!func.getReturns().equals(BuiltinTypes.VOID)) {
             boolean hasReturn = checkReturns(dec.body);
-            if(!hasReturn) {
+            if (!hasReturn) {
                 context.throwError("Function with non void return type must end with a return statement", dec);
             }
         }
@@ -167,24 +167,24 @@ class FunctionDefCompiler {
 
     private static boolean checkReturns(List<AST.Statement> body) {
         AST.Statement last;
-        if(body.size() != 0) {
+        if (body.size() != 0) {
             last = body.get(body.size() - 1);
         } else {
             return false;
         }
 
-        if(last instanceof AST.Return) {
+        if (last instanceof AST.Return) {
             return true;
         }
 
-        if(last instanceof AST.IfBlock) {
+        if (last instanceof AST.IfBlock) {
             AST.IfBlock blk = (AST.IfBlock) last;
-            if(blk.body.size() == 0 || !(blk.body.get(blk.body.size() - 1) instanceof AST.Return)) {
+            if (blk.body.size() == 0 || !(blk.body.get(blk.body.size() - 1) instanceof AST.Return)) {
                 return false;
             }
             ASTOptional<AST.ElseBlock> currElse = blk.elseBlock;
-            while(currElse.isPresent()) {
-                if(currElse.get() instanceof AST.ElseIfBlock) {
+            while (currElse.isPresent()) {
+                if (currElse.get() instanceof AST.ElseIfBlock) {
                     AST.ElseIfBlock elseBlock = (AST.ElseIfBlock) currElse.get();
                     if (elseBlock.on.body.size() == 0 ||
                             !(elseBlock.on.body.get(elseBlock.on.body.size() - 1) instanceof AST.Return)) {
@@ -213,11 +213,11 @@ class FunctionDefCompiler {
 
         CompiledFunction func = createCompiledFunc(isConstructor, stmt, context);
 
-        if(context.getContainingClass() == null) {
+        if (context.getContainingClass() == null) {
             context.declareObject(func);
         }
 
-        if(stmt.modifiers.contains(ASTEnums.DecModType.NATIVE)) {
+        if (stmt.modifiers.contains(ASTEnums.DecModType.NATIVE)) {
             return new CompiledCode();
         }
 
@@ -233,18 +233,18 @@ class FunctionDefCompiler {
                             .append(arg.getName()).append(" = skalloc_ref_stack();\n");
                     functionCode.append(innerContext.getIndent()).append("*").append(arg.getName()).append(" = formal_")
                             .append(arg.getName()).append(";\n");
-        });
+                });
     }
 
     private static void injectSetup(StringBuilder functionCode, CompiledFunction func, AST.Statement returns,
                                     CompileContext context) {
-        if(func.getReturns() != BuiltinTypes.INT) {
+        if (func.getReturns() != BuiltinTypes.INT) {
             context.throwError("Main must return int", returns);
         }
 
         context.getScope().getAllVars()
                 .stream()
-                .filter(o->o instanceof CompiledType)
+                .filter(o -> o instanceof CompiledType)
                 .map(o -> (CompiledType) o)
                 .filter(CompiledType::isRef)
                 .forEach(t -> functionCode.append(context.getIndent()).append(t.getStaticInitName()).append("();\n"));
@@ -259,7 +259,7 @@ class FunctionDefCompiler {
                 "();\n" +
                 innerContext.getIndent() +
                 "if(this == 0) \n" +
-                 innerContext.getIndent() +
+                innerContext.getIndent() +
                 "{ \n" +
                 innerIndent +
                 "this = skalloc(1, sizeof(" +
@@ -268,7 +268,7 @@ class FunctionDefCompiler {
                 innerContext.getIndent() + CompileContext.INDENT +
                 "this->class_ptr = &" +
                 cls.getInterfaceName()
-                +";\n" +
+                + ";\n" +
                 innerContext.getIndent() +
                 "}\n";
 
@@ -277,11 +277,11 @@ class FunctionDefCompiler {
     private static String generateReturns(Optional<AST.Return> returns, boolean isConstructor, CompileContext context,
                                           CompileContext innerContext) {
         StringBuilder sb = new StringBuilder();
-        if(returns.isEmpty()) {
+        if (returns.isEmpty()) {
             VisitorUtils.cleanupScope(sb, innerContext, true);
         }
 
-        if(isConstructor) {
+        if (isConstructor) {
             returns.ifPresent(returnz -> context.throwError("Constructor cannot return!", returnz));
 
             sb.append(innerContext.getIndent())

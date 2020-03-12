@@ -6,8 +6,6 @@ import io.dallen.parser.Parser;
 import io.dallen.parser.ParserError;
 import io.dallen.tokenizer.Token;
 
-import java.util.List;
-
 /**
  * Allows for splitting with precedence. Each layer in the settings is checked in order. Within each layer, the cases
  * are checked in order. The first hit recorded while parsing will be executed and have its result passed back to the
@@ -20,7 +18,7 @@ public class LayeredSplitter {
 
     public LayeredSplitter(SplitSettings settings, Parser parser) {
         this.parser = parser;
-        if(parser == null) {
+        if (parser == null) {
             int i = 0;
         }
         this.settings = settings;
@@ -29,7 +27,7 @@ public class LayeredSplitter {
     public AST.Statement execute() {
         for (SplitLayer layer : settings.getSplitLayers()) {
             AST.Statement rtn;
-            if(layer.isLeftToRight()) {
+            if (layer.isLeftToRight()) {
                 rtn = executeLayerLeftToRight(layer);
             } else {
                 rtn = executeLayerRightToLeft(layer);
@@ -48,7 +46,7 @@ public class LayeredSplitter {
         while (loc >= 0) {
 
             AST.Statement result = handleToken(braceManager, layer, loc);
-            if(result != null) {
+            if (result != null) {
                 return result;
             }
 
@@ -64,7 +62,7 @@ public class LayeredSplitter {
         while (loc < parser.tokenCount()) {
 
             AST.Statement result = handleToken(braceManager, layer, loc);
-            if(result != null) {
+            if (result != null) {
                 return result;
             }
 

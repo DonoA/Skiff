@@ -1,12 +1,14 @@
 package io.dallen.compiler.visitor;
 
 import io.dallen.ast.AST;
-import io.dallen.compiler.*;
+import io.dallen.compiler.CompileContext;
+import io.dallen.compiler.CompileException;
+import io.dallen.compiler.CompiledCode;
+import io.dallen.compiler.CompiledFunction;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 class FunctionCallCompiler {
@@ -19,8 +21,8 @@ class FunctionCallCompiler {
         try {
             func = context.getScope().getFunction(stmt.name,
                     compArgs.stream().map(CompiledCode::getType).collect(Collectors.toList()));
-        } catch(CompileException | NoSuchElementException ex) {
-            if(context.getContainingClass() == null) {
+        } catch (CompileException | NoSuchElementException ex) {
+            if (context.getContainingClass() == null) {
                 context.throwError(ex.getMessage(), stmt);
                 return new CompiledCode();
             }
@@ -32,7 +34,7 @@ class FunctionCallCompiler {
         boolean isSuper = stmt.name.equals("super");
 
         StringBuilder sb = new StringBuilder();
-        if(isSuper) {
+        if (isSuper) {
             CompiledFunction ctr = context.getContainingClass().getParent().getConstructor(compArgs.stream().map(CompiledCode::getType)
                     .collect(Collectors.toList()));
             sb.append(ctr.getCompiledName());
@@ -43,17 +45,17 @@ class FunctionCallCompiler {
 
         List<String> argList = new ArrayList<>();
 
-        if(isSuper) {
+        if (isSuper) {
             argList.add("(" + context.getContainingClass().getParent().getCompiledName() + ") this");
         }
 
         argList.addAll(compArgs
                 .stream()
                 .map(arg -> {
-                    if(arg.onStack() && arg.getType().isRef()) {
-                        return  "*(" + arg.getCompiledText() + ")";
+                    if (arg.onStack() && arg.getType().isRef()) {
+                        return "*(" + arg.getCompiledText() + ")";
                     }
-                    return  "(" + arg.getCompiledText() + ")";
+                    return "(" + arg.getCompiledText() + ")";
                 }).collect(Collectors.toList()));
 
         sb.append(String.join(", ", argList));

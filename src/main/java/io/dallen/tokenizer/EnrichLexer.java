@@ -26,36 +26,37 @@ public class EnrichLexer {
 
     /**
      * Run through tokens to add needed identifier information
+     *
      * @return The enriched list
      */
     public List<Token> enrich() {
         for (int i = 0; i < tokens.size(); i++) {
             Token token = tokens.get(i);
-            if(token.type == Token.Symbol.LEFT_BRACE) {
+            if (token.type == Token.Symbol.LEFT_BRACE) {
                 table.newChild();
             }
 
-            if(token.type == Token.Symbol.RIGHT_BRACE) {
-                if(table.getCurrent() == null) {
+            if (token.type == Token.Symbol.RIGHT_BRACE) {
+                if (table.getCurrent() == null) {
                     errors.throwError("Too many close braces", token);
                     return List.of();
                 }
                 table.toParent();
             }
 
-            if(token.type != Token.Keyword.CLASS) {
+            if (token.type != Token.Keyword.CLASS) {
                 continue;
             }
 
             Token next = tokens.get(i + 1);
             table.defineIdent(next.literal, Token.IdentifierType.TYPE);
 
-            if(tokens.get(i + 2).type == Token.Symbol.LEFT_ANGLE) {
+            if (tokens.get(i + 2).type == Token.Symbol.LEFT_ANGLE) {
                 int index = i + 2;
-                while(true) {
+                while (true) {
                     table.defineIdent(tokens.get(index + 1).literal, Token.IdentifierType.TYPE);
                     int nextIndex = indexOfNext(index, Token.Symbol.COMMA, Token.Symbol.RIGHT_ANGLE);
-                    if(nextIndex == -1) {
+                    if (nextIndex == -1) {
                         i = index;
                         break;
                     }
@@ -64,12 +65,12 @@ public class EnrichLexer {
             }
         }
 
-        if(table.getCurrent() == null) {
+        if (table.getCurrent() == null) {
             errors.throwError("Too many close braces", tokens.get(tokens.size() - 1));
             return List.of();
         }
 
-        if(table.getCurrent().getParent() != null) {
+        if (table.getCurrent().getParent() != null) {
             errors.throwError("Expected more close braces", tokens.get(tokens.size() - 1));
             return List.of();
         }
@@ -77,17 +78,17 @@ public class EnrichLexer {
         return tokens
                 .stream()
                 .map(token -> {
-                    if(token.type == Token.Symbol.LEFT_BRACE) {
+                    if (token.type == Token.Symbol.LEFT_BRACE) {
                         table.nextChild();
                     }
 
-                    if(token.type == Token.Symbol.RIGHT_BRACE) {
+                    if (token.type == Token.Symbol.RIGHT_BRACE) {
                         table.toParent();
                     }
 
-                    if(token.type == Token.Textless.NAME) {
+                    if (token.type == Token.Textless.NAME) {
                         Token.IdentifierType ident = table.getIdent(token.literal);
-                        if(ident == null) {
+                        if (ident == null) {
                             ident = Token.IdentifierType.VARIABLE;
                         }
                         return new Token(token.type, token.literal, ident, token.pos);
@@ -100,10 +101,10 @@ public class EnrichLexer {
 
     private int indexOfNext(int start, Token.TokenType search, Token.TokenType blockEnd) {
         for (int i = start; i < tokens.size(); i++) {
-            if(tokens.get(i).type == search) {
+            if (tokens.get(i).type == search) {
                 return i;
             }
-            if(tokens.get(i).type == blockEnd) {
+            if (tokens.get(i).type == blockEnd) {
                 return -1;
             }
         }

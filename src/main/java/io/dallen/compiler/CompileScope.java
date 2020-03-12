@@ -33,7 +33,7 @@ public class CompileScope {
         try {
             getObject(decVar.getName());
             throw new UnsupportedOperationException("Cannot redefine variable " + decVar.getName());
-        } catch(NoSuchElementException ex) {
+        } catch (NoSuchElementException ex) {
             variableTable.put(decVar.getName(), decVar);
         }
     }
@@ -42,8 +42,8 @@ public class CompileScope {
         try {
             getFunction(decFunc.getName(), decFunc.getArgs().stream().map(CompiledVar::getType).collect(Collectors.toList()));
             throw new UnsupportedOperationException("Cannot redefine variable " + decFunc.getName());
-        } catch(NoSuchElementException ex) {
-            if(functionTable.containsKey(decFunc.getName())) {
+        } catch (NoSuchElementException ex) {
+            if (functionTable.containsKey(decFunc.getName())) {
                 functionTable.get(decFunc.getName()).add(decFunc);
             } else {
                 List<CompiledFunction> funcs = new ArrayList<>();
@@ -55,11 +55,11 @@ public class CompileScope {
 
     public CompiledObject getObject(String name) throws NoSuchElementException {
         CompiledObject varFor = variableTable.get(name);
-        if(varFor != null) {
+        if (varFor != null) {
             return varFor;
         }
 
-        if(parent == null) {
+        if (parent == null) {
             throw new NoSuchElementException(name);
         }
 
@@ -68,18 +68,18 @@ public class CompileScope {
 
     public CompiledFunction getFunction(String name, List<CompiledType> args) throws CompileException {
         List<CompiledFunction> posFuncs = functionTable.get(name);
-        if(posFuncs != null) {
+        if (posFuncs != null) {
             Optional<CompiledFunction> targetFunc = posFuncs.stream().filter(func -> {
-                if(args.size() != func.getArgs().size()) {
+                if (args.size() != func.getArgs().size()) {
                     return false;
                 }
 
                 for (int i = 0; i < args.size(); i++) {
-                    if(args.get(i).equals(func.getArgs().get(i).getType())) {
+                    if (args.get(i).equals(func.getArgs().get(i).getType())) {
                         continue;
                     }
                     // TODO: make this check the type of the invoked function
-                    if(func.getArgs().get(i).getType().isGenericPlaceholder()) {
+                    if (func.getArgs().get(i).getType().isGenericPlaceholder()) {
                         continue;
                     }
                     return false;
@@ -89,12 +89,12 @@ public class CompileScope {
                 return true;
             }).findFirst();
 
-            if(targetFunc.isPresent()) {
+            if (targetFunc.isPresent()) {
                 return targetFunc.get();
             }
         }
 
-        if(parent == null) {
+        if (parent == null) {
             String message = "Could not find function " + name +
                     " with args " + args.stream()
                     .map(CompiledObject::getName)
@@ -111,7 +111,7 @@ public class CompileScope {
 
     public List<CompiledObject> getAllVars() {
         List<CompiledObject> all = new ArrayList<>(variableTable.values());
-        if(this.parent != null) {
+        if (this.parent != null) {
             all.addAll(this.parent.getAllVars());
         }
         return all;
@@ -124,7 +124,7 @@ public class CompileScope {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
 
-        if(this.parent != null) {
+        if (this.parent != null) {
             all.addAll(this.parent.getAllFuncs());
         }
         return all;

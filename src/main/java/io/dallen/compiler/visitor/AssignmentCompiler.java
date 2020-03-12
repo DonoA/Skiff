@@ -11,10 +11,10 @@ public class AssignmentCompiler {
         // Each stack location should represent exactly one named var
         CompiledCode value = stmt.value.compile(context);
 
-        if(stmt.name instanceof AST.FunctionCall) {
+        if (stmt.name instanceof AST.FunctionCall) {
             AST.FunctionCall func = (AST.FunctionCall) stmt.name;
             return compileDeconstructionAssign(value, func, context);
-        } else if(stmt.name instanceof AST.Subscript) {
+        } else if (stmt.name instanceof AST.Subscript) {
             AST.Subscript sub = (AST.Subscript) stmt.name;
             return compileSubscript(value, sub, context);
         } else {
@@ -31,30 +31,30 @@ public class AssignmentCompiler {
         String deref = (value.onStack() ? "*" : "");
 
         for (int i = 0; i < func.args.size(); i++) {
-            if(!(func.args.get(i) instanceof AST.Variable)) {
+            if (!(func.args.get(i) instanceof AST.Variable)) {
                 context.throwError("Args of type deconstruction must be Variables", func.args.get(i));
                 continue;
             }
             AST.Variable v = (AST.Variable) func.args.get(i);
             CompiledField field = intoType.getAllFields().get(i);
             sb.append(context.getIndent()).append(field.getType().getCompiledName());
-            if(field.getType().isRef()) {
+            if (field.getType().isRef()) {
                 sb.append("*");
             }
             sb.append(" ").append(v.name);
-            if(field.getType().isRef()) {
+            if (field.getType().isRef()) {
                 sb.append(" = skalloc_ref_stack()");
             }
             sb.append(";\n");
             sb.append(context.getIndent());
-            if(field.getType().isRef()) {
+            if (field.getType().isRef()) {
                 sb.append("*");
             }
             sb.append(v.name).append(" = ((").append(intoType.getCompiledName()).append(") ").append(deref)
                     .append(value.getCompiledText()).append(")->").append(field.getName()).append(";\n");
 
             context.declareObject(new CompiledVar(v.name, false, field.getType()));
-            if(field.getType().isRef()) {
+            if (field.getType().isRef()) {
                 context.addRefStackSize(1);
             }
         }
@@ -76,7 +76,7 @@ public class AssignmentCompiler {
 
         String text = name + "->class_ptr->" + subscrCall.getName() + "(" + name + ", " +
                 (rhsDeRef ? "*(" : "(") + value.getCompiledText() + "), " +
-                sub.getCompiledText() +")";
+                sub.getCompiledText() + ")";
 
         return new CompiledCode()
                 .withText(text)
@@ -88,14 +88,14 @@ public class AssignmentCompiler {
         CompiledCode name = stmt.name.compile(context);
 
         boolean lhsDeRef = name.onStack();
-        if(name.getBinding() instanceof CompiledVar) {
+        if (name.getBinding() instanceof CompiledVar) {
             lhsDeRef = lhsDeRef && ((CompiledVar) name.getBinding()).getType().isRef();
         }
 
         boolean rhsDeRef = value.onStack() && value.getType().isRef();
 
         String cast = "";
-        if(!name.getType().getName().equals(value.getType().getName())) {
+        if (!name.getType().getName().equals(value.getType().getName())) {
             cast = "(" + name.getType().getCompiledName() + ")";
         }
 

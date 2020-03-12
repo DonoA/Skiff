@@ -3,6 +3,7 @@ package io.dallen.ast;
 /**
  * An optional replacement class for classes that extend AST.Statement. Allows for easier code generation in AST.java
  * Provides an implementation for toFlatString to works well with null values.
+ *
  * @param <T> The AST class wrapped by this optional
  */
 public class ASTOptional<T extends AST.Statement> {
@@ -14,7 +15,7 @@ public class ASTOptional<T extends AST.Statement> {
     }
 
     public static <T extends AST.Statement> ASTOptional<T> of(T dat) {
-        if(dat == null) {
+        if (dat == null) {
             throw new UnsupportedOperationException("ASTOptional cannot be of null");
         }
         return new ASTOptional<>(dat);
@@ -34,7 +35,7 @@ public class ASTOptional<T extends AST.Statement> {
 
     @Override
     public String toString() {
-        if(dat == null) {
+        if (dat == null) {
             return "ASTOptional.empty";
         } else {
             return "ASTOptional.of(" + dat.toString() + ")";
@@ -42,7 +43,7 @@ public class ASTOptional<T extends AST.Statement> {
     }
 
     public String toFlatString() {
-        if(dat == null) {
+        if (dat == null) {
             return "ASTOptional.empty";
         } else {
             return "ASTOptional.of(" + dat.toFlatString() + ")";

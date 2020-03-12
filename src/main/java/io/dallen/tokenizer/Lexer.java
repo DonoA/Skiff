@@ -17,6 +17,7 @@ public class Lexer implements ErrorCollector<Token> {
 
     /**
      * Tokenize the string given to this Lexer
+     *
      * @return A list of tokens representing the string
      */
     public List<Token> lex() {
@@ -29,8 +30,8 @@ public class Lexer implements ErrorCollector<Token> {
             }
 
             // Skip comments
-            if(data.charAt(pos) == '/' && pos + 1 < data.length() && data.charAt(pos+1) == '/') {
-                while(pos < data.length() && data.charAt(pos) != '\n') {
+            if (data.charAt(pos) == '/' && pos + 1 < data.length() && data.charAt(pos + 1) == '/') {
+                while (pos < data.length() && data.charAt(pos) != '\n') {
                     pos++;
                 }
                 continue;
@@ -68,7 +69,7 @@ public class Lexer implements ErrorCollector<Token> {
 
         // Search symbol tokens
         for (Token.TokenType testType : Token.Symbol.values()) {
-            if(tokenNotValid(testType, searchPos)) {
+            if (tokenNotValid(testType, searchPos)) {
                 continue;
             }
 
@@ -79,7 +80,7 @@ public class Lexer implements ErrorCollector<Token> {
 
         // Search keyword tokens
         for (Token.TokenType testType : Token.Keyword.values()) {
-            if(tokenNotValid(testType, searchPos)) {
+            if (tokenNotValid(testType, searchPos)) {
                 continue;
             }
 
@@ -113,7 +114,7 @@ public class Lexer implements ErrorCollector<Token> {
             pos++;
             StringBuilder regex = new StringBuilder();
             regex.append(selectTo('/')).append('\0');
-            while(pos < data.length() && isRegexFlag(data.charAt(pos))) {
+            while (pos < data.length() && isRegexFlag(data.charAt(pos))) {
                 regex.append(data.charAt(pos));
                 pos++;
             }
@@ -154,13 +155,13 @@ public class Lexer implements ErrorCollector<Token> {
         StringBuilder sb = new StringBuilder();
         pos++;
         while (true) {
-            if(pos >= data.length()) {
+            if (pos >= data.length()) {
                 errorMsg.add(ErrorPrinter.pointToPos(data, pos, "Failed to find " + c + " in lexing"));
                 return "";
             }
 
             // check for escaped chars
-            if(pos > 0 && data.charAt(pos - 1) != '\\' && data.charAt(pos) == c) {
+            if (pos > 0 && data.charAt(pos - 1) != '\\' && data.charAt(pos) == c) {
                 break;
             }
 

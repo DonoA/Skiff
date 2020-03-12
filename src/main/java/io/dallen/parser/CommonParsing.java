@@ -46,7 +46,7 @@ class CommonParsing {
         Token name = parser.consumeExpected(Token.Textless.NAME);
 
         List<AST.Type> subTypes = new ArrayList<>();
-        if(parser.current().type == Token.Symbol.COLON) {
+        if (parser.current().type == Token.Symbol.COLON) {
             parser.consumeExpected(Token.Symbol.COLON);
             subTypes.add(CommonParsing.parseType(parser));
         }
@@ -56,7 +56,7 @@ class CommonParsing {
 
     static AST.Type parseType(Parser parser) {
         AST.Statement typeName = parser.subParserTo(Token.Symbol.LEFT_ANGLE).parseExpression();
-        if(parser.current().isEOF()) {
+        if (parser.current().isEOF()) {
             return new AST.Type(typeName, List.of(), parser.absoluteStart(), parser.absoluteStop());
         }
         List<AST.Type> genericParams;

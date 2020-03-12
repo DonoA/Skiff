@@ -8,7 +8,7 @@ import java.util.List;
 public class BuiltinTypes {
     public static final CompiledType VOID = new CompiledType("Void", false, true)
             .setCompiledName("void");
-    public static final CompiledType ANY = new CompiledType("Any",  false, false);
+    public static final CompiledType ANY = new CompiledType("Any", false, false);
 
     public static final CompiledType INT = new CompiledType("Int", false, false)
             .setParent(BuiltinTypes.ANY)
@@ -18,11 +18,11 @@ public class BuiltinTypes {
             .setParent(BuiltinTypes.ANY)
             .setCompiledName("float");
 
-    public static final CompiledType BOOL = new CompiledType("Bool" ,false, false)
+    public static final CompiledType BOOL = new CompiledType("Bool", false, false)
             .setCompiledName("uint8_t")
             .setParent(BuiltinTypes.ANY);
 
-    public static final CompiledType BYTE = new CompiledType("Byte" ,false, false)
+    public static final CompiledType BYTE = new CompiledType("Byte", false, false)
             .setCompiledName("int8_t")
             .setParent(BuiltinTypes.ANY);
 
@@ -39,7 +39,7 @@ public class BuiltinTypes {
     private static boolean setup = false;
 
     public static void finishSetup() {
-        if(setup) {
+        if (setup) {
             return;
         }
 

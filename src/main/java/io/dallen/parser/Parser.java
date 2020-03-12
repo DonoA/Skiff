@@ -4,9 +4,8 @@ import io.dallen.ast.AST;
 import io.dallen.errors.ErrorCollector;
 import io.dallen.errors.ErrorPrinter;
 import io.dallen.tokenizer.Token;
-import io.dallen.ast.AST.*;
-
 import io.dallen.tokenizer.Token.Textless;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +61,7 @@ public class Parser implements ErrorCollector<Token> {
             }
             try {
                 braceManager.check(current());
-            } catch(ParserError ex) {
+            } catch (ParserError ex) {
                 // TODO: allow parser to recover from this
                 throwError(ex.msg, ex.on);
                 return null;
@@ -93,7 +92,7 @@ public class Parser implements ErrorCollector<Token> {
 
     public Token get(int i) {
         int offset = absolutePos() + i;
-        if(offset >= stop) {
+        if (offset >= stop) {
             int best_guess_pos = tokens.get(stop).pos;
             return Token.EOF(best_guess_pos);
         }
@@ -106,7 +105,7 @@ public class Parser implements ErrorCollector<Token> {
 
     public Token consumeExpected(Token.TokenType typ) {
         Token rtn = get(0);
-        if(rtn.type != typ) {
+        if (rtn.type != typ) {
             throw new ParserError.NoCatchParseError("Expected token " + typ.getName() + " got " + rtn.type.getName(), rtn);
         }
         pos++;
@@ -131,10 +130,10 @@ public class Parser implements ErrorCollector<Token> {
         int startPos = absolutePos();
         List<AST.Statement> body = new ArrayList<>();
 
-        while(true) {
+        while (true) {
             AST.Statement stmt = parseStatement();
 
-            if(stmt == null) {
+            if (stmt == null) {
                 break;
             }
 
@@ -145,8 +144,8 @@ public class Parser implements ErrorCollector<Token> {
     }
 
     public int indexOf(Token.TokenType type) {
-        for(int i = 0; get(i).type != Textless.EOF; i++) {
-            if(get(i).type == type) {
+        for (int i = 0; get(i).type != Textless.EOF; i++) {
+            if (get(i).type == type) {
                 return i;
             }
         }
