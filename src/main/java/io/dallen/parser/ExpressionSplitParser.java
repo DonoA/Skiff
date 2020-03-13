@@ -35,7 +35,7 @@ class ExpressionSplitParser {
                     .addSplitRule(Token.Symbol.MINUS, ExpressionSplitParser.mathAction(ASTEnums.MathOp.MINUS)))
             .addLayer(new SplitLayer()
                     .addSplitRule(Token.Symbol.DOT,
-                            ExpressionSplitParser.statementAction(ExpressionSplitParser::parseNew)
+                            ExpressionSplitParser.statementAction(ExpressionSplitParser::parseDotted)
                     )).leftToRight(false);
 
     static Statement split(Parser parser) {
@@ -101,7 +101,7 @@ class ExpressionSplitParser {
         };
     }
 
-    private static Statement parseNew(Statement left, Statement right) {
+    private static Statement parseDotted(Statement left, Statement right) {
         return new Dotted(left, right, left.token_start, right.token_end);
     }
 

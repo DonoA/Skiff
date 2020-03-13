@@ -5,24 +5,24 @@ class Optional<T> {
         this.data = data;
     }
 
-    static def of<U>(data: U): Optional<U> {
+    static def of<U>(data: U) -> Optional<U> {
         return new Optional<U>(data);
     }
 
-    static def empty<U>(): Optional<U> {
+    static def empty<U>() -> Optional<U> {
         return new Optional<U>(null);
     }
 
-    def get(): T {
+    def get() -> T {
         return data;
     }
 
-    def isPresent(): Bool {
+    def isPresent() -> Bool {
         return data != null;
     }
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     op: Optional<Int> = Optional.of<Int>(5);
     if(op.isPresent()) {
         return op.get();

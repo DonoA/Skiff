@@ -5,12 +5,12 @@ class Wrapper<T> {
         this.dat = dat;
     }
 
-    def getDat(): T {
+    def getDat() -> T {
         return this.dat;
     }
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     intData: Wrapper<Int>;
     intData = new Wrapper<Int>(5);
 

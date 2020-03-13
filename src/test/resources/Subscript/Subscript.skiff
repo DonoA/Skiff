@@ -1,7 +1,7 @@
 class Container {
     def Container() { }
 
-    def getSub(i: Int): Int {
+    def getSub(i: Int) -> Int {
         print("Getting item at ");
         println(i.toString());
         return 1;
@@ -15,7 +15,7 @@ class Container {
     }
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     println(args[0]);
     args[0] = "New String";
     println(args[0]);

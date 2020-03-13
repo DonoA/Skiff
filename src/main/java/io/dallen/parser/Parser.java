@@ -40,6 +40,12 @@ public class Parser implements ErrorCollector<Token> {
         this.code = parent.code;
     }
 
+    public Parser subParserTo(int count) {
+        int startPos = absolutePos();
+        this.pos += count;
+        return new Parser(this, startPos, Math.min(startPos + count, absoluteStop()));
+    }
+
     public Parser subParserTo(Token.TokenType endToken) {
         return subParserTo(endToken, BraceManager.leftToRight);
     }
@@ -106,7 +112,8 @@ public class Parser implements ErrorCollector<Token> {
     public Token consumeExpected(Token.TokenType typ) {
         Token rtn = get(0);
         if (rtn.type != typ) {
-            throw new ParserError.NoCatchParseError("Expected token " + typ.getName() + " got " + rtn.type.getName(), rtn);
+            throwError("Expected token " + typ.getName() + " got " + rtn.type.getName(), rtn);
+//            throw new ParserError.NoCatchParseError("Expected token " + typ.getName() + " got " + rtn.type.getName(), rtn);
         }
         pos++;
         return rtn;

@@ -38,7 +38,7 @@ class Array<T> {
         removeAt(size - 1);
     }
 
-    def getSub(i: Int): T {
+    def getSub(i: Int) -> T {
         return data[i];
     }
 
@@ -46,7 +46,7 @@ class Array<T> {
         data[i] = elt;
     }
 
-    def getSize(): Int {
+    def getSize() -> Int {
         return size;
     }
 }

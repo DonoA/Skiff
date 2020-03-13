@@ -5,7 +5,7 @@ class Thing {
         this.name = name;
     }
 
-    def getName(): String {
+    def getName() -> String {
         return name;
     }
 }
@@ -22,12 +22,12 @@ class Person : Thing {
         this.age = age + 1;
     }
 
-    def getAge(): Int {
+    def getAge() -> Int {
         return this.age;
     }
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     thing: Thing;
     thing = new Person("Dave", 15);
     println(thing.getName());

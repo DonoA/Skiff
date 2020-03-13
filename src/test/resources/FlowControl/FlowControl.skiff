@@ -8,7 +8,7 @@ def testMe(i: Int) {
     }
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     testMe(20);
     testMe(0);
     testMe(10);

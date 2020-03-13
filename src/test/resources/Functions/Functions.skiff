@@ -1,9 +1,9 @@
-def myFunc(arg: Int, arg2: String, arg3: Int, arg4: String): Int {
+def myFunc(arg: Int, arg2: String, arg3: Int, arg4: String) -> Int {
     println(arg2);
     return arg;
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     i: Int = 2;
     j: String = "Hello World!";
     return myFunc(i, j, 5, "literal string");

@@ -1,4 +1,4 @@
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     i: Int = 5;
 
     i += 5; // i = 10

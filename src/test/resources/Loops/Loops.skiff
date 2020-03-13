@@ -1,4 +1,4 @@
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     i: Int = 0;
     
     while(i < 2 && true) {

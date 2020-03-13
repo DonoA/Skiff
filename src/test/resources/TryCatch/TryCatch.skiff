@@ -3,7 +3,7 @@ def anError() {
     println("Never executed!");
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     try {
         anError();
     } catch(ex: Exception) {

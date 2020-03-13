@@ -1,9 +1,9 @@
 native import "./skiff_file.h";
 
-native def openFd(filename: String): Int;
+native def openFd(filename: String) -> Int;
 native def closeFd(desc: Int);
-native def readToBuffer(fd: Int, buffer: List<Byte>): Int;
-native def decodeBytes(buffer: List<Byte>, len: Int): String;
+native def readToBuffer(fd: Int, buffer: List<Byte>) -> Int;
+native def decodeBytes(buffer: List<Byte>, len: Int) -> String;
 
 class File {
     fileName: String;
@@ -24,7 +24,7 @@ class File {
         this.buffer = new List<Byte>(4096);
     }
 
-    def readAll(): String {
+    def readAll() -> String {
         this.open();
         read: Int = 0;
         // loop {

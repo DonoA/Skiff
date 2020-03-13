@@ -18,9 +18,6 @@ public class LayeredSplitter {
 
     public LayeredSplitter(SplitSettings settings, Parser parser) {
         this.parser = parser;
-        if (parser == null) {
-            int i = 0;
-        }
         this.settings = settings;
     }
 

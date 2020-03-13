@@ -255,9 +255,6 @@ class BlockParser {
             if (parser.current().type == Keyword.IMPORT) {
                 return BlockParser.parseNativeImport(parser, true);
             }
-            if (t.type == Keyword.PRIVATE) {
-                int i = 0;
-            }
             AST.Statement on = BlockParser.parseBlock(parser);
             if (on instanceof AST.Declare) {
                 ((AST.Declare) on).modifiers.add(type);
@@ -299,8 +296,8 @@ class BlockParser {
 
         Token.TokenType endToken = isAbstract ? Token.Symbol.SEMICOLON : Token.Symbol.LEFT_BRACE;
 
-        if (parser.current().type == Token.Symbol.COLON) {
-            parser.consumeExpected(Token.Symbol.COLON);
+        if (parser.current().type == Token.Symbol.THIN_ARROW) {
+            parser.consumeExpected(Token.Symbol.THIN_ARROW);
             returnType = CommonParsing.parseType(parser.subParserTo(endToken));
         } else {
             parser.consumeExpected(endToken);

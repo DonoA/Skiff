@@ -7,7 +7,7 @@ struct Teacher : Person {
     grade: String;
 }
 
-def main(args: List<String>): Int {
+def main(args: List<String>) -> Int {
     data: Teacher = new Teacher(15, "James", "10th");
 
     Person(pAge, pName) = data;
