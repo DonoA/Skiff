@@ -94,4 +94,20 @@ class CommonParsing {
         }
     }
 
+    static List<AST.Statement> consumeFunctionParams(Parser parser) {
+        Parser params = parser.subParserTo(Token.Symbol.RIGHT_PAREN);
+        List<Parser> paramTokens;
+        try {
+            paramTokens = BraceSplitter.splitAll(params, Token.Symbol.COMMA);
+        } catch (ParserError parserError) {
+            parser.throwError(parserError.msg, parserError.on);
+            return List.of();
+        }
+
+        return paramTokens.stream()
+                .filter(p -> p.tokenCount() != 0)
+                .map(Parser::parseExpression)
+                .collect(Collectors.toList());
+    }
+
 }

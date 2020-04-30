@@ -171,6 +171,10 @@
         return null;
     }
     
+    public CompiledCode compileDeconstructAssign(DeconstructAssign stmt, CompileContext context) { 
+        return null;
+    }
+    
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) { 
         return null;
     }

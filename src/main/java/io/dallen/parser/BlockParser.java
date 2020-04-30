@@ -53,11 +53,21 @@ class BlockParser {
             return new AST.Declare(type, nameToken.literal, new ArrayList<>(), startPos, parser.absolutePos());
         }
 
-        
-        Parser typeParser = declareParser.subParserTo(equalIndex - 1);
+        Parser lhsParser = declareParser.subParserTo(Token.Symbol.EQUAL);
+        int parenLoc = lhsParser.indexOf(Token.Symbol.LEFT_PAREN);
+        if (parenLoc != -1) {
+            Parser typeParser = lhsParser.subParserTo(parenLoc);
+            AST.Type type = CommonParsing.parseType(typeParser);
+            lhsParser.consumeExpected(Token.Symbol.LEFT_PAREN);
+            List<AST.Statement> funcParams = CommonParsing.consumeFunctionParams(lhsParser);
+            AST.Statement value = ExpressionParser.parseExpression(declareParser);
+
+            return new AST.DeconstructAssign(type, funcParams, value, startPos, declareParser.absolutePos());
+        }
+
+        Parser typeParser = lhsParser.subParserTo(equalIndex - 1);
         AST.Type type = CommonParsing.parseType(typeParser);
-        Token nameToken = declareParser.consumeExpected(Token.Textless.NAME);
-        declareParser.consumeExpected(Token.Symbol.EQUAL);
+        Token nameToken = lhsParser.consumeExpected(Token.Textless.NAME);
 
         AST.Statement value = ExpressionParser.parseExpression(declareParser);
 
@@ -237,8 +247,18 @@ class BlockParser {
     private static AST.CaseMatchStatement parseMatchCase(Parser parser) {
         int startPos = parser.absolutePos();
         parser.consumeExpected(Token.Keyword.CASE);
-
-        AST.Statement on = parser.subParserTo(Token.Symbol.FAT_ARROW).parseExpression();
+        Parser onParser = parser.subParserTo(Token.Symbol.FAT_ARROW);
+        AST.Statement on;
+        if(onParser.indexOf(Token.Symbol.LEFT_PAREN) != -1)
+        {
+            on = onParser.parseExpression();
+        }
+        else
+        {
+            Parser typeParser = onParser.subParserTo(onParser.tokenCount() - 1);
+            AST.Type type = CommonParsing.parseType(typeParser);
+            on = new AST.Declare(type, onParser.current().literal, List.of(), startPos, onParser.absolutePos());
+        }
 
         return new AST.CaseMatchStatement(on, startPos, parser.absolutePos());
     }

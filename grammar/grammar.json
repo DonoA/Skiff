@@ -342,6 +342,14 @@
             "value": "Statement"
         }
     },
+    "DeconstructAssign": {
+        "extends": "Statement",
+        "fields": {
+            "type": "Type",
+            "args": "List<Statement>",
+            "value": "Statement"
+        }
+    },
     "NumberLiteral": {
         "extends": "Expression",
         "fields": {

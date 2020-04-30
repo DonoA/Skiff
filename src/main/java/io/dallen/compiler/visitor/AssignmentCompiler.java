@@ -11,10 +11,7 @@ public class AssignmentCompiler {
         // Each stack location should represent exactly one named var
         CompiledCode value = stmt.value.compile(context);
 
-        if (stmt.name instanceof AST.FunctionCall) {
-            AST.FunctionCall func = (AST.FunctionCall) stmt.name;
-            return compileDeconstructionAssign(value, func, context);
-        } else if (stmt.name instanceof AST.Subscript) {
+        if (stmt.name instanceof AST.Subscript) {
             AST.Subscript sub = (AST.Subscript) stmt.name;
             return compileSubscript(value, sub, context);
         } else {
@@ -22,20 +19,27 @@ public class AssignmentCompiler {
         }
     }
 
-    private static CompiledCode compileDeconstructionAssign(CompiledCode value, AST.FunctionCall func,
+    static CompiledCode compileDeconstructionAssign(AST.DeconstructAssign stmt,
                                                             CompileContext context) {
-        CompiledType intoType = (CompiledType) context.getObject(func.name);
+        CompiledCode value = stmt.value.compile(context);
+
+        CompiledType intoType = (CompiledType) stmt.type.compile(context).getBinding();
+        if(!intoType.isDataClass()) {
+            context.throwError("Deconstruction requires data class", stmt.type);
+            return new CompiledCode();
+        }
 
         StringBuilder sb = new StringBuilder();
 
         String deref = (value.onStack() ? "*" : "");
 
-        for (int i = 0; i < func.args.size(); i++) {
-            if (!(func.args.get(i) instanceof AST.Variable)) {
-                context.throwError("Args of type deconstruction must be Variables", func.args.get(i));
+        for (int i = 0; i < stmt.args.size(); i++) {
+            AST.Statement arg = stmt.args.get(i);
+            if (!(arg instanceof AST.Variable)) {
+                context.throwError("Args of type deconstruction must be Variables", arg);
                 continue;
             }
-            AST.Variable v = (AST.Variable) func.args.get(i);
+            AST.Variable v = (AST.Variable) arg;
             CompiledField field = intoType.getAllFields().get(i);
             sb.append(context.getIndent()).append(field.getType().getCompiledName());
             if (field.getType().isRef()) {

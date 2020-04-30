@@ -232,7 +232,7 @@ class ExpressionParser {
             parser.throwError("Function call name was multi token", funcName.get(0));
             return null;
         }
-        List<AST.Statement> funcParams = consumeFunctionParams(parser);
+        List<AST.Statement> funcParams = CommonParsing.consumeFunctionParams(parser);
         return new AST.FunctionCall(funcName.get(0).literal, funcParams, generics, startPos, parser.absolutePos());
     }
 
@@ -242,21 +242,5 @@ class ExpressionParser {
         AST.Statement left = parser.subParserTo(consume).parseExpression();
 
         return new AST.MathSelfMod(left, type, ASTEnums.SelfModTime.POST, startPos, parser.absolutePos());
-    }
-
-    private static List<AST.Statement> consumeFunctionParams(Parser parser) {
-        Parser params = parser.subParserTo(Token.Symbol.RIGHT_PAREN);
-        List<Parser> paramTokens;
-        try {
-            paramTokens = BraceSplitter.splitAll(params, Symbol.COMMA);
-        } catch (ParserError parserError) {
-            parser.throwError(parserError.msg, parserError.on);
-            return List.of();
-        }
-
-        return paramTokens.stream()
-                .filter(p -> p.tokenCount() != 0)
-                .map(Parser::parseExpression)
-                .collect(Collectors.toList());
     }
 }

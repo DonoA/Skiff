@@ -148,6 +148,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileMatchBlock(MatchBlock stmt, CompileContext context) {
+        // TODO: extract this
         StringBuilder sb = new StringBuilder();
         CompiledCode onCode = stmt.on.compile(context);
         String deref = (onCode.onStack() ? "*" : "");
@@ -335,6 +336,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileNew(New stmt, CompileContext context) {
+        // TODO: extract this
         CompiledType typeCode = (CompiledType) stmt.type.compile(context).getBinding();
         List<CompiledType> genericTypes = stmt.type.genericTypes
                 .stream()
@@ -532,6 +534,7 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileDeclareAssign(DeclareAssign stmt, CompileContext context) {
+        // TODO: fix this hack
         CompiledCode dec = this.compileDeclare(new Declare(stmt.type, stmt.name, List.of(), stmt.token_start,
                 stmt.token_end), context);
         CompiledCode value = this.compileAssign(new Assign(new Variable(stmt.name, stmt.token_start, stmt.token_end),
@@ -543,6 +546,10 @@ public class ASTVisitor {
                 .withBinding(dec.getBinding())
                 .withText(text)
                 .withSemicolon(false);
+    }
+
+    public CompiledCode compileDeconstructAssign(DeconstructAssign stmt, CompileContext context) {
+        return AssignmentCompiler.compileDeconstructionAssign(stmt, context);
     }
 
     public CompiledCode compileNumberLiteral(NumberLiteral stmt, CompileContext context) {
