@@ -1,17 +1,12 @@
 package io.dallen.compiler.visitor;
 
-import io.dallen.SkiffC;
 import io.dallen.ast.AST;
 import io.dallen.ast.AST.*;
 import io.dallen.ast.ASTEnums;
 import io.dallen.compiler.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ASTVisitor {
@@ -90,36 +85,11 @@ public class ASTVisitor {
     }
 
     public CompiledCode compileElseIfBlock(ElseIfBlock stmt, CompileContext context) {
-        StringBuilder text = new StringBuilder();
-        CompiledCode code = stmt.on.compile(context);
-        text.append("else ").append(code.getCompiledText());
-
-        if (stmt.elseBlock.isPresent()) {
-            text.append("\n");
-            text.append(context.getIndent());
-            text.append(stmt.elseBlock.get().compile(context).getCompiledText());
-        }
-
-        return new CompiledCode()
-                .withText(text.toString())
-                .withType(code.getType())
-                .withSemicolon(false);
+        return ConditionBlockCompiler.compileElseIfBlock(stmt, context);
     }
 
     public CompiledCode compileElseAlwaysBlock(ElseAlwaysBlock stmt, CompileContext context) {
-        CompileContext elseInnerContext = new CompileContext(context).addIndent();
-        StringBuilder sb = new StringBuilder();
-        sb.append("else\n"); // first line does not need indent
-        sb.append(context.getIndent());
-        sb.append("{\n");
-        stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, elseInnerContext));
-
-        sb.append(context.getIndent());
-        sb.append("}");
-
-        return new CompiledCode()
-                .withText(sb.toString())
-                .withSemicolon(false);
+        return ConditionBlockCompiler.compileElseAlwaysBlock(stmt, context);
     }
 
     public CompiledCode compileWhileBlock(WhileBlock stmt, CompileContext context) {
@@ -147,132 +117,12 @@ public class ASTVisitor {
         return null;
     }
 
-    public CompiledCode compileMatchBlock(MatchBlock stmt, CompileContext context) {
-        // TODO: extract this
-        StringBuilder sb = new StringBuilder();
-        CompiledCode onCode = stmt.on.compile(context);
-        String deref = (onCode.onStack() ? "*" : "");
-        for (int i = 0; i < stmt.body.size(); i++) {
-            if (!(stmt.body.get(i) instanceof AST.CaseMatchStatement)) {
-                continue;
-            }
-            AST.CaseMatchStatement caseStatement = (AST.CaseMatchStatement) stmt.body.get(i);
-            if (i != 0) {
-                sb.append(context.getIndent()).append("else ");
-            }
-
-            CompileContext innerContext = new CompileContext(context).addIndent();
-            sb.append("if(instance_of((skiff_any_ref_t *)").append(deref).append(onCode.getCompiledText()).append(", &");
-            if (caseStatement.on instanceof FunctionCall) {
-                FunctionCall func = (FunctionCall) caseStatement.on;
-                CompiledObject intoObj = context.getObject(func.name);
-                if (!(intoObj instanceof CompiledType)) {
-                    context.throwError("Match type is not a type", func);
-                    return new CompiledCode();
-                }
-                CompiledType into = (CompiledType) intoObj;
-                if (!into.isDataClass()) {
-                    context.throwError("Cannot deconstruct non data class", func);
-                    return new CompiledCode();
-                }
-                sb.append(into.getInterfaceName()).append("))\n")
-                        .append(context.getIndent()).append("{\n");
-                func.args.forEach(stmtArg -> {
-                    if (!(stmtArg instanceof Variable)) {
-                        context.throwError("Args of type deconstruction must be Variables", stmtArg);
-                        return;
-                    }
-                    Variable v = (Variable) stmtArg;
-                    CompiledField field = into.getField(v.name);
-                    sb.append(innerContext.getIndent()).append(field.getType().getCompiledName());
-                    if (field.getType().isRef()) {
-                        sb.append("*");
-                    }
-                    sb.append(" ").append(v.name);
-                    if (field.getType().isRef()) {
-                        sb.append(" = skalloc_ref_stack()");
-                    }
-                    sb.append(";\n");
-                    sb.append(innerContext.getIndent());
-                    if (field.getType().isRef()) {
-                        sb.append("*");
-                    }
-                    sb.append(v.name).append(" = ((").append(into.getCompiledName()).append(") ").append(deref)
-                            .append(onCode.getCompiledText()).append(")->").append(field.getName()).append(";\n");
-
-                    innerContext.declareObject(new CompiledVar(v.name, false, field.getType()));
-                    if (field.getType().isRef()) {
-                        innerContext.addRefStackSize(1);
-                    }
-                });
-
-            } else if (caseStatement.on instanceof Declare) {
-                Declare dec = (Declare) caseStatement.on;
-                CompiledType type = (CompiledType) dec.type.compile(context).getBinding();
-                sb.append(type.getInterfaceName()).append("))\n")
-                        .append(context.getIndent()).append("{\n")
-                        .append(innerContext.getIndent()).append(dec.compile(innerContext).getCompiledText()).append(";\n")
-                        .append(innerContext.getIndent()).append("*").append(dec.name).append(" = (")
-                        .append(type.getCompiledName()).append(") *").append(onCode.getCompiledText()).append(";\n");
-            } else {
-                context.throwError("Invalid statement type", caseStatement.on);
-            }
-            for (int j = i + 1; j < stmt.body.size(); j++) {
-                if (stmt.body.get(j) instanceof AST.BreakStatement) {
-                    break;
-                }
-                if (stmt.body.get(j) instanceof AST.CaseMatchStatement) {
-                    continue;
-                }
-                CompiledCode innerCode = stmt.body.get(j).compile(innerContext);
-                sb.append(innerContext.getIndent()).append(innerCode.getCompiledText());
-                if (innerCode.isRequiresSemicolon()) {
-                    sb.append(";");
-                }
-                sb.append("\n");
-            }
-            VisitorUtils.cleanupScope(sb, innerContext, true);
-            sb.append(context.getIndent()).append("}\n");
-        }
-        return new CompiledCode()
-                .withText(sb.toString())
-                .withSemicolon(false);
+    public CompiledCode compileMatchBlock(AST.MatchBlock stmt, CompileContext context) {
+        return SwitchMatchCompiler.compileMatchBlock(stmt, context);
     }
 
-    public CompiledCode compileSwitchBlock(SwitchBlock stmt, CompileContext context) {
-        StringBuilder sb = new StringBuilder();
-        CompiledCode onCode = stmt.on.compile(context);
-        for (int i = 0; i < stmt.body.size(); i++) {
-            if (!(stmt.body.get(i) instanceof AST.CaseStatement)) {
-                continue;
-            }
-            AST.CaseStatement caseStatement = (AST.CaseStatement) stmt.body.get(i);
-            if (i != 0) {
-                sb.append(context.getIndent()).append("else ");
-            }
-            CompiledCode equalCode = caseStatement.on.compile(context);
-            sb.append("if(").append(onCode.getCompiledText()).append(" == ")
-                    .append(equalCode.getCompiledText()).append(")\n").append(context.getIndent()).append("{\n");
-            CompileContext innerContext = new CompileContext(context).addIndent();
-            for (int j = i + 1; j < stmt.body.size(); j++) {
-                if (stmt.body.get(j) instanceof AST.BreakStatement) {
-                    break;
-                }
-                if (stmt.body.get(j) instanceof AST.CaseStatement) {
-                    continue;
-                }
-                CompiledCode innerCode = stmt.body.get(j).compile(innerContext);
-                sb.append(innerContext.getIndent()).append(innerCode.getCompiledText());
-                if (innerCode.isRequiresSemicolon()) {
-                    sb.append(";");
-                }
-                sb.append("\n");
-            }
-            sb.append(context.getIndent()).append("}\n");
-        }
-        return new CompiledCode()
-                .withText(sb.toString())
-                .withSemicolon(false);
+    public CompiledCode compileSwitchBlock(AST.SwitchBlock stmt, CompileContext context) {
+        return SwitchMatchCompiler.compileSwitchBlock(stmt, context);
     }
 
     public CompiledCode compileCaseStatement(CaseStatement stmt, CompileContext context) {
@@ -335,63 +185,8 @@ public class ASTVisitor {
                 .withSemicolon(true);
     }
 
-    public CompiledCode compileNew(New stmt, CompileContext context) {
-        // TODO: extract this
-        CompiledType typeCode = (CompiledType) stmt.type.compile(context).getBinding();
-        List<CompiledType> genericTypes = stmt.type.genericTypes
-                .stream()
-                .map(type -> {
-                    CompiledType typ = (CompiledType) type.compile(context).getBinding();
-                    if (typ == null) {
-
-                    }
-                    return typ;
-                })
-                .collect(Collectors.toList());
-        List<CompiledCode> compiledArgs = stmt.argz.stream().map(arg -> arg.compile(context))
-                .collect(Collectors.toList());
-
-        CompiledFunction ctr = typeCode.getConstructor(compiledArgs.stream().map(CompiledCode::getType)
-                .collect(Collectors.toList()));
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(ctr.getCompiledName()).append("(");
-        List<String> argz = new ArrayList<>();
-        argz.add("0");
-        for (int i = 0; i < stmt.argz.size(); i++) {
-            String argType = "";
-            CompiledCode argCode = compiledArgs.get(i);
-            String argText = argCode.getCompiledText();
-            if (argCode.onStack() && argCode.getType().isRef()) {
-                argText = "*" + argText;
-            }
-            if (ctr.getArgs().get(i).getType().isGenericPlaceholder()) {
-                argType = "(void *)";
-            }
-            argz.add(argType + argText);
-        }
-
-        sb.append(String.join(", ", argz))
-                .append(")");
-
-        CompiledType exactType = typeCode.fillGenericTypes(genericTypes, false);
-
-        boolean requiresCopy = !genericTypes.stream().allMatch(CompiledType::isRef);
-
-        if (requiresCopy) { // TODO: enable class duplication to support native types
-//            CompileContext newClassContext = new CompileContext(context)
-//                    .setContainingClass(exactType).setIndent("")
-//                    .setScopePrefix(exactType.getName());
-//
-//            ClassDefCompiler.prepareContext(exactType, exactType.getOriginalDef(), newClassContext);
-//
-//            CompiledCode newClass = ClassDefCompiler.compileClassInstance(exactType, newClassContext);
-//            context.addDependentCode(newClass.getCompiledText());
-        }
-
-        return new CompiledCode()
-                .withType(exactType)
-                .withText(sb.toString());
+    public CompiledCode compileNew(AST.New stmt, CompileContext context) {
+        return NewCompiler.compileNew(stmt, context);
     }
 
     public CompiledCode compileThrowStatement(ThrowStatement stmt, CompileContext context) {
@@ -401,50 +196,8 @@ public class ASTVisitor {
                 .withText("skiff_throw(" + inner.getCompiledText() + ")");
     }
 
-    public CompiledCode compileImportStatement(ImportStatement stmt, CompileContext context) {
-        String importText;
-
-        if (stmt.type == ASTEnums.ImportType.NATIVE) {
-            String location = new File(context.getFilename()).getParent() + "/" + stmt.value;
-            StringBuilder importLocation = new StringBuilder();
-            importLocation.append("#include \"");
-            for (int i = 0; i < context.getDestFileName().length(); i++) {
-                if (context.getDestFileName().charAt(i) == '/') {
-                    importLocation.append("../");
-                }
-            }
-            importLocation.append(location).append("\"\n");
-            return new CompiledCode().withText(importLocation.toString());
-        }
-
-        String location;
-        if (stmt.value.startsWith(".")) {
-            location = new File(context.getFilename()).getParent() + "/" + stmt.value + ".skiff";
-        } else {
-            location = "lib/" + stmt.value + ".skiff";
-        }
-
-        try {
-            importText = SkiffC.readFile(location);
-        } catch (IOException e) {
-            context.throwError("Cannot find import file", stmt);
-            return new CompiledCode();
-        }
-
-        String currentFile = context.getFilename();
-        context.setFilename(location);
-        String currentText = context.getCode();
-        context.setCode(importText);
-        Optional<String> importCode = SkiffC.compile(importText, context);
-        context.setFilename(currentFile);
-        context.setCode(currentText);
-
-        if (importCode.isEmpty()) {
-            return new CompiledCode();
-        }
-        String text = "// Import " + stmt.value + "\n" + importCode.get() + "\n";
-        return new CompiledCode()
-                .withText(text);
+    public CompiledCode compileImportStatement(AST.ImportStatement stmt, CompileContext context) {
+        return ImportCompiler.compileImportStatement(stmt, context);
     }
 
     public CompiledCode compileMathStatement(MathStatement stmt, CompileContext context) {

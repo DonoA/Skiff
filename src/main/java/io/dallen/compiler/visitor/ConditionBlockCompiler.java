@@ -66,4 +66,37 @@ class ConditionBlockCompiler {
                 .withSemicolon(false);
     }
 
+    static CompiledCode compileElseIfBlock(AST.ElseIfBlock stmt, CompileContext context) {
+        StringBuilder text = new StringBuilder();
+        CompiledCode code = stmt.on.compile(context);
+        text.append("else ").append(code.getCompiledText());
+
+        if (stmt.elseBlock.isPresent()) {
+            text.append("\n");
+            text.append(context.getIndent());
+            text.append(stmt.elseBlock.get().compile(context).getCompiledText());
+        }
+
+        return new CompiledCode()
+                .withText(text.toString())
+                .withType(code.getType())
+                .withSemicolon(false);
+    }
+
+    static CompiledCode compileElseAlwaysBlock(AST.ElseAlwaysBlock stmt, CompileContext context) {
+        CompileContext elseInnerContext = new CompileContext(context).addIndent();
+        StringBuilder sb = new StringBuilder();
+        sb.append("else\n"); // first line does not need indent
+        sb.append(context.getIndent());
+        sb.append("{\n");
+        stmt.body.forEach(VisitorUtils.compileToStringBuilder(sb, elseInnerContext));
+
+        sb.append(context.getIndent());
+        sb.append("}");
+
+        return new CompiledCode()
+                .withText(sb.toString())
+                .withSemicolon(false);
+    }
+
 }
