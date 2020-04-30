@@ -1,4 +1,4 @@
 native class Exception {
-    native def Exception(message: String);
+    native def Exception(String message);
     native def getMessage() -> String;
 }

@@ -1,7 +1,7 @@
 class Thing {
-    name: String;
+    String name;
 
-    def Thing(name: String) {
+    def Thing(String name) {
         this.name = name;
     }
 
@@ -11,9 +11,9 @@ class Thing {
 }
 
 class Person : Thing {
-    age: Int;
+    Int age;
 
-    def Person(name: String, age: Int) {
+    def Person(String name, Int age) {
         super(name);
         this.age = age;
     }
@@ -27,11 +27,11 @@ class Person : Thing {
     }
 }
 
-def main(args: List<String>) -> Int {
-    thing: Thing;
+def main(List<String> args) -> Int {
+    let Thing thing;
     thing = new Person("Dave", 15);
     println(thing.getName());
-    dave: Person = thing;
+    let Person dave = thing;
     dave.incAge();
     return dave.getAge();
 }

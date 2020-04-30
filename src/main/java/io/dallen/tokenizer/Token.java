@@ -82,6 +82,7 @@ public class Token {
         CASE("case"),
         RETURN("return"),
         DEF("def"),
+        LET("let"),
         NATIVE("native"),
         IMPORT("import"),
         CLASS("class"),

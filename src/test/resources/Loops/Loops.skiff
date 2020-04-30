@@ -1,12 +1,12 @@
-def main(args: List<String>) -> Int {
-    i: Int = 0;
+def main(List<String> args) -> Int {
+    let Int i = 0;
     
     while(i < 2 && true) {
         println("while");
         i++;
     }
 
-    j: Int = 4;
+    let Int j = 4;
 
     loop {
         println("loop");
@@ -16,7 +16,7 @@ def main(args: List<String>) -> Int {
         j--;
     }
 
-    for(k: Int = 0; k < 2; k++) {
+    for(let Int k = 0; k < 2; k++) {
         println("bonk");
     }
 

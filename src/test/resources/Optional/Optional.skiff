@@ -1,11 +1,11 @@
 class Optional<T> {
-    private data: T;
+    private T data;
 
-    def Optional(data: T) {
+    def Optional(T data) {
         this.data = data;
     }
 
-    static def of<U>(data: U) -> Optional<U> {
+    static def of<U>(U data) -> Optional<U> {
         return new Optional<U>(data);
     }
 
@@ -22,8 +22,8 @@ class Optional<T> {
     }
 }
 
-def main(args: List<String>) -> Int {
-    op: Optional<Int> = Optional.of<Int>(5);
+def main(List<String> args) -> Int {
+    let Optional<Int> op = Optional.of<Int>(5);
     if(op.isPresent()) {
         return op.get();
     } else {

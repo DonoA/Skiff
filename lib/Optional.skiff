@@ -1,11 +1,11 @@
 class Optional<T> {
-    private data: T;
+    private T data;
 
-    def Optional(data: T) {
+    def Optional(T data) {
         this.data = data;
     }
 
-    static def of<U>(data: U) -> Optional<U> {
+    static def of<U>(U data) -> Optional<U> {
         return new Optional<U>(data);
     }
 

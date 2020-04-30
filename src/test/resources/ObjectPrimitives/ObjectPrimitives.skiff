@@ -1,9 +1,9 @@
-def main(args: List<String>) -> Int {
-    i: Int = 10;
+def main(List<String> args) -> Int {
+    let Int i = 10;
     println(i.toString());
     println((15).toString());
 
-    f: Float = 10.65;
+    let Float f = 10.65;
     println(f.toString());
     println((42.42).toString());
 

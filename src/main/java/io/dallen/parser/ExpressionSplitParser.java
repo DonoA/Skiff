@@ -44,29 +44,9 @@ class ExpressionSplitParser {
 
     // Handle equal signs, picks up assign and declare assign.
     private static Statement parseAssignment(Parser parent, Parser first, Parser second) {
-        List<Parser> res;
-        try {
-            res = BraceSplitter.splitAll(first, Token.Symbol.COLON);
-        } catch (ParserError parserError) {
-            parent.throwError(parserError.msg, parserError.on);
-            return null;
-        }
-        if (res.size() == 1) {
-            Statement firstS = first.parseExpression();
-            Statement secondS = second.parseExpression();
-            return new Assign(firstS, secondS, first.absoluteStart(), second.absoluteStop());
-        } else if (res.size() == 2) {
-            Type typ = CommonParsing.parseType(res.get(1));
-            if (res.get(0).tokenCount() != 1) {
-                parent.throwError("Declare assign name had multiple parts", res.get(0).get(0));
-                return null;
-            }
-            String name = res.get(0).get(0).literal;
-            Statement secondS = second.parseExpression();
-            return new DeclareAssign(secondS, typ, name, new ArrayList<>(), first.absoluteStart(), second.absoluteStop());
-        }
-        parent.throwError("Assign name had many colons", res.get(0).get(0));
-        return null;
+        Statement firstS = first.parseExpression();
+        Statement secondS = second.parseExpression();
+        return new Assign(firstS, secondS, first.absoluteStart(), second.absoluteStop());
     }
 
     // handles '&&' and '||'

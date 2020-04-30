@@ -74,24 +74,22 @@ class CommonParsing {
         return new AST.Type(typeName, genericParams, parser.absoluteStart(), parser.absoluteStop());
     }
 
-    static List<AST.FunctionParam> parseFunctionDecArgs(Parser functionArgsParser) {
+    static List<AST.FunctionParam> parseFunctionDecArgs(Parser parser) {
         try {
-            return BraceSplitter.splitAll(functionArgsParser, Token.Symbol.COMMA)
+            return BraceSplitter.splitAll(parser, Token.Symbol.COMMA)
                     .stream()
-                    .map(e -> {
-                        try {
-                            return BraceSplitter.splitAll(e, Token.Symbol.COLON);
-                        } catch (ParserError parserError) {
-                            throw new ParserError.NoCatchParseError(parserError.msg, parserError.on);
-                        }
+                    .map(p -> {
+                        Parser type = p.subParserTo(p.tokenCount() - 1);
+                        AST.Type argType = CommonParsing.parseType(type);
+                        Token name = p.consumeExpected(Token.Textless.NAME);
+                        return new AST.FunctionParam(argType, name.literal);
                     })
-                    .map(e -> new AST.FunctionParam(CommonParsing.parseType(e.get(1)), e.get(0).get(0).literal))
                     .collect(Collectors.toList());
         } catch (ParserError parserError) {
-            functionArgsParser.throwError(parserError.msg, parserError.on);
+            parser.throwError(parserError.msg, parserError.on);
             return List.of();
         } catch (ParserError.NoCatchParseError parserError) {
-            functionArgsParser.throwError(parserError.msg, parserError.on);
+            parser.throwError(parserError.msg, parserError.on);
             return List.of();
         }
     }

@@ -1,16 +1,16 @@
 struct Person {
-    age: Int;
-    name: String;
+    Int age;
+    String name;
 }
 
 struct Teacher : Person {
-    grade: String;
+    String grade;
 }
 
-def main(args: List<String>) -> Int {
-    data: Teacher = new Teacher(15, "James", "10th");
+def main(List<String> args) -> Int {
+    let Teacher data = new Teacher(15, "James", "10th");
 
-    Person(pAge, pName) = data;
+    let Person(pAge, pName) = data;
 
     print("Name:");
     println(pName);
@@ -20,7 +20,7 @@ def main(args: List<String>) -> Int {
             println(name);
             println(grade);
             break;
-        case p: Person =>
+        case Person p =>
             println(p.getName());
             break;
     }

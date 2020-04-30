@@ -1,7 +1,7 @@
 class Array<T> {
-    data: List<T>;
-    cap: Int;
-    size: Int;
+    List<T> data;
+    Int cap;
+    Int size;
 
     def Array() {
         cap = 10;
@@ -9,7 +9,7 @@ class Array<T> {
         data = new List<T>(cap);
     }
 
-    def append(elt: T) {
+    def append(T elt) {
         if(size + 1 > cap) {
             expand(cap * 2);
         }
@@ -17,19 +17,19 @@ class Array<T> {
         size++;
     }
 
-    private def expand(newCap: Int) {
+    private def expand(Int newCap) {
         println("Expanding!");
-        oldData: List<T> = data;
+        let List<T> oldData = data;
         data = new List<T>(newCap);
-        for(i: Int = 0; i < cap; i++) {
+        for(let Int i = 0; i < cap; i++) {
             data[i] = oldData[i];
         }
         cap = newCap;
     }
 
-    def removeAt(index: Int) {
+    def removeAt(Int index) {
         size--;
-        for(i: Int = index; i < size; i++) {
+        for(let Int i = index; i < size; i++) {
             data[i] = data[i + 1];
         }
     }
@@ -38,11 +38,11 @@ class Array<T> {
         removeAt(size - 1);
     }
 
-    def getSub(i: Int) -> T {
+    def getSub(Int i) -> T {
         return data[i];
     }
 
-    def assignSub(elt: T, i: Int) {
+    def assignSub(T elt, Int i) {
         data[i] = elt;
     }
 

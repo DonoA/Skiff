@@ -1,3 +1,3 @@
-native def println(str: String);
+native def println(String str);
 // native def println(i: Int);
-native def print(str: String);
+native def print(String str);

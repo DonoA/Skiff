@@ -25,6 +25,7 @@ class BlockParser {
                     .addCase(Keyword.FOR::equals, BlockParser::parseForBlock)
                     .addCase(Keyword.IF::equals, BlockParser::parseIfBlock)
                     .addCase(Keyword.ELSE::equals, BlockParser::parseElse)
+                    .addCase(Keyword.LET::equals, BlockParser::parseVarDef)
                     .addCase(Keyword.DEF::equals, BlockParser::parseFunctionDef)
                     .addCase(Keyword.CLASS::equals, BlockParser::parseClassDef)
                     .addCase(Keyword.STRUCT::equals, BlockParser::parseClassDef)
@@ -37,6 +38,31 @@ class BlockParser {
                     .addCase(Keyword.TRY::equals, BlockParser::parseTryBlock)
                     .addCase(Keyword.CATCH::equals, BlockParser::parseCatch)
                     .setDefault(Parser::parseExpression);
+
+    private static AST.Statement parseVarDef(Parser parser) {
+        int startPos = parser.absolutePos();
+        parser.consumeExpected(Keyword.LET);
+        Parser declareParser = parser.subParserTo(Token.Symbol.SEMICOLON);
+        int equalIndex = declareParser.indexOf(Token.Symbol.EQUAL);
+
+        // this is just declare
+        if(equalIndex == -1) {
+            Parser typeParser = declareParser.subParserTo(declareParser.tokenCount() - 1);
+            AST.Type type = CommonParsing.parseType(typeParser);
+            Token nameToken = declareParser.consumeExpected(Token.Textless.NAME);
+            return new AST.Declare(type, nameToken.literal, new ArrayList<>(), startPos, parser.absolutePos());
+        }
+
+        
+        Parser typeParser = declareParser.subParserTo(equalIndex - 1);
+        AST.Type type = CommonParsing.parseType(typeParser);
+        Token nameToken = declareParser.consumeExpected(Token.Textless.NAME);
+        declareParser.consumeExpected(Token.Symbol.EQUAL);
+
+        AST.Statement value = ExpressionParser.parseExpression(declareParser);
+
+        return new AST.DeclareAssign(value, type, nameToken.literal, new ArrayList<>(), startPos, declareParser.absolutePos());
+    }
 
     static List<AST.Statement> parseAll(Parser parser) {
         List<AST.Statement> statements = new ArrayList<>();
@@ -80,11 +106,35 @@ class BlockParser {
             parser.consumeExpected(Token.Symbol.LEFT_BRACE);
         }
 
-        List<AST.Statement> body = BlockParser.parseAll(parser.subParserTo(Token.Symbol.RIGHT_BRACE));
+        List<AST.Statement> body = new ArrayList<>();
+        Parser bodyParser = parser.subParserTo(Token.Symbol.RIGHT_BRACE);
+        while (bodyParser.current().type != Token.Textless.EOF) {
+            Token.TokenType currentType = bodyParser.current().type;
+            if(currentType == Token.Textless.NAME) {
+                Parser decParser = bodyParser.subParserTo(Token.Symbol.SEMICOLON);
+                body.add(parseClassField(decParser));
+            } else {
+                AST.Statement result = blockSwitcher.execute(currentType, bodyParser);
+                if (result != null) {
+                    body.add(result);
+                }
+            }
+        }
 
         return new AST.ClassDef(name.literal, genericTypes, isStruct, new ArrayList<>(), extended, body, startPos,
                 parser.absolutePos());
     }
+
+
+    private static AST.Declare parseClassField(Parser parser) {
+        int startPos = parser.absolutePos();
+        Parser type = parser.subParserTo(parser.tokenCount() - 1);
+        AST.Type decType = CommonParsing.parseType(type);
+        Token decName = parser.consumeExpected(Token.Textless.NAME);
+        return new AST.Declare(decType, decName.literal, new ArrayList<>(), startPos, parser.absolutePos());
+    }
+
+
 
     private static AST.CatchBlock parseCatch(Parser parser) {
         int startPos = parser.absolutePos();
@@ -130,7 +180,7 @@ class BlockParser {
             return null;
         }
 
-        AST.Statement initStmt = seg.get(0).parseExpression();
+        AST.Statement initStmt = seg.get(0).parseStatement();
         AST.Statement condStmt = seg.get(1).parseExpression();
         AST.Statement stepStmt = seg.get(2).parseExpression();
 
@@ -252,10 +302,23 @@ class BlockParser {
                                                                                             ASTEnums.DecModType type) {
         return (parser) -> {
             Token t = parser.consumeExpected(expected);
+
+            // Native modifier can be used on imports
             if (parser.current().type == Keyword.IMPORT) {
                 return BlockParser.parseNativeImport(parser, true);
             }
-            AST.Statement on = BlockParser.parseBlock(parser);
+
+            AST.Statement on;
+            if(parser.current().type == Token.Textless.NAME) {
+                // modifiers on class decs are treated specially
+                Parser decParser = parser.subParserTo(Token.Symbol.SEMICOLON);
+                on = parseClassField(decParser);
+            } else {
+                // Other times modifiers can just be used on any old block
+                on = BlockParser.parseBlock(parser);
+            }
+
+            // Normal modifier things
             if (on instanceof AST.Declare) {
                 ((AST.Declare) on).modifiers.add(type);
             } else if (on instanceof AST.FunctionDef) {

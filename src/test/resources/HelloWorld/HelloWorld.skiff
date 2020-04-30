@@ -1,4 +1,4 @@
-def main(args: List<String>) -> Int {
+def main(List<String> args) -> Int {
     println("Hello World!");
     return 0;
 }

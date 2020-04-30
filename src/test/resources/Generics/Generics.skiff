@@ -1,7 +1,7 @@
 class Wrapper<T> {
-    dat: T;
+    private T dat;
 
-    def Wrapper(dat: T) {
+    def Wrapper(T dat) {
         this.dat = dat;
     }
 
@@ -10,11 +10,11 @@ class Wrapper<T> {
     }
 }
 
-def main(args: List<String>) -> Int {
-    intData: Wrapper<Int>;
+def main(List<String> args) -> Int {
+    let Wrapper<Int> intData;
     intData = new Wrapper<Int>(5);
 
-    dave: Wrapper<String>;
+    let Wrapper<String> dave;
     dave = new Wrapper<String>("My name Dave!");
 
     println(dave.getDat());

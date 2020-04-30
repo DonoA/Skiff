@@ -1,5 +1,5 @@
-def main(args: List<String>) -> Int {
-    i: Int = 5;
+def main(List<String> args) -> Int {
+    let Int i = 5;
 
     i += 5; // i = 10
     i = i * 2; // i = 20

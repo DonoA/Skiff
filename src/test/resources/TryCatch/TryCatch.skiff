@@ -3,17 +3,17 @@ def anError() {
     println("Never executed!");
 }
 
-def main(args: List<String>) -> Int {
+def main(List<String> args) -> Int {
     try {
         anError();
-    } catch(ex: Exception) {
+    } catch(Exception ex) {
         println("Oh no!");
         println(ex.getMessage());
     }
 
     println("We resume here!");
 
-    list: List<String> = null;
+    let List<String> list = null;
 
     return list.getSize();
 }

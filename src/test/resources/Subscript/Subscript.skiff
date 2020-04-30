@@ -1,13 +1,13 @@
 class Container {
     def Container() { }
 
-    def getSub(i: Int) -> Int {
+    def getSub(Int i) -> Int {
         print("Getting item at ");
         println(i.toString());
         return 1;
     }
 
-    def assignSub(elt: Int, i: Int) {
+    def assignSub(Int elt, Int i) {
         print("Placing ");
         print(elt.toString());
         print(" at index ");
@@ -15,12 +15,12 @@ class Container {
     }
 }
 
-def main(args: List<String>) -> Int {
+def main(List<String> args) -> Int {
     println(args[0]);
     args[0] = "New String";
     println(args[0]);
 
-    c: Container = new Container();
+    let Container c = new Container();
     c[5] = 15;
     return c[1];
 }

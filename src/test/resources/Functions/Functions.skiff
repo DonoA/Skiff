@@ -1,10 +1,10 @@
-def myFunc(arg: Int, arg2: String, arg3: Int, arg4: String) -> Int {
+def myFunc(Int arg, String arg2, Int arg3, String arg4) -> Int {
     println(arg2);
     return arg;
 }
 
-def main(args: List<String>) -> Int {
-    i: Int = 2;
-    j: String = "Hello World!";
+def main(List<String> args) -> Int {
+    let Int i = 2;
+    let String j = "Hello World!";
     return myFunc(i, j, 5, "literal string");
 }

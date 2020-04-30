@@ -1,4 +1,4 @@
-def testMe(i: Int) {
+def testMe(Int i) {
     if(i == 10) {
         println("i is 10!");
     } else if(i > 5) {
@@ -8,12 +8,12 @@ def testMe(i: Int) {
     }
 }
 
-def main(args: List<String>) -> Int {
+def main(List<String> args) -> Int {
     testMe(20);
     testMe(0);
     testMe(10);
 
-    i: Int = 15;
+    let Int i = 15;
 
     switch(i) {
         case 15 =>
